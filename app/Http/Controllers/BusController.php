@@ -21,11 +21,11 @@ class BusController extends Controller
     public function search(Request $request)
     {
         $bus_project = $request->bus_project;
-        $vin         = $request->vin;
-        $uzunluq     = $request->uzunluq;
-        $xett_no     = $request->xett_no;
-        $dqn         = $request->dqn;
-        $motor_no    = $request->motor_no;
+        $vin = $request->vin;
+        $uzunluq = $request->uzunluq;
+        $xett_no = $request->xett_no;
+        $dqn = $request->dqn;
+        $motor_no = $request->motor_no;
 
         $query = Bus::query();
 
@@ -48,8 +48,8 @@ class BusController extends Controller
             $query->where('motor_no', 'ILIKE', "%{$motor_no}%");
         }
 
-        $buses = $query->orderBy('id')->get();
-
+        // 🔥 DƏYİŞİKLİK: get() əvəzinə paginate(50)
+        $buses = $query->orderBy('id', 'desc')->paginate(50);
         $isEmpty = $buses->isEmpty();
 
         if ($request->ajax()) {

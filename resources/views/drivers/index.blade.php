@@ -77,4 +77,7 @@
         </div>
     </div>
 </div>
+<div class="pagination-wrapper d-flex justify-content-center mt-4">
+    {{ $drivers->withQueryString()->links() }}
+</div>
 @endsection

@@ -16,12 +16,9 @@
     @include('buses.partials.table', ['buses' => $buses])
 </div>
 
-<!-- Pagination (Yalnız normal səhifədə görünür, çünki axtarış zamanı pagination yoxdur) -->
-{{-- @if($buses instanceof \Illuminate\Pagination\LengthAwarePaginator && $buses->hasPages())
-    <div class="pagination-wrapper d-flex justify-content-center mt-4">
-        {{ $buses->links() }}
-    </div>
-@endif --}}
+<div class="pagination-wrapper d-flex justify-content-center mt-4">
+    {{ $buses->withQueryString()->links() }}
+</div>
 @endsection
 
 @section('scripts')

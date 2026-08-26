@@ -12,7 +12,8 @@ class DriverController extends Controller
 {
     public function index()
     {
-        $drivers = Driver::orderBy('kodu')->get();
+        // 🔥 DƏYİŞİKLİK: paginate(30) əlavə edildi
+        $drivers = Driver::orderBy('kodu')->paginate(30);
         return view('drivers.index', compact('drivers'));
     }
 

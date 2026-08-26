@@ -73,4 +73,7 @@
         </div>
     </div>
 </div>
+<div class="pagination-wrapper d-flex justify-content-center mt-4">
+    {{ $employees->withQueryString()->links() }}
+</div>
 @endsection
