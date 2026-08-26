@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BusController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ComplaintTypeController;
@@ -35,21 +36,8 @@ require __DIR__.'/auth.php';
 */
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard
-    Route::get('/dashboard', function () {
-        $totalBuses = App\Models\Bus::count();
-        $totalComplaints = App\Models\Complaint::count();
-        $totalWarehouses = App\Models\Warehouse::count();
-
-        $recentComplaints = App\Models\Complaint::with('bus')->orderBy('id', 'desc')->limit(5)->get();
-        $recentBuses = App\Models\Bus::orderBy('id', 'desc')->limit(5)->get();
-        $lowStockItems = App\Models\Warehouse::whereColumn('miqdar', '<=', 'minimum_miqdar')->get();
-
-        return view('dashboard', compact(
-            'totalBuses', 'totalComplaints', 'totalWarehouses',
-            'recentComplaints', 'recentBuses', 'lowStockItems'
-        ));
-    })->name('dashboard');
+    // 🔥 DASHBOARD - AUTH QRUQU İÇİNDƏ
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -185,8 +173,6 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ==================== API ROUTES (JSON) ====================
-    // Qeyd: bu route-lar giriş etmiş istifadəçilər üçün nəzərdə tutulub,
-    // ona görə auth middleware qrupunun içinə köçürüldü.
     Route::get('get-bus-id-by-xett/{xett_no}', function ($xett_no) {
         $bus = App\Models\Bus::where('xett_no', $xett_no)->first();
         return response()->json([
@@ -238,4 +224,4 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('get.driver.by.kod');
 
-});
+}); // 🔥 Bu qapayıcı mötərizə əhəmiyyətlidir!

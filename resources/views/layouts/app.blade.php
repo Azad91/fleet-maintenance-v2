@@ -3,145 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>
-        @yield('title', 'Fleet Maintenance')</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-            <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-        @yield('styles')
+    <title>@yield('title', 'Fleet Maintenance V2')</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- V2 CSS -->
+    <link rel="stylesheet" href="{{ asset('css/app-v2.css') }}">
+
+    @stack('styles')
 </head>
 <body>
     <div class="container-fluid p-0">
         <div class="row g-0">
-        <!-- SIDEBAR -->
-        <div class="col-md-2 sidebar">
-            <!-- <div class="brand user-info">
-                Fleet <i class="bi bi-car-front-fill"></i>
-            </div> -->
-            <!-- 👤 İSTİFADƏÇİ MƏLUMATLARI -->
-            @auth
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="bi bi-person-circle"></i>
-                </div>
-                    <div class="user-details">
-                        <div class="user-role fw-bold">
-                            @php
-                                $roleLabels = [
-                                    'admin' => 'OPERATION',
-                                    'directorate' => 'Müdiriyyət',
-                                    'complaint' => 'Şikayət',
-                                    'warehouse' => 'Anbar',
-                                    'bus' => 'Avtobus',
-                                ];
-                            @endphp
-                            {{ $roleLabels[Auth::user()->role] ?? Auth::user()->role }}
+            <!-- SIDEBAR -->
+            <div class="col-auto sidebar">
+                <!-- Brand -->
+                <div class="brand text-center">
+                    <a href="{{ route('dashboard') }}" class="text-decoration-none">
+                        <div class="logo-icon">
+                            <i class="fas fa-bus"></i>
                         </div>
+                        <span class="brand-name">Fleet</span>
+                        <span class="brand-sub">Maintenance V2</span>
+                    </a>
+                </div>
+
+                <!-- User Info -->
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {{ Auth::user() ? substr(Auth::user()->name, 0, 1) : 'A' }}
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ Auth::user()->name ?? 'Qonaq' }}</div>
+                        <div class="user-role">{{ Auth::user()->role ?? 'İstifadəçi' }}</div>
                     </div>
                 </div>
-            @endauth
 
-            <div class="nav-label">Əsas</div>
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
+                <!-- Navigation -->
+                <nav class="nav flex-column">
+                    <div class="nav-label">ƏSAS</div>
 
-            @auth
-                @php
-                    $role = Auth::user()->role;
-                @endphp
-
-                @if($role == 'admin' || $role == 'bus' || $role == 'directorate')
-                    <div class="nav-label">İdarəetmə</div>
-                    <a href="{{ route('buses.index') }}" class="{{ request()->routeIs('buses.*') ? 'active' : '' }}">
-                        <i class="bi bi-bus-front"></i> Avtobuslar
-                    </a>
-                @endif
-
-
-                @if($role == 'admin' || $role == 'complaint' || $role == 'directorate')
-                    <a href="{{ route('complaints.index') }}" class="{{ request()->routeIs('complaints.*') ? 'active' : '' }}">
-                        <i class="bi bi-clipboard"></i> Kartlar
-                    </a>
-                @endif
-
-                @if($role == 'admin' || $role == 'warehouse' || $role == 'directorate')
-                    <a href="{{ route('warehouses.index') }}" class="{{ request()->routeIs('warehouses.*') ? 'active' : '' }}">
-                        <i class="bi bi-box-seam"></i> Anbar
-                    </a>
-                @endif
-
-                @if($role == 'admin')
-                    <div class="nav-label">Texniki Xidmət</div>
-                    <a href="{{ route('motor-oil.index') }}" class="{{ request()->routeIs('motor-oil.*') ? 'active' : '' }}">
-                        <i class="bi bi-droplet"></i> Motor Yağ
-                    </a>
-
-                    <a href="{{ route('bus-daily-statuses.index') }}" class="{{ request()->routeIs('bus-daily-statuses.*') ? 'active' : '' }}">
-                        <i class="bi bi-calendar2-check"></i> Gündəlik Status
-                    </a>
-
-                    <!-- YENİ KM QEYDLƏRİ -->
-                    <a href="{{ route('daily-km-records.index') }}" class="{{ request()->routeIs('daily-km-records.*') ? 'active' : '' }}">
-                        <i class="bi bi-speedometer2"></i> Gündəlik KM
-                    </a>
-                @endif
-
-                @if($role == 'directorate')
-                    <div class="nav-label text-warning mt-3">
-                        <i class="bi bi-eye"></i> Yalnız Baxış
+                    <div class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <a href="{{ route('dashboard') }}">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Dashboard</span>
+                        </a>
                     </div>
-                @endif
 
-                <a href="{{ route('drivers.index') }}" class="{{ request()->routeIs('drivers.*') ? 'active' : '' }}">
-                    <i class="bi bi-person"></i> Sürücülər
-                </a>
+                    <div class="nav-label">İDARƏETMƏ</div>
 
-                @if($role == 'admin')
-                    <div class="nav-label">İdarəetmə</div>
-                    <a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'active' : '' }}">
-                        <i class="bi bi-people"></i> İşçilər
-                    </a>
-                @endif
+                    <div class="nav-item {{ request()->routeIs('buses.*') ? 'active' : '' }}">
+                        <a href="{{ route('buses.index') }}">
+                            <i class="fas fa-bus"></i>
+                            <span>Avtobuslar</span>
+                        </a>
+                    </div>
 
-                <hr>
-                <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">
-                    <i class="bi bi-person"></i> Profil
-                </a>
+                    <div class="nav-item {{ request()->routeIs('complaints.*') ? 'active' : '' }}">
+                        <a href="{{ route('complaints.index') }}">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Kartlar</span>
+                        </a>
+                    </div>
 
-                <hr>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-box-arrow-right"></i> Çıxış
-                    </button>
-                </form>
-            @endauth
+                    <div class="nav-item {{ request()->routeIs('warehouses.*') ? 'active' : '' }}">
+                        <a href="{{ route('warehouses.index') }}">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Anbar</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-label">TEXNİKİ XİDMƏT</div>
+
+                    <div class="nav-item {{ request()->routeIs('motor-oil.*') ? 'active' : '' }}">
+                        <a href="{{ route('motor-oil.index') }}">
+                            <i class="fas fa-oil-can"></i>
+                            <span>Motor Yağı</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item {{ request()->routeIs('bus-daily-statuses.*') ? 'active' : '' }}">
+                        <a href="{{ route('bus-daily-statuses.index') }}">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Gündəlik Status</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item {{ request()->routeIs('daily-km-records.*') ? 'active' : '' }}">
+                        <a href="{{ route('daily-km-records.index') }}">
+                            <i class="fas fa-road"></i>
+                            <span>Gündəlik KM</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item {{ request()->routeIs('drivers.*') ? 'active' : '' }}">
+                        <a href="{{ route('drivers.index') }}">
+                            <i class="fas fa-id-card"></i>
+                            <span>Sürücülər</span>
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <div class="nav-label">SİSTEM</div>
+
+                    <div class="nav-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
+                        <a href="{{ route('employees.index') }}">
+                            <i class="fas fa-users"></i>
+                            <span>İşçilər</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                        <a href="{{ route('profile.edit') }}">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Profil</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-item">
+                        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Çıxış</span>
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="col content-wrapper">
+                @yield('content')
+            </div>
         </div>
-
-        <!-- CONTENT -->
-        <div class="col-md-10 content">
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            @yield('content')
-        </div>
-    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

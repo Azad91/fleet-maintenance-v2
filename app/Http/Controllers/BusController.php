@@ -12,7 +12,8 @@ class BusController extends Controller
     // ====== INDEX ======
     public function index()
     {
-        $buses = Bus::orderBy('id')->get(); // Pagination yoxdur, hamısı bir səhifədə
+        // 🔥 DƏYİŞİKLİK: paginate(50) əlavə edildi
+        $buses = Bus::orderBy('id', 'desc')->paginate(50);
         return view('buses.index', compact('buses'));
     }
 

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ComplaintsImport;
 use App\Models\Employee;
+use Illuminate\Validation\ValidationException;
 
 class ComplaintController extends Controller
 {
@@ -99,6 +100,15 @@ class ComplaintController extends Controller
                 foreach ($request->detallar as $detal) {
                     if (!empty($detal['kodu'])) {
                         $warehouse = Warehouse::where('kod', $detal['kodu'])->lockForUpdate()->first();
+
+                        // 🔥 MƏNFİ STOK YOXLANIŞI (ƏLAVƏ EDİLDİ)
+                        $usedQuantity = (int) ($detal['islenen_miqdar'] ?? 0);
+                        if ($warehouse && $warehouse->miqdar < $usedQuantity) {
+                            throw ValidationException::withMessages([
+                                'detallar' => "Anbarda kifayət qədər '{$warehouse->ad}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->miqdar})"
+                            ]);
+                        }
+
                         $detallar[] = [
                             'shikayet_index' => $detal['shikayet_index'] ?? 0,
                             'kodu' => $detal['kodu'],
@@ -114,7 +124,8 @@ class ComplaintController extends Controller
                         }
                     }
                 }
-                $data['detallar'] = json_encode($detallar, JSON_UNESCAPED_UNICODE);
+                // 🔥 JSON MƏNTİQİ TƏMİZLƏNDİ (model casts 'array' olduğu üçün)
+                $data['detallar'] = $detallar; // əvvəl: json_encode(...)
             } else {
                 $data['detallar'] = null;
             }
@@ -206,12 +217,21 @@ class ComplaintController extends Controller
                 }
             }
 
-            // Yeni detalları saxla
+            // Yeni detalları saxla (mənfi yoxlanışı ilə)
             if (!empty($validated['detallar']) && is_array($validated['detallar'])) {
                 $detallar = [];
                 foreach ($validated['detallar'] as $detal) {
                     if (!empty($detal['kodu'])) {
                         $warehouse = Warehouse::where('kod', $detal['kodu'])->lockForUpdate()->first();
+
+                        // 🔥 MƏNFİ STOK YOXLANIŞI (ƏLAVƏ EDİLDİ)
+                        $usedQuantity = (int) ($detal['islenen_miqdar'] ?? 0);
+                        if ($warehouse && $warehouse->miqdar < $usedQuantity) {
+                            throw ValidationException::withMessages([
+                                'detallar' => "Anbarda kifayət qədər '{$warehouse->ad}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->miqdar})"
+                            ]);
+                        }
+
                         $detallar[] = [
                             'shikayet_index' => $detal['shikayet_index'] ?? 0,
                             'kodu' => $detal['kodu'],
@@ -227,7 +247,8 @@ class ComplaintController extends Controller
                         }
                     }
                 }
-                $complaint->detallar = json_encode($detallar, JSON_UNESCAPED_UNICODE);
+                // 🔥 JSON MƏNTİQİ TƏMİZLƏNDİ
+                $complaint->detallar = $detallar; // əvvəl: json_encode(...)
             } else {
                 $complaint->detallar = null;
             }
@@ -245,11 +266,35 @@ class ComplaintController extends Controller
         return redirect('/complaints')->with('success', 'Şikayət uğurla yeniləndi!');
     }
 
+    // 🔥 DESTROY METODU (STOK GERİ QAYTARILIR)
     public function destroy($id)
     {
         $complaint = Complaint::findOrFail($id);
-        $complaint->delete();
-        return redirect()->route('complaints.index')->with('success', 'Şikayət uğurla silindi!');
+
+        DB::transaction(function () use ($complaint) {
+            // 1. Silinən şikayətin detallarını geri qaytar
+            $detallar = $complaint->detallar ?? [];
+            if (is_string($detallar)) {
+                $detallar = json_decode($detallar, true) ?? [];
+            }
+
+            if (is_array($detallar)) {
+                foreach ($detallar as $detal) {
+                    if (!empty($detal['kodu']) && !empty($detal['islenen_miqdar']) && $detal['islenen_miqdar'] > 0) {
+                        $warehouse = Warehouse::where('kod', $detal['kodu'])->lockForUpdate()->first();
+                        if ($warehouse) {
+                            $warehouse->miqdar = $warehouse->miqdar + $detal['islenen_miqdar'];
+                            $warehouse->save();
+                        }
+                    }
+                }
+            }
+
+            // 2. Şikayəti sil
+            $complaint->delete();
+        });
+
+        return redirect()->route('complaints.index')->with('success', 'Şikayət uğurla silindi! Anbar yeniləndi.');
     }
 
     // =============== IMPORT ===============

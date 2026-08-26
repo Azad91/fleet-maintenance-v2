@@ -3,113 +3,123 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">🚀 Dashboard</h1>
-    </div>
+<div class="page-header">
+    <h1>Dashboard <small>Avtobus parkınızın ümumi vəziyyəti</small></h1>
 </div>
 
-<!-- Stat Cards -->
+<!-- Statistik Kartlar -->
 <div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card stat-card bg-primary-gradient">
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="stat-card primary">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="count">{{ $totalBuses ?? 0 }}</div>
-                    <div class="label">🚌 Avtobuslar</div>
+                    <div class="stat-count">{{ $totalBuses }}</div>
+                    <div class="stat-label">Cəmi Avtobus</div>
                 </div>
-                <div class="icon"><i class="bi bi-bus-front"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-bus"></i>
+                </div>
             </div>
+            <div class="stat-change up">+{{ $activeBuses }} aktiv</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card bg-warning-gradient">
+
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="stat-card warning">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="count">{{ $totalComplaints ?? 0 }}</div>
-                    <div class="label">📋 Şikayətlər</div>
+                    <div class="stat-count">{{ $activeComplaints }}</div>
+                    <div class="stat-label">Açıq Şikayət</div>
                 </div>
-                <div class="icon"><i class="bi bi-clipboard"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
             </div>
+            <div class="stat-change down">Gözləmədə olanlar</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card bg-success-gradient">
+
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="stat-card danger">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="count">{{ $totalWarehouses ?? 0 }}</div>
-                    <div class="label">📦 Anbar Məhsulları</div>
+                    <div class="stat-count">{{ $lowStockItems->count() }}</div>
+                    <div class="stat-label">Tükənən Məhsul</div>
                 </div>
-                <div class="icon"><i class="bi bi-box-seam"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
             </div>
+            <div class="stat-change down">Kritik səviyyə</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card bg-info-gradient">
+
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="stat-card info">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <div class="count">{{ $lowStockItems->count() ?? 0 }}</div>
-                    <div class="label">⚠️ Tükənən Məhsullar</div>
+                    <div class="stat-count">{{ $totalWarehouseItems }}</div>
+                    <div class="stat-label">Anbar Məhsulları</div>
                 </div>
-                <div class="icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
             </div>
+            <div class="stat-change up">Ümumi miqdar</div>
         </div>
     </div>
 </div>
 
-<!-- Son Avtobuslar -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">🚌 Son Avtobuslar</h5>
-        <a href="{{ route('buses.index') }}" class="btn btn-sm btn-primary">Hamısına Bax</a>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Xətt №</th>
-                        <th>DQN</th>
-                        <th>Sürücü</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($recentBuses ?? [] as $bus)
-                    <tr>
-                        <td>{{ $bus->id }}</td>
-                        <td>{{ $bus->xett_no ?? '-' }}</td>
-                        <td><strong>{{ $bus->dqn }}</strong></td>
-                        <td>{{ $bus->surucu_adi ?? '-' }}</td>
-                        <td>
-                            <span class="badge-status {{ $bus->aktiv ? 'aktiv' : 'passiv' }}">
-                                {{ $bus->aktiv ? '✅ Aktiv' : '❌ Passiv' }}
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">Hələ avtobus yoxdur</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Son Şikayətlər + Tükənən Məhsullar -->
-<div class="row g-4">
-    <div class="col-md-6">
+<!-- Son Avtobuslar və Tükənən Məhsullar -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">📋 Son Şikayətlər</h5>
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-bus"></i> Son Avtobuslar</span>
+                <a href="{{ route('buses.index') }}" class="btn btn-sm btn-primary">Hamısına Bax</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Xətt №</th>
+                                <th>DQN</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentBuses as $bus)
+                            <tr>
+                                <td>{{ $bus->xett_no ?? '-' }}</td>
+                                <td><strong>{{ $bus->dqn }}</strong></td>
+                                <td>
+                                    @if($bus->aktiv)
+                                        <span class="badge-status aktiv">Aktiv</span>
+                                    @else
+                                        <span class="badge-status passiv">Passiv</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="3" class="text-center text-muted py-3">Hələ avtobus yoxdur</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-clipboard-list"></i> Son Şikayətlər</span>
                 <a href="{{ route('complaints.index') }}" class="btn btn-sm btn-primary">Hamısına Bax</a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Avtobus</th>
@@ -118,20 +128,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($recentComplaints ?? [] as $complaint)
+                            @forelse($recentComplaints as $complaint)
                             <tr>
-                                <td><strong>{{ $complaint->bus->dqn ?? '-' }}</strong></td>
-                                <td>{{ Str::limit($complaint->shikayet ?? '-', 20) }}</td>
+                                <td>{{ $complaint->bus->dqn ?? '-' }}</td>
+                                <td>{{ Str::limit($complaint->shikayet, 30) }}</td>
                                 <td>
-                                    <span class="badge-status {{ str_replace(' ', '-', $complaint->status) }}">
+                                    <span class="badge-status {{ $complaint->status }}">
                                         {{ $complaint->status }}
                                     </span>
                                 </td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">Hələ şikayət yoxdur</td>
-                            </tr>
+                            <tr><td colspan="3" class="text-center text-muted py-3">Hələ şikayət yoxdur</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -139,43 +147,52 @@
             </div>
         </div>
     </div>
+</div>
 
-    <div class="col-md-6">
+<!-- Bildirişlər (Təkrarlanan nasazlıqlar, KM daxil edilməyənlər) -->
+<div class="row g-4">
+    @if($recurringIssues->count() > 0)
+    <div class="col-xl-6">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">⚠️ Tükənən Məhsullar</h5>
-                <a href="{{ route('warehouses.index') }}" class="btn btn-sm btn-primary">Hamısına Bax</a>
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-repeat text-warning"></i> Təkrarlanan Nasazlıqlar</span>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Kod</th>
-                                <th>Ad</th>
-                                <th>Miqdar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($lowStockItems ?? [] as $item)
-                            <tr>
-                                <td><strong>{{ $item->kod }}</strong></td>
-                                <td>{{ $item->ad }}</td>
-                                <td>
-                                    <span class="text-danger">{{ $item->miqdar }}</span>
-                                    <small class="text-muted">(min: {{ $item->minimum_miqdar }})</small>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">✅ Bütün məhsullar kifayət qədərdir</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                @foreach($recurringIssues as $issue)
+                <div class="notification-card warning">
+                    <div class="notif-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-title">{{ $issue->bus->dqn ?? 'Bilinməyən' }}</div>
+                        <div class="notif-desc">{{ $issue->shikayet }} ({{ $issue->total }} dəfə)</div>
+                        <div class="notif-time">Son 30 gündə</div>
+                    </div>
                 </div>
+                @endforeach
             </div>
         </div>
     </div>
+    @endif
+
+    @if($busesWithoutKmToday->count() > 0)
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-road text-danger"></i> Bu gün KM daxil edilməyənlər</span>
+            </div>
+            <div class="card-body">
+                @foreach($busesWithoutKmToday as $bus)
+                <div class="notification-card critical">
+                    <div class="notif-icon"><i class="fas fa-bus"></i></div>
+                    <div class="notif-content">
+                        <div class="notif-title">{{ $bus->dqn }}</div>
+                        <div class="notif-desc">Bu gün üçün KM məlumatı daxil edilməyib</div>
+                        <div class="notif-time">Xətt: {{ $bus->xett_no ?? '-' }}</div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection
