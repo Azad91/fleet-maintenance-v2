@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\Warehouse;
+use App\Models\DailyKmRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,29 +13,29 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Statistik məlumatlar
+        // 1. Statistik məlumatlar (kartlar üçün)
         $totalBuses = Bus::count();
         $activeBuses = Bus::where('aktiv', true)->count();
         $activeComplaints = Complaint::where('status', '!=', 'həll olundu')->count();
         $totalWarehouseItems = Warehouse::sum('miqdar');
 
-        // 2. Son 5 avtobus
+        // 2. Son 5 avtobus (həmişə göstərilir)
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();
 
-        // 3. Son 5 şikayət
-        $recentComplaints = Complaint::with('bus')
-            ->orderBy('id', 'desc')
-            ->limit(5)
-            ->get();
-
-        // 4. Tükənən məhsullar (minimum miqdar 5-dən az olanlar)
+        // 3. Kritik stok (5-dən az)
         $lowStockItems = Warehouse::where('miqdar', '<', 5)
             ->orderBy('miqdar', 'asc')
             ->limit(10)
             ->get();
 
-        // 5. Təkrarlanan nasazlıqlar - son 30 gündə eyni avtobusda 2+ dəfə
-        // 🔥 DÜZƏLİŞ: PostgreSQL ilə uyğun
+        // 4. Açıq şikayətlər (bağlanmamış)
+        $openComplaints = Complaint::with('bus')
+            ->where('status', '!=', 'həll olundu')
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get();
+
+        // 5. Təkrarlanan nasazlıqlar
         $recurringIssues = Complaint::select(
                 'bus_id',
                 'shikayet',
@@ -60,8 +61,8 @@ class DashboardController extends Controller
             'activeComplaints',
             'totalWarehouseItems',
             'recentBuses',
-            'recentComplaints',
             'lowStockItems',
+            'openComplaints',
             'recurringIssues',
             'busesWithoutKmToday'
         ));
