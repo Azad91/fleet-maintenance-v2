@@ -25,27 +25,27 @@
                         <th></th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="bus_project"
-                                   placeholder="🔍 Layihə..." style="font-size: 13px;">
+                                placeholder="🔍 Layihə..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="vin"
-                                   placeholder="🔍 Şassi..." style="font-size: 13px;">
+                                placeholder="🔍 Şassi..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="uzunluq"
-                                   placeholder="🔍 Uzunluq..." style="font-size: 13px;">
+                                placeholder="🔍 Uzunluq..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="xett_no"
-                                   placeholder="🔍 Xətt..." style="font-size: 13px;">
+                                placeholder="🔍 Xətt..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="dqn"
-                                   placeholder="🔍 DQN..." style="font-size: 13px;">
+                                placeholder="🔍 DQN..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="motor_no"
-                                   placeholder="🔍 Motor..." style="font-size: 13px;">
+                                placeholder="🔍 Motor..." style="font-size: 13px;">
                         </th>
                         <th style="text-align: center;"></th>
                         <th style="text-align: center;"></th>

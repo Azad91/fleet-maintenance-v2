@@ -48,7 +48,6 @@ class BusController extends Controller
             $query->where('motor_no', 'ILIKE', "%{$motor_no}%");
         }
 
-        // 🔥 DƏYİŞİKLİK: get() əvəzinə paginate(50)
         $buses = $query->orderBy('id', 'desc')->paginate(50);
         $isEmpty = $buses->isEmpty();
 
@@ -57,7 +56,7 @@ class BusController extends Controller
         }
 
         return view('buses.index', compact('buses'));
-    }
+}
 
     // ====== SHOW ======
     public function show($id)

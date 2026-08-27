@@ -19,16 +19,13 @@
 <div class="pagination-wrapper d-flex justify-content-center mt-4">
     {{ $buses->withQueryString()->links() }}
 </div>
-@endsection
-
-@section('scripts')
 <script>
     let searchTimeout;
 
     function filterTable() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
-            const inputs = document.querySelectorAll('#searchResults input');
+            const inputs = document.querySelectorAll('#busTableFilter input');
             const params = new URLSearchParams();
 
             inputs.forEach(input => {
@@ -37,36 +34,32 @@
                 }
             });
 
-            fetch(window.location.origin + '/buses/search?' + params.toString())
+            fetch('/buses/search?' + params.toString())
                 .then(response => response.text())
                 .then(html => {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    const newTbody = tempDiv.querySelector('tbody');
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTbody = doc.querySelector('tbody');
+                    const newPagination = doc.querySelector('.pagination-wrapper');
 
                     if (newTbody) {
-                        const existingTbody = document.querySelector('#searchResults tbody');
-                        if (existingTbody) {
-                            existingTbody.innerHTML = newTbody.innerHTML;
-                        }
+                        document.querySelector('#searchResults tbody').innerHTML = newTbody.innerHTML;
                     }
-
-                    attachInputEvents();
+                    if (newPagination) {
+                        document.querySelector('.pagination-wrapper').innerHTML = newPagination.innerHTML;
+                    }
                 })
                 .catch(error => console.error('Xəta:', error));
-        }, 200);
-    }
-
-    function attachInputEvents() {
-        const inputs = document.querySelectorAll('#searchResults input');
-        inputs.forEach(input => {
-            input.removeEventListener('input', filterTable);
-            input.addEventListener('input', filterTable);
-        });
+        }, 300);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        attachInputEvents();
+        const inputs = document.querySelectorAll('#busTableFilter input');
+        inputs.forEach(input => {
+            input.addEventListener('input', filterTable);
+        });
     });
 </script>
 @endsection
+
+
