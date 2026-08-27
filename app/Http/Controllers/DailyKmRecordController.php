@@ -24,10 +24,7 @@ class DailyKmRecordController extends Controller
             });
         }
 
-        // GET() ƏVƏZİNƏ PAGINATE() İSTİFADƏ EDİRİK
-        // Hər səhifədə 100 qeyd göstər
         $records = $query->orderBy('tarix', 'desc')->paginate(100);
-
         return view('daily-km-records.index', compact('records', 'search'));
     }
 
@@ -41,9 +38,30 @@ class DailyKmRecordController extends Controller
     {
         $validated = $request->validate([
             'bus_id' => 'required|exists:buses,id',
-            'tarix'  => 'required|date',
-            'km'     => 'required|integer|min:0',
+            'tarix' => 'required|date',
+            'km' => 'required|integer|min:0',
         ]);
+
+        // 🔥 BİZNES QAYDASI: Yeni KM əvvəlki KM-dən böyük olmalıdır
+        $bus = Bus::findOrFail($request->bus_id);
+        $lastKm = $bus->dailyKmRecords()->orderBy('tarix', 'desc')->first();
+
+        if ($lastKm && $request->km <= $lastKm->km) {
+            return back()->withErrors([
+                'km' => "Yeni KM dəyəri ({$request->km}) əvvəlki KM-dən ({$lastKm->km}) böyük olmalıdır!"
+            ])->withInput();
+        }
+
+        // 🔥 BİZNES QAYDASI: Eyni günə 2-ci qeyd əngəllənsin
+        $exists = DailyKmRecord::where('bus_id', $request->bus_id)
+            ->whereDate('tarix', $request->tarix)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors([
+                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq KM qeydi var!"
+            ])->withInput();
+        }
 
         DailyKmRecord::create($validated);
         return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatı uğurla əlavə edildi!');
@@ -51,14 +69,10 @@ class DailyKmRecordController extends Controller
 
     public function show($id)
     {
-        // 1. Cari qeydi tap
         $record = DailyKmRecord::with('bus')->findOrFail($id);
-
-        // 2. Həmin avtobusa aid BÜTÜN qeydləri götür (tarixə görə sırala)
         $history = DailyKmRecord::where('bus_id', $record->bus_id)
                     ->orderBy('tarix', 'desc')
                     ->get();
-
         return view('daily-km-records.show', compact('record', 'history'));
     }
 
@@ -72,11 +86,38 @@ class DailyKmRecordController extends Controller
     public function update(Request $request, $id)
     {
         $record = DailyKmRecord::findOrFail($id);
+
         $validated = $request->validate([
             'bus_id' => 'required|exists:buses,id',
-            'tarix'  => 'required|date',
-            'km'     => 'required|integer|min:0',
+            'tarix' => 'required|date',
+            'km' => 'required|integer|min:0',
         ]);
+
+        // 🔥 BİZNES QAYDASI: Yenilənən KM əvvəlki KM-dən böyük olmalıdır
+        $bus = Bus::findOrFail($request->bus_id);
+        $lastKm = $bus->dailyKmRecords()
+            ->where('id', '!=', $id) // Özünü nəzərə alma
+            ->orderBy('tarix', 'desc')
+            ->first();
+
+        if ($lastKm && $request->km <= $lastKm->km) {
+            return back()->withErrors([
+                'km' => "Yeni KM dəyəri ({$request->km}) əvvəlki KM-dən ({$lastKm->km}) böyük olmalıdır!"
+            ])->withInput();
+        }
+
+        // 🔥 BİZNES QAYDASI: Eyni günə başqa qeyd varsa (özündən başqa)
+        $exists = DailyKmRecord::where('bus_id', $request->bus_id)
+            ->where('id', '!=', $id)
+            ->whereDate('tarix', $request->tarix)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors([
+                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq KM qeydi var!"
+            ])->withInput();
+        }
+
         $record->update($validated);
         return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatı yeniləndi!');
     }
@@ -90,13 +131,12 @@ class DailyKmRecordController extends Controller
 
     public function importForm()
     {
-        set_time_limit(600); // 10 dəqiqə vaxt ver
+        set_time_limit(600);
         return view('daily-km-records.import');
     }
 
     public function import(Request $request)
     {
-        // VAXT VƏ YADDAŞ LİMİTİNİ 30 DƏQİQƏYƏ ÇIXAR
         set_time_limit(1800);
         ini_set('memory_limit', '1024M');
 
