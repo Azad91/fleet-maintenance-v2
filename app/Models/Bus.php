@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Bus extends Model
 {
-    use HasFactory;
+    use HasFactory, HasGarageScope;
 
     protected $fillable = [
+        'garage_id',
+        'company_id',
         'bus_project',
         'vin',
         'uzunluq',
@@ -24,11 +27,9 @@ class Bus extends Model
     protected $casts = [
         'aktiv' => 'boolean',
         'tarix' => 'date',
-        'detallar' => 'array',
         'km' => 'integer',
     ];
 
-    // ==================== RELATIONSHIPS ====================
     public function complaints()
     {
         return $this->hasMany(Complaint::class);
@@ -44,25 +45,16 @@ class Bus extends Model
         return $this->hasMany(BusDailyStatus::class)->orderBy('tarix', 'desc');
     }
 
-    // ==================== ƏN SON MƏLUMATLARI ALMAQ ÜÇÜN ====================
     public function latestKmRecord()
     {
         return $this->hasOne(DailyKmRecord::class)->latest('tarix');
     }
 
-    // Ən son KM dəyərini almaq üçün aksessor
     public function getLatestKmAttribute()
     {
         return $this->latestKmRecord?->km;
     }
 
-    // Ən son statusu almaq üçün aksessor
-    public function getLatestStatusAttribute()
-    {
-        return $this->dailyStatuses()->first();
-    }
-
-    // ==================== SCOPES ====================
     public function scopeActive($query)
     {
         return $query->where('aktiv', true);

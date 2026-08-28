@@ -43,6 +43,19 @@
                     </div>
                 </div>
 
+                @if(session('current_garage_name'))
+                <div class="px-3 py-2 mb-3">
+                    <div class="bg-dark rounded p-2">
+                        <small class="text-muted d-block">🏠 Cari Qaraj</small>
+                        <div class="text-white fw-bold">{{ session('current_garage_name') }}</div>
+                        <div class="text-muted small">{{ session('current_company_name') ?? '' }}</div>
+                        <a href="{{ route('garage.selection') }}" class="text-warning small text-decoration-none">
+                            <i class="fas fa-exchange-alt"></i> Dəyiş
+                        </a>
+                    </div>
+                </div>
+                @endif
+
                 <!-- Navigation -->
                 <nav class="nav flex-column">
                     <div class="nav-label">ƏSAS</div>

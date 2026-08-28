@@ -36,7 +36,6 @@ class ComplaintStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
-            // Ümumi mesajlar
             'bus_id.required' => 'Avtobus seçilməlidir.',
             'bus_id.exists' => 'Seçilən avtobus mövcud deyil.',
             'yer.required' => 'Yer seçilməlidir.',
@@ -44,7 +43,6 @@ class ComplaintStoreRequest extends FormRequest
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
-            'shikayet.*.max' => 'Hər şikayət 1000 simvoldan çox ola bilməz.',
             'sikayet_tipi.in' => 'Şikayət tipi düzgün seçilməyib.',
             'status.required' => 'Status seçilməlidir.',
             'status.in' => 'Status düzgün seçilməyib.',
@@ -55,7 +53,6 @@ class ComplaintStoreRequest extends FormRequest
             'service_km.required_if' => 'Servis şablonu seçilibsə, servis km-i məcburidir!',
             'service_km.integer' => 'Servis km-i tam ədəd olmalıdır.',
             'service_km.min' => 'Servis km-i 0-dan kiçik ola bilməz.',
-            // Xüsusi mesajlar (status ilə bağlı)
             'is_bitme_tarix.required_if' => 'Şikayət "həll olundu" statusuna keçərsə, bitmə tarixi məcburidir!',
             'is_bitme_saat.required_if' => 'Şikayət "həll olundu" statusuna keçərsə, bitmə saatı məcburidir!',
         ];

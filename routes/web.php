@@ -12,6 +12,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\BusDailyStatusController;
 use App\Http\Controllers\DailyKmRecordController;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\GarageSelectionController;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,12 +33,22 @@ require __DIR__.'/auth.php';
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes
+| Garage Selection Routes (Auth required, NO garage middleware)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    Route::get('/select-garage', [GarageSelectionController::class, 'index'])->name('garage.selection');
+    Route::post('/select-garage', [GarageSelectionController::class, 'selectGarage'])->name('garage.select');
+});
 
-    // 🔥 DASHBOARD - AUTH QRUQU İÇİNDƏ
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes (Auth + Garage Selected)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'garage.selected'])->group(function () {
+
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profile
@@ -46,8 +58,6 @@ Route::middleware(['auth'])->group(function () {
 
     // ==================== BUS ROUTES ====================
     Route::prefix('buses')->name('buses.')->group(function () {
-
-        // Qrup 1: Yalnız Admin üçün CRUD və Import
         Route::middleware(['role:admin'])->group(function () {
             Route::get('/import', [BusController::class, 'importForm'])->name('import');
             Route::post('/import', [BusController::class, 'import'])->name('import.store');
@@ -58,7 +68,6 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{bus}', [BusController::class, 'destroy'])->name('destroy');
         });
 
-        // Qrup 2: Admin, Bus, Directorate üçün baxış
         Route::middleware(['role:admin,bus,directorate'])->group(function () {
             Route::get('/', [BusController::class, 'index'])->name('index');
             Route::get('/search', [BusController::class, 'search'])->name('search');
@@ -223,5 +232,4 @@ Route::middleware(['auth'])->group(function () {
             'driver_id' => $driver ? $driver->id : null,
         ]);
     })->name('get.driver.by.kod');
-
-}); // 🔥 Bu qapayıcı mötərizə əhəmiyyətlidir!
+});

@@ -2,64 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 
 class Warehouse extends Model
 {
-    use HasFactory;
+    use HasGarageScope;
 
     protected $fillable = [
-        'kod',
-        'ad',
-        'kateqoriya',
-        'olcu_vahidi',
-        'miqdar',
-        'minimum_miqdar',
-        'qiymet',
-        'tedarikci',
-        'qeyd',
+        'garage_id',
+        'company_id',
+        'name',
+        'code',
+        'type',
+        'address',
+        'is_active',
     ];
 
-    protected $casts = [
-        'miqdar' => 'integer',
-        'minimum_miqdar' => 'integer',
-        'qiymet' => 'decimal:2',
-    ];
-
-    // ==================== ACCESSORS ====================
-    public function getTotalPriceAttribute()
+    public function garage()
     {
-        return $this->miqdar * $this->qiymet;
+        return $this->belongsTo(Garage::class);
     }
 
-    public function getStatusAttribute()
+    public function stockBalances()
     {
-        if ($this->miqdar <= 0) {
-            return 'empty';
-        } elseif ($this->miqdar <= $this->minimum_miqdar) {
-            return 'low';
-        }
-        return 'normal';
+        return $this->hasMany(StockBalance::class);
     }
 
-    public function getStatusLabelAttribute()
+    public function stockMovements()
     {
-        return match($this->status) {
-            'empty' => '🔴 Bitib',
-            'low' => '🟡 Tükənir',
-            default => '🟢 Normal',
-        };
-    }
-
-    // ==================== SCOPES ====================
-    public function scopeLowStock($query)
-    {
-        return $query->whereColumn('miqdar', '<=', 'minimum_miqdar');
-    }
-
-    public function scopeEmptyStock($query)
-    {
-        return $query->where('miqdar', 0);
+        return $this->hasMany(StockMovement::class);
     }
 }

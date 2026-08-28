@@ -63,4 +63,36 @@ class User extends Authenticatable
     {
         return in_array($this->role, $roles);
     }
+    // app/Models/User.php - class User daxilinə əlavə et:
+
+public function garages()
+{
+    return $this->belongsToMany(Garage::class, 'garage_user')->withPivot('role', 'is_active')->withTimestamps();
+}
+
+public function currentGarage()
+{
+    return $this->belongsTo(Garage::class, 'current_garage_id');
+}
+
+public function currentCompany()
+{
+    return $this->belongsTo(Company::class, 'current_company_id');
+}
+
+public function setCurrentGarage(Garage $garage): void
+{
+    $this->update([
+        'current_garage_id' => $garage->id,
+        'current_company_id' => $garage->company_id,
+        'last_selected_garage_at' => now(),
+    ]);
+
+    session([
+        'current_garage_id' => $garage->id,
+        'current_garage_name' => $garage->name,
+        'current_company_id' => $garage->company_id,
+        'current_company_name' => $garage->company->name,
+    ]);
+}
 }
