@@ -76,7 +76,12 @@ class BusController extends Controller
     {
         $data = $request->validated();
         $data['tarix'] = now()->format('Y-m-d');
+
+        // 🔥 QARAJ ID AVTOMATİK YAZ
+        $data = $this->addGarageContext($data);
+
         Bus::create($data);
+
         return redirect()->route('buses.index')->with('success', 'Avtobus uğurla əlavə edildi!');
     }
 
@@ -92,7 +97,13 @@ class BusController extends Controller
     {
         $bus = Bus::findOrFail($id);
         $data = $request->validated();
+
+        // 🔥 QARAJ ID YENİLƏNMƏSİN (əgər istəmirsənsə)
+        // $data['garage_id'] = session('current_garage_id');
+        // $data['company_id'] = session('current_company_id');
+
         $bus->update($data);
+
         return redirect()->route('buses.index')->with('success', 'Avtobus uğurla yeniləndi!');
     }
 

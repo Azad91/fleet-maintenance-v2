@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Complaint extends Model
 {
@@ -31,6 +32,8 @@ class Complaint extends Model
         'service_template_id',
         'service_km',
         'qeyd',
+        'closed_at',
+        'closed_by',
     ];
 
     protected $casts = [
@@ -38,10 +41,77 @@ class Complaint extends Model
         'bildirilme_tarix' => 'date',
         'is_baslama_tarix' => 'date',
         'is_bitme_tarix' => 'date',
+        'closed_at' => 'datetime',
     ];
 
+    // ==================== ƏLAQƏLƏR ====================
     public function bus()
     {
         return $this->belongsTo(Bus::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function serviceTemplate()
+    {
+        return $this->belongsTo(ServiceTemplate::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function closer()
+    {
+        return $this->belongsTo(User::class, 'closed_by');
+    }
+
+    // ==================== SKOPLAR ====================
+    public function scopeOpen($query)
+    {
+        return $query->where('status', '!=', 'həll olundu');
+    }
+
+    public function scopeClosed($query)
+    {
+        return $query->where('status', 'həll olundu');
+    }
+
+    public function scopeByType($query, $type)
+    {
+        return $query->where('sikayet_tipi', $type);
+    }
+
+    // ==================== AKSESSORLAR ====================
+    public function getIsOpenAttribute()
+    {
+        return $this->status !== 'həll olundu';
+    }
+
+    public function getDurationAttribute()
+    {
+        if ($this->is_baslama_tarix && $this->is_bitme_tarix) {
+            return $this->is_baslama_tarix->diffInDays($this->is_bitme_tarix) . ' gün';
+        }
+        return '-';
+    }
+
+    // ==================== EVENT (Audit Log üçün) ====================
+    protected static function booted()
+    {
+        static::updating(function ($complaint) {
+            // Yalnız status dəyişərsə
+            if ($complaint->isDirty('status')) {
+                $oldStatus = $complaint->getOriginal('status');
+                $newStatus = $complaint->status;
+
+                // Audit log əlavə et (sonra implement edəcəyik)
+                // \App\Models\AuditLog::create([...]);
+            }
+        });
     }
 }

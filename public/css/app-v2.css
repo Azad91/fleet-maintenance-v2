@@ -393,7 +393,7 @@ body {
    5. CONTENT WRAPPER - AÇIQ FON
    ================================================================ */
 .content-wrapper {
-    padding: 32px 38px 50px;
+    padding: 7px;
     min-height: 100vh;
     background: var(--bg-content);
 }
@@ -1379,9 +1379,9 @@ body {
    ============================================ */
 
 .dashboard-clean {
-    background: #0f1117 !important;
+    background: #15161a !important;
     padding: 20px;
-    border-radius: 16px;
+    border-radius: 5px;
     min-height: 100vh;
 }
 

@@ -94,6 +94,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         });
     });
 
+    Route::post('/complaints/{complaint}/close', [ComplaintController::class, 'close'])->name('complaints.close');
+
     // ==================== COMPLAINT TYPES ====================
     Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:admin'])->group(function () {
         Route::get('/import', [ComplaintTypeController::class, 'importForm'])->name('import');

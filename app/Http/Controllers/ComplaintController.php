@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ComplaintsImport;
 use App\Models\Employee;
 use Illuminate\Validation\ValidationException;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ComplaintController extends Controller
 {
@@ -93,6 +94,9 @@ class ComplaintController extends Controller
             $data['service_km'] = $request->service_km;
         }
 
+        // 🔥 KİM AÇDI?
+        $data['created_by'] = auth()->id();
+
         DB::transaction(function () use ($request, &$data) {
             // Detalları JSON olaraq saxla (anbar əməliyyatları ilə birlikdə)
             if ($request->has('detallar') && is_array($request->detallar)) {
@@ -101,7 +105,7 @@ class ComplaintController extends Controller
                     if (!empty($detal['kodu'])) {
                         $warehouse = Warehouse::where('kod', $detal['kodu'])->lockForUpdate()->first();
 
-                        // 🔥 MƏNFİ STOK YOXLANIŞI (ƏLAVƏ EDİLDİ)
+                        // 🔥 MƏNFİ STOK YOXLANIŞI
                         $usedQuantity = (int) ($detal['islenen_miqdar'] ?? 0);
                         if ($warehouse && $warehouse->miqdar < $usedQuantity) {
                             throw ValidationException::withMessages([
@@ -124,8 +128,7 @@ class ComplaintController extends Controller
                         }
                     }
                 }
-                // 🔥 JSON MƏNTİQİ TƏMİZLƏNDİ (model casts 'array' olduğu üçün)
-                $data['detallar'] = $detallar; // əvvəl: json_encode(...)
+                $data['detallar'] = $detallar;
             } else {
                 $data['detallar'] = null;
             }
@@ -224,7 +227,7 @@ class ComplaintController extends Controller
                     if (!empty($detal['kodu'])) {
                         $warehouse = Warehouse::where('kod', $detal['kodu'])->lockForUpdate()->first();
 
-                        // 🔥 MƏNFİ STOK YOXLANIŞI (ƏLAVƏ EDİLDİ)
+                        // 🔥 MƏNFİ STOK YOXLANIŞI
                         $usedQuantity = (int) ($detal['islenen_miqdar'] ?? 0);
                         if ($warehouse && $warehouse->miqdar < $usedQuantity) {
                             throw ValidationException::withMessages([
@@ -247,8 +250,7 @@ class ComplaintController extends Controller
                         }
                     }
                 }
-                // 🔥 JSON MƏNTİQİ TƏMİZLƏNDİ
-                $complaint->detallar = $detallar; // əvvəl: json_encode(...)
+                $complaint->detallar = $detallar;
             } else {
                 $complaint->detallar = null;
             }
@@ -315,5 +317,84 @@ class ComplaintController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('complaints.index')->with('error', 'Xəta baş verdi: ' . $e->getMessage());
         }
+    }
+
+    // =============== BAĞLA (CLOSE) ===============
+    public function close(Request $request, $id)
+    {
+        $complaint = Complaint::findOrFail($id);
+
+        // Yalnız açıq şikayətlər bağlana bilər
+        if ($complaint->status === 'həll olundu') {
+            return back()->with('error', 'Bu şikayət artıq bağlanıb!');
+        }
+
+        $request->validate([
+            'is_bitme_tarix' => 'required|date',
+            'is_bitme_saat' => 'required|date_format:H:i',
+            'gorulen_is' => 'required|string|min:5',
+        ]);
+
+        // Detalları anbardan çıxar
+        $this->deductStock($complaint);
+
+        // Şikayəti bağla
+        $complaint->update([
+            'status' => 'həll olundu',
+            'is_bitme_tarix' => $request->is_bitme_tarix,
+            'is_bitme_saat' => $request->is_bitme_saat,
+            'kim_is_gorub' => $request->gorulen_is,
+            'closed_at' => now(),
+            'closed_by' => auth()->id(),
+        ]);
+
+        // PDF yarat
+        try {
+            $pdf = Pdf::loadView('complaints.akt', [
+                'complaint' => $complaint,
+                'company' => $complaint->company,
+                'garage' => $complaint->garage,
+            ]);
+
+            $pdfPath = storage_path("app/public/akt/akt-{$complaint->id}.pdf");
+            \Illuminate\Support\Facades\Storage::makeDirectory('public/akt');
+            $pdf->save($pdfPath);
+        } catch (\Exception $e) {
+            // PDF yaradılmasa belə davam et
+            \Log::error('PDF yaradılmadı: ' . $e->getMessage());
+        }
+
+        return redirect()->route('complaints.index')->with('success', '✅ Şikayət bağlandı! Akt PDF olaraq yaradıldı.');
+    }
+
+    // =============== STOKDAN ÇIXAR ===============
+    private function deductStock($complaint)
+    {
+        if ($complaint->detallar && is_array($complaint->detallar)) {
+            foreach ($complaint->detallar as $detal) {
+                if (!empty($detal['kodu']) && !empty($detal['islenen_miqdar'])) {
+                    $warehouse = Warehouse::where('kod', $detal['kodu'])->lockForUpdate()->first();
+                    if ($warehouse) {
+                        // 🔥 MƏNFİ STOK YOXLANIŞI
+                        if ($warehouse->miqdar < $detal['islenen_miqdar']) {
+                            throw ValidationException::withMessages([
+                                'detallar' => "Anbarda kifayət qədər '{$warehouse->ad}' yoxdur! (Mövcud: {$warehouse->miqdar}, Tələb: {$detal['islenen_miqdar']})"
+                            ]);
+                        }
+                        $warehouse->miqdar -= $detal['islenen_miqdar'];
+                        $warehouse->save();
+                    }
+                }
+            }
+        }
+    }
+
+    // =============== PDF YÜKLƏ ===============
+    public function downloadPdf($id)
+    {
+        $complaint = Complaint::with(['bus', 'employee'])->findOrFail($id);
+
+        $pdf = Pdf::loadView('complaints.akt', compact('complaint'));
+        return $pdf->download("akt-{$complaint->id}.pdf");
     }
 }
