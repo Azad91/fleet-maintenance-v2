@@ -18,17 +18,16 @@ class RoleMiddleware
         $user = Auth::user();
         $currentGarageId = session('current_garage_id');
 
-        // Admin istifadəçi hər şeyi görə bilər
+        // Admin hər şeyi görə bilər
         if ($user->role === 'admin') {
             return $next($request);
         }
 
-        // 🔥 Qaraj seçilməyibsə, qaraj seçiminə yönləndir
         if (!$currentGarageId) {
             return redirect()->route('garage.selection');
         }
 
-        // 🔥 QARAJ ÜZRƏ ROL YOXLANIŞI
+        // 🔥 QARAJ ÜZRƏ ROL YOXLA
         $membership = $user
             ->garages()
             ->whereKey($currentGarageId)

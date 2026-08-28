@@ -11,8 +11,9 @@
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- V2 CSS -->
-    <link rel="stylesheet" href="{{ asset('css/app-v2.css') }}">
+<!-- V2 CSS (əsas) -->
+<link rel="stylesheet" href="{{ asset('css/app-v2.css') }}">
+
 
     @stack('styles')
 </head>
@@ -23,8 +24,8 @@
             <div class="col-auto sidebar">
                 <!-- Brand -->
                 <div class="brand text-center">
-                    <a href="{{ route('dashboard') }}" class="text-decoration-none">
-                        <div class="logo-icon">
+                <a href="{{ route('dashboard') }}" class="text-decoration-none">
+                    <div class="logo-icon">
                             <i class="fas fa-bus"></i>
                         </div>
                         <span class="brand-name">Fleet</span>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\Warehouse;
-use App\Models\DailyKmRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -28,8 +27,8 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // 4. Açıq şikayətlər (bağlanmamış)
-        $openComplaints = Complaint::with('bus')
+        // 4. Açıq şikayətlər (bağlanmamış) - 🔥 YENİ ƏLAVƏ
+        $recentComplaints = Complaint::with('bus')
             ->where('status', '!=', 'həll olundu')
             ->orderBy('id', 'desc')
             ->limit(10)
@@ -62,7 +61,7 @@ class DashboardController extends Controller
             'totalWarehouseItems',
             'recentBuses',
             'lowStockItems',
-            'openComplaints',
+            'recentComplaints',
             'recurringIssues',
             'busesWithoutKmToday'
         ));

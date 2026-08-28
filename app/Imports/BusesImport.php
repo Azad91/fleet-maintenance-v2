@@ -10,32 +10,25 @@ class BusesImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
-        // Sənin Excel çıxışına əsasən dəqiq sahələr:
-        $dqn      = trim($row['dqn'] ?? '');
-        $project  = $row['bus_project'] ?? null;
-        $vin      = $row['vin'] ?? null;
-        $uzunluq  = $row['uzunluq'] ?? null;
-        $xett_no  = $row['xett'] ?? null;    // BURADA "xett_no" YOX, "xett"!
-        $motor_no = $row['motor'] ?? null;   // BURADA "motor_no" YOX, "motor"!
+        // 🔥 Cari qaraj məlumatlarını al
+        $garageId = session('current_garage_id');
+        $companyId = session('current_company_id');
 
-        if (empty($dqn)) {
+        if (!$garageId) {
             return null;
         }
 
-        // Uzunluq rəqəmə çevir (əgər metr varsa)
-        $uzunluq = $uzunluq ? (float) preg_replace('/[^0-9.]/', '', $uzunluq) : null;
-
-        return Bus::updateOrCreate(
-            ['dqn' => $dqn],
-            [
-                'bus_project' => $project,
-                'vin'         => $vin,
-                'uzunluq'     => $uzunluq,
-                'xett_no'     => $xett_no,
-                'motor_no'    => $motor_no,
-                'tarix'       => now()->format('Y-m-d'),
-                'aktiv'       => true,
-            ]
-        );
+        return new Bus([
+            'garage_id' => $garageId,
+            'company_id' => $companyId,
+            'bus_project' => $row['bus_project'] ?? null,
+            'vin' => $row['vin'] ?? null,
+            'uzunluq' => $row['uzunluq'] ?? null,
+            'xett_no' => $row['xett'] ?? null,
+            'dqn' => $row['dqn'] ?? null,
+            'motor_no' => $row['motor'] ?? null,
+            'tarix' => now(),
+            'aktiv' => true,
+        ]);
     }
 }
