@@ -12,25 +12,20 @@ class Warehouse extends Model
     protected $fillable = [
         'garage_id',
         'company_id',
-        'name',
-        'code',
-        'type',
-        'address',
-        'is_active',
+        'kod',
+        'ad',
+        'kateqoriya',
+        'olcu_vahidi',
+        'miqdar',
+        'minimum_miqdar',
+        'qiymet',
+        'tedarikci',
+        'qeyd',
     ];
 
-    public function garage()
-    {
-        return $this->belongsTo(Garage::class);
-    }
-
-    public function stockBalances()
-    {
-        return $this->hasMany(StockBalance::class);
-    }
-
-    public function stockMovements()
-    {
-        return $this->hasMany(StockMovement::class);
-    }
+    protected $casts = [
+        'miqdar' => 'integer',
+        'minimum_miqdar' => 'integer',
+        'qiymet' => 'decimal:2',
+    ];
 }

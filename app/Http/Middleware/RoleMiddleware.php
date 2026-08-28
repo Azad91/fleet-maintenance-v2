@@ -27,7 +27,7 @@ class RoleMiddleware
             return redirect()->route('garage.selection');
         }
 
-        // 🔥 QARAJ ÜZRƏ ROL YOXLA
+        // Qaraj üzrə rol yoxla
         $membership = $user
             ->garages()
             ->whereKey($currentGarageId)
@@ -38,8 +38,10 @@ class RoleMiddleware
             abort(403, 'Bu qaraja giriş icazəniz yoxdur.');
         }
 
-        if (!in_array($membership->pivot->role, $roles)) {
-            abort(403, 'Bu əməliyyat üçün icazəniz yoxdur.');
+        $userRole = $membership->pivot->role;
+
+        if (!in_array($userRole, $roles)) {
+            abort(403, "Bu əməliyyat üçün icazəniz yoxdur. Tələb olunan rollar: " . implode(', ', $roles));
         }
 
         return $next($request);
