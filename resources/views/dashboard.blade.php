@@ -1,240 +1,74 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'İdarə paneli')
 
 @section('content')
-<div class="dashboard-clean">
-    <div class="page-header">
-        <h1 class="text-white">Dashboard</h1>
-        <p class="text-muted">Avtobus parkınızın ümumi vəziyyəti</p>
+    <div class="fleet-dashboard">
+        <section class="fleet-page-heading">
+            <div>
+                <span class="fleet-eyebrow">ƏMƏLİYYAT İCMALI</span>
+                <h1>Salam, {{ Auth::user()->name }}!</h1>
+                <p>Qarajınızdakı nəqliyyat, texniki işlər və stok vəziyyətini bir baxışda izləyin.</p>
+            </div>
+            <div class="fleet-page-heading__actions">
+                <a href="{{ route('buses.index') }}" class="fleet-button fleet-button--secondary"><i class="fas fa-bus"></i> Avtobuslar</a>
+                <a href="{{ route('complaints.index') }}" class="fleet-button fleet-button--primary"><i class="fas fa-arrow-right"></i> Kartlara bax</a>
+            </div>
+        </section>
+
+        <section class="fleet-kpi-grid" aria-label="Əsas göstəricilər">
+            <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--blue"><i class="fas fa-bus"></i></span><div><span>Ümumi avtobus</span><strong>{{ $totalBuses }}</strong><small>{{ $activeBuses }} aktiv nəqliyyat vasitəsi</small></div></article>
+            <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--amber"><i class="fas fa-screwdriver-wrench"></i></span><div><span>Açıq kartlar</span><strong>{{ $activeComplaints }}</strong><small>Həll olunma gözləyən işlər</small></div></article>
+            <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--violet"><i class="fas fa-boxes-stacked"></i></span><div><span>Anbar qalığı</span><strong>{{ $totalWarehouseItems }}</strong><small>Qeydiyyatda olan ümumi miqdar</small></div></article>
+            <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--rose"><i class="fas fa-gauge-high"></i></span><div><span>Bugünkü KM qeydi yoxdur</span><strong>{{ $busesWithoutKmToday->count() }}</strong><small>Yoxlanmalı avtobuslar</small></div></article>
+        </section>
+
+        <section class="fleet-dashboard-grid">
+            <article class="fleet-panel fleet-panel--wide">
+                <header class="fleet-panel__header"><div><span class="fleet-eyebrow">SON ƏLAVƏ OLUNANLAR</span><h2>Avtobuslar</h2></div><a href="{{ route('buses.index') }}" class="fleet-text-link">Hamısına bax <i class="fas fa-arrow-right"></i></a></header>
+                <div class="fleet-list">
+                    @forelse($recentBuses as $bus)
+                        <a href="{{ route('buses.show', $bus) }}" class="fleet-list__item text-decoration-none">
+                            <span class="fleet-list__icon"><i class="fas fa-bus"></i></span>
+                            <span class="fleet-list__content"><strong>{{ $bus->marka_model ?? 'Model qeyd edilməyib' }}</strong><small>{{ $bus->qeydiyyat_nomresi ?? 'Nömrə qeyd edilməyib' }}</small></span>
+                            <span class="fleet-status {{ $bus->aktiv ? 'fleet-status--success' : 'fleet-status--muted' }}">{{ $bus->aktiv ? 'Aktiv' : 'Qeyri-aktiv' }}</span><i class="fas fa-chevron-right fleet-list__arrow"></i>
+                        </a>
+                    @empty
+                        <div class="fleet-empty-state"><i class="fas fa-bus"></i><p>Hələ avtobus əlavə edilməyib.</p></div>
+                    @endforelse
+                </div>
+            </article>
+            <article class="fleet-panel">
+                <header class="fleet-panel__header"><div><span class="fleet-eyebrow">NƏZARƏT</span><h2>Diqqət tələb edir</h2></div></header>
+                <div class="fleet-attention-list">
+                    <a href="{{ route('warehouses.index') }}" class="fleet-attention-item text-decoration-none"><span class="fleet-attention-item__icon fleet-attention-item__icon--red"><i class="fas fa-box-open"></i></span><span><strong>Aşağı stok</strong><small>{{ $lowStockItems->count() }} detal kritik həddədir</small></span><i class="fas fa-chevron-right"></i></a>
+                    <a href="{{ route('daily-km-records.index') }}" class="fleet-attention-item text-decoration-none"><span class="fleet-attention-item__icon fleet-attention-item__icon--amber"><i class="fas fa-gauge-high"></i></span><span><strong>KM qeydi</strong><small>{{ $busesWithoutKmToday->count() }} avtobusdan məlumat gözlənilir</small></span><i class="fas fa-chevron-right"></i></a>
+                    <a href="{{ route('complaints.index') }}" class="fleet-attention-item text-decoration-none"><span class="fleet-attention-item__icon fleet-attention-item__icon--blue"><i class="fas fa-repeat"></i></span><span><strong>Təkrarlanan nasazlıq</strong><small>{{ $recurringIssues->count() }} problem izlənməlidir</small></span><i class="fas fa-chevron-right"></i></a>
+                </div>
+            </article>
+        </section>
+
+        <section class="fleet-dashboard-grid">
+            <article class="fleet-panel fleet-panel--wide">
+                <header class="fleet-panel__header"><div><span class="fleet-eyebrow">TEXNİKİ İŞLƏR</span><h2>Son açıq kartlar</h2></div><a href="{{ route('complaints.index') }}" class="fleet-text-link">Kartlar <i class="fas fa-arrow-right"></i></a></header>
+                <div class="fleet-table-wrap"><table class="fleet-table"><thead><tr><th>Avtobus</th><th>Şikayət</th><th>Status</th><th>Tarix</th></tr></thead><tbody>
+                    @forelse($recentComplaints as $complaint)
+                        <tr><td><strong>{{ optional($complaint->bus)->qeydiyyat_nomresi ?? '—' }}</strong></td><td>{{ Str::limit($complaint->shikayet, 54) }}</td><td><span class="fleet-status fleet-status--warning">{{ $complaint->status }}</span></td><td>{{ optional($complaint->created_at)->format('d.m.Y') }}</td></tr>
+                    @empty
+                        <tr><td colspan="4" class="fleet-table__empty">Açıq kart yoxdur.</td></tr>
+                    @endforelse
+                </tbody></table></div>
+            </article>
+            <article class="fleet-panel">
+                <header class="fleet-panel__header"><div><span class="fleet-eyebrow">STOK XƏBƏRDARLIĞI</span><h2>Kritik qalıqlar</h2></div></header>
+                <div class="fleet-stock-list">
+                    @forelse($lowStockItems as $item)
+                        <a href="{{ route('warehouses.index') }}" class="fleet-stock-item text-decoration-none"><span><strong>{{ $item->ad }}</strong><small>{{ $item->kod ?? 'Kod yoxdur' }}</small></span><b>{{ $item->miqdar }}</b></a>
+                    @empty
+                        <div class="fleet-empty-state fleet-empty-state--compact"><i class="fas fa-circle-check"></i><p>Kritik stok yoxdur.</p></div>
+                    @endforelse
+                </div>
+            </article>
+        </section>
     </div>
-
-    <!-- Statistik Kartlar -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="stat-card-clean primary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-count">{{ $totalBuses }}</div>
-                        <div class="stat-label">Cəmi Avtobus</div>
-                    </div>
-                    <div class="stat-icon-clean">
-                        <i class="fas fa-bus"></i>
-                    </div>
-                </div>
-                <div class="stat-change up">+{{ $activeBuses }} aktiv</div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="stat-card-clean warning">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-count">{{ $activeComplaints }}</div>
-                        <div class="stat-label">Açıq Şikayət</div>
-                    </div>
-                    <div class="stat-icon-clean">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                </div>
-                <div class="stat-change down">Gözləmədə olanlar</div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="stat-card-clean danger">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-count">{{ $lowStockItems->count() }}</div>
-                        <div class="stat-label">Tükənən Məhsul</div>
-                    </div>
-                    <div class="stat-icon-clean">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                </div>
-                <div class="stat-change down">Kritik səviyyə</div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="stat-card-clean info">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-count">{{ $totalWarehouseItems }}</div>
-                        <div class="stat-label">Anbar Məhsulları</div>
-                    </div>
-                    <div class="stat-icon-clean">
-                        <i class="fas fa-warehouse"></i>
-                    </div>
-                </div>
-                <div class="stat-change up">Ümumi miqdar</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Trend və Top Brand -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-8">
-            <div class="card-clean">
-                <div class="card-header-clean">
-                    <span class="card-title"><i class="fas fa-chart-line"></i> Aylıq Əməliyyat Trendi</span>
-                    <span class="text-muted">Bu il</span>
-                </div>
-                <div class="card-body-clean">
-                    <div class="chart-container" style="height: 250px;">
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-4">
-            <div class="card-clean">
-                <div class="card-header-clean">
-                    <span class="card-title"><i class="fas fa-star"></i> Ən Çox İstifadə Olunan Detallar</span>
-                </div>
-                <div class="card-body-clean">
-                    <div class="top-brands-clean">
-                        <div class="brand-item-clean">
-                            <span class="brand-name">Motor Yağı</span>
-                            <span class="brand-percent">26%</span>
-                            <div class="progress-clean"><div class="progress-bar-clean" style="width: 26%;"></div></div>
-                        </div>
-                        <div class="brand-item-clean">
-                            <span class="brand-name">Yağ Filtr</span>
-                            <span class="brand-percent">22%</span>
-                            <div class="progress-clean"><div class="progress-bar-clean" style="width: 22%;"></div></div>
-                        </div>
-                        <div class="brand-item-clean">
-                            <span class="brand-name">Hava Filtr</span>
-                            <span class="brand-percent">20%</span>
-                            <div class="progress-clean"><div class="progress-bar-clean" style="width: 20%;"></div></div>
-                        </div>
-                        <div class="brand-item-clean">
-                            <span class="brand-name">Əyləc Diski</span>
-                            <span class="brand-percent">17%</span>
-                            <div class="progress-clean"><div class="progress-bar-clean" style="width: 17%;"></div></div>
-                        </div>
-                        <div class="brand-item-clean">
-                            <span class="brand-name">Şin</span>
-                            <span class="brand-percent">15%</span>
-                            <div class="progress-clean"><div class="progress-bar-clean" style="width: 15%;"></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Son Avtobuslar və Son Şikayətlər -->
-    <div class="row g-4">
-        <div class="col-xl-6">
-            <div class="card-clean">
-                <div class="card-header-clean">
-                    <span class="card-title"><i class="fas fa-bus"></i> Son Avtobuslar</span>
-                    <a href="{{ route('buses.index') }}" class="btn btn-sm btn-primary-clean">Hamısına Bax</a>
-                </div>
-                <div class="card-body-clean p-0">
-                    <div class="table-responsive">
-                        <table class="table table-clean table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Xətt №</th>
-                                    <th>DQN</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentBuses as $bus)
-                                <tr>
-                                    <td>{{ $bus->xett_no ?? '-' }}</td>
-                                    <td><strong>{{ $bus->dqn }}</strong></td>
-                                    <td>
-                                        @if($bus->aktiv)
-                                            <span class="badge-status aktiv">Aktiv</span>
-                                        @else
-                                            <span class="badge-status passiv">Passiv</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="3" class="text-center text-muted py-3">Hələ avtobus yoxdur</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="card-clean">
-                <div class="card-header-clean">
-                    <span class="card-title"><i class="fas fa-clipboard-list"></i> Son Şikayətlər</span>
-                    <a href="{{ route('complaints.index') }}" class="btn btn-sm btn-primary-clean">Hamısına Bax</a>
-                </div>
-                <div class="card-body-clean p-0">
-                    <div class="table-responsive">
-                        <table class="table table-clean table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Avtobus</th>
-                                    <th>Şikayət</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentComplaints as $complaint)
-                                <tr>
-                                    <td>{{ $complaint->bus->dqn ?? '-' }}</td>
-                                    <td>{{ Str::limit($complaint->shikayet, 30) }}</td>
-                                    <td>
-                                        <span class="badge-status {{ $complaint->status }}">
-                                            {{ $complaint->status }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="3" class="text-center text-muted py-3">Hələ şikayət yoxdur</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'İyn', 'İyl', 'Avq', 'Sen', 'Okt', 'Noy', 'Dek'],
-                datasets: [{
-                    label: 'Əməliyyatlar',
-                    data: [12, 19, 15, 22, 30, 45, 55, 78, 65, 50, 40, 35],
-                    borderColor: '#d4a74c',
-                    backgroundColor: 'rgba(212, 167, 76, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: { ticks: { color: '#8b95a9' } },
-                    y: { ticks: { color: '#8b95a9' } }
-                }
-            }
-        });
-    });
-</script>
 @endsection
