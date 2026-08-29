@@ -227,6 +227,27 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         return response()->json($result);
     })->name('get.service.templates');
 
+    Route::get('get-motor-oil-services/{bus_id}', function ($bus_id) {
+        $bus = App\Models\Bus::findOrFail($bus_id);
+        $latestKm = optional($bus->dailyKmRecords()->latest('tarix')->first())->km ?? 0;
+
+        return App\Models\MotorOilDetail::where('km', '>', $latestKm)
+            ->orderBy('km')
+            ->orderBy('detal_adi')
+            ->get()
+            ->groupBy('km')
+            ->map(fn ($details, $km) => [
+                'km' => (int) $km,
+                'details' => $details->map(fn ($detail) => [
+                    'kodu' => $detail->detal_kodu,
+                    'adi' => $detail->detal_adi,
+                    'miqdar' => $detail->miqdar,
+                    'say' => $detail->say,
+                ])->values(),
+            ])
+            ->values();
+    })->name('get.motor.oil.services');
+
     Route::get('get-driver-by-kod/{kod}', function ($kod) {
         $driver = App\Models\Driver::where('kodu', $kod)->first();
         return response()->json([

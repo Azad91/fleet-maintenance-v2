@@ -128,7 +128,7 @@
             <div class="mb-3">
                 <label for="bildirilme_saat" class="form-label fw-bold">🕐 Bildirilme Saat</label>
                 <input type="time" class="form-control" id="bildirilme_saat" name="bildirilme_saat"
-                       value="{{ old('bildirilme_saat') }}">
+                       value="{{ old('bildirilme_saat', now()->format('H:i')) }}">
             </div>
         </div>
     </div>
@@ -145,7 +145,7 @@
     <div class="col-md-6">
         <div class="mb-3">
             <label for="is_baslama_saat" class="form-label fw-bold">🕐 İşə Başlama Saat <span class="text-danger">*</span></label>
-            <input type="time" class="form-control" id="is_baslama_saat" name="is_baslama_saat" required value="{{ old('is_baslama_saat') }}">
+            <input type="time" class="form-control" id="is_baslama_saat" name="is_baslama_saat" required value="{{ old('is_baslama_saat', now()->format('H:i')) }}">
         </div>
     </div>
 </div>
@@ -161,7 +161,7 @@
     <div class="col-md-6">
         <div class="mb-3">
             <label for="is_bitme_saat" class="form-label fw-bold">🕐 İşin Bitdiyi Saat <span class="text-danger">*</span></label>
-            <input type="time" class="form-control" id="is_bitme_saat" name="is_bitme_saat" required value="{{ old('is_bitme_saat') }}">
+            <input type="time" class="form-control" id="is_bitme_saat" name="is_bitme_saat" required value="{{ old('is_bitme_saat', now()->format('H:i')) }}">
         </div>
     </div>
 </div>
@@ -180,24 +180,23 @@
 <!-- ==================== 11. TEXNİKİ XİDMƏT ==================== -->
 <div id="serviceFields" class="service-fields-hidden">
     <div class="mb-3">
-        <label for="service_template_id" class="form-label fw-bold">🔧 Baxım Növü</label>
-        <select class="form-select" id="service_template_id" name="service_template_id" onchange="onServiceSelectChange()">
-            <option value="">Baxım növünü seçin...</option>
+        <label for="motor_oil_km" class="form-label fw-bold">🔧 Baxım növü</label>
+        <select class="form-select" id="motor_oil_km" onchange="onServiceSelectChange()">
+            <option value="">Əvvəl avtobus seçin...</option>
         </select>
     </div>
 
     <div class="mb-3">
-        <label for="service_km" class="form-label fw-bold">📊 Cari KM</label>
-        <input type="number" class="form-control" id="service_km" name="service_km" placeholder="Məs: 36000" min="0">
-        <small class="text-muted">Avtobusun cari yürüşünü daxil edin</small>
+        <label for="service_km" class="form-label fw-bold">📊 Planlanan baxım KM-i</label>
+        <input type="number" class="form-control input-disabled" id="service_km" name="service_km" readonly min="0">
+        <small class="text-muted">Seçilən baxımın KM-i Motor Yağı cədvəlindən avtomatik gəlir.</small>
     </div>
 </div>
 
 <!-- ==================== HIDDEN INPUT ==================== -->
-<input type="hidden" name="service_template_id" id="service_template_id_hidden">
 
 <!-- ==================== 12. DETALLAR ==================== -->
-<div class="card bg-light p-3 mb-3">
+<div class="complaint-details-card p-3 mb-3">
     <h5 class="fw-bold mb-3">🔧 İstifadə Olunan Detallar <span class="text-danger">*</span></h5>
     <div id="detallarContainer">
         <div class="detallar-item">
@@ -223,17 +222,28 @@
                         <input type="text" class="form-control input-disabled" name="detallar[0][adi]" required readonly disabled value="{{ old('detallar.0.adi') }}">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <div class="mb-2">
                         <label class="form-label fw-bold">Depo Miqdarı <span class="text-danger">*</span></label>
                         <input type="text" class="form-control input-disabled" name="detallar[0][depo_miqdari]" required readonly disabled value="{{ old('detallar.0.depo_miqdari') }}">
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <div class="mb-2">
                         <label class="form-label fw-bold">İşlənən Miqdar <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="detallar[0][islenen_miqdar]" required
                                placeholder="0" min="0" value="{{ old('detallar.0.islenen_miqdar', 0) }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">İşi görən işçi <span class="text-danger">*</span></label>
+                        <select class="form-select" name="detallar[0][employee_id]" required>
+                            <option value="">İşçi seçin...</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" {{ old('detallar.0.employee_id') == $employee->id ? 'selected' : '' }}>{{ $employee->full_name_with_position }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -261,23 +271,6 @@
     <small class="text-muted d-block mt-1">Hər detal hansı şikayətə aid olduğunu seçin.</small>
 </div>
 
-<!-- ==================== 13. İŞÇİ (KİM İŞ GÖRÜB) ==================== -->
-<div class="mb-3">
-    <label for="employee_id" class="form-label fw-bold">👤 İşçi <span class="text-danger">*</span></label>
-    <select class="form-select" id="employee_id" name="employee_id" required>
-        <option value="">İşçi seçin...</option>
-        @foreach($employees as $employee)
-            <option value="{{ $employee->id }}" {{ old('employee_id') == $employee->id ? 'selected' : '' }}>
-                {{ $employee->full_name_with_position }}
-            </option>
-        @endforeach
-    </select>
-    <small class="text-muted">Bu şikayəti kim icra edir?</small>
-</div>
-
-<!-- Köhnə "kim_is_gorub" - u gizlədək -->
-<input type="hidden" name="kim_is_gorub" value="{{ old('kim_is_gorub') }}">
-
 <!-- ==================== 14. DÜYMƏLƏR ==================== -->
 <div class="d-flex gap-2">
     <button type="submit" class="btn btn-success">
@@ -297,7 +290,8 @@
             document.getElementById('dqn').value = '';
             document.getElementById('bus_id').value = '';
             document.getElementById('km').value = '';
-            document.getElementById('service_template_id').innerHTML = '<option value="">Baxım növünü seçin...</option>';
+            document.getElementById('motor_oil_km').innerHTML = '<option value="">Baxım növünü seçin...</option>';
+            document.getElementById('service_km').value = '';
             return;
         }
 
@@ -356,8 +350,24 @@
     // ==================== 3. TEXNİKİ XİDMƏT VƏ QARAJ ====================
 function toggleServiceFields() {
     const selectedTip = document.querySelector('input[name="sikayet_tipi"]:checked');
-    const selectedYer = document.querySelector('input[name="yer"]:checked');
     const serviceFields = document.getElementById('serviceFields');
+
+    if (selectedTip && selectedTip.value === 'texniki_xidmet') {
+        document.getElementById('yer_qaraj').checked = true;
+        document.getElementById('surucuField').style.display = 'none';
+        document.getElementById('bildirilmeFields').style.display = 'none';
+        document.getElementById('driver_kodu').value = '';
+        document.getElementById('surucu_adi').value = '';
+        document.getElementById('driver_id').value = '';
+        document.getElementById('bildirilme_tarix').removeAttribute('required');
+        document.getElementById('bildirilme_saat').removeAttribute('required');
+    }
+
+    const selectedYer = document.querySelector('input[name="yer"]:checked');
+
+    if ((!selectedTip || selectedTip.value !== 'texniki_xidmet') && selectedYer && selectedYer.value === 'yol') {
+        document.getElementById('surucuField').style.display = 'block';
+    }
 
     // Əgər həm Texniki Xidmət, həm də Qaraj seçilibsə
     if (selectedTip && selectedTip.value === 'texniki_xidmet' && selectedYer && selectedYer.value === 'qaraj') {
@@ -370,44 +380,32 @@ function toggleServiceFields() {
     } else {
         // GİZLƏT
         serviceFields.style.display = 'none';
-        document.getElementById('service_template_id').innerHTML = '<option value="">Baxım növünü seçin...</option>';
+        document.getElementById('motor_oil_km').innerHTML = '<option value="">Baxım növünü seçin...</option>';
+        document.getElementById('service_km').value = '';
     }
 }
 
  // ==================== 4. BAXIM NÖVLƏRİNİ YÜKLƏ ====================
 function loadServiceTemplates(busId) {
     if (!busId) {
-        const select = document.getElementById('service_template_id');
+        const select = document.getElementById('motor_oil_km');
         select.innerHTML = '<option value="">Avtobus seçin...</option>';
         return;
     }
 
-    const currentKm = parseInt(document.getElementById('km').value) || 0;
-
-    // ✅ DÜZƏLİŞ: window.location.origin istifadə et
-    fetch(window.location.origin + '/get-service-templates/' + busId)
+    fetch(window.location.origin + '/get-motor-oil-services/' + busId)
         .then(response => response.json())
         .then(data => {
-            console.log('📦 Gələn məlumatlar:', data); // <-- BUNU ƏLAVƏ ET (yoxlamaq üçün)
-            const select = document.getElementById('service_template_id');
+            const select = document.getElementById('motor_oil_km');
             select.innerHTML = '<option value="">Baxım növünü seçin...</option>';
 
-            // Sırala
-            data.sort((a, b) => a.km_interval - b.km_interval);
-
-            // YALNIZ cari KM-dən BÖYÜK olanları göstər
-            const filtered = data.filter(template => template.km_interval > currentKm);
-
-            filtered.forEach(template => {
-                if (template.details && template.details.length > 0) {
-                    const option = document.createElement('option');
-                    option.value = template.id;
-                    const kmFormatted = new Intl.NumberFormat('az').format(template.km_interval);
-                    option.textContent = template.name;
-                    option.dataset.km = template.km_interval;
-                    option.dataset.details = JSON.stringify(template.details);
-                    select.appendChild(option);
-                }
+            data.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.km;
+                option.textContent = `Yağ və texniki baxım — ${new Intl.NumberFormat('az').format(service.km)} KM`;
+                option.dataset.km = service.km;
+                option.dataset.details = JSON.stringify(service.details || []);
+                select.appendChild(option);
             });
 
             if (select.options.length <= 1) {
@@ -421,7 +419,7 @@ function loadServiceTemplates(busId) {
         })
         .catch(error => {
             console.error('Xəta:', error);
-            const select = document.getElementById('service_template_id');
+            const select = document.getElementById('motor_oil_km');
             select.innerHTML = '<option value="">Xəta baş verdi</option>';
         });
 }
@@ -498,19 +496,15 @@ function loadServiceTemplates(busId) {
 
     // ==================== 6. BAXIM NÖVÜ SEÇİLƏNDƏ ====================
     function onServiceSelectChange() {
-        const select = document.getElementById('service_template_id');
+        const select = document.getElementById('motor_oil_km');
         const selectedOption = select.options[select.selectedIndex];
 
         if (!selectedOption || !selectedOption.value) return;
 
-        const templateId = selectedOption.value;
-        const templateName = selectedOption.textContent.replace(/\(\d{1,3}\.\d{3}\.\d{3} km\)$/, '').trim();
+        const serviceKm = selectedOption.dataset.km || selectedOption.value;
+        const templateName = selectedOption.textContent.trim();
         const details = JSON.parse(selectedOption.dataset.details || '[]');
-
-        const hiddenInput = document.getElementById('service_template_id_hidden');
-        if (hiddenInput) {
-            hiddenInput.value = templateId;
-        }
+        document.getElementById('service_km').value = serviceKm;
 
         // Şikayət siyahısına avtomatik əlavə et
         const shikayetSelects = document.querySelectorAll('select[name="shikayet[]"]');
@@ -634,17 +628,28 @@ function loadServiceTemplates(busId) {
                         <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][adi]" required readonly disabled>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <div class="mb-2">
                         <label class="form-label fw-bold">Depo Miqdarı</label>
                         <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][depo_miqdari]" required readonly disabled>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <div class="mb-2">
                         <label class="form-label fw-bold">İşlənən Miqdar</label>
                         <input type="number" class="form-control" name="detallar[${detalCount}][islenen_miqdar]" required
                                placeholder="0" min="0" value="0">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">İşi görən işçi</label>
+                        <select class="form-select" name="detallar[${detalCount}][employee_id]" required>
+                            <option value="">İşçi seçin...</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-2">

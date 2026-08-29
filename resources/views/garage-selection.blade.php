@@ -1,46 +1,29 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
-@section('title', 'Qaraj Seçimi')
+@section('title', 'Qaraj seçimi')
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-3">
-                    <h4><i class="fas fa-warehouse"></i> Qaraj Seçimi</h4>
-                    <p class="mb-0 text-white-50">İşləmək istədiyiniz qarajı seçin</p>
-                </div>
-                <div class="card-body p-4">
-                    <form action="{{ route('garage.select') }}" method="POST">
-                        @csrf
-
-                        <div class="mb-4">
-                            <label for="garage_id" class="form-label fw-bold">🏠 Qaraj</label>
-                            <select name="garage_id" id="garage_id" class="form-select form-select-lg" required>
-                                <option value="">-- Qaraj seçin --</option>
-                                @foreach($companies as $company)
-                                    <optgroup label="{{ $company->name }}">
-                                        @foreach($company->garages as $garage)
-                                            <option value="{{ $garage->id }}">
-                                                {{ $garage->name }} ({{ $garage->code }})
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
-                            <small class="text-muted">Hansı qarajda işləmək istəyirsiniz?</small>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt"></i> Daxil Ol
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <section class="garage-selection">
+        <div class="garage-selection__intro">
+            <span class="fleet-eyebrow">İŞ MÜHİTİNİ SEÇİN</span>
+            <h1>Hansı qarajda işləyəcəksiniz?</h1>
+            <p>Seçdiyiniz qaraja uyğun avtobuslar, kartlar, anbar və işçi məlumatları açılacaq.</p>
+            <div class="garage-selection__features"><span><i class="fas fa-building"></i> Şirkətə görə ayrılmış məlumatlar</span><span><i class="fas fa-shield-halved"></i> İcazəniz olan qarajlar</span></div>
         </div>
-    </div>
-</div>
+        <div class="garage-selection__card">
+            <span class="garage-selection__icon"><i class="fas fa-warehouse"></i></span><h2>Qaraj seçimi</h2><p>İşə davam etmək üçün bir qaraj seçin.</p>
+            <form action="{{ route('garage.select') }}" method="POST">
+                @csrf
+                <label for="garage_id" class="form-label">Şirkət və qaraj</label>
+                <select name="garage_id" id="garage_id" class="form-select form-select-lg" required autofocus>
+                    <option value="">Qaraj seçin…</option>
+                    @foreach($companies as $company)
+                        <optgroup label="{{ $company->name }}">@foreach($company->garages as $garage)<option value="{{ $garage->id }}">{{ $garage->name }} · {{ $garage->code }}</option>@endforeach</optgroup>
+                    @endforeach
+                </select>
+                @error('garage_id')<div class="fleet-guest__error">{{ $message }}</div>@enderror
+                <button type="submit" class="garage-selection__submit"><i class="fas fa-arrow-right"></i> Qaraja daxil ol</button>
+            </form>
+        </div>
+    </section>
 @endsection

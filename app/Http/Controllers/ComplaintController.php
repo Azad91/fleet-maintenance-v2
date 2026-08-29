@@ -119,6 +119,7 @@ class ComplaintController extends Controller
                             'adi' => $warehouse ? $warehouse->ad : null,
                             'depo_miqdari' => $warehouse ? $warehouse->miqdar : null,
                             'islenen_miqdar' => $detal['islenen_miqdar'] ?? 0,
+                            'employee_id' => $detal['employee_id'] ?? null,
                             'qeyd' => $detal['qeyd'] ?? null,
                         ];
 
@@ -241,6 +242,7 @@ class ComplaintController extends Controller
                             'adi' => $warehouse ? $warehouse->ad : null,
                             'depo_miqdari' => $warehouse ? $warehouse->miqdar : null,
                             'islenen_miqdar' => $detal['islenen_miqdar'] ?? 0,
+                            'employee_id' => $detal['employee_id'] ?? null,
                             'qeyd' => $detal['qeyd'] ?? null,
                         ];
 

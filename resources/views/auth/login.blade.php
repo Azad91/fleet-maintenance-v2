@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
 @section('title', 'Daxil Ol - Fleet Maintenance')
 
@@ -47,7 +47,7 @@
                     <label class="form-check-label" for="remember">Məni xatırla</label>
                 </div>
                 @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" style="color:#4CAF50; font-size:14px; text-decoration:none;">Şifrəni unutdun?</a>
+                    <a href="{{ route('password.request') }}" class="auth-forgot-link">Şifrəni unutdun?</a>
                 @endif
             </div>
 
