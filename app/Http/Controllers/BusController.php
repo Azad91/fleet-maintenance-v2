@@ -13,7 +13,7 @@ class BusController extends Controller
     public function index()
     {
         // 🔥 DƏYİŞİKLİK: paginate(50) əlavə edildi
-        $buses = Bus::orderBy('id', 'desc')->paginate(50);
+        $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')->paginate(50);
         return view('buses.index', compact('buses'));
     }
 
@@ -27,7 +27,7 @@ class BusController extends Controller
         $dqn = $request->dqn;
         $motor_no = $request->motor_no;
 
-        $query = Bus::query();
+        $query = Bus::with('latestKmRecord');
 
         if (!empty($bus_project)) {
             $query->where('bus_project', 'ILIKE', "%{$bus_project}%");

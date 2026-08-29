@@ -47,7 +47,7 @@ class Bus extends Model
 
     public function latestKmRecord()
     {
-        return $this->hasOne(DailyKmRecord::class)->latest('tarix');
+        return $this->hasOne(DailyKmRecord::class)->latestOfMany('tarix');
     }
 
     public function getLatestKmAttribute()

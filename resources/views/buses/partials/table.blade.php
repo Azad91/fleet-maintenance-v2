@@ -54,7 +54,7 @@
                 <tbody>
                     @forelse($buses as $bus)
                     <tr>
-                        <td style="text-align: center;">{{ $loop->iteration }}</td>
+                        <td style="text-align: center;">{{ $buses->firstItem() + $loop->index }}</td>
                         <td>{{ $bus->bus_project ?? '-' }}</td>
                         <td>{{ $bus->vin ?? '-' }}</td>
                         <td>{{ $bus->uzunluq ? number_format($bus->uzunluq, 1) . ' m' : '-' }}</td>

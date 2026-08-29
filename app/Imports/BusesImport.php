@@ -20,19 +20,22 @@ class BusesImport implements ToModel, WithHeadingRow
         $garageId = session('current_garage_id');
         $companyId = session('current_company_id');
 
-        return Bus::updateOrCreate(
-            ['dqn' => $dqn],
-            [
-                'garage_id' => $garageId,
-                'company_id' => $companyId,
-                'bus_project' => $row['bus_project'] ?? null,
-                'vin' => $row['vin'] ?? null,
-                'uzunluq' => $row['uzunluq'] ?? null,
-                'xett_no' => $row['xett'] ?? null,
-                'motor_no' => $row['motor'] ?? null,
-                'tarix' => now()->format('Y-m-d'),
-                'aktiv' => true,
-            ]
-        );
+        // DQN fiziki avtobusun sistem üzrə unikal identifikatorudur. Modeldəki
+        // qaraj scope-u köhnə qeydi gizlədə bilər; import isə onu yeniləməlidir.
+        $bus = Bus::withoutGlobalScopes()->firstOrNew(['dqn' => $dqn]);
+
+        $bus->fill([
+            'garage_id' => $garageId,
+            'company_id' => $companyId,
+            'bus_project' => $row['bus_project'] ?? null,
+            'vin' => $row['vin'] ?? null,
+            'uzunluq' => $row['uzunluq'] ?? null,
+            'xett_no' => $row['xett'] ?? null,
+            'motor_no' => $row['motor'] ?? null,
+            'tarix' => now()->format('Y-m-d'),
+            'aktiv' => true,
+        ]);
+
+        return $bus;
     }
 }
