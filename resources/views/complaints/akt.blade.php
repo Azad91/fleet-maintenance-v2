@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <title>İş Kartı - Akt</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
+        /* DomPDF-nin DejaVu Sans fontu Azərbaycan əlifbasını tam dəstəkləyir. */
+        body { font-family: 'DejaVu Sans', sans-serif; margin: 40px; }
         .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .title { font-size: 24px; font-weight: bold; }
         .content { margin-top: 30px; }
         .row { display: flex; margin-bottom: 10px; }
         .label { font-weight: bold; width: 150px; }
         .value { flex: 1; }
+        @page { margin: 24px 28px; }
         .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table th { background: #f5f5f5; }
@@ -41,10 +43,10 @@
         @if($complaint->detallar && is_array($complaint->detallar) && count($complaint->detallar) > 0)
         <h3>🔧 İstifadə Olunan Detallar</h3>
         <table class="table">
-            <thead><tr><th>Kod</th><th>Ad</th><th>Miqdar</th></tr></thead>
+            <thead><tr><th>Kod</th><th>Ad</th><th>Miqdar</th><th>İşi görən işçi</th></tr></thead>
             <tbody>
                 @foreach($complaint->detallar as $detal)
-                <tr><td>{{ $detal['kodu'] ?? '-' }}</td><td>{{ $detal['adi'] ?? '-' }}</td><td>{{ $detal['islenen_miqdar'] ?? 0 }}</td></tr>
+                <tr><td>{{ $detal['kodu'] ?? '-' }}</td><td>{{ $detal['adi'] ?? '-' }}</td><td>{{ $detal['islenen_miqdar'] ?? 0 }}</td><td>{{ $employeesById[$detal['employee_id'] ?? null]->full_name_with_position ?? '-' }}</td></tr>
                 @endforeach
             </tbody>
         </table>

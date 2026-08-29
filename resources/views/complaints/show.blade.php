@@ -6,9 +6,12 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">📋 Şikayət Məlumatları</h4>
-        <span class="badge-status {{ str_replace(' ', '-', $complaint->status) }}">
-            {{ $complaint->status }}
-        </span>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('complaints.pdf', $complaint) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-file-earmark-pdf"></i> PDF / Çap et
+            </a>
+            <span class="badge-status {{ str_replace(' ', '-', $complaint->status) }}">{{ $complaint->status }}</span>
+        </div>
     </div>
     <div class="card-body">
         <!-- Avtobus Məlumatları -->
@@ -170,6 +173,10 @@
                                 <small class="text-muted d-block">İşlənən Miqdar</small>
                                 <strong class="text-danger">{{ $detal['islenen_miqdar'] ?? '-' }}</strong>
                             </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">👤 İşi görən işçi</small>
+                                <strong>{{ $employeesById[$detal['employee_id'] ?? null]->full_name_with_position ?? '-' }}</strong>
+                            </div>
                         </div>
                         @if(!empty($detal['qeyd']))
                         <div class="row mt-2">
@@ -190,27 +197,6 @@
             @endif
         </div>
     </div>
-
-        <!-- Qeyd və İşçi -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-pencil me-2"></i>📝 Qeyd və İşçi</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="p-2 bg-light rounded">
-                            <small class="text-muted d-block">👤 Kim iş görüb</small>
-                            <strong>
-                                @if($complaint->employee)
-                                    {{ $complaint->employee->full_name_with_position }}
-                                @else
-                                    {{ $complaint->kim_is_gorub ?? '-' }}
-                                @endif
-                        </strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Əlavə məlumatlar -->
         <div class="row mb-4">

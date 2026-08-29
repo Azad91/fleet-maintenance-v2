@@ -173,7 +173,7 @@
             </div>
 
             <!-- Detallar -->
-            <div class="card bg-light p-3 mb-3">
+            <div class="complaint-details-card p-3 mb-3">
                 <h5 class="fw-bold mb-3">🔧 İstifadə Olunan Detallar</h5>
                 <div id="detallarContainer">
                     @php
@@ -212,15 +212,24 @@
                                         <input type="text" class="form-control input-disabled" name="detallar[{{ $index }}][adi]"
                                             value="{{ $detal['adi'] ?? '' }}" readonly disabled>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-1">
                                         <label class="form-label fw-bold">Depo Miqdarı</label>
                                         <input type="text" class="form-control input-disabled" name="detallar[{{ $index }}][depo_miqdari]"
                                             value="{{ $detal['depo_miqdari'] ?? '' }}" readonly disabled>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-1">
                                         <label class="form-label fw-bold">İşlənən Miqdar</label>
                                         <input type="number" class="form-control" name="detallar[{{ $index }}][islenen_miqdar]"
-                                            value="{{ $detal['islenen_miqdar'] ?? 0 }}" min="0">
+                                            value="{{ $detal['islenen_miqdar'] ?? 1 }}" min="1" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">İşi görən işçi</label>
+                                        <select class="form-select" name="detallar[{{ $index }}][employee_id]" required>
+                                            <option value="">İşçi seçin...</option>
+                                            @foreach($employees as $employee)
+                                                <option value="{{ $employee->id }}" {{ old("detallar.$index.employee_id", $detal['employee_id'] ?? '') == $employee->id ? 'selected' : '' }}>{{ $employee->full_name_with_position }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">&nbsp;</label>
@@ -255,15 +264,22 @@
                                     <label class="form-label fw-bold">Detal Adı</label>
                                     <input type="text" class="form-control input-disabled" name="detallar[0][adi]" readonly disabled>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-1">
                                     <label class="form-label fw-bold">Depo Miqdarı</label>
                                     <input type="text" class="form-control input-disabled" name="detallar[0][depo_miqdari]" readonly disabled>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">İşlənən Miqdar</label>
-                                    <input type="number" class="form-control" name="detallar[0][islenen_miqdar]"
-                                        placeholder="0" min="0" value="0">
-                                </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label fw-bold">İşlənən Miqdar</label>
+                                        <input type="number" class="form-control" name="detallar[0][islenen_miqdar]"
+                                        placeholder="0" min="1" value="1" required>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">İşi görən işçi</label>
+                                        <select class="form-select" name="detallar[0][employee_id]" required>
+                                            <option value="">İşçi seçin...</option>
+                                            @foreach($employees as $employee)<option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>@endforeach
+                                        </select>
+                                    </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">&nbsp;</label>
                                     <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetal(this)">
@@ -285,23 +301,6 @@
                 </button>
                 <small class="text-muted d-block mt-1">Hər detal hansı şikayətə aid olduğunu seçin.</small>
             </div>
-
-            <!-- ==================== İŞÇİ (KİM İŞ GÖRÜB) ==================== -->
-            <div class="mb-3">
-                <label for="employee_id" class="form-label fw-bold">👤 İşçi <span class="text-danger">*</span></label>
-                <select class="form-select" id="employee_id" name="employee_id" required>
-                    <option value="">İşçi seçin...</option>
-                    @foreach($employees as $employee)
-                        <option value="{{ $employee->id }}" {{ old('employee_id', $complaint->employee_id ?? '') == $employee->id ? 'selected' : '' }}>
-                            {{ $employee->full_name_with_position }}
-                        </option>
-                    @endforeach
-                </select>
-                <small class="text-muted">Bu şikayəti kim icra edir?</small>
-            </div>
-
-            <!-- Köhnə "kim_is_gorub" - u gizlədək -->
-            <input type="hidden" name="kim_is_gorub" value="{{ old('kim_is_gorub', $complaint->kim_is_gorub ?? '') }}">
 
             <button type="submit" class="btn btn-success">
                 <i class="bi bi-save"></i> Yenilə
@@ -399,13 +398,20 @@
                     <label class="form-label fw-bold">Detal Adı</label>
                     <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][adi]" readonly disabled>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label class="form-label fw-bold">Depo Miqdarı</label>
                     <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][depo_miqdari]" readonly disabled>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label class="form-label fw-bold">İşlənən Miqdar</label>
-                    <input type="number" class="form-control" name="detallar[${detalCount}][islenen_miqdar]" placeholder="0" min="0" value="0">
+                    <input type="number" class="form-control" name="detallar[${detalCount}][islenen_miqdar]" placeholder="0" min="1" value="1" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">İşi görən işçi</label>
+                    <select class="form-select" name="detallar[${detalCount}][employee_id]" required>
+                        <option value="">İşçi seçin...</option>
+                        @foreach($employees as $employee)<option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>@endforeach
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">&nbsp;</label>

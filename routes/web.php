@@ -90,6 +90,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
             Route::get('/', [ComplaintController::class, 'index'])->name('index');
             Route::get('/search', [ComplaintController::class, 'search'])->name('search');
             Route::get('/create', [ComplaintController::class, 'create'])->name('create');
+            Route::get('/{complaint}/pdf', [ComplaintController::class, 'downloadPdf'])->name('pdf');
             Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
         });
     });
