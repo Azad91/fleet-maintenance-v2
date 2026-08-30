@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\Auditable;
 
 class Warehouse extends Model
 {
-    use HasGarageScope, SoftDeletes;
+    use HasGarageScope, SoftDeletes, Auditable;
 
     protected $fillable = [
         'garage_id',

@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use App\Models\Traits\HasGarageScope;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Driver extends Model
 {
-    use HasFactory, SoftDeletes;
-    use HasGarageScope;
+    use HasFactory, SoftDeletes,HasGarageScope, Auditable;
 
     protected $fillable = [
         'kodu', 'ad', 'soyad', 'telefon', 'vezifesi', 'aktiv', 'qeyd', 'garage_id', 'company_id'

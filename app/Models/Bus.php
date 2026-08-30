@@ -6,10 +6,11 @@ use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\Auditable;
 
 class Bus extends Model
 {
-    use HasFactory, HasGarageScope, SoftDeletes;
+    use HasFactory, HasGarageScope, SoftDeletes, Auditable;
 
     protected $fillable = [
         'garage_id',

@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Traits\HasGarageScope;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Complaint extends Model
 {
-    use HasGarageScope, SoftDeletes;
+    use HasGarageScope, SoftDeletes, Auditable;
 
     protected $fillable = [
         'garage_id',
@@ -110,36 +111,5 @@ class Complaint extends Model
             return $this->is_baslama_tarix->diffInDays($this->is_bitme_tarix) . ' gün';
         }
         return '-';
-    }
-
-    protected static function booted()
-    {
-        static::created(function (self $complaint) {
-            $complaint->writeAudit('created', null, $complaint->getAttributes());
-        });
-
-        static::updating(function (self $complaint) {
-            $newValues = $complaint->getDirty();
-            $oldValues = array_intersect_key($complaint->getOriginal(), $newValues);
-            $complaint->writeAudit('updated', $oldValues, $newValues);
-        });
-
-        static::deleted(function (self $complaint) {
-            $complaint->writeAudit('deleted', $complaint->getOriginal(), null);
-        });
-    }
-
-    private function writeAudit(string $event, ?array $oldValues, ?array $newValues): void
-    {
-        AuditLog::create([
-            'user_id' => auth()->id(),
-            'garage_id' => $this->garage_id,
-            'company_id' => $this->company_id,
-            'auditable_type' => self::class,
-            'auditable_id' => $this->id,
-            'event' => $event,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-        ]);
     }
 }

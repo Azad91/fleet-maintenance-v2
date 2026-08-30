@@ -6,11 +6,11 @@ use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\Auditable;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes;
-    use HasGarageScope;
+    use HasFactory, SoftDeletes, HasGarageScope, Auditable;
 
     protected $fillable = [
         'ad', 'soyad', 'vezifesi', 'aktiv', 'qeyd', 'garage_id', 'company_id'
