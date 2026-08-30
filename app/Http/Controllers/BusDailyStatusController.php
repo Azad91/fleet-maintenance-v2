@@ -33,6 +33,17 @@ class BusDailyStatusController extends Controller
             'status' => 'required|string',
         ]);
 
+        // ✅ DÜZƏLİŞ: Eyni avtobus və tarix üçün qeyd varsa, xəta ver
+        $exists = BusDailyStatus::where('bus_id', $request->bus_id)
+            ->whereDate('tarix', $request->tarix)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors([
+                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq status qeydi var!"
+            ])->withInput();
+        }
+
         BusDailyStatus::create($validated);
         return redirect()->route('bus-daily-statuses.index')->with('success', 'Status uğurla əlavə edildi!');
     }
@@ -53,11 +64,25 @@ class BusDailyStatusController extends Controller
     public function update(Request $request, $id)
     {
         $status = BusDailyStatus::findOrFail($id);
+
         $validated = $request->validate([
             'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
             'tarix'  => 'required|date',
             'status' => 'required|string',
         ]);
+
+        // ✅ DÜZƏLİŞ: Eyni avtobus və tarix üçün başqa qeyd varsa (özündən başqa), xəta ver
+        $exists = BusDailyStatus::where('bus_id', $request->bus_id)
+            ->where('id', '!=', $id)
+            ->whereDate('tarix', $request->tarix)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors([
+                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq status qeydi var!"
+            ])->withInput();
+        }
+
         $status->update($validated);
         return redirect()->route('bus-daily-statuses.index')->with('success', 'Status yeniləndi!');
     }
