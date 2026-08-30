@@ -11,6 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             GarageSeeder::class,
+            ComplaintTypeSeeder::class,
+            ServiceTemplateSeeder::class,
         ]);
     }
 }

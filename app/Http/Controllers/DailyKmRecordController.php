@@ -42,13 +42,26 @@ class DailyKmRecordController extends Controller
             'km' => 'required|integer|min:0',
         ]);
 
-        // 🔥 BİZNES QAYDASI: Yeni KM əvvəlki KM-dən böyük olmalıdır
+        // HasGarageScope cari qaraj və şirkəti avtomatik yazır.
         $bus = Bus::findOrFail($request->bus_id);
-        $lastKm = $bus->dailyKmRecords()->orderBy('tarix', 'desc')->first();
+        $previousKm = $bus->dailyKmRecords()
+            ->whereDate('tarix', '<', $request->tarix)
+            ->orderByDesc('tarix')
+            ->first();
+        $nextKm = $bus->dailyKmRecords()
+            ->whereDate('tarix', '>', $request->tarix)
+            ->orderBy('tarix')
+            ->first();
 
-        if ($lastKm && $request->km <= $lastKm->km) {
+        if ($previousKm && $request->km <= $previousKm->km) {
             return back()->withErrors([
-                'km' => "Yeni KM dəyəri ({$request->km}) əvvəlki KM-dən ({$lastKm->km}) böyük olmalıdır!"
+                'km' => "KM dəyəri əvvəlki qeyddən ({$previousKm->km}) böyük olmalıdır!"
+            ])->withInput();
+        }
+
+        if ($nextKm && $request->km >= $nextKm->km) {
+            return back()->withErrors([
+                'km' => "KM dəyəri sonrakı qeyddən ({$nextKm->km}) kiçik olmalıdır!"
             ])->withInput();
         }
 
@@ -93,16 +106,27 @@ class DailyKmRecordController extends Controller
             'km' => 'required|integer|min:0',
         ]);
 
-        // 🔥 BİZNES QAYDASI: Yenilənən KM əvvəlki KM-dən böyük olmalıdır
         $bus = Bus::findOrFail($request->bus_id);
-        $lastKm = $bus->dailyKmRecords()
-            ->where('id', '!=', $id) // Özünü nəzərə alma
-            ->orderBy('tarix', 'desc')
+        $previousKm = $bus->dailyKmRecords()
+            ->where('id', '!=', $id)
+            ->whereDate('tarix', '<', $request->tarix)
+            ->orderByDesc('tarix')
+            ->first();
+        $nextKm = $bus->dailyKmRecords()
+            ->where('id', '!=', $id)
+            ->whereDate('tarix', '>', $request->tarix)
+            ->orderBy('tarix')
             ->first();
 
-        if ($lastKm && $request->km <= $lastKm->km) {
+        if ($previousKm && $request->km <= $previousKm->km) {
             return back()->withErrors([
-                'km' => "Yeni KM dəyəri ({$request->km}) əvvəlki KM-dən ({$lastKm->km}) böyük olmalıdır!"
+                'km' => "KM dəyəri əvvəlki qeyddən ({$previousKm->km}) böyük olmalıdır!"
+            ])->withInput();
+        }
+
+        if ($nextKm && $request->km >= $nextKm->km) {
+            return back()->withErrors([
+                'km' => "KM dəyəri sonrakı qeyddən ({$nextKm->km}) kiçik olmalıdır!"
             ])->withInput();
         }
 

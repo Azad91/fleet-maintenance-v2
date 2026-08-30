@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Garage;
+use App\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,12 +12,30 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected $garage;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Create a company and garage for testing
+        $company = Company::create([
+            'name' => 'Test Company',
+            'slug' => 'test-company'
+        ]);
+        $this->garage = Garage::create([
+            'company_id' => $company->id,
+            'name' => 'Test Garage',
+            'code' => 'TG001'
+        ]);
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['current_garage_id' => $this->garage->id])
             ->get('/profile');
 
         $response->assertOk();
@@ -27,6 +47,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['current_garage_id' => $this->garage->id])
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
@@ -49,6 +70,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['current_garage_id' => $this->garage->id])
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => $user->email,
@@ -67,6 +89,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['current_garage_id' => $this->garage->id])
             ->delete('/profile', [
                 'password' => 'password',
             ]);
@@ -85,6 +108,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withSession(['current_garage_id' => $this->garage->id])
             ->from('/profile')
             ->delete('/profile', [
                 'password' => 'wrong-password',

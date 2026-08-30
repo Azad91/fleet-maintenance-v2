@@ -80,6 +80,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         Route::middleware(['role:admin,complaint'])->group(function () {
             Route::get('/import', [ComplaintController::class, 'importForm'])->name('import');
             Route::post('/import', [ComplaintController::class, 'import'])->name('import.store');
+            Route::get('/create', [ComplaintController::class, 'create'])->name('create');
             Route::post('/', [ComplaintController::class, 'store'])->name('store');
             Route::get('/{complaint}/edit', [ComplaintController::class, 'edit'])->name('edit');
             Route::put('/{complaint}', [ComplaintController::class, 'update'])->name('update');
@@ -89,13 +90,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         Route::middleware(['role:admin,complaint,directorate'])->group(function () {
             Route::get('/', [ComplaintController::class, 'index'])->name('index');
             Route::get('/search', [ComplaintController::class, 'search'])->name('search');
-            Route::get('/create', [ComplaintController::class, 'create'])->name('create');
             Route::get('/{complaint}/pdf', [ComplaintController::class, 'downloadPdf'])->name('pdf');
             Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
         });
     });
 
-    Route::post('/complaints/{complaint}/close', [ComplaintController::class, 'close'])->name('complaints.close');
+    Route::post('/complaints/{complaint}/close', [ComplaintController::class, 'close'])
+        ->middleware(['role:admin,complaint'])
+        ->name('complaints.close');
 
     // ==================== COMPLAINT TYPES ====================
     Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:admin'])->group(function () {
@@ -145,29 +147,37 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     });
 
     // ==================== BUS DAILY STATUS ROUTES ====================
-    Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->middleware(['role:admin'])->group(function () {
+    Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->group(function () {
+        Route::middleware(['role:admin,daily_status'])->group(function () {
         Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
         Route::post('/import', [BusDailyStatusController::class, 'import'])->name('import.store');
         Route::get('/create', [BusDailyStatusController::class, 'create'])->name('create');
         Route::post('/', [BusDailyStatusController::class, 'store'])->name('store');
-        Route::get('/', [BusDailyStatusController::class, 'index'])->name('index');
-        Route::get('/{bus_daily_status}', [BusDailyStatusController::class, 'show'])->name('show');
         Route::get('/{bus_daily_status}/edit', [BusDailyStatusController::class, 'edit'])->name('edit');
         Route::put('/{bus_daily_status}', [BusDailyStatusController::class, 'update'])->name('update');
         Route::delete('/{bus_daily_status}', [BusDailyStatusController::class, 'destroy'])->name('destroy');
+        });
+        Route::middleware(['role:admin,daily_status,directorate'])->group(function () {
+            Route::get('/', [BusDailyStatusController::class, 'index'])->name('index');
+            Route::get('/{bus_daily_status}', [BusDailyStatusController::class, 'show'])->name('show');
+        });
     });
 
     // ==================== DAILY KM RECORDS ROUTES ====================
-    Route::prefix('daily-km-records')->name('daily-km-records.')->middleware(['role:admin'])->group(function () {
+    Route::prefix('daily-km-records')->name('daily-km-records.')->group(function () {
+        Route::middleware(['role:admin,daily_km'])->group(function () {
         Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
         Route::post('/import', [DailyKmRecordController::class, 'import'])->name('import.store');
         Route::get('/create', [DailyKmRecordController::class, 'create'])->name('create');
         Route::post('/', [DailyKmRecordController::class, 'store'])->name('store');
-        Route::get('/', [DailyKmRecordController::class, 'index'])->name('index');
-        Route::get('/{daily_km_record}', [DailyKmRecordController::class, 'show'])->name('show');
         Route::get('/{daily_km_record}/edit', [DailyKmRecordController::class, 'edit'])->name('edit');
         Route::put('/{daily_km_record}', [DailyKmRecordController::class, 'update'])->name('update');
         Route::delete('/{daily_km_record}', [DailyKmRecordController::class, 'destroy'])->name('destroy');
+        });
+        Route::middleware(['role:admin,daily_km,directorate'])->group(function () {
+            Route::get('/', [DailyKmRecordController::class, 'index'])->name('index');
+            Route::get('/{daily_km_record}', [DailyKmRecordController::class, 'show'])->name('show');
+        });
     });
 
     // ==================== DRIVER ROUTES ====================
@@ -204,8 +214,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::get('get-bus-km-by-id/{bus_id}', function ($bus_id) {
         $bus = App\Models\Bus::find($bus_id);
         if ($bus) {
+            // Əvvəl DailyKmRecord-dən axtar
             $latestKm = $bus->dailyKmRecords()->latest('tarix')->first();
-            return response()->json(['km' => $latestKm ? $latestKm->km : null]);
+            // Əgər yoxdursa, Bus cədvəlindən km-i al
+            $km = $latestKm ? $latestKm->km : $bus->km;
+            return response()->json(['km' => $km]);
         }
         return response()->json(['km' => null]);
     })->name('get.bus.km.by.id');
@@ -215,9 +228,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         if (!$bus) return response()->json([]);
 
         $templates = App\Models\ServiceTemplate::all();
-        $result = $templates->map(function ($template) use ($bus) {
-            $interval = App\Models\BusServiceInterval::where('bus_id', $bus->id)
-                ->where('service_template_id', $template->id)->first();
+        $intervalsByTemplate = App\Models\BusServiceInterval::where('bus_id', $bus->id)
+            ->whereIn('service_template_id', $templates->pluck('id'))
+            ->get()
+            ->keyBy('service_template_id');
+
+        $result = $templates->map(function ($template) use ($intervalsByTemplate) {
+            $interval = $intervalsByTemplate->get($template->id);
             return [
                 'id' => $template->id,
                 'name' => $template->name,
@@ -230,7 +247,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
     Route::get('get-motor-oil-services/{bus_id}', function ($bus_id) {
         $bus = App\Models\Bus::findOrFail($bus_id);
-        $latestKm = optional($bus->dailyKmRecords()->latest('tarix')->first())->km ?? 0;
+        $latestKm = optional($bus->dailyKmRecords()->latest('tarix')->first())->km ?? $bus->km ?? 0;
 
         return App\Models\MotorOilDetail::where('km', '>', $latestKm)
             ->orderBy('km')
