@@ -28,7 +28,6 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $companyId = session('current_company_id');
 
         DB::transaction(function () use ($kod, $rowArray, $garageId, $companyId) {
-            // ✅ DÜZƏLİŞ: Əgər varsa YENİDƏN YAZ (əlavə etmə)
             $warehouse = Warehouse::where('kod', $kod)->lockForUpdate()->first();
 
             if ($warehouse) {
@@ -58,8 +57,21 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         return [
             'kod' => 'required|string|max:255',
             'ad' => 'required|string|max:255',
-            'miqdar' => 'nullable|numeric|min:0',      // ✅ ƏLAVƏ
-            'qiymet' => 'nullable|numeric|min:0',      // ✅ ƏLAVƏ
+            'miqdar' => 'nullable|numeric|min:0',
+            'qiymet' => 'nullable|numeric|min:0',
+            'olcu_vahidi' => 'nullable|string|max:50',
+        ];
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            'kod.required' => 'Kod sütunu boş ola bilməz.',
+            'ad.required' => 'Ad sütunu boş ola bilməz.',
+            'miqdar.numeric' => 'Miqdar yalnız rəqəm ola bilər.',
+            'miqdar.min' => 'Miqdar 0-dan kiçik ola bilməz.',
+            'qiymet.numeric' => 'Qiymət yalnız rəqəm ola bilər.',
+            'qiymet.min' => 'Qiymət 0-dan kiçik ola bilməz.',
         ];
     }
 }
