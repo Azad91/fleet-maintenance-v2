@@ -92,7 +92,7 @@
                                 @endif
 
                                 <!-- Sil -->
-                                @if(Auth::user()->role == 'admin')
+                                @if(Auth::user()->hasGarageRole('admin'))
                                 <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kartı silmək istədiyinizdən əminsiniz?')">
                                     @csrf
                                     @method('DELETE')

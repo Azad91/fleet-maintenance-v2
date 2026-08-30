@@ -44,7 +44,7 @@
                                 <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if(Auth::user()->role == 'admin' || Auth::user()->role == 'complaint')
+                                @if(Auth::user()->hasGarageRole(['admin', 'complaint']))
                                     <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>

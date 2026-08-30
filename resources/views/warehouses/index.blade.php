@@ -45,6 +45,13 @@
 @section('scripts')
 <script>
     function liveSearch(query) {
+        const params = new URLSearchParams();
+        const search = query.trim();
+
+        if (search) {
+            params.set('search', search);
+        }
+
         fetch('{{ url('/warehouses/search') }}?' + params.toString())
             .then(response => response.text())
             .then(html => {

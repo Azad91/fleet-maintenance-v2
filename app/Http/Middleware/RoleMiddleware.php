@@ -18,8 +18,7 @@ class RoleMiddleware
         $user = Auth::user();
         $currentGarageId = session('current_garage_id');
 
-        // Admin hər şeyi görə bilər
-        if ($user->role === 'admin') {
+        if ($user->hasGarageRole('admin')) {
             return $next($request);
         }
 
@@ -28,19 +27,11 @@ class RoleMiddleware
         }
 
         // Qaraj üzrə rol yoxla
-        $membership = $user
-            ->garages()
-            ->whereKey($currentGarageId)
-            ->wherePivot('is_active', true)
-            ->first();
-
-        if (!$membership) {
+        if (! $user->garages()->whereKey($currentGarageId)->wherePivot('is_active', true)->exists()) {
             abort(403, 'Bu qaraja giriş icazəniz yoxdur.');
         }
 
-        $userRole = $membership->pivot->role;
-
-        if (!in_array($userRole, $roles)) {
+        if (! $user->hasGarageRole($roles, $currentGarageId)) {
             abort(403, "Bu əməliyyat üçün icazəniz yoxdur. Tələb olunan rollar: " . implode(', ', $roles));
         }
 

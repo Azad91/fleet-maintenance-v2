@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Complaint extends Model
 {
-    use HasGarageScope;
+    use HasGarageScope, SoftDeletes;
 
     protected $fillable = [
         'garage_id',
@@ -70,6 +71,11 @@ class Complaint extends Model
         return $this->belongsTo(User::class, 'closed_by');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ComplaintItem::class);
+    }
+
     // ==================== SKOPLAR ====================
     public function scopeOpen($query)
     {
@@ -100,18 +106,34 @@ class Complaint extends Model
         return '-';
     }
 
-    // ==================== EVENT (Audit Log üçün) ====================
     protected static function booted()
     {
-        static::updating(function ($complaint) {
-            // Yalnız status dəyişərsə
-            if ($complaint->isDirty('status')) {
-                $oldStatus = $complaint->getOriginal('status');
-                $newStatus = $complaint->status;
-
-                // Audit log əlavə et (sonra implement edəcəyik)
-                // \App\Models\AuditLog::create([...]);
-            }
+        static::created(function (self $complaint) {
+            $complaint->writeAudit('created', null, $complaint->getAttributes());
         });
+
+        static::updating(function (self $complaint) {
+            $newValues = $complaint->getDirty();
+            $oldValues = array_intersect_key($complaint->getOriginal(), $newValues);
+            $complaint->writeAudit('updated', $oldValues, $newValues);
+        });
+
+        static::deleted(function (self $complaint) {
+            $complaint->writeAudit('deleted', $complaint->getOriginal(), null);
+        });
+    }
+
+    private function writeAudit(string $event, ?array $oldValues, ?array $newValues): void
+    {
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'garage_id' => $this->garage_id,
+            'company_id' => $this->company_id,
+            'auditable_type' => self::class,
+            'auditable_id' => $this->id,
+            'event' => $event,
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+        ]);
     }
 }

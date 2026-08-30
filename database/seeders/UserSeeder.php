@@ -49,5 +49,23 @@ class UserSeeder extends Seeder
                 'role' => 'warehouse',
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'daily-km@fleet.com'],
+            [
+                'name' => 'Günlük KM İşçisi',
+                'password' => Hash::make('password'),
+                'role' => 'bus',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'daily-status@fleet.com'],
+            [
+                'name' => 'Günlük Status İşçisi',
+                'password' => Hash::make('password'),
+                'role' => 'bus',
+            ]
+        );
     }
 }

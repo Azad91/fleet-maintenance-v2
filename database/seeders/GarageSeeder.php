@@ -130,5 +130,23 @@ class GarageSeeder extends Seeder
             ]);
             $warehouse->setCurrentGarage($garage1);
         }
+
+        $dailyKm = User::where('email', 'daily-km@fleet.com')->first();
+        if ($dailyKm) {
+            $dailyKm->garages()->sync([
+                $garage1->id => ['role' => 'daily_km', 'is_active' => true],
+                $garage2->id => ['role' => 'daily_km', 'is_active' => true],
+            ]);
+            $dailyKm->setCurrentGarage($garage1);
+        }
+
+        $dailyStatus = User::where('email', 'daily-status@fleet.com')->first();
+        if ($dailyStatus) {
+            $dailyStatus->garages()->sync([
+                $garage1->id => ['role' => 'daily_status', 'is_active' => true],
+                $garage2->id => ['role' => 'daily_status', 'is_active' => true],
+            ]);
+            $dailyStatus->setCurrentGarage($garage1);
+        }
     }
 }

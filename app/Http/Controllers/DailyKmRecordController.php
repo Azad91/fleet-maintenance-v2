@@ -169,7 +169,8 @@ class DailyKmRecordController extends Controller
             Excel::import(new DailyKmRecordsImport, $request->file('file'));
             return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatları uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('daily-km-records.index')->with('error', 'Xəta: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('daily-km-records.index')->with('error', 'KM idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
 }

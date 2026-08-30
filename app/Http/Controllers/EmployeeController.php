@@ -91,7 +91,8 @@ class EmployeeController extends Controller
             Excel::import(new EmployeesImport, $request->file('file'));
             return redirect()->route('employees.index')->with('success', 'İşçilər uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('employees.index')->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('employees.index')->with('error', 'İşçi idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
 }

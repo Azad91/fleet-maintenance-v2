@@ -59,9 +59,29 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
-    public function hasAnyRole($roles)
+public function hasAnyRole($roles)
+{
+        return $this->hasGarageRole($roles);
+    }
+
+    public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
-        return in_array($this->role, $roles);
+        $roles = (array) $roles;
+
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        $garageId ??= session('current_garage_id');
+        if (! $garageId) {
+            return false;
+        }
+
+        return $this->garages()
+            ->whereKey($garageId)
+            ->wherePivot('is_active', true)
+            ->wherePivotIn('role', $roles)
+            ->exists();
     }
     // app/Models/User.php - class User daxilinə əlavə et:
 

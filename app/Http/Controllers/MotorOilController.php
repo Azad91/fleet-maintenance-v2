@@ -51,7 +51,8 @@ class MotorOilController extends Controller
             Excel::import(new MotorOilImport, $request->file('file'));
             return redirect()->route('motor-oil.index')->with('success', 'Motor yağ detalları uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Xəta: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'Motor yağı idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
 }

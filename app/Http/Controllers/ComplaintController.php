@@ -140,7 +140,10 @@ class ComplaintController extends Controller
                 $data['detallar'] = null;
             }
 
-            return Complaint::create($data);
+            $complaint = Complaint::create($data);
+            $this->syncComplaintItems($complaint, $request->input('shikayet', []), $data['sikayet_tipi'] ?? null);
+
+            return $complaint;
         });
 
         return redirect()->route('complaints.show', $complaint)->with('success', 'Kart uğurla açıldı. PDF formatında çap edə bilərsiniz.');
@@ -213,6 +216,7 @@ class ComplaintController extends Controller
 
             if (!empty($validated['shikayet']) && is_array($validated['shikayet'])) {
                 $complaint->shikayet = implode("\n", array_filter($validated['shikayet']));
+                $this->syncComplaintItems($complaint, $validated['shikayet'], $validated['sikayet_tipi'] ?? null);
             }
 
             // Köhnə detalları anbara geri qaytar
@@ -281,6 +285,18 @@ class ComplaintController extends Controller
         return redirect('/complaints')->with('success', 'Şikayət uğurla yeniləndi!');
     }
 
+    private function syncComplaintItems(Complaint $complaint, array $items, ?string $type): void
+    {
+        $complaint->items()->delete();
+
+        foreach (array_filter(array_map('trim', $items)) as $description) {
+            $complaint->items()->create([
+                'description' => $description,
+                'type' => $type,
+            ]);
+        }
+    }
+
     // 🔥 DESTROY METODU (STOK GERİ QAYTARILIR)
     public function destroy($id)
     {
@@ -328,7 +344,8 @@ class ComplaintController extends Controller
             Excel::import(new ComplaintsImport, $request->file('file'));
             return redirect()->route('complaints.index')->with('success', 'Şikayətlər uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('complaints.index')->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('complaints.index')->with('error', 'Şikayət idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
 
@@ -387,6 +404,14 @@ class ComplaintController extends Controller
     public function downloadPdf($id)
     {
         $complaint = Complaint::with('bus')->findOrFail($id);
+
+        $storedPdfPath = storage_path("app/public/akt/akt-{$complaint->id}.pdf");
+        if (is_file($storedPdfPath)) {
+            return response()->file($storedPdfPath, [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
         $employeesById = Employee::whereIn(
             'id',
             collect($complaint->detallar ?? [])->pluck('employee_id')->filter()->unique()

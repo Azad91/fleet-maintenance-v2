@@ -13,6 +13,7 @@ use App\Http\Controllers\BusDailyStatusController;
 use App\Http\Controllers\DailyKmRecordController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\GarageSelectionController;
+use App\Http\Controllers\GarageDataController;
 use Illuminate\Http\Request;
 
 /*
@@ -195,82 +196,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     });
 
     // ==================== API ROUTES (JSON) ====================
-    Route::get('get-bus-id-by-xett/{xett_no}', function ($xett_no) {
-        $bus = App\Models\Bus::where('xett_no', $xett_no)->first();
-        return response()->json([
-            'dqn' => $bus ? $bus->dqn : null,
-            'bus_id' => $bus ? $bus->id : null
-        ]);
-    })->name('get.bus.id.by.xett');
-
-    Route::get('get-detal-by-kod/{kod}', function ($kod) {
-        $detal = App\Models\Warehouse::where('kod', $kod)->first();
-        return response()->json([
-            'detal_adi' => $detal ? $detal->ad : null,
-            'depo_miqdari' => $detal ? $detal->miqdar : null,
-        ]);
-    })->name('get.detal.by.kod');
-
-    Route::get('get-bus-km-by-id/{bus_id}', function ($bus_id) {
-        $bus = App\Models\Bus::find($bus_id);
-        if ($bus) {
-            // Əvvəl DailyKmRecord-dən axtar
-            $latestKm = $bus->dailyKmRecords()->latest('tarix')->first();
-            // Əgər yoxdursa, Bus cədvəlindən km-i al
-            $km = $latestKm ? $latestKm->km : $bus->km;
-            return response()->json(['km' => $km]);
-        }
-        return response()->json(['km' => null]);
-    })->name('get.bus.km.by.id');
-
-    Route::get('get-service-templates/{bus_id}', function ($bus_id) {
-        $bus = App\Models\Bus::find($bus_id);
-        if (!$bus) return response()->json([]);
-
-        $templates = App\Models\ServiceTemplate::all();
-        $intervalsByTemplate = App\Models\BusServiceInterval::where('bus_id', $bus->id)
-            ->whereIn('service_template_id', $templates->pluck('id'))
-            ->get()
-            ->keyBy('service_template_id');
-
-        $result = $templates->map(function ($template) use ($intervalsByTemplate) {
-            $interval = $intervalsByTemplate->get($template->id);
-            return [
-                'id' => $template->id,
-                'name' => $template->name,
-                'km_interval' => $interval ? $interval->custom_km_interval : $template->default_km_interval,
-                'details' => $template->details,
-            ];
-        });
-        return response()->json($result);
-    })->name('get.service.templates');
-
-    Route::get('get-motor-oil-services/{bus_id}', function ($bus_id) {
-        $bus = App\Models\Bus::findOrFail($bus_id);
-        $latestKm = optional($bus->dailyKmRecords()->latest('tarix')->first())->km ?? $bus->km ?? 0;
-
-        return App\Models\MotorOilDetail::where('km', '>', $latestKm)
-            ->orderBy('km')
-            ->orderBy('detal_adi')
-            ->get()
-            ->groupBy('km')
-            ->map(fn ($details, $km) => [
-                'km' => (int) $km,
-                'details' => $details->map(fn ($detail) => [
-                    'kodu' => $detail->detal_kodu,
-                    'adi' => $detail->detal_adi,
-                    'miqdar' => $detail->miqdar,
-                    'say' => $detail->say,
-                ])->values(),
-            ])
-            ->values();
-    })->name('get.motor.oil.services');
-
-    Route::get('get-driver-by-kod/{kod}', function ($kod) {
-        $driver = App\Models\Driver::where('kodu', $kod)->first();
-        return response()->json([
-            'driver_ad' => $driver ? $driver->full_name : null,
-            'driver_id' => $driver ? $driver->id : null,
-        ]);
-    })->name('get.driver.by.kod');
+    Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
+    Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
+    Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
+    Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');
+    Route::get('get-motor-oil-services/{bus_id}', [GarageDataController::class, 'motorOilServices'])->name('get.motor.oil.services');
+    Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
 });

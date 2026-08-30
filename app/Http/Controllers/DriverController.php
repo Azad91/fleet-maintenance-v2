@@ -86,7 +86,8 @@ class DriverController extends Controller
             Excel::import(new DriversImport, $request->file('file'));
             return redirect()->route('drivers.index')->with('success', 'Sürücülər uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Xəta: ' . $e->getMessage());
+            report($e);
+            return redirect()->back()->with('error', 'Sürücü idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
 

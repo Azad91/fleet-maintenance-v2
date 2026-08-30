@@ -80,7 +80,8 @@ class BusDailyStatusController extends Controller
             Excel::import(new BusDailyStatusesImport, $request->file('file'));
             return redirect()->route('bus-daily-statuses.index')->with('success', 'Statuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('bus-daily-statuses.index')->with('error', 'Xəta: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('bus-daily-statuses.index')->with('error', 'Status idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
 }

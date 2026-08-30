@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bus extends Model
 {
-    use HasFactory, HasGarageScope;
+    use HasFactory, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
         'garage_id',

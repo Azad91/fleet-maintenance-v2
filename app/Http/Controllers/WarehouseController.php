@@ -93,7 +93,8 @@ class WarehouseController extends Controller
             Excel::import(new WarehouseImport, $request->file('file'));
             return redirect()->route('warehouses.index')->with('success', 'Anbar məlumatları uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('warehouses.index')->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('warehouses.index')->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
         }
     }
 }

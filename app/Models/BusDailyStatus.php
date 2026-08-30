@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusDailyStatus extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     use HasGarageScope;
 
     protected $fillable = [

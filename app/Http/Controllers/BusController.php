@@ -131,7 +131,8 @@ class BusController extends Controller
             \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\BusesImport, $request->file('file'));
             return redirect()->route('buses.index')->with('success', 'Avtobuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('buses.index')->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('buses.index')->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
         }
     }
 }

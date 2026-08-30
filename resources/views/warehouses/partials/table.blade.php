@@ -42,7 +42,7 @@
                                 <a href="{{ route('warehouses.show', $item) }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if(Auth::user()->role == 'admin' || Auth::user()->role == 'warehouse')
+                                @if(Auth::user()->hasGarageRole(['admin', 'warehouse']))
                                     <a href="{{ route('warehouses.edit', $item) }}" class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>

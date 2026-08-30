@@ -73,7 +73,8 @@ class ComplaintTypeController extends Controller
             Excel::import(new ComplaintTypesImport, $request->file('file'));
             return redirect()->route('complaint-types.index')->with('success', 'Şikayət növləri uğurla idxal edildi!');
         } catch (\Exception $e) {
-            return redirect()->route('complaint-types.index')->with('error', 'Xəta baş verdi: ' . $e->getMessage());
+            report($e);
+            return redirect()->route('complaint-types.index')->with('error', 'Şikayət növlərinin idxalı zamanı xəta baş verdi.');
         }
     }
 }

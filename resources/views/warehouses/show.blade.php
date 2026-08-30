@@ -79,7 +79,7 @@
     </div>
 
     <br>
-    @if(Auth::user()->role != 'directorate')
+    @if(Auth::user()->hasGarageRole(['admin', 'warehouse']))
         <a href="{{ route('warehouses.edit', $warehouse) }}" class="btn btn-warning">✏️ Redaktə Et</a>
     @endif
     <a href="{{ route('warehouses.index') }}" class="btn btn-secondary">⬅ Geri</a>

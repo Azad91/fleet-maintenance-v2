@@ -75,7 +75,7 @@
                                 <a href="{{ route('buses.show', $bus) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if(Auth::user()->role == 'admin')
+                                @if(Auth::user()->hasGarageRole('admin'))
                                     <a href="{{ route('buses.edit', $bus) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
