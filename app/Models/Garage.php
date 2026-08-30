@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Garage extends Model
 {
+
+    use SoftDeletes;
+
     protected $fillable = ['company_id', 'name', 'code', 'address', 'phone', 'is_active'];
 
     public function company()
