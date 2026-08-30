@@ -17,27 +17,25 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
     {
         $rowArray = $row->toArray();
 
-        // 🔥 KODU TAM TƏMİZLƏ
         $kod = trim((string) ($rowArray['kod'] ?? ''));
 
-        // 🔥 Əgər kod boşdursa, keç
         if (empty($kod)) {
             Log::warning('Boş kod sətri keçildi');
             return;
         }
 
-        // 🔥 Cari qaraj və şirkət ID-lərini al
         $garageId = session('current_garage_id');
         $companyId = session('current_company_id');
 
         DB::transaction(function () use ($kod, $rowArray, $garageId, $companyId) {
-            // Paralel import və kart əməliyyatlarında stok itkisinin qarşısını alır.
+            // ✅ DÜZƏLİŞ: Əgər varsa YENİDƏN YAZ (əlavə etmə)
             $warehouse = Warehouse::where('kod', $kod)->lockForUpdate()->first();
 
             if ($warehouse) {
+                // ✅ ƏVƏZ ET: miqdarı toplama əvəzinə birbaşa təyin et
                 $warehouse->update([
-                    'miqdar' => $warehouse->miqdar + (int) ($rowArray['miqdar'] ?? 0),
-                    'qiymet' => $rowArray['qiymet'] ?? $warehouse->qiymet,
+                    'miqdar' => (int) ($rowArray['miqdar'] ?? 0),
+                    'qiymet' => isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : $warehouse->qiymet,
                     'ad' => $rowArray['ad'] ?? $warehouse->ad,
                     'olcu_vahidi' => $rowArray['olcu_vahidi'] ?? $warehouse->olcu_vahidi,
                 ]);
@@ -58,8 +56,10 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
     public function rules(): array
     {
         return [
-            'kod' => 'required',
+            'kod' => 'required|string|max:255',
             'ad' => 'required|string|max:255',
+            'miqdar' => 'nullable|numeric|min:0',      // ✅ ƏLAVƏ
+            'qiymet' => 'nullable|numeric|min:0',      // ✅ ƏLAVƏ
         ];
     }
 }

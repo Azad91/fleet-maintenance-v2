@@ -16,6 +16,9 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'current_garage_id',
+        'current_company_id',
+        'last_selected_garage_at',
     ];
 
     protected $hidden = [

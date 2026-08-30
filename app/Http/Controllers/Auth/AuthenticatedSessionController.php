@@ -28,7 +28,26 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // ✅ DÜZƏLİŞ: Login olan istifadəçinin əvvəlki qarajını sessiyaya yaz
+        $user = Auth::user();
+
+        if ($user && $user->current_garage_id) {
+            // Əvvəl qaraj seçilibsə — sessiyaya yaz və dashboard-a yönləndir
+            $garage = $user->currentGarage;
+            if ($garage) {
+                session([
+                    'current_garage_id' => $garage->id,
+                    'current_garage_name' => $garage->name,
+                    'current_company_id' => $garage->company_id,
+                    'current_company_name' => $garage->company->name ?? null,
+                ]);
+
+                return redirect()->intended(route('dashboard', absolute: false));
+            }
+        }
+
+        // ❌ Əvvəl qaraj seçilməyibsə — qaraj seçim səhifəsinə yönləndir
+        return redirect()->route('garage.selection');
     }
 
     /**
