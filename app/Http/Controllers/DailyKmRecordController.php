@@ -25,7 +25,7 @@ class DailyKmRecordController extends Controller
             });
         }
 
-        $records = $query->orderBy('tarix', 'desc')->paginate(100);
+        $records = $query->orderBy('tarix', 'desc')->paginate(config('settings.pagination'));
         return view('daily-km-records.index', compact('records', 'search'));
     }
 
