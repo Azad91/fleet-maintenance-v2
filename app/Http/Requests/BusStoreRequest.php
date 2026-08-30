@@ -22,8 +22,6 @@ class BusStoreRequest extends FormRequest
             'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')],
             'motor_no' => 'nullable|string|max:255',
             'km' => 'nullable|integer|min:0',
-            'garage_id' => 'nullable|exists:garages,id',  // 🔥 ƏLAVƏ
-            'company_id' => 'nullable|exists:companies,id', // 🔥 ƏLAVƏ
         ];
     }
 }
