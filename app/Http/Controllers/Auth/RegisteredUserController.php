@@ -14,11 +14,13 @@ class RegisteredUserController extends Controller
 {
     public function create()
     {
-        return view('auth.register');
+        abort(403, 'Yeni istifadəçiləri yalnız administrator yarada bilər.');
     }
 
     public function store(Request $request)
     {
+        abort(403, 'Yeni istifadəçiləri yalnız administrator yarada bilər.');
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],

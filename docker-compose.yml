@@ -15,7 +15,7 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: fleet_maintenance
+      DB_DATABASE: fleet_maintenance_v2
       DB_USERNAME: fleet
       DB_PASSWORD: fleet_password
 
@@ -27,7 +27,7 @@ services:
     container_name: fleet-maintenance-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: fleet_maintenance
+      POSTGRES_DB: fleet_maintenance_v2
       POSTGRES_USER: fleet
       POSTGRES_PASSWORD: fleet_password
     volumes:

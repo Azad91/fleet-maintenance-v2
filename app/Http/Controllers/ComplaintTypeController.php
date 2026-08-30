@@ -66,7 +66,7 @@ class ComplaintTypeController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv'
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
         ]);
 
         try {

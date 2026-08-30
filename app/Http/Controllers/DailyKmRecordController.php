@@ -7,6 +7,7 @@ use App\Models\Bus;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\DailyKmRecordsImport;
+use Illuminate\Validation\Rule;
 
 class DailyKmRecordController extends Controller
 {
@@ -37,7 +38,7 @@ class DailyKmRecordController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bus_id' => 'required|exists:buses,id',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
             'tarix' => 'required|date',
             'km' => 'required|integer|min:0',
         ]);
@@ -101,7 +102,7 @@ class DailyKmRecordController extends Controller
         $record = DailyKmRecord::findOrFail($id);
 
         $validated = $request->validate([
-            'bus_id' => 'required|exists:buses,id',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
             'tarix' => 'required|date',
             'km' => 'required|integer|min:0',
         ]);
@@ -155,16 +156,12 @@ class DailyKmRecordController extends Controller
 
     public function importForm()
     {
-        set_time_limit(600);
         return view('daily-km-records.import');
     }
 
     public function import(Request $request)
     {
-        set_time_limit(1800);
-        ini_set('memory_limit', '1024M');
-
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
             Excel::import(new DailyKmRecordsImport, $request->file('file'));
             return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatları uğurla idxal edildi!');

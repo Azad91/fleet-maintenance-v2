@@ -39,9 +39,6 @@
             <a href="{{ route('login') }}" class="btn-custom btn-login">
                 <i class="bi bi-box-arrow-in-right"></i> Daxil Ol
             </a>
-            <a href="{{ route('register') }}" class="btn-custom btn-register">
-                <i class="bi bi-person-plus"></i> Qeydiyyat
-            </a>
         </div>
 
         <div class="footer-text">

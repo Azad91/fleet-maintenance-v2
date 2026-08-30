@@ -56,9 +56,7 @@
             </button>
         </form>
 
-        <div class="auth-footer">
-            Hesabın yoxdur? <a href="{{ route('register') }}">Qeydiyyat</a>
-        </div>
+        <div class="auth-footer">Yeni istifadəçi hesabını administrator yaradır.</div>
     </div>
 </div>
 @endsection

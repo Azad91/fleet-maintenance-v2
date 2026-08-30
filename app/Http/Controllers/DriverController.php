@@ -81,7 +81,7 @@ class DriverController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
             Excel::import(new DriversImport, $request->file('file'));
             return redirect()->route('drivers.index')->with('success', 'Sürücülər uğurla idxal edildi!');

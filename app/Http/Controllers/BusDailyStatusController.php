@@ -6,6 +6,7 @@ use App\Models\BusDailyStatus;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\BusDailyStatusesImport;
+use Illuminate\Validation\Rule;
 
 class BusDailyStatusController extends Controller
 {
@@ -27,7 +28,7 @@ class BusDailyStatusController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bus_id' => 'required|exists:buses,id',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
             'tarix'  => 'required|date',
             'status' => 'required|string',
         ]);
@@ -53,7 +54,7 @@ class BusDailyStatusController extends Controller
     {
         $status = BusDailyStatus::findOrFail($id);
         $validated = $request->validate([
-            'bus_id' => 'required|exists:buses,id',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
             'tarix'  => 'required|date',
             'status' => 'required|string',
         ]);
@@ -75,7 +76,7 @@ class BusDailyStatusController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
             Excel::import(new BusDailyStatusesImport, $request->file('file'));
             return redirect()->route('bus-daily-statuses.index')->with('success', 'Statuslar uğurla idxal edildi!');

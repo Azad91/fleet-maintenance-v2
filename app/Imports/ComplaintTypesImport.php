@@ -15,12 +15,13 @@ class ComplaintTypesImport implements OnEachRow, WithHeadingRow, WithValidation,
     {
         $rowArray = $row->toArray();
 
-        if (empty($rowArray['name'])) {
+        $name = trim((string) ($rowArray['name'] ?? ''));
+        if ($name === '') {
             return;
         }
 
         ComplaintType::updateOrCreate(
-            ['name' => $rowArray['name']]
+            ['name' => $name]
         );
     }
 

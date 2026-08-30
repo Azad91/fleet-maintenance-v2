@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class BusStoreRequest extends FormRequest
 {
@@ -18,7 +19,7 @@ class BusStoreRequest extends FormRequest
             'vin' => 'nullable|string|max:17',
             'uzunluq' => 'nullable|numeric|min:0',
             'xett_no' => 'nullable|string|max:255',
-            'dqn' => 'required|unique:buses,dqn',
+            'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')],
             'motor_no' => 'nullable|string|max:255',
             'km' => 'nullable|integer|min:0',
             'garage_id' => 'nullable|exists:garages,id',  // 🔥 ƏLAVƏ

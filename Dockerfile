@@ -43,8 +43,9 @@ RUN printf '<Directory /var/www/html/public>\n\
 </Directory>\n' > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
 
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && php artisan storage:link
 
 EXPOSE 80
 
-CMD ["sh", "-c", "php artisan migrate --force && apache2-foreground"]
+CMD ["apache2-foreground"]

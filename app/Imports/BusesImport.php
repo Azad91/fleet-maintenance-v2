@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Bus;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Validation\ValidationException;
 
 class BusesImport implements ToModel, WithHeadingRow
 {
@@ -20,9 +21,22 @@ class BusesImport implements ToModel, WithHeadingRow
         $garageId = session('current_garage_id');
         $companyId = session('current_company_id');
 
-        // DQN fiziki avtobusun sistem üzrə unikal identifikatorudur. Modeldəki
-        // qaraj scope-u köhnə qeydi gizlədə bilər; import isə onu yeniləməlidir.
-        $bus = Bus::withoutGlobalScopes()->firstOrNew(['dqn' => $dqn]);
+        $existingInAnotherGarage = Bus::withoutGlobalScopes()
+            ->where('dqn', $dqn)
+            ->where('garage_id', '!=', $garageId)
+            ->exists();
+
+        if ($existingInAnotherGarage) {
+            throw ValidationException::withMessages([
+                'file' => "DQN {$dqn} başqa qaraja aiddir və idxal edilə bilməz.",
+            ]);
+        }
+
+        $bus = Bus::withTrashed()->where('dqn', $dqn)->where('garage_id', $garageId)->first();
+        if ($bus?->trashed()) {
+            $bus->restore();
+        }
+        $bus ??= new Bus();
 
         $bus->fill([
             'garage_id' => $garageId,
