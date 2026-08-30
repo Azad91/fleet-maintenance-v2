@@ -14,6 +14,7 @@ use App\Http\Controllers\DailyKmRecordController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\GarageSelectionController;
 use App\Http\Controllers\GarageDataController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Http\Request;
 
 /*
@@ -56,6 +57,15 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // ==================== USER MANAGEMENT (ADMIN ONLY) ====================
+    Route::prefix('users')->name('users.')->middleware(['role:admin'])->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('/create', [UserManagementController::class, 'create'])->name('create');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
+    });
 
     // ==================== BUS ROUTES ====================
     Route::prefix('buses')->name('buses.')->group(function () {
@@ -150,13 +160,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     // ==================== BUS DAILY STATUS ROUTES ====================
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->group(function () {
         Route::middleware(['role:admin,daily_status'])->group(function () {
-        Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
-        Route::post('/import', [BusDailyStatusController::class, 'import'])->name('import.store');
-        Route::get('/create', [BusDailyStatusController::class, 'create'])->name('create');
-        Route::post('/', [BusDailyStatusController::class, 'store'])->name('store');
-        Route::get('/{bus_daily_status}/edit', [BusDailyStatusController::class, 'edit'])->name('edit');
-        Route::put('/{bus_daily_status}', [BusDailyStatusController::class, 'update'])->name('update');
-        Route::delete('/{bus_daily_status}', [BusDailyStatusController::class, 'destroy'])->name('destroy');
+            Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
+            Route::post('/import', [BusDailyStatusController::class, 'import'])->name('import.store');
+            Route::get('/create', [BusDailyStatusController::class, 'create'])->name('create');
+            Route::post('/', [BusDailyStatusController::class, 'store'])->name('store');
+            Route::get('/{bus_daily_status}/edit', [BusDailyStatusController::class, 'edit'])->name('edit');
+            Route::put('/{bus_daily_status}', [BusDailyStatusController::class, 'update'])->name('update');
+            Route::delete('/{bus_daily_status}', [BusDailyStatusController::class, 'destroy'])->name('destroy');
         });
         Route::middleware(['role:admin,daily_status,directorate'])->group(function () {
             Route::get('/', [BusDailyStatusController::class, 'index'])->name('index');
@@ -167,13 +177,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     // ==================== DAILY KM RECORDS ROUTES ====================
     Route::prefix('daily-km-records')->name('daily-km-records.')->group(function () {
         Route::middleware(['role:admin,daily_km'])->group(function () {
-        Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
-        Route::post('/import', [DailyKmRecordController::class, 'import'])->name('import.store');
-        Route::get('/create', [DailyKmRecordController::class, 'create'])->name('create');
-        Route::post('/', [DailyKmRecordController::class, 'store'])->name('store');
-        Route::get('/{daily_km_record}/edit', [DailyKmRecordController::class, 'edit'])->name('edit');
-        Route::put('/{daily_km_record}', [DailyKmRecordController::class, 'update'])->name('update');
-        Route::delete('/{daily_km_record}', [DailyKmRecordController::class, 'destroy'])->name('destroy');
+            Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
+            Route::post('/import', [DailyKmRecordController::class, 'import'])->name('import.store');
+            Route::get('/create', [DailyKmRecordController::class, 'create'])->name('create');
+            Route::post('/', [DailyKmRecordController::class, 'store'])->name('store');
+            Route::get('/{daily_km_record}/edit', [DailyKmRecordController::class, 'edit'])->name('edit');
+            Route::put('/{daily_km_record}', [DailyKmRecordController::class, 'update'])->name('update');
+            Route::delete('/{daily_km_record}', [DailyKmRecordController::class, 'destroy'])->name('destroy');
         });
         Route::middleware(['role:admin,daily_km,directorate'])->group(function () {
             Route::get('/', [DailyKmRecordController::class, 'index'])->name('index');

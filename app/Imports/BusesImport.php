@@ -41,6 +41,7 @@ class BusesImport implements ToModel, WithHeadingRow
         $bus->fill([
             'garage_id' => $garageId,
             'company_id' => $companyId,
+            'dqn' => $dqn,
             'bus_project' => $row['bus_project'] ?? null,
             'vin' => $row['vin'] ?? null,
             'uzunluq' => $row['uzunluq'] ?? null,

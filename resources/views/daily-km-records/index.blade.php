@@ -5,6 +5,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📊 Gündəlik KM Qeydləri</h1>
+    @if(auth()->user()?->hasGarageRole(['admin', 'daily_km']))
     <div>
         <a href="{{ route('daily-km-records.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> Excel - dən Yüklə
@@ -13,6 +14,7 @@
             <i class="bi bi-plus-lg"></i> Yeni KM Qeydi
         </a>
     </div>
+    @endif
 </div>
 
 <!-- Axtarış -->
@@ -53,16 +55,18 @@
                                 <a href="{{ route('daily-km-records.show', $record) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('daily-km-records.edit', $record) }}" class="btn btn-sm btn-outline-warning">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('Əminsən?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                @if(auth()->user()?->hasGarageRole(['admin', 'daily_km']))
+                                    <a href="{{ route('daily-km-records.edit', $record) }}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('Əminsən?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

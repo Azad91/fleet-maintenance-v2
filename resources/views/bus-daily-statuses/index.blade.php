@@ -5,6 +5,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📋 Gündəlik Avtobus Statusları</h1>
+    @if(auth()->user()?->hasGarageRole(['admin', 'daily_status']))
     <div>
         <a href="{{ route('bus-daily-statuses.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> Excel - dən Yüklə
@@ -13,6 +14,7 @@
             <i class="bi bi-plus-lg"></i> Yeni Status
         </a>
     </div>
+    @endif
 </div>
 
 <div class="card">
@@ -55,9 +57,11 @@
                                 <a href="{{ route('bus-daily-statuses.show', $status) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('bus-daily-statuses.edit', $status) }}" class="btn btn-sm btn-outline-warning">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
+                                @if(auth()->user()?->hasGarageRole(['admin', 'daily_status']))
+                                    <a href="{{ route('bus-daily-statuses.edit', $status) }}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                @endif
                             </div>
                         </td>
                     </tr>

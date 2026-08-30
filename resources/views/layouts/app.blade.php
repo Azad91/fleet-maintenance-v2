@@ -37,19 +37,37 @@
                 @endif
             </div>
             <nav class="fleet-nav" aria-label="Əsas naviqasiya">
+                @php
+                    $currentUser = auth()->user();
+                    $canManage = $currentUser?->hasGarageRole('admin');
+                    $canViewBuses = $currentUser?->hasGarageRole(['admin', 'bus', 'directorate']);
+                    $canViewComplaints = $currentUser?->hasGarageRole(['admin', 'complaint', 'directorate']);
+                    $canViewWarehouse = $currentUser?->hasGarageRole(['admin', 'warehouse', 'directorate']);
+                    $canManageMotorOil = $currentUser?->hasGarageRole('admin');
+                    $canViewDailyStatus = $currentUser?->hasGarageRole(['admin', 'daily_status', 'directorate']);
+                    $canViewDailyKm = $currentUser?->hasGarageRole(['admin', 'daily_km', 'directorate']);
+                @endphp
                 <p class="fleet-nav__label">ƏSAS MENYU</p>
                 <a href="{{ route('dashboard') }}" class="fleet-nav__link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}"><i class="fas fa-chart-pie"></i><span>İdarə paneli</span></a>
-                <p class="fleet-nav__label">ƏMƏLİYYATLAR</p>
-                <a href="{{ route('buses.index') }}" class="fleet-nav__link {{ request()->routeIs('buses.*') ? 'is-active' : '' }}"><i class="fas fa-bus"></i><span>Avtobuslar</span></a>
-                <a href="{{ route('complaints.index') }}" class="fleet-nav__link {{ request()->routeIs('complaints.*') ? 'is-active' : '' }}"><i class="fas fa-screwdriver-wrench"></i><span>Kartlar / Şikayətlər</span></a>
-                <a href="{{ route('warehouses.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouses.*') ? 'is-active' : '' }}"><i class="fas fa-boxes-stacked"></i><span>Anbar</span></a>
-                <a href="{{ route('motor-oil.index') }}" class="fleet-nav__link {{ request()->routeIs('motor-oil.*') ? 'is-active' : '' }}"><i class="fas fa-oil-can"></i><span>Motor yağı</span></a>
-                <p class="fleet-nav__label">GÜNLÜK QEYDLƏR</p>
-                <a href="{{ route('bus-daily-statuses.index') }}" class="fleet-nav__link {{ request()->routeIs('bus-daily-statuses.*') ? 'is-active' : '' }}"><i class="fas fa-clipboard-check"></i><span>Günlük statuslar</span></a>
-                <a href="{{ route('daily-km-records.index') }}" class="fleet-nav__link {{ request()->routeIs('daily-km-records.*') ? 'is-active' : '' }}"><i class="fas fa-gauge-high"></i><span>Günlük KM</span></a>
-                <p class="fleet-nav__label">MƏLUMATLAR</p>
-                <a href="{{ route('drivers.index') }}" class="fleet-nav__link {{ request()->routeIs('drivers.*') ? 'is-active' : '' }}"><i class="fas fa-id-card"></i><span>Sürücülər</span></a>
-                <a href="{{ route('employees.index') }}" class="fleet-nav__link {{ request()->routeIs('employees.*') ? 'is-active' : '' }}"><i class="fas fa-users"></i><span>İşçilər</span></a>
+                @if($canViewBuses || $canViewComplaints || $canViewWarehouse || $canManageMotorOil)
+                    <p class="fleet-nav__label">ƏMƏLİYYATLAR</p>
+                    @if($canViewBuses)<a href="{{ route('buses.index') }}" class="fleet-nav__link {{ request()->routeIs('buses.*') ? 'is-active' : '' }}"><i class="fas fa-bus"></i><span>Avtobuslar</span></a>@endif
+                    @if($canViewComplaints)<a href="{{ route('complaints.index') }}" class="fleet-nav__link {{ request()->routeIs('complaints.*') ? 'is-active' : '' }}"><i class="fas fa-screwdriver-wrench"></i><span>Kartlar / Şikayətlər</span></a>@endif
+                    @if($canViewWarehouse)<a href="{{ route('warehouses.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouses.*') ? 'is-active' : '' }}"><i class="fas fa-boxes-stacked"></i><span>Anbar</span></a>@endif
+                    @if($canManageMotorOil)<a href="{{ route('motor-oil.index') }}" class="fleet-nav__link {{ request()->routeIs('motor-oil.*') ? 'is-active' : '' }}"><i class="fas fa-oil-can"></i><span>Motor yağı</span></a>@endif
+                @endif
+                @if($canViewDailyStatus || $canViewDailyKm)
+                    <p class="fleet-nav__label">GÜNLÜK QEYDLƏR</p>
+                    @if($canViewDailyStatus)<a href="{{ route('bus-daily-statuses.index') }}" class="fleet-nav__link {{ request()->routeIs('bus-daily-statuses.*') ? 'is-active' : '' }}"><i class="fas fa-clipboard-check"></i><span>Günlük statuslar</span></a>@endif
+                    @if($canViewDailyKm)<a href="{{ route('daily-km-records.index') }}" class="fleet-nav__link {{ request()->routeIs('daily-km-records.*') ? 'is-active' : '' }}"><i class="fas fa-gauge-high"></i><span>Günlük KM</span></a>@endif
+                @endif
+                @if($canManage)
+                    <p class="fleet-nav__label">MƏLUMATLAR</p>
+                    <a href="{{ route('drivers.index') }}" class="fleet-nav__link {{ request()->routeIs('drivers.*') ? 'is-active' : '' }}"><i class="fas fa-id-card"></i><span>Sürücülər</span></a>
+                    <a href="{{ route('employees.index') }}" class="fleet-nav__link {{ request()->routeIs('employees.*') ? 'is-active' : '' }}"><i class="fas fa-users"></i><span>İşçilər</span></a>
+                    <p class="fleet-nav__label">İDARƏETMƏ</p>
+                    <a href="{{ route('users.index') }}" class="fleet-nav__link {{ request()->routeIs('users.*') ? 'is-active' : '' }}"><i class="fas fa-user-shield"></i><span>İstifadəçilər</span></a>
+                @endif
             </nav>
             <div class="fleet-sidebar__bottom">
                 <a href="{{ route('profile.edit') }}" class="fleet-nav__link {{ request()->routeIs('profile.*') ? 'is-active' : '' }}"><i class="fas fa-user-gear"></i><span>Profil ayarları</span></a>

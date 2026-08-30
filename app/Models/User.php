@@ -68,10 +68,6 @@ public function hasAnyRole($roles)
     {
         $roles = (array) $roles;
 
-        if ($this->role === 'admin') {
-            return true;
-        }
-
         $garageId ??= session('current_garage_id');
         if (! $garageId) {
             return false;
