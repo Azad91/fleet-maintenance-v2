@@ -1,58 +1,133 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Fleet Control
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Fleet Control avtobus parkının texniki istismarını idarə etmək üçün hazırlanmış Laravel tətbiqidir. Sistem bir neçə şirkət və qarajla işləyir; məlumat, istifadəçi rolu və əməliyyatlar cari qaraj üzrə ayrılır.
 
-## About Laravel
+## Əsas imkanlar
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Avtobusların, xətt nömrələrinin, DQN/VIN və son yürüşün idarə edilməsi
+- Günlük KM və günlük status qeydləri
+- Nasazlıq, qəza və texniki xidmət kartlarının açılması
+- Texniki xidmətdə növbəti yağdəyişmə intervalına görə detalların avtomatik gətirilməsi
+- Kartda istifadə olunan detalın, miqdarın və işi görən işçinin qeyd edilməsi
+- Stok qalığının izlənməsi və mənfi stokun qarşısının alınması
+- Şikayət kartının PDF akt kimi açılması/çap edilməsi
+- Excel-dən avtobus, anbar, işçi, sürücü, günlük KM, günlük status və digər məlumatların idxalı
+- Sürücülərin Excel-ə ixracı
+- Şirkət → qaraj → məlumat quruluşu
+- Rol əsaslı menyu və icazələr
+- Açıq və tünd rejim
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Sistem quruluşu
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```text
+Şirkət
+└── Qaraj
+    ├── Avtobuslar
+    ├── Kartlar / Şikayətlər
+    ├── Anbar
+    ├── Günlük KM
+    ├── Günlük statuslar
+    ├── Sürücülər
+    └── İşçilər
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+İstifadəçi yalnız ona təyin edilmiş qarajdakı məlumatları görür.
 
-## Contributing
+## Rollar və icazələr
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Rol | İcazə |
+| --- | --- |
+| `admin` | Təyin olunduğu qarajda bütün əməliyyatlar və istifadəçi idarəetməsi |
+| `complaint` | Kart/şikayət yaratmaq, redaktə etmək və idarə etmək |
+| `warehouse` | Anbar məhsullarını və stokunu idarə etmək |
+| `daily_km` | Günlük KM qeydlərini idarə etmək |
+| `daily_status` | Günlük status qeydlərini idarə etmək |
+| `directorate` | Müvafiq bölmələrə yalnız baxış; yaratma, redaktə və silmə yoxdur |
 
-## Code of Conduct
+Admin yeni hesabları **İstifadəçilər** bölməsindən yaradır, cari qaraja bağlayır, rol verir, hesabı aktiv/passiv edir və şifrəni yeniləyə bilir.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Tələblər
 
-## Security Vulnerabilities
+- PHP 8.3+
+- Composer
+- PostgreSQL 14+
+- PHP genişlənmələri: `pdo_pgsql`, `mbstring`, `xml`, `zip`, `gd`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Quraşdırma
 
-## License
+```bash
+git clone https://github.com/Azad91/fleet-maintenance-v2.git
+cd fleet-maintenance-v2
+composer install
+copy .env.example .env
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`.env` faylında PostgreSQL bağlantısını öz mühitinizə uyğun yazın:
+
+```dotenv
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=fleet_maintenance_v2
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+```
+
+Sonra migration və başlanğıc məlumatları yaradın:
+
+```bash
+php artisan migrate --seed
+php artisan serve
+```
+
+Tətbiq standart olaraq `http://127.0.0.1:8000` ünvanında açılır.
+
+> Mövcud məlumatları olan bazada `migrate:fresh` işlətməyin; bu əmr cədvəlləri silir. Mövcud sistem üçün yalnız `php artisan migrate` istifadə edin.
+
+## İlkin giriş
+
+Seeder ilə aşağıdakı admin hesabı yaradılır:
+
+```text
+E-mail: admin@fleet.com
+Şifrə: password
+```
+
+İlk girişdən sonra şifrəni **Profil ayarları** bölməsindən dəyişin. Admin daxil olduqdan sonra qaraj seçir və **İstifadəçilər** bölməsindən yeni hesablar yaradır.
+
+## Excel idxalı
+
+Hər idxal səhifəsində qəbul olunan sütunlar göstərilir. Fayllar `.xlsx`, `.xls` və ya `.csv` formatında, maksimum 10 MB ola bilər.
+
+Avtobus idxalında `DQN` məcburidir. Eyni DQN cari qarajda yenilənir; başqa qaraja aid DQN isə idxal edilmir.
+
+## Texniki xidmət kartı
+
+1. Kart açarkən avtobus və texniki xidmət tipi seçilir.
+2. Sistem avtobusun son KM göstəricisini götürür.
+3. Motor yağı cədvəlindən son KM-dən böyük olan ilk interval seçilir.
+4. Həmin intervalın detallar siyahısı avtomatik əlavə edilir.
+5. Dəyişməyəcək detal varsa, kartdakı **Detalı sil** düyməsi ilə çıxarılır. Silinən detal anbardan düşmür.
+
+## Testlər
+
+```bash
+php artisan test
+```
+
+## Texnologiyalar
+
+- Laravel 13
+- PHP 8.3+
+- PostgreSQL
+- Bootstrap 5
+- Laravel Excel (`maatwebsite/excel`)
+- DomPDF (`barryvdh/laravel-dompdf`)
+
+## Təhlükəsizlik qeydləri
+
+- `.env` faylını GitHub-a göndərməyin.
+- Production mühitində `APP_DEBUG=false` istifadə edin.
+- İlkin admin şifrəsini dərhal dəyişin.
+- İstifadəçilərə yalnız ehtiyac duyduğu qaraj və rolu verin.
