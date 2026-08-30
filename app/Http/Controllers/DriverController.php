@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\DriversImport;
 use App\Exports\DriversExport;
+use Illuminate\Validation\Rule;
 
 class DriverController extends Controller
 {
@@ -24,13 +25,27 @@ class DriverController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'kodu' => mb_strtoupper(trim((string) $request->input('kodu'))),
+            'ad' => trim((string) $request->input('ad')),
+            'soyad' => $request->filled('soyad') ? trim((string) $request->input('soyad')) : null,
+        ]);
+
         $validated = $request->validate([
-            'kodu' => 'required|unique:drivers,kodu',
+            'kodu' => [
+                'required', 'string', 'max:100',
+                Rule::unique('drivers', 'kodu')->where(fn ($query) => $query
+                    ->where('garage_id', session('current_garage_id'))
+                    ->whereNull('deleted_at')),
+            ],
             'ad' => 'required|string|max:255',
             'soyad' => 'nullable|string|max:255',
             'telefon' => 'nullable|string|max:50',
             'vezifesi' => 'nullable|string|max:255',
+            'aktiv' => 'required|boolean',
             'qeyd' => 'nullable|string',
+        ], [
+            'kodu.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
         ]);
 
         Driver::create($validated);
@@ -53,13 +68,27 @@ class DriverController extends Controller
     {
         $driver = Driver::findOrFail($id);
 
+        $request->merge([
+            'kodu' => mb_strtoupper(trim((string) $request->input('kodu'))),
+            'ad' => trim((string) $request->input('ad')),
+            'soyad' => $request->filled('soyad') ? trim((string) $request->input('soyad')) : null,
+        ]);
+
         $validated = $request->validate([
-            'kodu' => 'required|unique:drivers,kodu,' . $id,
+            'kodu' => [
+                'required', 'string', 'max:100',
+                Rule::unique('drivers', 'kodu')->ignore($driver->id)->where(fn ($query) => $query
+                    ->where('garage_id', session('current_garage_id'))
+                    ->whereNull('deleted_at')),
+            ],
             'ad' => 'required|string|max:255',
             'soyad' => 'nullable|string|max:255',
             'telefon' => 'nullable|string|max:50',
             'vezifesi' => 'nullable|string|max:255',
+            'aktiv' => 'required|boolean',
             'qeyd' => 'nullable|string',
+        ], [
+            'kodu.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
         ]);
 
         $driver->update($validated);

@@ -72,6 +72,7 @@
                     <option value="{{ $driver->kodu }}">
                 @endforeach
             </datalist>
+            <div id="driverHelp" class="form-text">Kod seçildikdə sürücünün adı avtomatik doldurulur.</div>
         </div>
         <div class="col-md-8">
             <label for="surucu_adi" class="form-label">Sürücü Adı</label>

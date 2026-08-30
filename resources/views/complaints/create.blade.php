@@ -172,6 +172,57 @@
     }
 
     // ==================== YOL / QARAJ ====================
+    let driverLookupRequest = 0;
+
+    function getDriverByKod(kod) {
+        const normalizedKod = kod.trim().toUpperCase();
+        const nameInput = document.getElementById('surucu_adi');
+        const idInput = document.getElementById('driver_id');
+        const help = document.getElementById('driverHelp');
+        const codeInput = document.getElementById('driver_kodu');
+
+        idInput.value = '';
+        nameInput.value = '';
+        codeInput.classList.remove('is-valid', 'is-invalid');
+
+        if (!normalizedKod) {
+            help.textContent = 'Kod seçildikdə sürücünün adı avtomatik doldurulur.';
+            help.className = 'form-text';
+            return;
+        }
+
+        const requestId = ++driverLookupRequest;
+        help.textContent = 'Sürücü axtarılır...';
+        help.className = 'form-text';
+
+        fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedKod))
+            .then(response => {
+                if (!response.ok) throw new Error('Sürücü axtarışı alınmadı.');
+                return response.json();
+            })
+            .then(data => {
+                if (requestId !== driverLookupRequest) return;
+                if (data.found) {
+                    nameInput.value = data.driver_ad;
+                    idInput.value = data.driver_id;
+                    codeInput.value = normalizedKod;
+                    codeInput.classList.add('is-valid');
+                    help.textContent = 'Sürücü tapıldı.';
+                    help.className = 'form-text text-success';
+                } else {
+                    codeInput.classList.add('is-invalid');
+                    help.textContent = 'Bu kodla aktiv sürücü tapılmadı.';
+                    help.className = 'form-text text-danger';
+                }
+            })
+            .catch(() => {
+                if (requestId !== driverLookupRequest) return;
+                codeInput.classList.add('is-invalid');
+                help.textContent = 'Sürücü məlumatı yüklənmədi. Yenidən cəhd edin.';
+                help.className = 'form-text text-danger';
+            });
+    }
+
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');
         if (!yer) return;
@@ -216,6 +267,8 @@
         defaultDetailsMarkup = document.getElementById('detallarContainer').innerHTML;
         toggleFields();
         toggleServiceFields();
+        const driverKod = document.getElementById('driver_kodu').value;
+        if (driverKod) getDriverByKod(driverKod);
     });
 </script>
 @endsection

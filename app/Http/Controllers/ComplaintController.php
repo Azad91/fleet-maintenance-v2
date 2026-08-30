@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ComplaintsImport;
 use App\Models\Employee;
+use App\Models\Driver;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -63,18 +64,28 @@ class ComplaintController extends Controller
         $complaintTypes = ComplaintType::orderBy('name')->get();
         $serviceTemplates = ServiceTemplate::orderBy('default_km_interval', 'asc')->get();
         $employees = Employee::active()->orderBy('ad')->get();
+        $drivers = Driver::active()->orderBy('kodu')->get();
 
         return view('complaints.create', compact(
             'buses',
             'complaintTypes',
             'serviceTemplates',
-            'employees'
+            'employees',
+            'drivers'
         ));
     }
 
     public function store(ComplaintStoreRequest $request)
     {
         $data = $request->validated();
+
+        if (($data['yer'] ?? null) === 'yol') {
+            $driver = Driver::active()->findOrFail($data['driver_id']);
+            $data['surucu_adi'] = $driver->full_name;
+        } else {
+            $data['driver_id'] = null;
+            $data['surucu_adi'] = null;
+        }
 
         // employee_id - ni əlavə et
         if ($request->has('employee_id')) {

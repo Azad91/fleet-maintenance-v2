@@ -82,11 +82,14 @@ class GarageDataController extends Controller
 
     public function driverByCode(string $kod)
     {
-        $driver = Driver::where('kodu', $kod)->first();
+        $driver = Driver::active()
+            ->where('kodu', mb_strtoupper(trim($kod)))
+            ->first();
 
         return response()->json([
             'driver_ad' => $driver?->full_name,
             'driver_id' => $driver?->id,
+            'found' => (bool) $driver,
         ]);
     }
 }

@@ -17,11 +17,16 @@ class ComplaintStoreRequest extends FormRequest
         $garageId = session('current_garage_id');
         $busRule = Rule::exists('buses', 'id')->where('garage_id', $garageId);
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
+        $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
+            ->where('garage_id', $garageId)
+            ->where('aktiv', true)
+            ->whereNull('deleted_at'));
 
         return [
             'bus_id' => ['required', $busRule],
             'yer' => 'required|in:yol,qaraj',
             'surucu_adi' => 'nullable|string|max:255',
+            'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule],
             'shikayet' => 'required|array|min:1',
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
@@ -45,6 +50,8 @@ class ComplaintStoreRequest extends FormRequest
             'bus_id.exists' => 'Seçilən avtobus mövcud deyil.',
             'yer.required' => 'Yer seçilməlidir.',
             'yer.in' => 'Yer yalnız "yol" və ya "qaraj" ola bilər.',
+            'driver_id.required_if' => 'Yol üçün aktiv sürücü kodu seçilməlidir.',
+            'driver_id.exists' => 'Sürücü kodu tapılmadı və ya cari qaraja aid deyil.',
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
@@ -65,10 +72,6 @@ class ComplaintStoreRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $validator->sometimes('surucu_adi', 'required|string|max:255', function ($input) {
-            return $input->yer == 'yol';
-        });
-
         $validator->sometimes('bildirilme_tarix', 'required|date', function ($input) {
             return $input->yer == 'yol';
         });

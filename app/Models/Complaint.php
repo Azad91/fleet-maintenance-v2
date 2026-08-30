@@ -15,6 +15,7 @@ class Complaint extends Model
         'garage_id',
         'company_id',
         'bus_id',
+        'driver_id',
         'yer',
         'surucu_adi',
         'shikayet',
@@ -54,6 +55,11 @@ class Complaint extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function driver()
+    {
+        return $this->belongsTo(Driver::class);
     }
 
     public function serviceTemplate()
