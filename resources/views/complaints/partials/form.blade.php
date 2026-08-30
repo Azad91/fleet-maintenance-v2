@@ -173,12 +173,11 @@
         <option value="">Status seçin...</option>
         <option value="gözləmədə" {{ old('status') == 'gözləmədə' ? 'selected' : '' }}>⏳ Gözləmədə</option>
         <option value="işdə" {{ old('status') == 'işdə' ? 'selected' : '' }}>🔨 İşdə</option>
-        <option value="həll olundu" {{ old('status') == 'həll olundu' ? 'selected' : '' }}>✅ Həll Olundu</option>
     </select>
 </div>
 
 <!-- ==================== 11. TEXNİKİ XİDMƏT ==================== -->
-<div id="serviceFields" class="service-fields-hidden">
+<div id="serviceFields" class="service-fields-hidden" hidden>
     <div class="mb-3">
         <label for="motor_oil_km" class="form-label fw-bold">🔧 Baxım növü</label>
         <select class="form-select" id="motor_oil_km" onchange="onServiceSelectChange()">

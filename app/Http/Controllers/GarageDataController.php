@@ -74,6 +74,7 @@ class GarageDataController extends Controller
                         'adi' => $detail->detal_adi,
                         'miqdar' => $detail->miqdar,
                         'say' => $detail->say,
+                        'olcu_vahidi' => $detail->olcu_vahidi,
                     ])->values(),
                 ])->values()
         );

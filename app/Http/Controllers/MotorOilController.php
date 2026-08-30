@@ -20,7 +20,7 @@ class MotorOilController extends Controller
 
     public function search(Request $request)
     {
-        $search = $request->search;
+        $search = preg_replace('/[^\d]/', '', (string) $request->search);
 
         // Axtarış: əgər search varsa, km-ə görə filtr et
         $details = MotorOilDetail::when($search, function ($query, $search) {

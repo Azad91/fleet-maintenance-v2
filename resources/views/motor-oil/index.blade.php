@@ -42,7 +42,14 @@
 @section('scripts')
 <script>
     function liveSearch(query) {
-        fetch('{{ url('/motor-oil/search') }}?' + encodeURIComponent(query))
+        const params = new URLSearchParams();
+        const normalized = query.replace(/[.,\s]/g, '');
+
+        if (normalized) {
+            params.set('search', normalized);
+        }
+
+        fetch('{{ url('/motor-oil/search') }}?' + params.toString())
             .then(response => response.text())
             .then(html => {
                 document.getElementById('searchResults').innerHTML = html;
