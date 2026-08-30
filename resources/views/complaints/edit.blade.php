@@ -45,8 +45,29 @@
 
             <!-- Sürücü -->
             <div class="mb-3" id="surucuField">
-                <label for="surucu_adi" class="form-label fw-bold">🧑‍✈️ Sürücü Adı</label>
-                <input type="text" class="form-control" id="surucu_adi" name="surucu_adi" value="{{ old('surucu_adi', $complaint->surucu_adi) }}">
+                <label class="form-label fw-bold">🧑‍✈️ Sürücü</label>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="driver_kodu" class="form-label">Sürücü Kodu</label>
+                        <input type="text" class="form-control" id="driver_kodu" name="driver_kodu"
+                            placeholder="Məs: D-001" list="driverList"
+                            oninput="getDriverByKod(this.value)"
+                            value="{{ old('driver_kodu', $complaint->driver?->kodu ?? '') }}">
+                        <datalist id="driverList">
+                            @foreach($drivers ?? [] as $driver)
+                                <option value="{{ $driver->kodu }}">
+                            @endforeach
+                        </datalist>
+                        <div id="driverHelp" class="form-text">Kod seçildikdə sürücünün adı avtomatik doldurulur.</div>
+                    </div>
+                    <div class="col-md-8">
+                        <label for="surucu_adi" class="form-label">Sürücü Adı</label>
+                        <input type="text" class="form-control input-disabled" id="surucu_adi" name="surucu_adi"
+                            placeholder="Kod daxil edildikdə avtomatik gəlir..." readonly
+                            value="{{ old('surucu_adi', $complaint->surucu_adi ?? '') }}">
+                        <input type="hidden" name="driver_id" id="driver_id" value="{{ old('driver_id', $complaint->driver_id ?? '') }}">
+                    </div>
+                </div>
             </div>
 
             <!-- Şikayətlər -->
@@ -316,11 +337,13 @@
 @section('scripts')
 <script>
     function toggleFields() {
-        var yer = document.querySelector('input[name="yer"]:checked').value;
-        var surucuField = document.getElementById('surucuField');
-        var bildirilmeFields = document.getElementById('bildirilmeFields');
+        const yer = document.querySelector('input[name="yer"]:checked');
+        if (!yer) return;
 
-        if (yer === 'qaraj') {
+        const surucuField = document.getElementById('surucuField');
+        const bildirilmeFields = document.getElementById('bildirilmeFields');
+
+        if (yer.value === 'qaraj') {
             surucuField.style.display = 'none';
             bildirilmeFields.style.display = 'none';
         } else {
@@ -485,5 +508,55 @@
     document.addEventListener('DOMContentLoaded', function() {
         toggleFields();
     });
+    let driverLookupRequest = 0;
+
+    function getDriverByKod(kod) {
+        const normalizedKod = kod.trim().toUpperCase();
+        const nameInput = document.getElementById('surucu_adi');
+        const idInput = document.getElementById('driver_id');
+        const help = document.getElementById('driverHelp');
+        const codeInput = document.getElementById('driver_kodu');
+
+        idInput.value = '';
+        nameInput.value = '';
+        codeInput.classList.remove('is-valid', 'is-invalid');
+
+        if (!normalizedKod) {
+            help.textContent = 'Kod seçildikdə sürücünün adı avtomatik doldurulur.';
+            help.className = 'form-text';
+            return;
+        }
+
+        const requestId = ++driverLookupRequest;
+        help.textContent = 'Sürücü axtarılır...';
+        help.className = 'form-text';
+
+        fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedKod))
+            .then(response => {
+                if (!response.ok) throw new Error('Sürücü axtarışı alınmadı.');
+                return response.json();
+            })
+            .then(data => {
+                if (requestId !== driverLookupRequest) return;
+                if (data.found) {
+                    nameInput.value = data.driver_ad;
+                    idInput.value = data.driver_id;
+                    codeInput.value = normalizedKod;
+                    codeInput.classList.add('is-valid');
+                    help.textContent = 'Sürücü tapıldı.';
+                    help.className = 'form-text text-success';
+                } else {
+                    codeInput.classList.add('is-invalid');
+                    help.textContent = 'Bu kodla aktiv sürücü tapılmadı.';
+                    help.className = 'form-text text-danger';
+                }
+            })
+            .catch(() => {
+                if (requestId !== driverLookupRequest) return;
+                codeInput.classList.add('is-invalid');
+                help.textContent = 'Sürücü məlumatı yüklənmədi. Yenidən cəhd edin.';
+                help.className = 'form-text text-danger';
+            });
+    }
 </script>
 @endsection

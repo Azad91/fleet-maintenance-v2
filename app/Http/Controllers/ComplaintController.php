@@ -181,6 +181,7 @@ class ComplaintController extends Controller
         $buses = Bus::orderBy('xett_no')->get();
         $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('ad')->get();
+        $drivers = Driver::active()->orderBy('kodu')->get(); // ✅ ƏLAVƏ ET
 
         $detallar = [];
         if ($complaint->detallar) {
@@ -192,7 +193,8 @@ class ComplaintController extends Controller
             'buses',
             'complaintTypes',
             'detallar',
-            'employees'
+            'employees',
+            'drivers' // ✅ ƏLAVƏ ET
         ));
     }
 
@@ -202,9 +204,8 @@ class ComplaintController extends Controller
         $validated = $request->validated();
 
         DB::transaction(function () use ($request, $validated, $complaint) {
-            // Köhnə detalları al
+            // 1. Köhnə detalları al
             $oldDetallar = $complaint->detallar ?? [];
-
             if (is_string($oldDetallar)) {
                 $oldDetallar = json_decode($oldDetallar, true) ?? [];
             }
@@ -212,7 +213,7 @@ class ComplaintController extends Controller
                 $oldDetallar = [];
             }
 
-            // BÜTÜN SAHƏLƏR (validated data-dan)
+            // 2. Bütün sahələri yenilə
             $complaint->status = $validated['status'];
             $complaint->yer = $validated['yer'];
             $complaint->surucu_adi = $validated['surucu_adi'] ?? null;
@@ -225,12 +226,13 @@ class ComplaintController extends Controller
             $complaint->is_bitme_tarix = $validated['is_bitme_tarix'] ?? null;
             $complaint->is_bitme_saat = $validated['is_bitme_saat'] ?? null;
 
+            // 3. Şikayət mətnini yenilə
             if (!empty($validated['shikayet']) && is_array($validated['shikayet'])) {
                 $complaint->shikayet = implode("\n", array_filter($validated['shikayet']));
                 $this->syncComplaintItems($complaint, $validated['shikayet'], $validated['sikayet_tipi'] ?? null);
             }
 
-            // Köhnə detalları anbara geri qaytar
+            // 4. Köhnə detalları anbara geri qaytar
             foreach ($oldDetallar as $old) {
                 if (!empty($old['kodu']) && !empty($old['islenen_miqdar'])) {
                     $warehouse = Warehouse::where('kod', $old['kodu'])->lockForUpdate()->first();
@@ -241,7 +243,7 @@ class ComplaintController extends Controller
                 }
             }
 
-            // Yeni detalları saxla (mənfi yoxlanışı ilə)
+            // 5. Yeni detalları tətbiq et (mənfi stok yoxlanışı ilə)
             if (!empty($validated['detallar']) && is_array($validated['detallar'])) {
                 $detallar = [];
                 foreach ($validated['detallar'] as $detal) {
@@ -254,7 +256,6 @@ class ComplaintController extends Controller
                             ]);
                         }
 
-                        // 🔥 MƏNFİ STOK YOXLANIŞI
                         $usedQuantity = (int) ($detal['islenen_miqdar'] ?? 0);
                         if ($warehouse->miqdar < $usedQuantity) {
                             throw ValidationException::withMessages([
@@ -283,11 +284,24 @@ class ComplaintController extends Controller
                 $complaint->detallar = null;
             }
 
+            // 6. Service template sahələri
             if ($request->has('service_template_id')) {
                 $complaint->service_template_id = $request->service_template_id;
             }
             if ($request->has('service_km')) {
                 $complaint->service_km = $request->service_km;
+            }
+
+            // 7. ✅ DÜZƏLİŞ: driver_id əlavə et
+            if (($validated['yer'] ?? null) === 'yol') {
+                if (!empty($validated['driver_id'])) {
+                    $driver = Driver::active()->findOrFail($validated['driver_id']);
+                    $complaint->surucu_adi = $driver->full_name;
+                    $complaint->driver_id = $driver->id;
+                }
+            } else {
+                $complaint->driver_id = null;
+                $complaint->surucu_adi = null;
             }
 
             $complaint->save();
