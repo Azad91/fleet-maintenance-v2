@@ -10,14 +10,16 @@ trait HasGarageScope
     {
         // 🔥 GLOBAL SCOPE (OXUYANDA)
         static::addGlobalScope('garage', function (Builder $builder) {
-            if (session('current_garage_id')) {
+            // ✅ YALNIZ HTTP REQUEST ZAMANI TƏTBİQ ET
+            if (!app()->runningInConsole() && session('current_garage_id')) {
                 $builder->where('garage_id', session('current_garage_id'));
             }
         });
 
         // 🔥 YARADANDA AVTOMATİK YAZ
         static::creating(function ($model) {
-            if (session('current_garage_id')) {
+            // ✅ YALNIZ HTTP REQUEST ZAMANI YAZ
+            if (!app()->runningInConsole() && session('current_garage_id')) {
                 $model->garage_id = session('current_garage_id');
                 $model->company_id = session('current_company_id');
             }
