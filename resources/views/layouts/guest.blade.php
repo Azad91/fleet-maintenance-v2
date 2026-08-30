@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app-v2.css') }}">
+    <script>
+        if (localStorage.getItem('fleet-theme') === 'dark') {
+            document.documentElement.dataset.fleetTheme = 'dark';
+        }
+    </script>
     @stack('styles')
 </head>
 <body class="fleet-guest">
