@@ -112,4 +112,9 @@ class Complaint extends Model
         }
         return '-';
     }
+
+    public function details()
+    {
+        return $this->hasMany(ComplaintDetail::class);
+    }
 }
