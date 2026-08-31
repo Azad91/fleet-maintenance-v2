@@ -2,37 +2,33 @@
 
 namespace App\Providers;
 
+use App\Models\Bus;
 use App\Models\Complaint;
+use App\Models\Warehouse;
+use App\Models\Driver;
+use App\Models\Employee;
 use App\Models\User;
+use App\Policies\BusPolicy;
 use App\Policies\ComplaintPolicy;
+use App\Policies\WarehousePolicy;
+use App\Policies\DriverPolicy;
+use App\Policies\EmployeePolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         Complaint::class => ComplaintPolicy::class,
+        Bus::class => BusPolicy::class,
+        Warehouse::class => WarehousePolicy::class,
+        Driver::class => DriverPolicy::class,
+        Employee::class => EmployeePolicy::class,
+        User::class => UserPolicy::class,
     ];
 
     public function boot(): void
     {
         $this->registerPolicies();
-
-        // Gate-lər (əlavə)
-        Gate::define('view-buses', function (User $user) {
-            return $user->hasGarageRole(['admin', 'bus', 'directorate']);
-        });
-
-        Gate::define('manage-warehouse', function (User $user) {
-            return $user->hasGarageRole(['admin', 'warehouse']);
-        });
-
-        Gate::define('manage-daily-km', function (User $user) {
-            return $user->hasGarageRole(['admin', 'daily_km']);
-        });
-
-        Gate::define('manage-daily-status', function (User $user) {
-            return $user->hasGarageRole(['admin', 'daily_status']);
-        });
     }
 }
