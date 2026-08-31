@@ -114,8 +114,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:admin'])->group(function () {
         Route::get('/import', [ComplaintTypeController::class, 'importForm'])->name('import');
         Route::post('/import', [ComplaintTypeController::class, 'import'])->name('import.store');
-        Route::resource('/', ComplaintTypeController::class)->parameters(['' => 'complaint_type']);
-    });
+        Route::resource('/', ComplaintTypeController::class)
+            ->except(['show'])
+            ->parameters(['' => 'complaint_type']);
 
     // ==================== WAREHOUSE ROUTES ====================
     Route::prefix('warehouses')->name('warehouses.')->group(function () {
