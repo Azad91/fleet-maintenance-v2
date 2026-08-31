@@ -8,6 +8,8 @@ class Kernel extends HttpKernel
 {
     /**
      * The application's global HTTP middleware stack.
+     *
+     * These middleware are run during every request to your application.
      */
     protected $middleware = [
         \App\Http\Middleware\TrustProxies::class,
@@ -39,6 +41,8 @@ class Kernel extends HttpKernel
 
     /**
      * The application's route middleware.
+     *
+     * These middleware may be assigned to groups or used individually.
      */
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
@@ -52,5 +56,9 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+
+        // ✅ ƏLAVƏ: Custom middleware-lər
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'garage.selected' => \App\Http\Middleware\EnsureGarageSelected::class,
     ];
 }
