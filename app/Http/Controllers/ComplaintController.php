@@ -9,9 +9,11 @@ use App\Models\Bus;
 use App\Models\ComplaintType;
 use App\Models\Employee;
 use App\Models\Driver;
+use App\Models\ComplaintDetail;
 use App\Services\Complaint\ComplaintService;
 use App\Services\Complaint\ComplaintPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ComplaintController extends Controller
 {
@@ -41,6 +43,8 @@ class ComplaintController extends Controller
     public function store(ComplaintStoreRequest $request)
     {
         $data = $request->validated();
+
+        // Service-ə detalları ötür (o, ComplaintDetail modellərinə çevirəcək)
         $complaint = $this->complaintService->create(
             $data,
             $request->input('detallar', []),
@@ -53,35 +57,37 @@ class ComplaintController extends Controller
 
     public function show($id)
     {
-        $complaint = Complaint::with('bus')->findOrFail($id);
+        $complaint = Complaint::with(['bus', 'details.employee'])->findOrFail($id);
+
+        // employee-ləri ayrıca indexed array kimi hazırla (PDF üçün)
         $employeesById = Employee::whereIn(
             'id',
-            collect($complaint->detallar ?? [])->pluck('employee_id')->filter()->unique()
+            $complaint->details->pluck('employee_id')->filter()->unique()
         )->get()->keyBy('id');
-
-        if ($complaint->detallar) {
-            $complaint->detallar = is_array($complaint->detallar)
-                ? $complaint->detallar
-                : json_decode($complaint->detallar, true);
-        }
 
         return view('complaints.show', compact('complaint', 'employeesById'));
     }
 
     public function edit($id)
     {
-        $complaint = Complaint::findOrFail($id);
+        $complaint = Complaint::with('details')->findOrFail($id);
         $buses = Bus::orderBy('xett_no')->get();
         $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('ad')->get();
         $drivers = Driver::active()->orderBy('kodu')->get();
 
-        $detallar = [];
-        if ($complaint->detallar) {
-            $detallar = is_array($complaint->detallar)
-                ? $complaint->detallar
-                : json_decode($complaint->detallar, true);
-        }
+        // detalları view-ə ötürmək üçün array-ə çevir
+        $detallar = $complaint->details->map(function ($detail) {
+            return [
+                'shikayet_index' => $detail->shikayet_index,
+                'kodu' => $detail->kodu,
+                'adi' => $detail->adi,
+                'depo_miqdari' => $detail->depo_miqdari,
+                'islenen_miqdar' => $detail->islenen_miqdar,
+                'employee_id' => $detail->employee_id,
+                'qeyd' => $detail->qeyd,
+            ];
+        })->toArray();
 
         return view('complaints.edit', compact(
             'complaint', 'buses', 'complaintTypes', 'detallar', 'employees', 'drivers'
@@ -141,7 +147,7 @@ class ComplaintController extends Controller
 
     public function downloadPdf($id)
     {
-        $complaint = Complaint::with('bus')->findOrFail($id);
+        $complaint = Complaint::with(['bus', 'details.employee'])->findOrFail($id);
         $pdf = $this->pdfService->generate($complaint);
         return $pdf->stream("is-karti-{$complaint->id}.pdf");
     }
