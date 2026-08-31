@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>İş Kartı - Akt</title>
     <style>
-        /* DomPDF-nin DejaVu Sans fontu Azərbaycan əlifbasını tam dəstəkləyir. */
         body { font-family: 'DejaVu Sans', sans-serif; margin: 40px; }
         .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .title { font-size: 24px; font-weight: bold; }
@@ -40,16 +39,28 @@
         <div class="row"><span class="label">Status:</span><span class="value">{{ $complaint->status ?? '-' }}</span></div>
 
         <!-- İstifadə Olunan Detallar -->
-        @if($complaint->detallar && is_array($complaint->detallar) && count($complaint->detallar) > 0)
-        <h3>🔧 İstifadə Olunan Detallar</h3>
-        <table class="table">
-            <thead><tr><th>Kod</th><th>Ad</th><th>Miqdar</th><th>İşi görən işçi</th></tr></thead>
-            <tbody>
-                @foreach($complaint->detallar as $detal)
-                <tr><td>{{ $detal['kodu'] ?? '-' }}</td><td>{{ $detal['adi'] ?? '-' }}</td><td>{{ $detal['islenen_miqdar'] ?? 0 }}</td><td>{{ $employeesById[$detal['employee_id'] ?? null]->full_name_with_position ?? '-' }}</td></tr>
-                @endforeach
-            </tbody>
-        </table>
+        @if($complaint->details && $complaint->details->count() > 0)
+            <h3>🔧 İstifadə Olunan Detallar</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Kod</th>
+                        <th>Ad</th>
+                        <th>Miqdar</th>
+                        <th>İşi görən işçi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($complaint->details as $detal)
+                        <tr>
+                            <td>{{ $detal->kodu ?? '-' }}</td>
+                            <td>{{ $detal->adi ?? '-' }}</td>
+                            <td>{{ $detal->islenen_miqdar ?? 0 }}</td>
+                            <td>{{ $employeesById[$detal->employee_id ?? null]->full_name_with_position ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
 
         <!-- Görülən İşlər -->

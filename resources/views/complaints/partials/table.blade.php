@@ -36,13 +36,17 @@
                         </td>
                         <td>
                             <div class="d-flex gap-1">
-                                <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if(Auth::user()->hasGarageRole(['admin', 'complaint']))
+                                @can('view', $complaint)
+                                    <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                @endcan
+                                @can('update', $complaint)
                                     <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                @endcan
+                                @can('delete', $complaint)
                                     <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline">
                                         @csrf
                                         @method('DELETE')
@@ -50,7 +54,7 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
-                                @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -61,7 +65,10 @@
                             @if(isset($dqn) || isset($xett_no) || isset($yer) || isset($shikayet))
                                 Axtarış nəticəsində heç nə tapılmadı
                             @else
-                                Hələ kart yoxdur. <a href="{{ route('complaints.create') }}">Yenisini əlavə et!</a>
+                                Hələ kart yoxdur.
+                                @can('create', App\Models\Complaint::class)
+                                    <a href="{{ route('complaints.create') }}">Yenisini əlavə et!</a>
+                                @endcan
                             @endif
                         </td>
                     </tr>
@@ -70,14 +77,12 @@
             </table>
         </div>
 
-        <!-- ==================== PAGINATION ==================== -->
         @if($complaints->hasPages())
             <div class="pagination-wrapper">
                 {{ $complaints->links() }}
             </div>
         @endif
 
-        <!-- Toplam sayını gizli saxlamaq üçün -->
         <span class="total-count d-none" data-count="{{ $complaints->count() }}"></span>
     </div>
 </div>

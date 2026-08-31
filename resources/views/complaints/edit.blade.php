@@ -197,10 +197,6 @@
             <div class="complaint-details-card p-3 mb-3">
                 <h5 class="fw-bold mb-3">🔧 İstifadə Olunan Detallar</h5>
                 <div id="detallarContainer">
-                    @php
-                        $detallar = is_array($complaint->detallar) ? $complaint->detallar : json_decode($complaint->detallar, true);
-                    @endphp
-
                     @if($detallar && count($detallar) > 0)
                         @foreach($detallar as $index => $detal)
                             <div class="detallar-item">
@@ -289,18 +285,20 @@
                                     <label class="form-label fw-bold">Depo Miqdarı</label>
                                     <input type="text" class="form-control input-disabled" name="detallar[0][depo_miqdari]" readonly disabled>
                                 </div>
-                                    <div class="col-md-1">
-                                        <label class="form-label fw-bold">İşlənən Miqdar</label>
-                                        <input type="number" class="form-control" name="detallar[0][islenen_miqdar]"
+                                <div class="col-md-1">
+                                    <label class="form-label fw-bold">İşlənən Miqdar</label>
+                                    <input type="number" class="form-control" name="detallar[0][islenen_miqdar]"
                                         placeholder="0" min="1" value="1" required>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">İşi görən işçi</label>
-                                        <select class="form-select" name="detallar[0][employee_id]" required>
-                                            <option value="">İşçi seçin...</option>
-                                            @foreach($employees as $employee)<option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>@endforeach
-                                        </select>
-                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label fw-bold">İşi görən işçi</label>
+                                    <select class="form-select" name="detallar[0][employee_id]" required>
+                                        <option value="">İşçi seçin...</option>
+                                        @foreach($employees as $employee)
+                                            <option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">&nbsp;</label>
                                     <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetal(this)">
@@ -323,12 +321,16 @@
                 <small class="text-muted d-block mt-1">Hər detal hansı şikayətə aid olduğunu seçin.</small>
             </div>
 
-            <button type="submit" class="btn btn-success">
-                <i class="bi bi-save"></i> Yenilə
-            </button>
-            <a href="{{ route('complaints.index') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Geri
-            </a>
+            <div class="d-flex gap-2">
+                @can('update', $complaint)
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Yenilə
+                    </button>
+                @endcan
+                <a href="{{ route('complaints.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Geri
+                </a>
+            </div>
         </form>
     </div>
 </div>
@@ -433,7 +435,9 @@
                     <label class="form-label fw-bold">İşi görən işçi</label>
                     <select class="form-select" name="detallar[${detalCount}][employee_id]" required>
                         <option value="">İşçi seçin...</option>
-                        @foreach($employees as $employee)<option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>@endforeach
+                        @foreach($employees as $employee)
+                            <option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -505,9 +509,6 @@
             .catch(error => console.error('Xəta:', error));
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleFields();
-    });
     let driverLookupRequest = 0;
 
     function getDriverByKod(kod) {
@@ -558,5 +559,9 @@
                 help.className = 'form-text text-danger';
             });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleFields();
+    });
 </script>
 @endsection

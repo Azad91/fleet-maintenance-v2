@@ -36,4 +36,9 @@ class ComplaintPolicy
     {
         return $user->hasGarageRole(['admin', 'complaint']);
     }
+
+    public function import(User $user): bool
+    {
+        return $user->hasGarageRole(['admin', 'complaint']);
+    }
 }

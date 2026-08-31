@@ -41,13 +41,17 @@
                         </td>
                         <td>
                             <div class="d-flex gap-1">
-                                <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if(Auth::user()->hasGarageRole(['admin', 'complaint']))
+                                @can('view', $complaint)
+                                    <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                @endcan
+                                @can('update', $complaint)
                                     <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                @endcan
+                                @can('delete', $complaint)
                                     <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline" onsubmit="return confirm('Əminsən?')">
                                         @csrf
                                         @method('DELETE')
@@ -55,7 +59,7 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
-                                @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -63,7 +67,10 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            Hələ kart yoxdur. <a href="{{ route('complaints.create') }}">Yeni kart əlavə et!</a>
+                            Hələ kart yoxdur.
+                            @can('create', App\Models\Complaint::class)
+                                <a href="{{ route('complaints.create') }}">Yeni kart əlavə et!</a>
+                            @endcan
                         </td>
                     </tr>
                     @endforelse

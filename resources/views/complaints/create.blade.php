@@ -5,8 +5,14 @@
 @section('content')
 <div class="complaint-create-page">
     <div class="complaint-create-page__heading">
-        <div><span class="fleet-eyebrow">TEXNİKİ QEYD</span><h1>Yeni kart aç</h1><p>Avtobus, yer və görülən iş məlumatlarını ardıcıl daxil edin.</p></div>
-        <a href="{{ route('complaints.index') }}" class="fleet-button fleet-button--secondary"><i class="fas fa-arrow-left"></i> Kartlara qayıt</a>
+        <div>
+            <span class="fleet-eyebrow">TEXNİKİ QEYD</span>
+            <h1>Yeni kart aç</h1>
+            <p>Avtobus, yer və görülən iş məlumatlarını ardıcıl daxil edin.</p>
+        </div>
+        <a href="{{ route('complaints.index') }}" class="fleet-button fleet-button--secondary">
+            <i class="fas fa-arrow-left"></i> Kartlara qayıt
+        </a>
     </div>
     <div class="card complaint-create-card">
         <div class="card-header">
@@ -30,13 +36,11 @@
     </div>
 </div>
 
-<!-- 🔥 JAVASCRIPT BİRBİRBİRBAŞA BURADA -->
 <script>
     let motorOilServices = [];
     let defaultComplaintMarkup = '';
     let defaultDetailsMarkup = '';
 
-    // ==================== AVTOBUS SEÇİMİ ====================
     function getBusByXett(xett_no) {
         console.log('🔍 Axtarılan xətt:', xett_no);
 
@@ -175,7 +179,6 @@
         if (items.length > 1) button.closest('.detallar-item').remove();
     }
 
-    // ==================== YOL / QARAJ ====================
     let driverLookupRequest = 0;
 
     function getDriverByKod(kod) {
@@ -243,7 +246,6 @@
         }
     }
 
-    // ==================== DETAL KODUNA GÖRƏ ANBAR ====================
     function getDetalByKod(input) {
         const kod = input.value;
         const item = input.closest('.detallar-item');
@@ -265,7 +267,6 @@
             .catch(error => console.error('❌ Detal xətası:', error));
     }
 
-    // ==================== SƏHİFƏ YÜKLƏNƏNDƏ ====================
     document.addEventListener('DOMContentLoaded', function() {
         defaultComplaintMarkup = document.getElementById('shikayetContainer').innerHTML;
         defaultDetailsMarkup = document.getElementById('detallarContainer').innerHTML;

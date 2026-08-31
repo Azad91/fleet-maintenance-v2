@@ -193,8 +193,6 @@
     </div>
 </div>
 
-<!-- ==================== HIDDEN INPUT ==================== -->
-
 <!-- ==================== 12. DETALLAR ==================== -->
 <div class="complaint-details-card p-3 mb-3">
     <h5 class="fw-bold mb-3">🔧 İstifadə Olunan Detallar <span class="text-danger">*</span></h5>
@@ -271,11 +269,13 @@
     <small class="text-muted d-block mt-1">Hər detal hansı şikayətə aid olduğunu seçin.</small>
 </div>
 
-<!-- ==================== 14. DÜYMƏLƏR ==================== -->
+<!-- ==================== 13. DÜYMƏLƏR ==================== -->
 <div class="d-flex gap-2">
-    <button type="submit" class="btn btn-success">
-        <i class="bi bi-save"></i> Yadda Saxla
-    </button>
+    @can('create', App\Models\Complaint::class)
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> Yadda Saxla
+        </button>
+    @endcan
     <a href="{{ route('complaints.index') }}" class="btn btn-secondary">
         <i class="bi bi-arrow-left"></i> Geri
     </a>
