@@ -69,8 +69,7 @@ Route::middleware(['auth', 'garage.selected'])->group(function () {
 
     // ==================== BUS ROUTES ====================
     Route::prefix('buses')->name('buses.')->group(function () {
-        Route::middleware(['role:admin'])->group(function () {
-            Route::get('/import', [BusController::class, 'importForm'])->name('import');
+        Route::middleware(['auth', 'garage.selected'])->group(function () {            Route::get('/import', [BusController::class, 'importForm'])->name('import');
             Route::post('/import', [BusController::class, 'import'])->name('import.store');
             Route::get('/create', [BusController::class, 'create'])->name('create');
             Route::post('/', [BusController::class, 'store'])->name('store');

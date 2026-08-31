@@ -74,10 +74,10 @@ class BusController extends Controller
     // ====== STORE ======
     public function store(BusStoreRequest $request)
     {
+        $this->authorize('create', Bus::class); // ✅ Policy yoxlayır
+
         $data = $request->validated();
         $data['tarix'] = now()->format('Y-m-d');
-
-        // 🔥 QARAJ ID AVTOMATİK YAZ
         $data = $this->addGarageContext($data);
 
         Bus::create($data);
@@ -96,7 +96,7 @@ class BusController extends Controller
     public function update(BusUpdateRequest $request, $id)
     {
         $bus = Bus::findOrFail($id);
-        $data = $request->validated();
+        $this->authorize('update', $bus); // ✅ Policy yoxlayır
 
         // 🔥 QARAJ ID YENİLƏNMƏSİN (əgər istəmirsənsə)
         // $data['garage_id'] = session('current_garage_id');
