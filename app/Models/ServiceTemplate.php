@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class ServiceTemplate
+ *
+ * 📌 QEYD: Bu model qlobal kataloqdur, HasGarageScope tətbiq edilmir.
+ * Bütün qarajlar üçün ortaq servis şablonlarını saxlayır.
+ */
 class ServiceTemplate extends Model
 {
     use HasFactory;
