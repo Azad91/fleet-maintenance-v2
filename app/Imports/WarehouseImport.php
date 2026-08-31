@@ -7,12 +7,19 @@ use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Row;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
-class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows
+class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
     public function onRow(Row $row)
     {
         $rowArray = $row->toArray();
@@ -31,7 +38,6 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
             $warehouse = Warehouse::where('kod', $kod)->lockForUpdate()->first();
 
             if ($warehouse) {
-                // ✅ ƏVƏZ ET: miqdarı toplama əvəzinə birbaşa təyin et
                 $warehouse->update([
                     'miqdar' => (int) ($rowArray['miqdar'] ?? 0),
                     'qiymet' => isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : $warehouse->qiymet,

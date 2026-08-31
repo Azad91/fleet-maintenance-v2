@@ -6,9 +6,16 @@ use App\Models\Driver;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows
+class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
     public function model(array $row)
     {
         $kodu = trim($row['kodu'] ?? '');

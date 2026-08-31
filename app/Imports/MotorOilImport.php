@@ -5,22 +5,25 @@ namespace App\Imports;
 use App\Models\MotorOilDetail;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Row;
 
-class MotorOilImport implements OnEachRow, WithHeadingRow
+class MotorOilImport implements OnEachRow, WithHeadingRow, ShouldQueue, WithChunkReading
 {
     protected $kmColumns = [];
+
+    public function chunkSize(): int
+    {
+        return 100;
+    }
 
     public function onRow(Row $row)
     {
         $rowArray = $row->toArray();
 
-        // Əgər kmColumns hələ boşdursa, Excel başlıqlarından km-ləri çıxar
         if (empty($this->kmColumns)) {
-            // WithHeadingRow artıq başlıqları oxuyub, onları $rowArray-ın açarları kimi qoyur
-            // Biz sadəcə bütün açarları yoxlayırıq
             foreach ($rowArray as $key => $value) {
-                // Əgər açar rəqəmdirsə, onu km kimi qəbul et
                 if (is_numeric($key)) {
                     $this->kmColumns[$key] = (int) $key;
                 }
@@ -34,7 +37,6 @@ class MotorOilImport implements OnEachRow, WithHeadingRow
 
         if (!$detal_kodu) return;
 
-        // Hər km sütununu yoxla
         foreach ($this->kmColumns as $columnIndex => $km) {
             $say = (int) ($rowArray[$columnIndex] ?? 0);
 

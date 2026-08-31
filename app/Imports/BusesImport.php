@@ -5,10 +5,17 @@ namespace App\Imports;
 use App\Models\Bus;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Validation\ValidationException;
 
-class BusesImport implements ToModel, WithHeadingRow
+class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading
 {
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
     public function model(array $row)
     {
         $dqn = trim($row['dqn'] ?? '');
@@ -17,7 +24,6 @@ class BusesImport implements ToModel, WithHeadingRow
             return null;
         }
 
-        // 🔥 QARAJ ID AVTOMATİK YAZ
         $garageId = session('current_garage_id');
         $companyId = session('current_company_id');
 

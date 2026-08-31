@@ -8,14 +8,17 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas
+class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, ShouldQueue, WithChunkReading
 {
-    /**
-     * Source layout: row 1 has dates, row 2 has daily headings, and row 3+
-     * stores buses. DQN is column D; the KM is the third column of each day.
-     */
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
     public function collection(Collection $rows): void
     {
         if ($rows->count() < 3) {
@@ -27,9 +30,6 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas
 
         foreach ($dateRow as $column => $value) {
             $date = $this->toDate($value);
-            // Date is at the start of a four-column daily block. The KM cell
-            // in the date row is intentionally empty; actual values begin on
-            // the vehicle rows, two columns to the right.
             if ($date !== null) {
                 $dailyKmColumns[$column + 2] = $date;
             }
@@ -52,9 +52,6 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas
                     continue;
                 }
 
-                // Eyni avtobus və tarix üçün qeyd sistem üzrə təkdir. Qaraj
-                // scope-u köhnə qeydi gizlətməsin deyə onu qlobal tapırıq və
-                // avtobusun hazırkı qaraj/şirkət kontekstinə keçiririk.
                 DailyKmRecord::withoutGlobalScopes()->updateOrCreate(
                     ['bus_id' => $bus->id, 'tarix' => $tarix],
                     [
