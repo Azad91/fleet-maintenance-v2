@@ -51,8 +51,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'garage.selected'])->group(function () {
 
     // Dashboard
-    // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -114,9 +114,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:admin'])->group(function () {
         Route::get('/import', [ComplaintTypeController::class, 'importForm'])->name('import');
         Route::post('/import', [ComplaintTypeController::class, 'import'])->name('import.store');
+        // ✅ DÜZƏLİŞ: except(['show']) əlavə edildi (Problem #4)
         Route::resource('/', ComplaintTypeController::class)
             ->except(['show'])
             ->parameters(['' => 'complaint_type']);
+    });
 
     // ==================== WAREHOUSE ROUTES ====================
     Route::prefix('warehouses')->name('warehouses.')->group(function () {
@@ -207,10 +209,19 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     });
 
     // ==================== API ROUTES (JSON) ====================
-    Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
-    Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
-    Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
-    Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');
-    Route::get('get-motor-oil-services/{bus_id}', [GarageDataController::class, 'motorOilServices'])->name('get.motor.oil.services');
-    Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
+    // ✅ DÜZƏLİŞ: Bütün API endpoint-lərinə uyğun role middleware əlavə edildi (Problem #5)
+    Route::middleware(['role:admin,complaint,bus,daily_km,daily_status,directorate'])->group(function () {
+        Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
+        Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
+    });
+
+    Route::middleware(['role:admin,complaint,warehouse'])->group(function () {
+        Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
+    });
+
+    Route::middleware(['role:admin,complaint'])->group(function () {
+        Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');
+        Route::get('get-motor-oil-services/{bus_id}', [GarageDataController::class, 'motorOilServices'])->name('get.motor.oil.services');
+        Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
+    });
 });
