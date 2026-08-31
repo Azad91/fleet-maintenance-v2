@@ -20,7 +20,15 @@ class BusUpdateRequest extends FormRequest
             'bus_project' => 'nullable|string|max:255',
             'vin'         => 'nullable|string|max:17',
             'uzunluq'     => 'nullable|numeric|min:0',
-            'xett_no'     => 'nullable|string|max:255',
+            'xett_no'     => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('buses', 'xett_no')
+                    ->where('garage_id', session('current_garage_id'))
+                    ->whereNull('deleted_at')
+                    ->ignore($busId)
+            ], // ✅ ƏLAVƏ
             'dqn'         => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')->ignore($busId)],
             'motor_no'    => 'nullable|string|max:255',
             'aktiv'       => 'nullable|boolean',

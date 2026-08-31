@@ -13,7 +13,7 @@ class ComplaintService
         protected ComplaintItemService $itemService
     ) {}
 
-    public function create(array $data, array $detallar = null, array $shikayet = []): Complaint
+        public function create(array $data, array $detallar = null, array $shikayet = []): Complaint
     {
         // Sürücü məlumatlarını hazırla
         if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
@@ -29,18 +29,23 @@ class ComplaintService
             $data['shikayet'] = implode("\n", array_filter($shikayet));
         }
 
-        // Detalları JSON olaraq saxla
-        if (!empty($detallar) && is_array($detallar)) {
-            $data['detallar'] = $this->stockService->deductStock($detallar);
-        } else {
-            $data['detallar'] = null;
-        }
-
         $data['created_by'] = auth()->id();
 
-        $complaint = DB::transaction(function () use ($data, $shikayet) {
+        // ✅ DÜZƏLİŞ: BÜTÜN ƏMƏLİYYAT BİR TRANSACTION-DA
+        $complaint = DB::transaction(function () use ($data, $detallar, $shikayet) {
+            // 1. Stoku azalt (əgər detallar varsa)
+            if (!empty($detallar) && is_array($detallar)) {
+                $data['detallar'] = $this->stockService->deductStock($detallar);
+            } else {
+                $data['detallar'] = null;
+            }
+
+            // 2. Şikayəti yarat
             $complaint = Complaint::create($data);
+
+            // 3. Item-ləri sinxronizasiya et
             $this->itemService->syncItems($complaint, $shikayet, $data['sikayet_tipi'] ?? null);
+
             return $complaint;
         });
 

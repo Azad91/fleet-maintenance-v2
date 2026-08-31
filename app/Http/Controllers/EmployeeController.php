@@ -30,7 +30,11 @@ class EmployeeController extends Controller
             'soyad' => 'required|string|max:255',
             'vezifesi' => 'required|string|max:255',
             'qeyd' => 'nullable|string',
+            'aktiv' => 'nullable|boolean', // ✅ ƏLAVƏ
         ]);
+
+        // ✅ ƏLAVƏ: checkbox-dan gələn dəyəri boolean-a çevir
+        $validated['aktiv'] = $request->boolean('aktiv');
 
         Employee::create($validated);
 
@@ -61,7 +65,11 @@ class EmployeeController extends Controller
             'soyad' => 'required|string|max:255',
             'vezifesi' => 'required|string|max:255',
             'qeyd' => 'nullable|string',
+            'aktiv' => 'nullable|boolean', // ✅ ƏLAVƏ
         ]);
+
+        // ✅ ƏLAVƏ: checkbox-dan gələn dəyəri boolean-a çevir
+        $validated['aktiv'] = $request->boolean('aktiv');
 
         $employee->update($validated);
 
