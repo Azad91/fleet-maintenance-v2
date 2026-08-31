@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\RoleEnum;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -9,6 +11,7 @@ return [
     'app_name' => env('APP_NAME', 'Fleet Maintenance'),
     'version' => '1.0.0',
     'pagination' => env('APP_PAGINATION', 25),
+    'timezone' => env('APP_TIMEZONE', 'Asia/Baku'),
     'locale' => env('APP_LOCALE', 'az'),
 
     /*
@@ -16,13 +19,7 @@ return [
     | Role Names
     |--------------------------------------------------------------------------
     */
-    'roles' => [
-        'admin' => env('ROLE_ADMIN', 'admin'),
-        'bus' => env('ROLE_BUS', 'bus'),
-        'complaint' => env('ROLE_COMPLAINT', 'complaint'),
-        'warehouse' => env('ROLE_WAREHOUSE', 'warehouse'),
-        'directorate' => env('ROLE_DIRECTORATE', 'directorate'),
-    ],
+    'roles' => RoleEnum::labels(),
 
     /*
     |--------------------------------------------------------------------------

@@ -3,21 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Enums\RoleEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
 {
-    private const ROLES = [
-        'admin' => 'Admin',
-        'complaint' => 'Kartlar / Şikayətlər',
-        'warehouse' => 'Anbar',
-        'daily_km' => 'Günlük KM',
-        'daily_status' => 'Günlük statuslar',
-        'directorate' => 'Müdiriyyət (yalnız baxış)',
-    ];
-
     public function index()
     {
         $garageId = $this->currentGarageId();
@@ -32,7 +24,7 @@ class UserManagementController extends Controller
 
     public function create()
     {
-        return view('users.create', ['roles' => self::ROLES]);
+        return view('users.create', ['roles' => RoleEnum::labels()]);
     }
 
     public function store(Request $request)
@@ -61,7 +53,7 @@ class UserManagementController extends Controller
 
         return view('users.edit', [
             'user' => $user,
-            'roles' => self::ROLES,
+            'roles' => RoleEnum::labels(),
             'garageRole' => $garageRole,
         ]);
     }
@@ -99,7 +91,7 @@ class UserManagementController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
-            'role' => ['required', Rule::in(array_keys(self::ROLES))],
+            'role' => ['required', Rule::in(RoleEnum::values())],
             'password' => $passwordRules,
             'is_active' => [$creating ? 'nullable' : 'required', 'boolean'],
         ], [
@@ -111,7 +103,6 @@ class UserManagementController extends Controller
     private function garageRoleFor(User $user): object
     {
         $garage = $user->garages()->whereKey($this->currentGarageId())->firstOrFail();
-
         return $garage->pivot;
     }
 
