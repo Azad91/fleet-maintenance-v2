@@ -25,20 +25,23 @@ class ComplaintService
 
         $data['created_by'] = auth()->id();
 
-        $complaint = DB::transaction(function () use ($data, $detallar, $shikayet) {
+        return DB::transaction(function () use ($data, $detallar, $shikayet) {
+            $processedDetails = [];
             if (!empty($detallar) && is_array($detallar)) {
-                $data['detallar'] = $this->stockService->deductStock($detallar);
-            } else {
-                $data['detallar'] = null;
+                $processedDetails = $this->stockService->deductStock($detallar);
             }
 
             $complaint = Complaint::create($data);
+
+            // ✅ YENİ: Əlaqəli cədvələ yazırıq
+            if (!empty($processedDetails)) {
+                $complaint->details()->createMany($processedDetails);
+            }
+
             $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
             return $complaint;
         });
-
-        return $complaint;
     }
 
     public function update(Complaint $complaint, array $data, array $detallar = null, array $shikayet = []): Complaint
@@ -52,17 +55,23 @@ class ComplaintService
         }
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-            if (!empty($complaint->detallar)) {
-                $this->stockService->restoreStock($complaint->detallar);
+            // ✅ YENİ: Köhnə detalları silib stoku geri qaytarırıq
+            if ($complaint->details->isNotEmpty()) {
+                $this->stockService->restoreStock($complaint->details->toArray());
+                $complaint->details()->delete();
             }
 
+            $processedDetails = [];
             if (!empty($detallar) && is_array($detallar)) {
-                $data['detallar'] = $this->stockService->deductStock($detallar);
-            } else {
-                $data['detallar'] = null;
+                $processedDetails = $this->stockService->deductStock($detallar);
             }
 
             $complaint->update($data);
+
+            if (!empty($processedDetails)) {
+                $complaint->details()->createMany($processedDetails);
+            }
+
             $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
             return $complaint;
@@ -86,8 +95,9 @@ class ComplaintService
     public function delete(Complaint $complaint): void
     {
         DB::transaction(function () use ($complaint) {
-            if (!empty($complaint->detallar)) {
-                $this->stockService->restoreStock($complaint->detallar);
+            if ($complaint->details->isNotEmpty()) {
+                $this->stockService->restoreStock($complaint->details->toArray());
+                $complaint->details()->delete();
             }
             $complaint->delete();
         });

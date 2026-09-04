@@ -12,34 +12,35 @@ class ComplaintStockService
         $processed = [];
 
         foreach ($detallar as $detal) {
-            if (empty($detal['kodu'])) {
+            $code = $detal['code'] ?? $detal['kodu'] ?? null;
+            if (empty($code)) {
                 continue;
             }
 
-            $warehouse = Warehouse::where('code', $detal['kodu'])->lockForUpdate()->first(); // kod → code
+            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
 
             if (! $warehouse) {
                 throw ValidationException::withMessages([
-                    'detallar' => "'{$detal['kodu']}' kodlu detal cari qarajın anbarında tapılmadı."
+                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı."
                 ]);
             }
 
-            $usedQuantity = (int) ($detal['islenen_miqdar'] ?? 0);
+            $usedQuantity = (int) ($detal['used_quantity'] ?? $detal['islenen_miqdar'] ?? 0);
 
-            if ($warehouse->quantity < $usedQuantity) { // miqdar → quantity
+            if ($warehouse->quantity < $usedQuantity) {
                 throw ValidationException::withMessages([
-                    'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->quantity})" // ad → name
+                    'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->quantity})"
                 ]);
             }
 
             $processed[] = [
                 'shikayet_index' => $detal['shikayet_index'] ?? 0,
-                'kodu' => $detal['kodu'],
-                'adi' => $warehouse->name,   // ad → name
-                'depo_miqdari' => $warehouse->quantity, // miqdar → quantity
-                'islenen_miqdar' => $usedQuantity,
+                'code' => $code,
+                'name' => $warehouse->name,
+                'stock_quantity' => $warehouse->quantity,
+                'used_quantity' => $usedQuantity,
                 'employee_id' => $detal['employee_id'] ?? null,
-                'qeyd' => $detal['qeyd'] ?? null,
+                'notes' => $detal['notes'] ?? $detal['qeyd'] ?? null,
             ];
 
             if ($usedQuantity > 0) {
@@ -54,13 +55,16 @@ class ComplaintStockService
     public function restoreStock(array $detallar): void
     {
         foreach ($detallar as $detal) {
-            if (empty($detal['kodu']) || empty($detal['islenen_miqdar'])) {
+            $code = $detal['code'] ?? $detal['kodu'] ?? null;
+            $usedQuantity = (int) ($detal['used_quantity'] ?? $detal['islenen_miqdar'] ?? 0);
+
+            if (empty($code) || $usedQuantity <= 0) {
                 continue;
             }
 
-            $warehouse = Warehouse::where('code', $detal['kodu'])->lockForUpdate()->first(); // kod → code
+            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
             if ($warehouse) {
-                $warehouse->quantity += $detal['islenen_miqdar']; // miqdar → quantity
+                $warehouse->quantity += $usedQuantity;
                 $warehouse->save();
             }
         }
