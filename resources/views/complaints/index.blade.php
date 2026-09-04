@@ -49,11 +49,14 @@
                         <td>
                             <strong>{{ $complaint->bus->dqn ?? '-' }}</strong>
                             <br>
-                            <small class="text-muted">{{ $complaint->bus->route_number ?? '-' }}</small> <!-- ✅ xett_no → route_number -->
+                            <small class="text-muted">{{ $complaint->bus->route_number ?? '-' }}</small>
                         </td>
-                        <td>{{ Str::limit($complaint->shikayet, 30) }}</td>
                         <td>
-                            @if($complaint->complaint_type == 'qezali') <!-- ✅ sikayet_tipi → complaint_type -->
+                            {{-- ✅ shikayet əvəzinə items-dən ilkini göstər --}}
+                            {{ Str::limit($complaint->items->first()->description ?? '-', 30) }}
+                        </td>
+                        <td>
+                            @if($complaint->complaint_type == 'qezali')
                                 <span class="badge bg-danger">🚗 Qəzalı</span>
                             @elseif($complaint->complaint_type == 'nasazliq')
                                 <span class="badge bg-warning">⚠️ Nasazlıq</span>
@@ -153,22 +156,22 @@
                         <div class="modal-body">
                             <div class="alert alert-info">
                                 <strong>🚌 Avtobus:</strong> {{ $complaint->bus->dqn ?? '-' }}
-                                ({{ $complaint->bus->route_number ?? '-' }}) <!-- ✅ xett_no → route_number -->
+                                ({{ $complaint->bus->route_number ?? '-' }})
                             </div>
 
                             <div class="mb-3">
                                 <label for="end_date{{ $complaint->id }}" class="form-label fw-bold">📅 Bitmə Tarixi <span class="text-danger">*</span></label>
-                                <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}"> <!-- ✅ is_bitme_tarix → end_date -->
+                                <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label for="end_time{{ $complaint->id }}" class="form-label fw-bold">🕐 Bitmə Saatı <span class="text-danger">*</span></label>
-                                <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}"> <!-- ✅ is_bitme_saat → end_time -->
+                                <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label for="work_done{{ $complaint->id }}" class="form-label fw-bold">📝 Görülən İşlər <span class="text-danger">*</span></label>
-                                <textarea name="work_done" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea> <!-- ✅ gorulen_is → work_done -->
+                                <textarea name="work_done" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea>
                                 <small class="text-muted">Ən azı 5 simvol daxil edin</small>
                             </div>
                         </div>

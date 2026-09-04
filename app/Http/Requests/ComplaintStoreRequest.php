@@ -25,13 +25,13 @@ class ComplaintStoreRequest extends FormRequest
         return [
             'bus_id' => ['required', $busRule],
             'yer' => 'required|in:yol,qaraj',
-            'driver_name' => 'nullable|string|max:255', // əvvəl: surucu_adi
+            'driver_name' => 'nullable|string|max:255',
             'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule],
-            'shikayet' => 'required|array|min:1',
+            'shikayet' => 'required|array|min:1', // ✅ shikayet array olaraq qalır (items üçün)
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet', // əvvəl: sikayet_tipi
+            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',

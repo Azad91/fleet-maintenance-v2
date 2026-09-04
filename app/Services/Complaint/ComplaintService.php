@@ -17,14 +17,10 @@ class ComplaintService
     {
         if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
             $driver = Driver::active()->findOrFail($data['driver_id']);
-            $data['driver_name'] = $driver->full_name;  // əvvəl: surucu_adi
+            $data['driver_name'] = $driver->full_name;
         } else {
             $data['driver_id'] = null;
             $data['driver_name'] = null;
-        }
-
-        if (!empty($shikayet) && is_array($shikayet)) {
-            $data['shikayet'] = implode("\n", array_filter($shikayet));
         }
 
         $data['created_by'] = auth()->id();
@@ -37,7 +33,7 @@ class ComplaintService
             }
 
             $complaint = Complaint::create($data);
-            $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null); // əvvəl: sikayet_tipi
+            $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
             return $complaint;
         });
@@ -53,10 +49,6 @@ class ComplaintService
         } else {
             $data['driver_id'] = null;
             $data['driver_name'] = null;
-        }
-
-        if (!empty($shikayet) && is_array($shikayet)) {
-            $data['shikayet'] = implode("\n", array_filter($shikayet));
         }
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
@@ -81,9 +73,9 @@ class ComplaintService
     {
         $complaint->update([
             'status' => 'həll olundu',
-            'end_date' => $data['end_date'],      // əvvəl: is_bitme_tarix
-            'end_time' => $data['end_time'],      // əvvəl: is_bitme_saat
-            'work_done_by' => $data['work_done'], // əvvəl: gorulen_is
+            'end_date' => $data['end_date'],
+            'end_time' => $data['end_time'],
+            'work_done_by' => $data['work_done'],
             'closed_at' => now(),
             'closed_by' => auth()->id(),
         ]);

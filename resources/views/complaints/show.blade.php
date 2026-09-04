@@ -65,9 +65,9 @@
         <div class="row mb-4">
             <div class="col-12">
                 <h6 class="complaint-show-card__section-title"><i class="bi bi-clipboard me-2"></i>Şikayətlər</h6>
+                {{-- Şikayətlər hissəsi --}}
                 @php
-                    $shikayetler = explode("\n", $complaint->shikayet ?? '');
-                    $shikayetler = array_filter($shikayetler);
+                    $shikayetler = $complaint->items->pluck('description')->toArray();
                 @endphp
 
                 @if(count($shikayetler) > 0)

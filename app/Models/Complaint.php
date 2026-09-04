@@ -16,29 +16,30 @@ class Complaint extends Model
         'company_id',
         'bus_id',
         'driver_id',
-        'yer',               // hələlik saxlanılır (sonra 'location' olacaq)
-        'driver_name',       // əvvəl: surucu_adi
-        'complaint_type',    // əvvəl: sikayet_tipi
+        'yer',
+        'driver_name',
+        'complaint_type',
         'status',
         'km',
-        'reported_date',     // əvvəl: bildirilme_tarix
-        'reported_time',     // əvvəl: bildirilme_saat
-        'start_date',        // əvvəl: is_baslama_tarix
-        'start_time',        // əvvəl: is_baslama_saat
-        'end_date',          // əvvəl: is_bitme_tarix
-        'end_time',          // əvvəl: is_bitme_saat
-        'work_done_by',      // əvvəl: kim_is_gorub
+        'reported_date',
+        'reported_time',
+        'start_date',
+        'start_time',
+        'end_date',
+        'end_time',
+        'work_done_by',
         'employee_id',
         'service_template_id',
         'service_km',
-        'notes',             // əvvəl: qeyd
+        'notes',
         'closed_at',
         'closed_by',
         'created_by',
+        // ✅ shikayet və detallar SILINDI
     ];
 
     protected $casts = [
-        'detallar' => 'array', // Bu hələlik JSON olaraq qalır (deprecated, amma hələ var)
+        // ✅ detallar SILINDI (artıq JSON istifadə olunmur)
         'reported_date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
@@ -81,6 +82,11 @@ class Complaint extends Model
         return $this->hasMany(ComplaintItem::class);
     }
 
+    public function details()
+    {
+        return $this->hasMany(ComplaintDetail::class);
+    }
+
     // ==================== SKOPLAR ====================
     public function scopeOpen($query)
     {
@@ -109,10 +115,5 @@ class Complaint extends Model
             return $this->start_date->diffInDays($this->end_date) . ' gün';
         }
         return '-';
-    }
-
-    public function details()
-    {
-        return $this->hasMany(ComplaintDetail::class);
     }
 }

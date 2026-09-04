@@ -75,8 +75,7 @@
                 <label class="form-label fw-bold">📝 Şikayətlər</label>
                 <div id="shikayetContainer">
                     @php
-                        $shikayetler = explode("\n", $complaint->shikayet ?? '');
-                        $shikayetler = array_filter($shikayetler);
+                        $shikayetler = $complaint->items->pluck('description')->toArray();
                     @endphp
 
                     @if(count($shikayetler) > 0)

@@ -23,7 +23,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td><strong>{{ $complaint->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $complaint->bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
+                        <td>{{ $complaint->bus->route_number ?? '-' }}</td>
                         <td>
                             @if($complaint->yer == 'yol')
                                 🛣️ Yol
@@ -33,7 +33,10 @@
                                 -
                             @endif
                         </td>
-                        <td>{{ Str::limit($complaint->shikayet ?? '-', 50) }}</td>
+                        <td>
+                            {{-- ✅ shikayet əvəzinə items-dən istifadə --}}
+                            {{ Str::limit($complaint->items->first()->description ?? '-', 50) }}
+                        </td>
                         <td>
                             <span class="badge-status {{ str_replace(' ', '-', $complaint->status) }}">
                                 {{ $complaint->status }}
