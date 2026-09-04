@@ -65,5 +65,5 @@ class Bus extends Model
     public function scopeInactive($query)
     {
         return $query->where('is_active', false);
-    }
+}
 }
