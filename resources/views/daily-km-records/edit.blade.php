@@ -18,15 +18,15 @@
                     <option value="">Avtobus seçin...</option>
                     @foreach($buses as $bus)
                         <option value="{{ $bus->id }}" {{ $record->bus_id == $bus->id ? 'selected' : '' }}>
-                            {{ $bus->dqn }} - Xətt: {{ $bus->xett_no ?? '-' }}
+                            {{ $bus->dqn }} - Xətt: {{ $bus->route_number ?? '-' }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
             <div class="mb-3">
-                <label for="tarix" class="form-label fw-bold">📅 Tarix <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" id="tarix" name="tarix" required value="{{ \Carbon\Carbon::parse($record->tarix)->format('Y-m-d') }}">
+                <label for="date" class="form-label fw-bold">📅 Tarix <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="date" name="date" required value="{{ \Carbon\Carbon::parse($record->date)->format('Y-m-d') }}">
             </div>
 
             <div class="mb-3">
@@ -35,8 +35,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="qeyd" class="form-label fw-bold">📝 Qeyd</label>
-                <textarea class="form-control" id="qeyd" name="qeyd" rows="3">{{ $record->qeyd }}</textarea>
+                <label for="notes" class="form-label fw-bold">📝 Qeyd</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3">{{ $record->notes }}</textarea>
             </div>
 
             <div class="d-flex gap-2">

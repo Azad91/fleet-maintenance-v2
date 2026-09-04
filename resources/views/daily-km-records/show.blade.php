@@ -24,13 +24,13 @@
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Xətt №</small>
-                        <strong>{{ $record->bus->xett_no ?? '-' }}</strong>
+                        <strong>{{ $record->bus->route_number ?? '-' }}</strong> <!-- ✅ xett_no → route_number -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">📅 Tarix</small>
-                        <strong>{{ $record->tarix ? \Carbon\Carbon::parse($record->tarix)->format('d.m.Y') : '-' }}</strong>
+                        <strong>{{ $record->date ? \Carbon\Carbon::parse($record->date)->format('d.m.Y') : '-' }}</strong> <!-- ✅ tarix → date -->
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -42,7 +42,7 @@
                 <div class="col-12">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">📝 Qeyd</small>
-                        <strong>{{ $record->qeyd ?? '-' }}</strong>
+                        <strong>{{ $record->notes ?? '-' }}</strong> <!-- ✅ qeyd → notes -->
                     </div>
                 </div>
             </div>
@@ -72,9 +72,9 @@
                         @forelse($history as $index => $item)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $item->tarix ? \Carbon\Carbon::parse($item->tarix)->format('d.m.Y') : '-' }}</td>
+                            <td>{{ $item->date ? \Carbon\Carbon::parse($item->date)->format('d.m.Y') : '-' }}</td> <!-- ✅ tarix → date -->
                             <td><strong>{{ number_format($item->km, 0, ',', '.') }} km</strong></td>
-                            <td>{{ $item->qeyd ?? '-' }}</td>
+                            <td>{{ $item->notes ?? '-' }}</td> <!-- ✅ qeyd → notes -->
                             <td>
                                 <div class="d-flex gap-1">
                                     <a href="{{ route('daily-km-records.show', $item) }}" class="btn btn-sm btn-primary">

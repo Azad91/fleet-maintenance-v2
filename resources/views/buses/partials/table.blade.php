@@ -36,7 +36,8 @@
                                 placeholder="🔍 Uzunluq..." style="font-size: 13px;">
                         </th>
                         <th>
-                            <input type="text" class="form-control form-control-sm" name="xett_no"
+                            <!-- ✅ xett_no → route_number -->
+                            <input type="text" class="form-control form-control-sm" name="route_number"
                                 placeholder="🔍 Xətt..." style="font-size: 13px;">
                         </th>
                         <th>
@@ -44,7 +45,8 @@
                                 placeholder="🔍 DQN..." style="font-size: 13px;">
                         </th>
                         <th>
-                            <input type="text" class="form-control form-control-sm" name="motor_no"
+                            <!-- ✅ motor_no → engine_number -->
+                            <input type="text" class="form-control form-control-sm" name="engine_number"
                                 placeholder="🔍 Motor..." style="font-size: 13px;">
                         </th>
                         <th style="text-align: center;"></th>
@@ -58,14 +60,14 @@
                         <td>{{ $bus->bus_project ?? '-' }}</td>
                         <td>{{ $bus->vin ?? '-' }}</td>
                         <td>{{ $bus->uzunluq ? number_format($bus->uzunluq, 1) . ' m' : '-' }}</td>
-                        <td>{{ $bus->xett_no ?? '-' }}</td>
+                        <td>{{ $bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
                         <td><strong>{{ $bus->dqn }}</strong></td>
-                        <td>{{ $bus->motor_no ?? '-' }}</td>
+                        <td>{{ $bus->engine_number ?? '-' }}</td> <!-- ✅ motor_no → engine_number -->
                         <td style="text-align: center;">
                             @if($bus->latestKmRecord)
                                 <strong>{{ number_format($bus->latestKmRecord->km, 0, ',', '.') }} km</strong>
                                 <br>
-                                <small class="text-muted">{{ $bus->latestKmRecord->tarix->format('d.m.Y') }}</small>
+                                <small class="text-muted">{{ $bus->latestKmRecord->date->format('d.m.Y') }}</small> <!-- ✅ tarix → date -->
                             @else
                                 <span class="text-muted">-</span>
                             @endif

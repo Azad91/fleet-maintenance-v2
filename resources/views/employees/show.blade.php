@@ -14,29 +14,29 @@
     </div>
     <div class="field">
         <span class="label">Ad:</span>
-        <span class="value">{{ $employee->ad }}</span>
+        <span class="value">{{ $employee->first_name }}</span> <!-- ✅ ad → first_name -->
     </div>
     <div class="field">
         <span class="label">Soyad:</span>
-        <span class="value">{{ $employee->soyad }}</span>
+        <span class="value">{{ $employee->last_name }}</span> <!-- ✅ soyad → last_name -->
     </div>
     <div class="field">
         <span class="label">Vəzifə:</span>
-        <span class="value">{{ $employee->vezifesi }}</span>
+        <span class="value">{{ $employee->position }}</span> <!-- ✅ vezifesi → position -->
     </div>
 
     <div class="section-title">📊 Status</div>
     <div class="field">
         <span class="label">Aktiv:</span>
-        <span class="value {{ $employee->aktiv ? 'active-yes' : 'active-no' }}">
-            {{ $employee->aktiv ? '✅ Aktiv' : '❌ Passiv' }}
+        <span class="value {{ $employee->is_active ? 'active-yes' : 'active-no' }}"> <!-- ✅ aktiv → is_active -->
+            {{ $employee->is_active ? '✅ Aktiv' : '❌ Passiv' }}
         </span>
     </div>
 
     <div class="section-title">📝 Qeyd</div>
     <div class="field">
         <span class="label">Qeyd:</span>
-        <span class="value">{{ $employee->qeyd ?? '-' }}</span>
+        <span class="value">{{ $employee->notes ?? '-' }}</span> <!-- ✅ qeyd → notes -->
     </div>
 
     <div class="section-title">📅 Əlavə Məlumatlar</div>

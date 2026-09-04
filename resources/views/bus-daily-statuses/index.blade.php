@@ -36,8 +36,8 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td><strong>{{ $status->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $status->bus->xett_no ?? '-' }}</td>
-                        <td>{{ $status->tarix ? \Carbon\Carbon::parse($status->tarix)->format('d.m.Y') : '-' }}</td>
+                        <td>{{ $status->bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
+                        <td>{{ $status->date ? \Carbon\Carbon::parse($status->date)->format('d.m.Y') : '-' }}</td> <!-- ✅ tarix → date -->
                         <td>
                             @php
                                 $bgClass = match(trim($status->status)) {

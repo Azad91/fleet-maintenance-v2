@@ -3,18 +3,18 @@
     <label class="form-label fw-bold">🏷️ Şikayət Tipi <span class="text-danger">*</span></label>
     <div>
         <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="sikayet_tipi" id="tip_qezali" value="qezali"
-                   {{ old('sikayet_tipi') == 'qezali' ? 'checked' : '' }} onchange="toggleServiceFields()" required>
+            <input class="form-check-input" type="radio" name="complaint_type" id="tip_qezali" value="qezali"
+                   {{ old('complaint_type') == 'qezali' ? 'checked' : '' }} onchange="toggleServiceFields()" required>
             <label class="form-check-label" for="tip_qezali">🚗 Qəzalı</label>
         </div>
         <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="sikayet_tipi" id="tip_nasazliq" value="nasazliq"
-                   {{ old('sikayet_tipi') == 'nasazliq' ? 'checked' : '' }} onchange="toggleServiceFields()">
+            <input class="form-check-input" type="radio" name="complaint_type" id="tip_nasazliq" value="nasazliq"
+                   {{ old('complaint_type') == 'nasazliq' ? 'checked' : '' }} onchange="toggleServiceFields()">
             <label class="form-check-label" for="tip_nasazliq">⚠️ Nasazlıq</label>
         </div>
         <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="sikayet_tipi" id="tip_texniki" value="texniki_xidmet"
-                   {{ old('sikayet_tipi') == 'texniki_xidmet' ? 'checked' : '' }} onchange="toggleServiceFields()">
+            <input class="form-check-input" type="radio" name="complaint_type" id="tip_texniki" value="texniki_xidmet"
+                   {{ old('complaint_type') == 'texniki_xidmet' ? 'checked' : '' }} onchange="toggleServiceFields()">
             <label class="form-check-label" for="tip_texniki">🔧 Texniki Xidmət</label>
         </div>
     </div>
@@ -46,7 +46,7 @@
                    oninput="getBusByXett(this.value)" value="{{ old('xett_no') }}">
             <datalist id="xettList">
                 @foreach($buses as $bus)
-                    <option value="{{ $bus->xett_no }}">
+                    <option value="{{ $bus->route_number }}">
                 @endforeach
             </datalist>
         </div>
@@ -69,16 +69,16 @@
                    oninput="getDriverByKod(this.value)" value="{{ old('driver_kodu') }}">
             <datalist id="driverList">
                 @foreach($drivers ?? [] as $driver)
-                    <option value="{{ $driver->kodu }}">
+                    <option value="{{ $driver->code }}">
                 @endforeach
             </datalist>
             <div id="driverHelp" class="form-text">Kod seçildikdə sürücünün adı avtomatik doldurulur.</div>
         </div>
         <div class="col-md-8">
-            <label for="surucu_adi" class="form-label">Sürücü Adı</label>
-            <input type="text" class="form-control input-disabled" id="surucu_adi" name="surucu_adi"
+            <label for="driver_name" class="form-label">Sürücü Adı</label>
+            <input type="text" class="form-control input-disabled" id="driver_name" name="driver_name"
                    placeholder="Kod daxil edildikdə avtomatik gəlir..." readonly
-                   value="{{ old('surucu_adi') }}">
+                   value="{{ old('driver_name') }}">
             <input type="hidden" name="driver_id" id="driver_id" value="{{ old('driver_id') }}">
         </div>
     </div>
@@ -120,16 +120,16 @@
     <div class="row g-3">
         <div class="col-md-6">
             <div class="mb-3">
-                <label for="bildirilme_tarix" class="form-label fw-bold">📅 Bildirilme Tarix</label>
-                <input type="date" class="form-control" id="bildirilme_tarix" name="bildirilme_tarix"
-                       value="{{ old('bildirilme_tarix', date('Y-m-d')) }}">
+                <label for="reported_date" class="form-label fw-bold">📅 Bildirilme Tarix</label>
+                <input type="date" class="form-control" id="reported_date" name="reported_date"
+                       value="{{ old('reported_date', date('Y-m-d')) }}">
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                <label for="bildirilme_saat" class="form-label fw-bold">🕐 Bildirilme Saat</label>
-                <input type="time" class="form-control" id="bildirilme_saat" name="bildirilme_saat"
-                       value="{{ old('bildirilme_saat', now()->format('H:i')) }}">
+                <label for="reported_time" class="form-label fw-bold">🕐 Bildirilme Saat</label>
+                <input type="time" class="form-control" id="reported_time" name="reported_time"
+                       value="{{ old('reported_time', now()->format('H:i')) }}">
             </div>
         </div>
     </div>
@@ -139,14 +139,14 @@
 <div class="row g-3">
     <div class="col-md-6">
         <div class="mb-3">
-            <label for="is_baslama_tarix" class="form-label fw-bold">📅 İşə Başlama Tarix <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="is_baslama_tarix" name="is_baslama_tarix" required value="{{ old('is_baslama_tarix', date('Y-m-d')) }}">
+            <label for="start_date" class="form-label fw-bold">📅 İşə Başlama Tarix <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="start_date" name="start_date" required value="{{ old('start_date', date('Y-m-d')) }}">
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <label for="is_baslama_saat" class="form-label fw-bold">🕐 İşə Başlama Saat <span class="text-danger">*</span></label>
-            <input type="time" class="form-control" id="is_baslama_saat" name="is_baslama_saat" required value="{{ old('is_baslama_saat', now()->format('H:i')) }}">
+            <label for="start_time" class="form-label fw-bold">🕐 İşə Başlama Saat <span class="text-danger">*</span></label>
+            <input type="time" class="form-control" id="start_time" name="start_time" required value="{{ old('start_time', now()->format('H:i')) }}">
         </div>
     </div>
 </div>
@@ -155,14 +155,14 @@
 <div class="row g-3">
     <div class="col-md-6">
         <div class="mb-3">
-            <label for="is_bitme_tarix" class="form-label fw-bold">📅 İşin Bitdiyi Tarix <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="is_bitme_tarix" name="is_bitme_tarix" required value="{{ old('is_bitme_tarix', date('Y-m-d')) }}">
+            <label for="end_date" class="form-label fw-bold">📅 İşin Bitdiyi Tarix <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="end_date" name="end_date" required value="{{ old('end_date', date('Y-m-d')) }}">
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <label for="is_bitme_saat" class="form-label fw-bold">🕐 İşin Bitdiyi Saat <span class="text-danger">*</span></label>
-            <input type="time" class="form-control" id="is_bitme_saat" name="is_bitme_saat" required value="{{ old('is_bitme_saat', now()->format('H:i')) }}">
+            <label for="end_time" class="form-label fw-bold">🕐 İşin Bitdiyi Saat <span class="text-danger">*</span></label>
+            <input type="time" class="form-control" id="end_time" name="end_time" required value="{{ old('end_time', now()->format('H:i')) }}">
         </div>
     </div>
 </div>
@@ -210,27 +210,27 @@
                 <div class="col-md-2">
                     <div class="mb-2">
                         <label class="form-label fw-bold">Detal Kodu <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="detallar[0][kodu]" required
-                               placeholder="Məs: D-001" oninput="getDetalByKod(this, 0)" value="{{ old('detallar.0.kodu') }}">
+                        <input type="text" class="form-control" name="detallar[0][code]" required
+                               placeholder="Məs: D-001" oninput="getDetalByKod(this, 0)" value="{{ old('detallar.0.code') }}">
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="mb-2">
                         <label class="form-label fw-bold">Detal Adı <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control input-disabled" name="detallar[0][adi]" required readonly disabled value="{{ old('detallar.0.adi') }}">
+                        <input type="text" class="form-control input-disabled" name="detallar[0][name]" required readonly disabled value="{{ old('detallar.0.name') }}">
                     </div>
                 </div>
                 <div class="col-md-1">
                     <div class="mb-2">
                         <label class="form-label fw-bold">Depo Miqdarı <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control input-disabled" name="detallar[0][depo_miqdari]" required readonly disabled value="{{ old('detallar.0.depo_miqdari') }}">
+                        <input type="text" class="form-control input-disabled" name="detallar[0][stock_quantity]" required readonly disabled value="{{ old('detallar.0.stock_quantity') }}">
                     </div>
                 </div>
                 <div class="col-md-1">
                     <div class="mb-2">
                         <label class="form-label fw-bold">İşlənən Miqdar <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="detallar[0][islenen_miqdar]" required
-                               placeholder="0" min="1" value="{{ old('detallar.0.islenen_miqdar', 1) }}">
+                        <input type="number" class="form-control" name="detallar[0][used_quantity]" required
+                               placeholder="0" min="1" value="{{ old('detallar.0.used_quantity', 1) }}">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -257,7 +257,7 @@
                 <div class="col-12">
                     <div class="mb-2">
                         <label class="form-label fw-bold">📝 Görülən İşlər (Qeyd) <span class="text-danger">*</span></label>
-                        <textarea class="form-control" name="detallar[0][qeyd]" rows="2" required placeholder="Bu detal üçün görülən işlər...">{{ old('detallar.0.qeyd') }}</textarea>
+                        <textarea class="form-control" name="detallar[0][notes]" rows="2" required placeholder="Bu detal üçün görülən işlər...">{{ old('detallar.0.notes') }}</textarea>
                     </div>
                 </div>
             </div>

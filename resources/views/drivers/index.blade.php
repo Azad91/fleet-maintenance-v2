@@ -36,14 +36,14 @@
                 <tbody>
                     @forelse($drivers as $driver)
                     <tr>
-                        <td><strong>{{ $driver->kodu }}</strong></td>
-                        <td>{{ $driver->ad }}</td>
-                        <td>{{ $driver->soyad ?? '-' }}</td>
-                        <td>{{ $driver->telefon ?? '-' }}</td>
-                        <td>{{ $driver->vezifesi ?? '-' }}</td>
+                        <td><strong>{{ $driver->code }}</strong></td> <!-- ✅ kodu → code -->
+                        <td>{{ $driver->first_name }}</td> <!-- ✅ ad → first_name -->
+                        <td>{{ $driver->last_name ?? '-' }}</td> <!-- ✅ soyad → last_name -->
+                        <td>{{ $driver->phone ?? '-' }}</td> <!-- ✅ telefon → phone -->
+                        <td>{{ $driver->position ?? '-' }}</td> <!-- ✅ vezifesi → position -->
                         <td>
-                            <span class="badge-status {{ $driver->aktiv ? 'aktiv' : 'passiv' }}">
-                                {{ $driver->aktiv ? '✅ Aktiv' : '❌ Passiv' }}
+                            <span class="badge-status {{ $driver->is_active ? 'aktiv' : 'passiv' }}"> <!-- ✅ aktiv → is_active -->
+                                {{ $driver->is_active ? '✅ Aktiv' : '❌ Passiv' }}
                             </span>
                         </td>
                         <td>

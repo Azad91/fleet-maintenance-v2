@@ -16,14 +16,14 @@
                 <select class="form-select" id="bus_id" name="bus_id" required>
                     <option value="">Avtobus seçin...</option>
                     @foreach($buses as $bus)
-                        <option value="{{ $bus->id }}">{{ $bus->dqn }} - Xətt: {{ $bus->xett_no ?? '-' }}</option>
+                        <option value="{{ $bus->id }}">{{ $bus->dqn }} - Xətt: {{ $bus->route_number ?? '-' }}</option> <!-- ✅ xett_no → route_number -->
                     @endforeach
                 </select>
             </div>
 
             <div class="mb-3">
-                <label for="tarix" class="form-label fw-bold">📅 Tarix <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" id="tarix" name="tarix" required value="{{ date('Y-m-d') }}">
+                <label for="date" class="form-label fw-bold">📅 Tarix <span class="text-danger">*</span></label> <!-- ✅ tarix → date -->
+                <input type="date" class="form-control" id="date" name="date" required value="{{ date('Y-m-d') }}">
             </div>
 
             <div class="mb-3">
@@ -32,8 +32,8 @@
             </div>
 
             <div class="mb-3">
-                <label for="qeyd" class="form-label fw-bold">📝 Qeyd</label>
-                <textarea class="form-control" id="qeyd" name="qeyd" rows="3" placeholder="Əlavə qeyd..."></textarea>
+                <label for="notes" class="form-label fw-bold">📝 Qeyd</label> <!-- ✅ qeyd → notes -->
+                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Əlavə qeyd..."></textarea>
             </div>
 
             <div class="d-flex gap-2">

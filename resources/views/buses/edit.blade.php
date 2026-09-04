@@ -31,10 +31,10 @@
                     <input type="number" class="form-control" id="uzunluq" name="uzunluq" step="0.1" value="{{ old('uzunluq', $bus->uzunluq) }}">
                 </div>
 
-                <!-- XƏTT № -->
+                <!-- XƏTT № - ✅ name dəyişdi -->
                 <div class="col-md-6">
-                    <label for="xett_no" class="form-label fw-bold">Xətt №</label>
-                    <input type="text" class="form-control" id="xett_no" name="xett_no" value="{{ old('xett_no', $bus->xett_no) }}">
+                    <label for="route_number" class="form-label fw-bold">Xətt №</label>
+                    <input type="text" class="form-control" id="route_number" name="route_number" value="{{ old('route_number', $bus->route_number) }}">
                 </div>
 
                 <!-- DQN -->
@@ -43,23 +43,23 @@
                     <input type="text" class="form-control" id="dqn" name="dqn" required value="{{ old('dqn', $bus->dqn) }}">
                 </div>
 
-                <!-- MOTOR № -->
+                <!-- MOTOR № - ✅ name dəyişdi -->
                 <div class="col-md-6">
-                    <label for="motor_no" class="form-label fw-bold">MOTOR №</label>
-                    <input type="text" class="form-control" id="motor_no" name="motor_no" value="{{ old('motor_no', $bus->motor_no) }}">
+                    <label for="engine_number" class="form-label fw-bold">MOTOR №</label>
+                    <input type="text" class="form-control" id="engine_number" name="engine_number" value="{{ old('engine_number', $bus->engine_number) }}">
                 </div>
 
-                <!-- Aktiv / Passiv -->
+                <!-- Aktiv / Passiv - ✅ name dəyişdi -->
                 <div class="col-12">
                     <label class="form-label fw-bold">Status</label>
                     <div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="aktiv" id="aktiv_yes" value="1" {{ old('aktiv', $bus->aktiv) == '1' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="aktiv_yes">✅ Aktiv</label>
+                            <input class="form-check-input" type="radio" name="is_active" id="is_active_yes" value="1" {{ old('is_active', $bus->is_active) == '1' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active_yes">✅ Aktiv</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="aktiv" id="aktiv_no" value="0" {{ old('aktiv', $bus->aktiv) == '0' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="aktiv_no">❌ Passiv</label>
+                            <input class="form-check-input" type="radio" name="is_active" id="is_active_no" value="0" {{ old('is_active', $bus->is_active) == '0' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active_no">❌ Passiv</label>
                         </div>
                     </div>
                 </div>

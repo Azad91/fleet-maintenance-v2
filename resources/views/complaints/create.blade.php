@@ -141,11 +141,11 @@
             container.insertAdjacentHTML('beforeend',
                 '<div class="detallar-item border rounded p-3 mb-2"><div class="d-flex justify-content-between align-items-center mb-2"><strong class="small">Avtomatik əlavə olunan detal</strong><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeServiceDetail(this)"><i class="bi bi-trash"></i> Detalı sil</button></div><div class="row g-3">' +
                 '<div class="col-md-2"><label class="form-label">Şikayət</label><input class="form-control" value="' + title + '" readonly><input type="hidden" name="detallar[' + index + '][shikayet_index]" value="0"></div>' +
-                '<div class="col-md-2"><label class="form-label">Detal kodu</label><input class="form-control" name="detallar[' + index + '][kodu]" value="' + detail.kodu + '" readonly></div>' +
+                '<div class="col-md-2"><label class="form-label">Detal kodu</label><input class="form-control" name="detallar[' + index + '][code]" value="' + detail.kodu + '" readonly></div>' +
                 '<div class="col-md-3"><label class="form-label">Detal adı</label><input class="form-control input-disabled" value="' + detail.adi + '" readonly></div>' +
-                '<div class="col-md-1"><label class="form-label">Miqdar</label><input type="number" class="form-control" name="detallar[' + index + '][islenen_miqdar]" value="' + amount + '" min="1" required></div>' +
+                '<div class="col-md-1"><label class="form-label">Miqdar</label><input type="number" class="form-control" name="detallar[' + index + '][used_quantity]" value="' + amount + '" min="1" required></div>' +
                 '<div class="col-md-4"><label class="form-label">İşi görən işçi</label><select class="form-select" name="detallar[' + index + '][employee_id]" required>' + employeeOptions + '</select></div>' +
-                '</div><div class="mt-2"><label class="form-label">Görülən iş</label><textarea class="form-control" name="detallar[' + index + '][qeyd]" rows="2" required>' + title + '</textarea></div></div>');
+                '</div><div class="mt-2"><label class="form-label">Görülən iş</label><textarea class="form-control" name="detallar[' + index + '][notes]" rows="2" required>' + title + '</textarea></div></div>');
         });
     }
 
@@ -183,7 +183,7 @@
 
     function getDriverByKod(kod) {
         const normalizedKod = kod.trim().toUpperCase();
-        const nameInput = document.getElementById('surucu_adi');
+        const nameInput = document.getElementById('driver_name');
         const idInput = document.getElementById('driver_id');
         const help = document.getElementById('driverHelp');
         const codeInput = document.getElementById('driver_kodu');
@@ -249,8 +249,8 @@
     function getDetalByKod(input) {
         const kod = input.value;
         const item = input.closest('.detallar-item');
-        const adiInput = item.querySelector('input[name*="[adi]"]');
-        const depoInput = item.querySelector('input[name*="[depo_miqdari]"]');
+        const adiInput = item.querySelector('input[name*="[name]"]');
+        const depoInput = item.querySelector('input[name*="[stock_quantity]"]');
 
         if (!kod) {
             adiInput.value = '';

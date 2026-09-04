@@ -23,13 +23,13 @@
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Xətt №</small>
-                        <strong>{{ $status->bus->xett_no ?? '-' }}</strong>
+                        <strong>{{ $status->bus->route_number ?? '-' }}</strong> <!-- ✅ xett_no → route_number -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">📅 Tarix</small>
-                        <strong>{{ $status->tarix ? \Carbon\Carbon::parse($status->tarix)->format('d.m.Y') : '-' }}</strong>
+                        <strong>{{ $status->date ? \Carbon\Carbon::parse($status->date)->format('d.m.Y') : '-' }}</strong> <!-- ✅ tarix → date -->
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -41,7 +41,7 @@
                 <div class="col-12">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">📝 Qeyd</small>
-                        <strong>{{ $status->qeyd ?? '-' }}</strong>
+                        <strong>{{ $status->notes ?? '-' }}</strong> <!-- ✅ qeyd → notes -->
                     </div>
                 </div>
             </div>

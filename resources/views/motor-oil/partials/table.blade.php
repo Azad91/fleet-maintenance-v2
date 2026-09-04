@@ -7,7 +7,7 @@
 
 @forelse($grouped as $km => $items)
     @php
-        $items = $items->sortBy('detal_adi');
+        $items = $items->sortBy('part_name'); // ✅ detal_adi → part_name
     @endphp
     <div class="card mb-4">
         <div class="card-body">
@@ -30,10 +30,10 @@
                         @foreach($items as $index => $item)
                         <tr>
                             <td style="text-align: center;">{{ $index + 1 }}</td>
-                            <td><strong>{{ $item->detal_kodu }}</strong></td>
-                            <td>{{ $item->detal_adi }}</td>
-                            <td style="text-align: center;">{{ $item->olcu_vahidi ?? '-' }}</td>
-                            <td style="text-align: center;">{{ number_format($item->miqdar, 2) }}</td>
+                            <td><strong>{{ $item->part_code }}</strong></td> <!-- ✅ detal_kodu → part_code -->
+                            <td>{{ $item->part_name }}</td> <!-- ✅ detal_adi → part_name -->
+                            <td style="text-align: center;">{{ $item->unit ?? '-' }}</td> <!-- ✅ olcu_vahidi → unit -->
+                            <td style="text-align: center;">{{ number_format($item->quantity, 2) }}</td> <!-- ✅ miqdar → quantity -->
                         </tr>
                         @endforeach
                     </tbody>
@@ -48,5 +48,4 @@
     </div>
 @endforelse
 
-<!-- Total count - u gizli saxlamaq üçün -->
 <span class="total-count d-none" data-count="{{ $grouped->sum(function($items) { return $items->count(); }) }}"></span>

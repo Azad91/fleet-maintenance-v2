@@ -12,39 +12,39 @@
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Kod</small>
-                        <strong>{{ $driver->kodu }}</strong>
+                        <strong>{{ $driver->code }}</strong> <!-- ✅ kodu → code -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Ad</small>
-                        <strong>{{ $driver->ad }}</strong>
+                        <strong>{{ $driver->first_name }}</strong> <!-- ✅ ad → first_name -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Soyad</small>
-                        <strong>{{ $driver->soyad ?? '-' }}</strong>
+                        <strong>{{ $driver->last_name ?? '-' }}</strong> <!-- ✅ soyad → last_name -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Telefon</small>
-                        <strong>{{ $driver->telefon ?? '-' }}</strong>
+                        <strong>{{ $driver->phone ?? '-' }}</strong> <!-- ✅ telefon → phone -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Vəzifəsi</small>
-                        <strong>{{ $driver->vezifesi ?? '-' }}</strong>
+                        <strong>{{ $driver->position ?? '-' }}</strong> <!-- ✅ vezifesi → position -->
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">Status</small>
                         <strong>
-                            <span class="badge-status {{ $driver->aktiv ? 'aktiv' : 'passiv' }}">
-                                {{ $driver->aktiv ? '✅ Aktiv' : '❌ Passiv' }}
+                            <span class="badge-status {{ $driver->is_active ? 'aktiv' : 'passiv' }}"> <!-- ✅ aktiv → is_active -->
+                                {{ $driver->is_active ? '✅ Aktiv' : '❌ Passiv' }}
                             </span>
                         </strong>
                     </div>
@@ -52,7 +52,7 @@
                 <div class="col-12">
                     <div class="p-3 bg-light rounded">
                         <small class="text-muted d-block">📝 Qeyd</small>
-                        <strong>{{ $driver->qeyd ?? '-' }}</strong>
+                        <strong>{{ $driver->notes ?? '-' }}</strong> <!-- ✅ qeyd → notes -->
                     </div>
                 </div>
             </div>

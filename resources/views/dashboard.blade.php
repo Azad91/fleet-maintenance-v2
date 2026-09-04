@@ -30,8 +30,8 @@
                     @forelse($recentBuses as $bus)
                         <a href="{{ route('buses.show', $bus) }}" class="fleet-list__item text-decoration-none">
                             <span class="fleet-list__icon"><i class="fas fa-bus"></i></span>
-                            <span class="fleet-list__content"><strong>{{ $bus->bus_project ?? 'Model qeyd edilməyib' }}</strong><small>{{ $bus->dqn ?? 'DQN qeyd edilməyib' }} · Xətt {{ $bus->xett_no ?? '—' }}</small></span>
-                            <span class="fleet-status {{ $bus->aktiv ? 'fleet-status--success' : 'fleet-status--muted' }}">{{ $bus->aktiv ? 'Aktiv' : 'Qeyri-aktiv' }}</span><i class="fas fa-chevron-right fleet-list__arrow"></i>
+                            <span class="fleet-list__content"><strong>{{ $bus->bus_project ?? 'Model qeyd edilməyib' }}</strong><small>{{ $bus->dqn ?? 'DQN qeyd edilməyib' }} · Xətt {{ $bus->route_number ?? '—' }}</small></span> <!-- ✅ xett_no → route_number -->
+                            <span class="fleet-status {{ $bus->is_active ? 'fleet-status--success' : 'fleet-status--muted' }}">{{ $bus->is_active ? 'Aktiv' : 'Qeyri-aktiv' }}</span><i class="fas fa-chevron-right fleet-list__arrow"></i> <!-- ✅ aktiv → is_active -->
                         </a>
                     @empty
                         <div class="fleet-empty-state"><i class="fas fa-bus"></i><p>Hələ avtobus əlavə edilməyib.</p></div>
@@ -63,7 +63,7 @@
                 <header class="fleet-panel__header"><div><span class="fleet-eyebrow">STOK XƏBƏRDARLIĞI</span><h2>Kritik qalıqlar</h2></div></header>
                 <div class="fleet-stock-list">
                     @forelse($lowStockItems as $item)
-                        <a href="{{ route('warehouses.index') }}" class="fleet-stock-item text-decoration-none"><span><strong>{{ $item->ad }}</strong><small>{{ $item->kod ?? 'Kod yoxdur' }}</small></span><b>{{ $item->miqdar }}</b></a>
+                        <a href="{{ route('warehouses.index') }}" class="fleet-stock-item text-decoration-none"><span><strong>{{ $item->name }}</strong><small>{{ $item->code ?? 'Kod yoxdur' }}</small></span><b>{{ $item->quantity }}</b></a> <!-- ✅ ad → name, kod → code, miqdar → quantity -->
                     @empty
                         <div class="fleet-empty-state fleet-empty-state--compact"><i class="fas fa-circle-check"></i><p>Kritik stok yoxdur.</p></div>
                     @endforelse

@@ -18,7 +18,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label>Xətt №</label>
-                        <input type="text" class="form-control" value="{{ $complaint->bus->xett_no ?? '' }}" readonly style="background:#e9ecef;">
+                        <input type="text" class="form-control" value="{{ $complaint->bus->route_number ?? '' }}" readonly style="background:#e9ecef;">
                     </div>
                     <div class="col-md-6">
                         <label>DQN</label>
@@ -52,19 +52,19 @@
                         <input type="text" class="form-control" id="driver_kodu" name="driver_kodu"
                             placeholder="Məs: D-001" list="driverList"
                             oninput="getDriverByKod(this.value)"
-                            value="{{ old('driver_kodu', $complaint->driver?->kodu ?? '') }}">
+                            value="{{ old('driver_kodu', $complaint->driver?->code ?? '') }}">
                         <datalist id="driverList">
                             @foreach($drivers ?? [] as $driver)
-                                <option value="{{ $driver->kodu }}">
+                                <option value="{{ $driver->code }}">
                             @endforeach
                         </datalist>
                         <div id="driverHelp" class="form-text">Kod seçildikdə sürücünün adı avtomatik doldurulur.</div>
                     </div>
                     <div class="col-md-8">
-                        <label for="surucu_adi" class="form-label">Sürücü Adı</label>
-                        <input type="text" class="form-control input-disabled" id="surucu_adi" name="surucu_adi"
+                        <label for="driver_name" class="form-label">Sürücü Adı</label>
+                        <input type="text" class="form-control input-disabled" id="driver_name" name="driver_name"
                             placeholder="Kod daxil edildikdə avtomatik gəlir..." readonly
-                            value="{{ old('surucu_adi', $complaint->surucu_adi ?? '') }}">
+                            value="{{ old('driver_name', $complaint->driver_name ?? '') }}">
                         <input type="hidden" name="driver_id" id="driver_id" value="{{ old('driver_id', $complaint->driver_id ?? '') }}">
                     </div>
                 </div>
@@ -131,11 +131,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">📅 Bildirilme Tarix</label>
-                        <input type="date" class="form-control" name="bildirilme_tarix" value="{{ old('bildirilme_tarix', $complaint->bildirilme_tarix ? \Carbon\Carbon::parse($complaint->bildirilme_tarix)->format('Y-m-d') : '') }}">
+                        <input type="date" class="form-control" name="reported_date" value="{{ old('reported_date', $complaint->reported_date ? \Carbon\Carbon::parse($complaint->reported_date)->format('Y-m-d') : '') }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">🕐 Bildirilme Saat</label>
-                        <input type="time" class="form-control" name="bildirilme_saat" value="{{ old('bildirilme_saat', $complaint->bildirilme_saat) }}">
+                        <input type="time" class="form-control" name="reported_time" value="{{ old('reported_time', $complaint->reported_time) }}">
                     </div>
                 </div>
             </div>
@@ -144,11 +144,11 @@
             <div class="row">
                 <div class="col-md-6">
                     <label class="form-label fw-bold">📅 İşə Başlama Tarix</label>
-                    <input type="date" class="form-control" name="is_baslama_tarix" value="{{ old('is_baslama_tarix', $complaint->is_baslama_tarix ? \Carbon\Carbon::parse($complaint->is_baslama_tarix)->format('Y-m-d') : '') }}">
+                    <input type="date" class="form-control" name="start_date" value="{{ old('start_date', $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('Y-m-d') : '') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">🕐 İşə Başlama Saat</label>
-                    <input type="time" class="form-control" name="is_baslama_saat" value="{{ old('is_baslama_saat', $complaint->is_baslama_saat) }}">
+                    <input type="time" class="form-control" name="start_time" value="{{ old('start_time', $complaint->start_time) }}">
                 </div>
             </div>
 
@@ -156,11 +156,11 @@
             <div class="row">
                 <div class="col-md-6">
                     <label class="form-label fw-bold">📅 İşin Bitdiyi Tarix</label>
-                    <input type="date" class="form-control" name="is_bitme_tarix" value="{{ old('is_bitme_tarix', $complaint->is_bitme_tarix ? \Carbon\Carbon::parse($complaint->is_bitme_tarix)->format('Y-m-d') : '') }}">
+                    <input type="date" class="form-control" name="end_date" value="{{ old('end_date', $complaint->end_date ? \Carbon\Carbon::parse($complaint->end_date)->format('Y-m-d') : '') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">🕐 İşin Bitdiyi Saat</label>
-                    <input type="time" class="form-control" name="is_bitme_saat" value="{{ old('is_bitme_saat', $complaint->is_bitme_saat) }}">
+                    <input type="time" class="form-control" name="end_time" value="{{ old('end_time', $complaint->end_time) }}">
                 </div>
             </div>
 
@@ -179,15 +179,15 @@
                 <label class="form-label fw-bold">🏷️ Şikayət Tipi</label>
                 <div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="sikayet_tipi" value="qezali" {{ $complaint->sikayet_tipi == 'qezali' ? 'checked' : '' }}>
+                        <input class="form-check-input" type="radio" name="complaint_type" value="qezali" {{ $complaint->complaint_type == 'qezali' ? 'checked' : '' }}>
                         <label class="form-check-label">🚗 Qəzalı</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="sikayet_tipi" value="nasazliq" {{ $complaint->sikayet_tipi == 'nasazliq' ? 'checked' : '' }}>
+                        <input class="form-check-input" type="radio" name="complaint_type" value="nasazliq" {{ $complaint->complaint_type == 'nasazliq' ? 'checked' : '' }}>
                         <label class="form-check-label">⚠️ Nasazlıq</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="sikayet_tipi" value="texniki_xidmet" {{ $complaint->sikayet_tipi == 'texniki_xidmet' ? 'checked' : '' }}>
+                        <input class="form-check-input" type="radio" name="complaint_type" value="texniki_xidmet" {{ $complaint->complaint_type == 'texniki_xidmet' ? 'checked' : '' }}>
                         <label class="form-check-label">🔧 Texniki Xidmət</label>
                     </div>
                 </div>
@@ -221,23 +221,23 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Detal Kodu</label>
-                                        <input type="text" class="form-control" name="detallar[{{ $index }}][kodu]"
-                                            value="{{ $detal['kodu'] ?? '' }}" oninput="getDetalByKod(this, {{ $index }})">
+                                        <input type="text" class="form-control" name="detallar[{{ $index }}][code]"
+                                            value="{{ $detal['code'] ?? '' }}" oninput="getDetalByKod(this, {{ $index }})">
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">Detal Adı</label>
-                                        <input type="text" class="form-control input-disabled" name="detallar[{{ $index }}][adi]"
-                                            value="{{ $detal['adi'] ?? '' }}" readonly disabled>
+                                        <input type="text" class="form-control input-disabled" name="detallar[{{ $index }}][name]"
+                                            value="{{ $detal['name'] ?? '' }}" readonly disabled>
                                     </div>
                                     <div class="col-md-1">
                                         <label class="form-label fw-bold">Depo Miqdarı</label>
-                                        <input type="text" class="form-control input-disabled" name="detallar[{{ $index }}][depo_miqdari]"
-                                            value="{{ $detal['depo_miqdari'] ?? '' }}" readonly disabled>
+                                        <input type="text" class="form-control input-disabled" name="detallar[{{ $index }}][stock_quantity]"
+                                            value="{{ $detal['stock_quantity'] ?? '' }}" readonly disabled>
                                     </div>
                                     <div class="col-md-1">
                                         <label class="form-label fw-bold">İşlənən Miqdar</label>
-                                        <input type="number" class="form-control" name="detallar[{{ $index }}][islenen_miqdar]"
-                                            value="{{ $detal['islenen_miqdar'] ?? 1 }}" min="1" required>
+                                        <input type="number" class="form-control" name="detallar[{{ $index }}][used_quantity]"
+                                            value="{{ $detal['used_quantity'] ?? 1 }}" min="1" required>
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">İşi görən işçi</label>
@@ -258,7 +258,7 @@
                                 <div class="row mt-2">
                                     <div class="col-12">
                                         <label class="form-label fw-bold">📝 Görülən İşlər (Qeyd)</label>
-                                        <textarea class="form-control" name="detallar[{{ $index }}][qeyd]" rows="2">{{ $detal['qeyd'] ?? '' }}</textarea>
+                                        <textarea class="form-control" name="detallar[{{ $index }}][notes]" rows="2">{{ $detal['notes'] ?? '' }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -274,20 +274,20 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">Detal Kodu</label>
-                                    <input type="text" class="form-control" name="detallar[0][kodu]"
+                                    <input type="text" class="form-control" name="detallar[0][code]"
                                         placeholder="Məs: D-001" oninput="getDetalByKod(this, 0)">
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label fw-bold">Detal Adı</label>
-                                    <input type="text" class="form-control input-disabled" name="detallar[0][adi]" readonly disabled>
+                                    <input type="text" class="form-control input-disabled" name="detallar[0][name]" readonly disabled>
                                 </div>
                                 <div class="col-md-1">
                                     <label class="form-label fw-bold">Depo Miqdarı</label>
-                                    <input type="text" class="form-control input-disabled" name="detallar[0][depo_miqdari]" readonly disabled>
+                                    <input type="text" class="form-control input-disabled" name="detallar[0][stock_quantity]" readonly disabled>
                                 </div>
                                 <div class="col-md-1">
                                     <label class="form-label fw-bold">İşlənən Miqdar</label>
-                                    <input type="number" class="form-control" name="detallar[0][islenen_miqdar]"
+                                    <input type="number" class="form-control" name="detallar[0][used_quantity]"
                                         placeholder="0" min="1" value="1" required>
                                 </div>
                                 <div class="col-md-2">
@@ -309,7 +309,7 @@
                             <div class="row mt-2">
                                 <div class="col-12">
                                     <label class="form-label fw-bold">📝 Görülən İşlər (Qeyd)</label>
-                                    <textarea class="form-control" name="detallar[0][qeyd]" rows="2" placeholder="Bu detal üçün görülən işlər..."></textarea>
+                                    <textarea class="form-control" name="detallar[0][notes]" rows="2" placeholder="Bu detal üçün görülən işlər..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -417,19 +417,19 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">Detal Kodu</label>
-                    <input type="text" class="form-control" name="detallar[${detalCount}][kodu]" placeholder="Məs: D-001" oninput="getDetalByKod(this, ${detalCount})">
+                    <input type="text" class="form-control" name="detallar[${detalCount}][code]" placeholder="Məs: D-001" oninput="getDetalByKod(this, ${detalCount})">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">Detal Adı</label>
-                    <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][adi]" readonly disabled>
+                    <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][name]" readonly disabled>
                 </div>
                 <div class="col-md-1">
                     <label class="form-label fw-bold">Depo Miqdarı</label>
-                    <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][depo_miqdari]" readonly disabled>
+                    <input type="text" class="form-control input-disabled" name="detallar[${detalCount}][stock_quantity]" readonly disabled>
                 </div>
                 <div class="col-md-1">
                     <label class="form-label fw-bold">İşlənən Miqdar</label>
-                    <input type="number" class="form-control" name="detallar[${detalCount}][islenen_miqdar]" placeholder="0" min="1" value="1" required>
+                    <input type="number" class="form-control" name="detallar[${detalCount}][used_quantity]" placeholder="0" min="1" value="1" required>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">İşi görən işçi</label>
@@ -450,7 +450,7 @@
             <div class="row mt-2">
                 <div class="col-12">
                     <label class="form-label fw-bold">📝 Görülən İşlər (Qeyd)</label>
-                    <textarea class="form-control" name="detallar[${detalCount}][qeyd]" rows="2" placeholder="Bu detal üçün görülən işlər..."></textarea>
+                    <textarea class="form-control" name="detallar[${detalCount}][notes]" rows="2" placeholder="Bu detal üçün görülən işlər..."></textarea>
                 </div>
             </div>
         `;
@@ -491,8 +491,8 @@
     function getDetalByKod(input, index) {
         const kod = input.value;
         const item = input.closest('.detallar-item');
-        const adiInput = item.querySelector('input[name*="[adi]"]');
-        const depoInput = item.querySelector('input[name*="[depo_miqdari]"]');
+        const adiInput = item.querySelector('input[name*="[name]"]');
+        const depoInput = item.querySelector('input[name*="[stock_quantity]"]');
 
         if (!kod) {
             adiInput.value = '';
@@ -513,7 +513,7 @@
 
     function getDriverByKod(kod) {
         const normalizedKod = kod.trim().toUpperCase();
-        const nameInput = document.getElementById('surucu_adi');
+        const nameInput = document.getElementById('driver_name');
         const idInput = document.getElementById('driver_id');
         const help = document.getElementById('driverHelp');
         const codeInput = document.getElementById('driver_kodu');

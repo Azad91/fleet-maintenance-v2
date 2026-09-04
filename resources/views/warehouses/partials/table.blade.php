@@ -18,21 +18,21 @@
                     @forelse($warehouses as $item)
                     <tr>
                         <td>{{ $item->id }}</td>
-                        <td><strong>{{ $item->kod }}</strong></td>
-                        <td>{{ $item->ad }}</td>
+                        <td><strong>{{ $item->code }}</strong></td> <!-- ✅ kod → code -->
+                        <td>{{ $item->name }}</td> <!-- ✅ ad → name -->
                         <td>
-                            {{ $item->miqdar }}
-                            @if($item->miqdar <= 0)
+                            {{ $item->quantity }} <!-- ✅ miqdar → quantity -->
+                            @if($item->quantity <= 0)
                                 <span class="badge bg-danger">⚠️ Bitib</span>
-                            @elseif($item->miqdar <= $item->minimum_miqdar)
+                            @elseif($item->quantity <= $item->minimum_quantity)
                                 <span class="badge bg-warning">⚠️ Tükənir</span>
                             @endif
                         </td>
-                        <td>{{ $item->olcu_vahidi ?? '-' }}</td>
-                        <td>{{ $item->qiymet ? number_format($item->qiymet, 2) . ' ₼' : '-' }}</td>
+                        <td>{{ $item->unit ?? '-' }}</td> <!-- ✅ olcu_vahidi → unit -->
+                        <td>{{ $item->price ? number_format($item->price, 2) . ' ₼' : '-' }}</td> <!-- ✅ qiymet → price -->
                         <td>
-                            @if($item->qiymet)
-                                <strong>{{ number_format($item->miqdar * $item->qiymet, 2) }} ₼</strong>
+                            @if($item->price)
+                                <strong>{{ number_format($item->quantity * $item->price, 2) }} ₼</strong>
                             @else
                                 -
                             @endif
@@ -73,14 +73,12 @@
             </table>
         </div>
 
-        <!-- ==================== PAGINATION ==================== -->
         @if($warehouses->hasPages())
             <div class="pagination-wrapper">
                 {{ $warehouses->links() }}
             </div>
         @endif
 
-        <!-- Toplam sayını gizli saxlamaq üçün -->
         <span class="total-count d-none" data-count="{{ $warehouses->count() }}"></span>
     </div>
 </div>

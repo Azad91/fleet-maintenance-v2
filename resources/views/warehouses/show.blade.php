@@ -13,29 +13,29 @@
     </div>
     <div class="field">
         <span class="label">Kod:</span>
-        <span class="value"><strong>{{ $warehouse->kod }}</strong></span>
+        <span class="value"><strong>{{ $warehouse->code }}</strong></span> <!-- ✅ kod → code -->
     </div>
     <div class="field">
         <span class="label">Ad:</span>
-        <span class="value">{{ $warehouse->ad }}</span>
+        <span class="value">{{ $warehouse->name }}</span> <!-- ✅ ad → name -->
     </div>
     <div class="field">
         <span class="label">Kateqoriya:</span>
-        <span class="value">{{ $warehouse->kateqoriya ?? '-' }}</span>
+        <span class="value">{{ $warehouse->category ?? '-' }}</span> <!-- ✅ kateqoriya → category -->
     </div>
     <div class="field">
         <span class="label">Ölçü Vahidi:</span>
-        <span class="value">{{ $warehouse->olcu_vahidi ?? '-' }}</span>
+        <span class="value">{{ $warehouse->unit ?? '-' }}</span> <!-- ✅ olcu_vahidi → unit -->
     </div>
 
     <div class="section-title">📊 Stok Məlumatları</div>
     <div class="field">
         <span class="label">Miqdar:</span>
         <span class="value">
-            <strong>{{ $warehouse->miqdar }}</strong>
-            @if($warehouse->miqdar <= 0)
+            <strong>{{ $warehouse->quantity }}</strong> <!-- ✅ miqdar → quantity -->
+            @if($warehouse->quantity <= 0)
                 <span class="status-empty">🔴 Bitib</span>
-            @elseif($warehouse->miqdar <= $warehouse->minimum_miqdar)
+            @elseif($warehouse->quantity <= $warehouse->minimum_quantity)
                 <span class="status-low">🟡 Tükənir</span>
             @else
                 <span class="status-good">🟢 Normal</span>
@@ -44,29 +44,29 @@
     </div>
     <div class="field">
         <span class="label">Minimum Miqdar:</span>
-        <span class="value">{{ $warehouse->minimum_miqdar }}</span>
+        <span class="value">{{ $warehouse->minimum_quantity }}</span> <!-- ✅ minimum_miqdar → minimum_quantity -->
     </div>
     <div class="field">
         <span class="label">Vahid Qiyməti:</span>
-        <span class="value">{{ $warehouse->qiymet ? number_format($warehouse->qiymet, 2) . ' ₼' : '-' }}</span>
+        <span class="value">{{ $warehouse->price ? number_format($warehouse->price, 2) . ' ₼' : '-' }}</span> <!-- ✅ qiymet → price -->
     </div>
     <div class="field">
         <span class="label">Cəmi Qiymət:</span>
         <span class="value">
-            <strong>{{ $warehouse->qiymet ? number_format($warehouse->miqdar * $warehouse->qiymet, 2) . ' ₼' : '-' }}</strong>
+            <strong>{{ $warehouse->price ? number_format($warehouse->quantity * $warehouse->price, 2) . ' ₼' : '-' }}</strong>
         </span>
     </div>
 
     <div class="section-title">🏢 Tədarükçü</div>
     <div class="field">
         <span class="label">Tədarükçü:</span>
-        <span class="value">{{ $warehouse->tedarikci ?? '-' }}</span>
+        <span class="value">{{ $warehouse->supplier ?? '-' }}</span> <!-- ✅ tedarikci → supplier -->
     </div>
 
     <div class="section-title">📝 Qeyd</div>
     <div class="field">
         <span class="label">Qeyd:</span>
-        <span class="value">{{ $warehouse->qeyd ?? '-' }}</span>
+        <span class="value">{{ $warehouse->notes ?? '-' }}</span> <!-- ✅ qeyd → notes -->
     </div>
 
     <div class="field">

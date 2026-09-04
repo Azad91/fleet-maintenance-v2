@@ -33,10 +33,10 @@
                     <tr>
                         <td>{{ $employee->id }}</td>
                         <td><strong>{{ $employee->full_name }}</strong></td>
-                        <td>{{ $employee->vezifesi }}</td>
+                        <td>{{ $employee->position }}</td> <!-- ✅ vezifesi → position -->
                         <td>
-                            <span class="badge-status {{ $employee->aktiv ? 'aktiv' : 'passiv' }}">
-                                {{ $employee->aktiv ? '✅ Aktiv' : '❌ Passiv' }}
+                            <span class="badge-status {{ $employee->is_active ? 'aktiv' : 'passiv' }}"> <!-- ✅ aktiv → is_active -->
+                                {{ $employee->is_active ? '✅ Aktiv' : '❌ Passiv' }}
                             </span>
                         </td>
                         <td>

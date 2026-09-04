@@ -23,7 +23,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td><strong>{{ $complaint->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $complaint->bus->xett_no ?? '-' }}</td>
+                        <td>{{ $complaint->bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
                         <td>
                             @if($complaint->yer == 'yol')
                                 🛣️ Yol

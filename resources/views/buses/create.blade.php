@@ -30,10 +30,10 @@
                     <input type="number" class="form-control" id="uzunluq" name="uzunluq" step="0.1" value="{{ old('uzunluq') }}" placeholder="Məs: 12.5">
                 </div>
 
-                <!-- Xətt № -->
+                <!-- Xətt № - ✅ name dəyişdi -->
                 <div class="col-md-6">
-                    <label for="xett_no" class="form-label fw-bold">Xətt №</label>
-                    <input type="text" class="form-control" id="xett_no" name="xett_no" value="{{ old('xett_no') }}" placeholder="Məs: 15405">
+                    <label for="route_number" class="form-label fw-bold">Xətt №</label>
+                    <input type="text" class="form-control" id="route_number" name="route_number" value="{{ old('route_number') }}" placeholder="Məs: 15405">
                 </div>
 
                 <!-- DQN -->
@@ -42,10 +42,10 @@
                     <input type="text" class="form-control" id="dqn" name="dqn" required value="{{ old('dqn') }}" placeholder="Məs: 90-AA-123">
                 </div>
 
-                <!-- MOTOR № -->
+                <!-- MOTOR № - ✅ name dəyişdi -->
                 <div class="col-md-6">
-                    <label for="motor_no" class="form-label fw-bold">MOTOR №</label>
-                    <input type="text" class="form-control" id="motor_no" name="motor_no" value="{{ old('motor_no') }}" placeholder="Məs: M-123456">
+                    <label for="engine_number" class="form-label fw-bold">MOTOR №</label>
+                    <input type="text" class="form-control" id="engine_number" name="engine_number" value="{{ old('engine_number') }}" placeholder="Məs: M-123456">
                 </div>
 
                 <!-- KM -->
@@ -54,17 +54,17 @@
                     <input type="number" class="form-control" id="km" name="km" value="{{ old('km') }}" placeholder="0" min="0">
                 </div>
 
-                <!-- Status (Aktiv / Passiv) -->
+                <!-- Aktiv / Passiv - ✅ name dəyişdi -->
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Status</label>
                     <div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="aktiv" id="aktiv_yes" value="1" {{ old('aktiv', '1') == '1' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="aktiv_yes">✅ Aktiv</label>
+                            <input class="form-check-input" type="radio" name="is_active" id="is_active_yes" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active_yes">✅ Aktiv</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="aktiv" id="aktiv_no" value="0" {{ old('aktiv') == '0' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="aktiv_no">❌ Passiv</label>
+                            <input class="form-check-input" type="radio" name="is_active" id="is_active_no" value="0" {{ old('is_active') == '0' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active_no">❌ Passiv</label>
                         </div>
                     </div>
                 </div>

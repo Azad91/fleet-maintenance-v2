@@ -28,14 +28,14 @@
 
     <div class="content">
         <!-- Avtobus Məlumatları -->
-        <div class="row"><span class="label">Avtobus:</span><span class="value">{{ $complaint->bus->dqn ?? '-' }} ({{ $complaint->bus->xett_no ?? '-' }})</span></div>
+        <div class="row"><span class="label">Avtobus:</span><span class="value">{{ $complaint->bus->dqn ?? '-' }} ({{ $complaint->bus->route_number ?? '-' }})</span></div>
         <div class="row"><span class="label">Yer:</span><span class="value">{{ $complaint->yer ?? '-' }}</span></div>
-        <div class="row"><span class="label">Sürücü:</span><span class="value">{{ $complaint->surucu_adi ?? '-' }}</span></div>
+        <div class="row"><span class="label">Sürücü:</span><span class="value">{{ $complaint->driver_name ?? '-' }}</span></div>
         <div class="row"><span class="label">KM:</span><span class="value">{{ $complaint->km ?? '-' }}</span></div>
 
         <!-- Şikayət Məlumatları -->
         <div class="row"><span class="label">Şikayət:</span><span class="value">{{ $complaint->shikayet ?? '-' }}</span></div>
-        <div class="row"><span class="label">Tip:</span><span class="value">{{ $complaint->sikayet_tipi ?? '-' }}</span></div>
+        <div class="row"><span class="label">Tip:</span><span class="value">{{ $complaint->complaint_type ?? '-' }}</span></div>
         <div class="row"><span class="label">Status:</span><span class="value">{{ $complaint->status ?? '-' }}</span></div>
 
         <!-- İstifadə Olunan Detallar -->
@@ -53,9 +53,9 @@
                 <tbody>
                     @foreach($complaint->details as $detal)
                         <tr>
-                            <td>{{ $detal->kodu ?? '-' }}</td>
-                            <td>{{ $detal->adi ?? '-' }}</td>
-                            <td>{{ $detal->islenen_miqdar ?? 0 }}</td>
+                            <td>{{ $detal->code ?? '-' }}</td>
+                            <td>{{ $detal->name ?? '-' }}</td>
+                            <td>{{ $detal->used_quantity ?? 0 }}</td>
                             <td>{{ $employeesById[$detal->employee_id ?? null]->full_name_with_position ?? '-' }}</td>
                         </tr>
                     @endforeach
@@ -64,9 +64,9 @@
         @endif
 
         <!-- Görülən İşlər -->
-        <div class="row"><span class="label">Görülən İş:</span><span class="value">{{ $complaint->kim_is_gorub ?? '-' }}</span></div>
-        <div class="row"><span class="label">Başlama:</span><span class="value">{{ $complaint->is_baslama_tarix ?? '-' }} {{ $complaint->is_baslama_saat ?? '' }}</span></div>
-        <div class="row"><span class="label">Bitmə:</span><span class="value">{{ $complaint->is_bitme_tarix ?? '-' }} {{ $complaint->is_bitme_saat ?? '' }}</span></div>
+        <div class="row"><span class="label">Görülən İş:</span><span class="value">{{ $complaint->work_done_by ?? '-' }}</span></div>
+        <div class="row"><span class="label">Başlama:</span><span class="value">{{ $complaint->start_date ?? '-' }} {{ $complaint->start_time ?? '' }}</span></div>
+        <div class="row"><span class="label">Bitmə:</span><span class="value">{{ $complaint->end_date ?? '-' }} {{ $complaint->end_time ?? '' }}</span></div>
     </div>
 
     <!-- İmzalar -->

@@ -13,35 +13,35 @@
             @method('PUT')
 
             <div class="mb-3">
-                <label for="kod" class="form-label fw-bold">Kod <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="kod" name="kod" required value="{{ old('kod', $warehouse->kod) }}">
+                <label for="code" class="form-label fw-bold">Kod <span class="text-danger">*</span></label> <!-- ✅ kod → code -->
+                <input type="text" class="form-control" id="code" name="code" required value="{{ old('code', $warehouse->code) }}">
             </div>
 
             <div class="mb-3">
-                <label for="ad" class="form-label fw-bold">Ad <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="ad" name="ad" required value="{{ old('ad', $warehouse->ad) }}">
+                <label for="name" class="form-label fw-bold">Ad <span class="text-danger">*</span></label> <!-- ✅ ad → name -->
+                <input type="text" class="form-control" id="name" name="name" required value="{{ old('name', $warehouse->name) }}">
             </div>
 
             <div class="mb-3">
-                <label for="miqdar" class="form-label fw-bold">Depo Miqdarı</label>
-                <input type="number" class="form-control" id="miqdar" name="miqdar" min="0" value="{{ old('miqdar', $warehouse->miqdar) }}">
+                <label for="quantity" class="form-label fw-bold">Depo Miqdarı</label> <!-- ✅ miqdar → quantity -->
+                <input type="number" class="form-control" id="quantity" name="quantity" min="0" value="{{ old('quantity', $warehouse->quantity) }}">
             </div>
 
             <div class="mb-3">
-                <label for="olcu_vahidi" class="form-label fw-bold">Ölçü Vahidi</label>
-                <select class="form-select" id="olcu_vahidi" name="olcu_vahidi">
+                <label for="unit" class="form-label fw-bold">Ölçü Vahidi</label> <!-- ✅ olcu_vahidi → unit -->
+                <select class="form-select" id="unit" name="unit">
                     <option value="">Seç...</option>
-                    <option value="ədəd" {{ $warehouse->olcu_vahidi == 'ədəd' ? 'selected' : '' }}>Ədəd</option>
-                    <option value="litr" {{ $warehouse->olcu_vahidi == 'litr' ? 'selected' : '' }}>Litr</option>
-                    <option value="metr" {{ $warehouse->olcu_vahidi == 'metr' ? 'selected' : '' }}>Metr</option>
-                    <option value="kq" {{ $warehouse->olcu_vahidi == 'kq' ? 'selected' : '' }}>Kiloqram</option>
-                    <option value="q" {{ $warehouse->olcu_vahidi == 'q' ? 'selected' : '' }}>Qram</option>
+                    <option value="ədəd" {{ $warehouse->unit == 'ədəd' ? 'selected' : '' }}>Ədəd</option>
+                    <option value="litr" {{ $warehouse->unit == 'litr' ? 'selected' : '' }}>Litr</option>
+                    <option value="metr" {{ $warehouse->unit == 'metr' ? 'selected' : '' }}>Metr</option>
+                    <option value="kq" {{ $warehouse->unit == 'kq' ? 'selected' : '' }}>Kiloqram</option>
+                    <option value="q" {{ $warehouse->unit == 'q' ? 'selected' : '' }}>Qram</option>
                 </select>
             </div>
 
             <div class="mb-3">
-                <label for="qiymet" class="form-label fw-bold">Qiymət (AZN)</label>
-                <input type="number" class="form-control" id="qiymet" name="qiymet" step="0.01" min="0" value="{{ old('qiymet', $warehouse->qiymet) }}">
+                <label for="price" class="form-label fw-bold">Qiymət (AZN)</label> <!-- ✅ qiymet → price -->
+                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{{ old('price', $warehouse->price) }}">
             </div>
 
             <div class="d-flex gap-2">

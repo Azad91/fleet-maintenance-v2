@@ -46,10 +46,10 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td><strong>{{ $record->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $record->bus->xett_no ?? '-' }}</td>
-                        <td>{{ $record->tarix ? \Carbon\Carbon::parse($record->tarix)->format('d.m.Y') : '-' }}</td>
+                        <td>{{ $record->bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
+                        <td>{{ $record->date ? \Carbon\Carbon::parse($record->date)->format('d.m.Y') : '-' }}</td> <!-- ✅ tarix → date -->
                         <td><strong>{{ number_format($record->km, 0, ',', '.') }} km</strong></td>
-                        <td>{{ $record->qeyd ?? '-' }}</td>
+                        <td>{{ $record->notes ?? '-' }}</td> <!-- ✅ qeyd → notes -->
                         <td>
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ route('daily-km-records.show', $record) }}" class="btn btn-sm btn-outline-primary">
@@ -82,7 +82,6 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if($records->hasPages())
             <div class="d-flex justify-content-center mt-4">
                 {{ $records->links() }}

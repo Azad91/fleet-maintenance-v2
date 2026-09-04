@@ -6,9 +6,12 @@ use App\Models\Bus;
 use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // ✅ ƏLAVƏ ET
 
 class BusController extends Controller
 {
+    use AuthorizesRequests; // ✅ ƏLAVƏ ET
+
     public function index()
     {
         $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')->paginate(config('settings.pagination', 15));
@@ -20,9 +23,9 @@ class BusController extends Controller
         $bus_project = $request->bus_project;
         $vin = $request->vin;
         $uzunluq = $request->uzunluq;
-        $route_number = $request->route_number; // əvvəl: xett_no
+        $route_number = $request->route_number;
         $dqn = $request->dqn;
-        $engine_number = $request->engine_number; // əvvəl: motor_no
+        $engine_number = $request->engine_number;
 
         $query = Bus::with('latestKmRecord');
 
@@ -70,7 +73,7 @@ class BusController extends Controller
     {
         $this->authorize('create', Bus::class);
         $data = $request->validated();
-        $data['date'] = now()->format('Y-m-d'); // əvvəl: tarix
+        $data['date'] = now()->format('Y-m-d');
         $data = $this->addGarageContext($data);
         Bus::create($data);
         return redirect()->route('buses.index')->with('success', 'Avtobus uğurla əlavə edildi!');

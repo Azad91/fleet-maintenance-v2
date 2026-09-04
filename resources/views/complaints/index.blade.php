@@ -49,15 +49,15 @@
                         <td>
                             <strong>{{ $complaint->bus->dqn ?? '-' }}</strong>
                             <br>
-                            <small class="text-muted">{{ $complaint->bus->xett_no ?? '-' }}</small>
+                            <small class="text-muted">{{ $complaint->bus->route_number ?? '-' }}</small> <!-- ✅ xett_no → route_number -->
                         </td>
                         <td>{{ Str::limit($complaint->shikayet, 30) }}</td>
                         <td>
-                            @if($complaint->sikayet_tipi == 'qezali')
+                            @if($complaint->complaint_type == 'qezali') <!-- ✅ sikayet_tipi → complaint_type -->
                                 <span class="badge bg-danger">🚗 Qəzalı</span>
-                            @elseif($complaint->sikayet_tipi == 'nasazliq')
+                            @elseif($complaint->complaint_type == 'nasazliq')
                                 <span class="badge bg-warning">⚠️ Nasazlıq</span>
-                            @elseif($complaint->sikayet_tipi == 'texniki_xidmet')
+                            @elseif($complaint->complaint_type == 'texniki_xidmet')
                                 <span class="badge bg-info">🔧 Texniki Xidmət</span>
                             @else
                                 <span class="badge bg-secondary">-</span>
@@ -153,22 +153,22 @@
                         <div class="modal-body">
                             <div class="alert alert-info">
                                 <strong>🚌 Avtobus:</strong> {{ $complaint->bus->dqn ?? '-' }}
-                                ({{ $complaint->bus->xett_no ?? '-' }})
+                                ({{ $complaint->bus->route_number ?? '-' }}) <!-- ✅ xett_no → route_number -->
                             </div>
 
                             <div class="mb-3">
-                                <label for="is_bitme_tarix{{ $complaint->id }}" class="form-label fw-bold">📅 Bitmə Tarixi <span class="text-danger">*</span></label>
-                                <input type="date" name="is_bitme_tarix" class="form-control" required value="{{ date('Y-m-d') }}">
+                                <label for="end_date{{ $complaint->id }}" class="form-label fw-bold">📅 Bitmə Tarixi <span class="text-danger">*</span></label>
+                                <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}"> <!-- ✅ is_bitme_tarix → end_date -->
                             </div>
 
                             <div class="mb-3">
-                                <label for="is_bitme_saat{{ $complaint->id }}" class="form-label fw-bold">🕐 Bitmə Saatı <span class="text-danger">*</span></label>
-                                <input type="time" name="is_bitme_saat" class="form-control" required value="{{ date('H:i') }}">
+                                <label for="end_time{{ $complaint->id }}" class="form-label fw-bold">🕐 Bitmə Saatı <span class="text-danger">*</span></label>
+                                <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}"> <!-- ✅ is_bitme_saat → end_time -->
                             </div>
 
                             <div class="mb-3">
-                                <label for="gorulen_is{{ $complaint->id }}" class="form-label fw-bold">📝 Görülən İşlər <span class="text-danger">*</span></label>
-                                <textarea name="gorulen_is" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea>
+                                <label for="work_done{{ $complaint->id }}" class="form-label fw-bold">📝 Görülən İşlər <span class="text-danger">*</span></label>
+                                <textarea name="work_done" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea> <!-- ✅ gorulen_is → work_done -->
                                 <small class="text-muted">Ən azı 5 simvol daxil edin</small>
                             </div>
                         </div>
@@ -184,7 +184,6 @@
         </div>
     @endif
 @endforeach
-
 @endsection
 
 @section('scripts')
