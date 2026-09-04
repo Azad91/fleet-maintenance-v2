@@ -9,11 +9,9 @@ use App\Models\Bus;
 use App\Models\ComplaintType;
 use App\Models\Employee;
 use App\Models\Driver;
-use App\Models\ComplaintDetail;
 use App\Services\Complaint\ComplaintService;
 use App\Services\Complaint\ComplaintPdfService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ComplaintController extends Controller
 {
@@ -32,10 +30,10 @@ class ComplaintController extends Controller
 
     public function create()
     {
-        $buses = Bus::orderBy('route_number')->get();  // dəyişdi
+        $buses = Bus::orderBy('route_number')->get(); // əvvəl: xett_no
         $complaintTypes = ComplaintType::orderBy('name')->get();
-        $employees = Employee::active()->orderBy('first_name')->get();  // dəyişdi
-        $drivers = Driver::active()->orderBy('code')->get();  // dəyişdi
+        $employees = Employee::active()->orderBy('first_name')->get(); // əvvəl: ad
+        $drivers = Driver::active()->orderBy('code')->get(); // əvvəl: kodu
 
         return view('complaints.create', compact('buses', 'complaintTypes', 'employees', 'drivers'));
     }
@@ -43,14 +41,11 @@ class ComplaintController extends Controller
     public function store(ComplaintStoreRequest $request)
     {
         $data = $request->validated();
-
-        // Service-ə detalları ötür (o, ComplaintDetail modellərinə çevirəcək)
         $complaint = $this->complaintService->create(
             $data,
             $request->input('detallar', []),
             $request->input('shikayet', [])
         );
-
         return redirect()->route('complaints.show', $complaint)
             ->with('success', 'Kart uğurla açıldı. PDF formatında çap edə bilərsiniz.');
     }
@@ -58,32 +53,30 @@ class ComplaintController extends Controller
     public function show($id)
     {
         $complaint = Complaint::with(['bus', 'details.employee'])->findOrFail($id);
-
         $employeesById = Employee::whereIn(
             'id',
             $complaint->details->pluck('employee_id')->filter()->unique()
         )->get()->keyBy('id');
-
         return view('complaints.show', compact('complaint', 'employeesById'));
     }
 
     public function edit($id)
     {
         $complaint = Complaint::with('details')->findOrFail($id);
-        $buses = Bus::orderBy('route_number')->get();  // dəyişdi
+        $buses = Bus::orderBy('route_number')->get();
         $complaintTypes = ComplaintType::orderBy('name')->get();
-        $employees = Employee::active()->orderBy('first_name')->get();  // dəyişdi
-        $drivers = Driver::active()->orderBy('code')->get();  // dəyişdi
+        $employees = Employee::active()->orderBy('first_name')->get();
+        $drivers = Driver::active()->orderBy('code')->get();
 
         $detallar = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,
-                'kodu' => $detail->code,  // dəyişdi
-                'adi' => $detail->name,   // dəyişdi
-                'depo_miqdari' => $detail->stock_quantity,  // dəyişdi
-                'islenen_miqdar' => $detail->used_quantity,  // dəyişdi
+                'kodu' => $detail->code,        // əvvəl: kodu -> code
+                'adi' => $detail->name,          // əvvəl: adi -> name
+                'depo_miqdari' => $detail->stock_quantity,  // əvvəl: depo_miqdari -> stock_quantity
+                'islenen_miqdar' => $detail->used_quantity, // əvvəl: islenen_miqdar -> used_quantity
                 'employee_id' => $detail->employee_id,
-                'qeyd' => $detail->notes,  // dəyişdi
+                'qeyd' => $detail->notes,        // əvvəl: qeyd -> notes
             ];
         })->toArray();
 
@@ -96,14 +89,12 @@ class ComplaintController extends Controller
     {
         $complaint = Complaint::findOrFail($id);
         $data = $request->validated();
-
         $this->complaintService->update(
             $complaint,
             $data,
             $request->input('detallar', []),
             $request->input('shikayet', [])
         );
-
         return redirect('/complaints')->with('success', 'Şikayət uğurla yeniləndi!');
     }
 
@@ -111,7 +102,6 @@ class ComplaintController extends Controller
     {
         $complaint = Complaint::findOrFail($id);
         $this->complaintService->delete($complaint);
-
         return redirect()->route('complaints.index')
             ->with('success', 'Şikayət uğurla silindi! Anbar yeniləndi.');
     }
@@ -125,9 +115,9 @@ class ComplaintController extends Controller
         }
 
         $request->validate([
-            'end_date' => 'required|date',      // dəyişdi
-            'end_time' => 'required|date_format:H:i',  // dəyişdi
-            'work_done_by' => 'required|string|min:5', // dəyişdi
+            'end_date' => 'required|date',      // əvvəl: is_bitme_tarix
+            'end_time' => 'required|date_format:H:i',  // əvvəl: is_bitme_saat
+            'work_done' => 'required|string|min:5',    // əvvəl: gorulen_is
         ]);
 
         $this->complaintService->close($complaint, $request->all());
@@ -149,7 +139,6 @@ class ComplaintController extends Controller
         return $pdf->stream("is-karti-{$complaint->id}.pdf");
     }
 
-    // =============== IMPORT ===============
     public function importForm()
     {
         return view('complaints.import');

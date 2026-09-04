@@ -12,10 +12,9 @@ class BusDailyStatusController extends Controller
 {
     public function index()
     {
-        // 🔥 DƏYİŞİKLİK: paginate(50) əlavə edildi
         $statuses = BusDailyStatus::with('bus')
-            ->orderBy('tarix', 'desc')
-            ->paginate(config('settings.pagination', 25));
+            ->orderBy('date', 'desc')
+            ->paginate(config('settings.pagination', 15));
         return view('bus-daily-statuses.index', compact('statuses'));
     }
 
@@ -28,19 +27,18 @@ class BusDailyStatusController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
-            'tarix'  => 'required|date',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'date' => 'required|date',
             'status' => 'required|string',
         ]);
 
-        // ✅ DÜZƏLİŞ: Eyni avtobus və tarix üçün qeyd varsa, xəta ver
         $exists = BusDailyStatus::where('bus_id', $request->bus_id)
-            ->whereDate('tarix', $request->tarix)
+            ->whereDate('date', $request->date)
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq status qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!"
             ])->withInput();
         }
 
@@ -66,20 +64,19 @@ class BusDailyStatusController extends Controller
         $status = BusDailyStatus::findOrFail($id);
 
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
-            'tarix'  => 'required|date',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'date' => 'required|date',
             'status' => 'required|string',
         ]);
 
-        // ✅ DÜZƏLİŞ: Eyni avtobus və tarix üçün başqa qeyd varsa (özündən başqa), xəta ver
         $exists = BusDailyStatus::where('bus_id', $request->bus_id)
             ->where('id', '!=', $id)
-            ->whereDate('tarix', $request->tarix)
+            ->whereDate('date', $request->date)
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq status qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!"
             ])->withInput();
         }
 

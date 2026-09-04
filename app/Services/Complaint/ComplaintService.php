@@ -13,38 +13,31 @@ class ComplaintService
         protected ComplaintItemService $itemService
     ) {}
 
-        public function create(array $data, array $detallar = null, array $shikayet = []): Complaint
+    public function create(array $data, array $detallar = null, array $shikayet = []): Complaint
     {
-        // Sürücü məlumatlarını hazırla
         if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
             $driver = Driver::active()->findOrFail($data['driver_id']);
-            $data['surucu_adi'] = $driver->full_name;
+            $data['driver_name'] = $driver->full_name;  // əvvəl: surucu_adi
         } else {
             $data['driver_id'] = null;
-            $data['surucu_adi'] = null;
+            $data['driver_name'] = null;
         }
 
-        // Şikayət arrayini string-ə çevir
         if (!empty($shikayet) && is_array($shikayet)) {
             $data['shikayet'] = implode("\n", array_filter($shikayet));
         }
 
         $data['created_by'] = auth()->id();
 
-        // ✅ DÜZƏLİŞ: BÜTÜN ƏMƏLİYYAT BİR TRANSACTION-DA
         $complaint = DB::transaction(function () use ($data, $detallar, $shikayet) {
-            // 1. Stoku azalt (əgər detallar varsa)
             if (!empty($detallar) && is_array($detallar)) {
                 $data['detallar'] = $this->stockService->deductStock($detallar);
             } else {
                 $data['detallar'] = null;
             }
 
-            // 2. Şikayəti yarat
             $complaint = Complaint::create($data);
-
-            // 3. Item-ləri sinxronizasiya et
-            $this->itemService->syncItems($complaint, $shikayet, $data['sikayet_tipi'] ?? null);
+            $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null); // əvvəl: sikayet_tipi
 
             return $complaint;
         });
@@ -54,27 +47,23 @@ class ComplaintService
 
     public function update(Complaint $complaint, array $data, array $detallar = null, array $shikayet = []): Complaint
     {
-        // Sürücü məlumatlarını hazırla
         if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
             $driver = Driver::active()->findOrFail($data['driver_id']);
-            $data['surucu_adi'] = $driver->full_name;
+            $data['driver_name'] = $driver->full_name;
         } else {
             $data['driver_id'] = null;
-            $data['surucu_adi'] = null;
+            $data['driver_name'] = null;
         }
 
-        // Şikayət arrayini string-ə çevir
         if (!empty($shikayet) && is_array($shikayet)) {
             $data['shikayet'] = implode("\n", array_filter($shikayet));
         }
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-            // Köhnə detalları geri qaytar
             if (!empty($complaint->detallar)) {
                 $this->stockService->restoreStock($complaint->detallar);
             }
 
-            // Yeni detalları tətbiq et
             if (!empty($detallar) && is_array($detallar)) {
                 $data['detallar'] = $this->stockService->deductStock($detallar);
             } else {
@@ -82,7 +71,7 @@ class ComplaintService
             }
 
             $complaint->update($data);
-            $this->itemService->syncItems($complaint, $shikayet, $data['sikayet_tipi'] ?? null);
+            $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
             return $complaint;
         });
@@ -92,9 +81,9 @@ class ComplaintService
     {
         $complaint->update([
             'status' => 'həll olundu',
-            'is_bitme_tarix' => $data['is_bitme_tarix'],
-            'is_bitme_saat' => $data['is_bitme_saat'],
-            'kim_is_gorub' => $data['gorulen_is'],
+            'end_date' => $data['end_date'],      // əvvəl: is_bitme_tarix
+            'end_time' => $data['end_time'],      // əvvəl: is_bitme_saat
+            'work_done_by' => $data['work_done'], // əvvəl: gorulen_is
             'closed_at' => now(),
             'closed_by' => auth()->id(),
         ]);
@@ -105,7 +94,6 @@ class ComplaintService
     public function delete(Complaint $complaint): void
     {
         DB::transaction(function () use ($complaint) {
-            // Detalları geri qaytar
             if (!empty($complaint->detallar)) {
                 $this->stockService->restoreStock($complaint->detallar);
             }

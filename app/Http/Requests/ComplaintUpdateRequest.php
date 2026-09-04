@@ -19,19 +19,19 @@ class ComplaintUpdateRequest extends FormRequest
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
             ->where('garage_id', $garageId)
-            ->where('is_active', true)   // dəyişdi
+            ->where('is_active', true)
             ->whereNull('deleted_at'));
 
         return [
             'bus_id' => ['required', $busRule],
             'yer' => 'required|in:yol,qaraj',
-            'driver_name' => 'nullable|string|max:255',  // dəyişdi
+            'driver_name' => 'nullable|string|max:255',
             'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule],
             'shikayet' => 'required|array|min:1',
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',  // dəyişdi
+            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',
@@ -70,15 +70,15 @@ class ComplaintUpdateRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $validator->sometimes('driver_name', 'required|string|max:255', function ($input) {  // dəyişdi (əvvəl: surucu_adi)
+        $validator->sometimes('driver_name', 'required|string|max:255', function ($input) {
             return $input->yer == 'yol';
         });
 
-        $validator->sometimes('reported_date', 'required|date', function ($input) {  // dəyişdi
+        $validator->sometimes('reported_date', 'required|date', function ($input) {
             return $input->yer == 'yol';
         });
 
-        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) {  // dəyişdi
+        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) {
             return $input->yer == 'yol';
         });
 

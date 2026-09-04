@@ -13,9 +13,7 @@ class DriverController extends Controller
 {
     public function index()
     {
-        // 🔥 DƏYİŞİKLİK: paginate(30) əlavə edildi
-        $drivers = Driver::orderBy('kodu')
-        ->paginate(config('settings.pagination', 25));
+        $drivers = Driver::orderBy('code')->paginate(config('settings.pagination', 30));
         return view('drivers.index', compact('drivers'));
     }
 
@@ -27,26 +25,26 @@ class DriverController extends Controller
     public function store(Request $request)
     {
         $request->merge([
-            'kodu' => mb_strtoupper(trim((string) $request->input('kodu'))),
-            'ad' => trim((string) $request->input('ad')),
-            'soyad' => $request->filled('soyad') ? trim((string) $request->input('soyad')) : null,
+            'code' => mb_strtoupper(trim((string) $request->input('code'))),
+            'first_name' => trim((string) $request->input('first_name')),
+            'last_name' => $request->filled('last_name') ? trim((string) $request->input('last_name')) : null,
         ]);
 
         $validated = $request->validate([
-            'kodu' => [
+            'code' => [
                 'required', 'string', 'max:100',
-                Rule::unique('drivers', 'kodu')->where(fn ($query) => $query
-                    ->where('garage_id', \App\Models\Garage::getCurrentId())
+                Rule::unique('drivers', 'code')->where(fn ($query) => $query
+                    ->where('garage_id', session('current_garage_id'))
                     ->whereNull('deleted_at')),
             ],
-            'ad' => 'required|string|max:255',
-            'soyad' => 'nullable|string|max:255',
-            'telefon' => 'nullable|string|max:50',
-            'vezifesi' => 'nullable|string|max:255',
-            'aktiv' => 'required|boolean',
-            'qeyd' => 'nullable|string',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'position' => 'nullable|string|max:255',
+            'is_active' => 'required|boolean',
+            'notes' => 'nullable|string',
         ], [
-            'kodu.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
+            'code.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
         ]);
 
         Driver::create($validated);
@@ -70,26 +68,26 @@ class DriverController extends Controller
         $driver = Driver::findOrFail($id);
 
         $request->merge([
-            'kodu' => mb_strtoupper(trim((string) $request->input('kodu'))),
-            'ad' => trim((string) $request->input('ad')),
-            'soyad' => $request->filled('soyad') ? trim((string) $request->input('soyad')) : null,
+            'code' => mb_strtoupper(trim((string) $request->input('code'))),
+            'first_name' => trim((string) $request->input('first_name')),
+            'last_name' => $request->filled('last_name') ? trim((string) $request->input('last_name')) : null,
         ]);
 
         $validated = $request->validate([
-            'kodu' => [
+            'code' => [
                 'required', 'string', 'max:100',
-                Rule::unique('drivers', 'kodu')->ignore($driver->id)->where(fn ($query) => $query
-                    ->where('garage_id', \App\Models\Garage::getCurrentId())
+                Rule::unique('drivers', 'code')->ignore($driver->id)->where(fn ($query) => $query
+                    ->where('garage_id', session('current_garage_id'))
                     ->whereNull('deleted_at')),
             ],
-            'ad' => 'required|string|max:255',
-            'soyad' => 'nullable|string|max:255',
-            'telefon' => 'nullable|string|max:50',
-            'vezifesi' => 'nullable|string|max:255',
-            'aktiv' => 'required|boolean',
-            'qeyd' => 'nullable|string',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'position' => 'nullable|string|max:255',
+            'is_active' => 'required|boolean',
+            'notes' => 'nullable|string',
         ], [
-            'kodu.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
+            'code.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
         ]);
 
         $driver->update($validated);
@@ -103,7 +101,6 @@ class DriverController extends Controller
         return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla silindi!');
     }
 
-    // ==================== IMPORT ====================
     public function importForm()
     {
         return view('drivers.import');
@@ -121,7 +118,6 @@ class DriverController extends Controller
         }
     }
 
-    // ==================== EXPORT ====================
     public function export()
     {
         return Excel::download(new DriversExport, 'suruculer.xlsx');

@@ -11,15 +11,12 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        // 🔥 DƏYİŞİKLİK: paginate(30) əlavə edildi
-        $employees = Employee::orderBy('ad')
-        ->paginate(config('settings.pagination', 25));
+        $employees = Employee::orderBy('first_name')->paginate(config('settings.pagination', 30));
         return view('employees.index', compact('employees'));
     }
 
     public function create()
     {
-        // BURADA İSTİFADƏ OLUNUR!
         $positions = config('settings.employee_positions');
         return view('employees.create', compact('positions'));
     }
@@ -27,16 +24,14 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'ad' => 'required|string|max:255',
-            'soyad' => 'required|string|max:255',
-            'vezifesi' => 'required|string|max:255',
-            'qeyd' => 'nullable|string',
-            'aktiv' => 'nullable|boolean', // ✅ ƏLAVƏ
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'position' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        // ✅ ƏLAVƏ: checkbox-dan gələn dəyəri boolean-a çevir
-        $validated['aktiv'] = $request->boolean('aktiv');
-
+        $validated['is_active'] = $request->boolean('is_active');
         Employee::create($validated);
 
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla əlavə edildi!');
@@ -51,8 +46,6 @@ class EmployeeController extends Controller
     public function edit($id)
     {
         $employee = Employee::findOrFail($id);
-
-        // BURADA İSTİFADƏ OLUNUR!
         $positions = config('settings.employee_positions');
         return view('employees.edit', compact('employee', 'positions'));
     }
@@ -62,16 +55,14 @@ class EmployeeController extends Controller
         $employee = Employee::findOrFail($id);
 
         $validated = $request->validate([
-            'ad' => 'required|string|max:255',
-            'soyad' => 'required|string|max:255',
-            'vezifesi' => 'required|string|max:255',
-            'qeyd' => 'nullable|string',
-            'aktiv' => 'nullable|boolean', // ✅ ƏLAVƏ
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'position' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
-        // ✅ ƏLAVƏ: checkbox-dan gələn dəyəri boolean-a çevir
-        $validated['aktiv'] = $request->boolean('aktiv');
-
+        $validated['is_active'] = $request->boolean('is_active');
         $employee->update($validated);
 
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla yeniləndi!');
@@ -81,7 +72,6 @@ class EmployeeController extends Controller
     {
         $employee = Employee::findOrFail($id);
         $employee->delete();
-
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla silindi!');
     }
 

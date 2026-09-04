@@ -19,19 +19,19 @@ class ComplaintStoreRequest extends FormRequest
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
             ->where('garage_id', $garageId)
-            ->where('is_active', true)   // dəyişdi
+            ->where('is_active', true)
             ->whereNull('deleted_at'));
 
         return [
             'bus_id' => ['required', $busRule],
             'yer' => 'required|in:yol,qaraj',
-            'driver_name' => 'nullable|string|max:255',  // dəyişdi (əvvəl: surucu_adi)
+            'driver_name' => 'nullable|string|max:255', // əvvəl: surucu_adi
             'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule],
             'shikayet' => 'required|array|min:1',
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',  // dəyişdi (əvvəl: sikayet_tipi)
+            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet', // əvvəl: sikayet_tipi
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',
@@ -55,7 +55,7 @@ class ComplaintStoreRequest extends FormRequest
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
-            'complaint_type.in' => 'Şikayət tipi düzgün seçilməyib.',  // dəyişdi
+            'complaint_type.in' => 'Şikayət tipi düzgün seçilməyib.',
             'status.required' => 'Status seçilməlidir.',
             'status.in' => 'Yeni kart yalnız "gözləmədə" və ya "işdə" statusunda açıla bilər.',
             'km.integer' => 'KM tam ədəd olmalıdır.',
@@ -72,11 +72,11 @@ class ComplaintStoreRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $validator->sometimes('reported_date', 'required|date', function ($input) {  // dəyişdi
+        $validator->sometimes('reported_date', 'required|date', function ($input) { // əvvəl: bildirilme_tarix
             return $input->yer == 'yol';
         });
 
-        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) {  // dəyişdi
+        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) { // əvvəl: bildirilme_saat
             return $input->yer == 'yol';
         });
 

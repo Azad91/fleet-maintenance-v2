@@ -17,11 +17,11 @@ class WarehouseUpdateRequest extends FormRequest
         $warehouseId = $this->route('warehouse');
 
         return [
-            'kod' => ['required', Rule::unique('warehouses', 'kod')->where('garage_id', \App\Models\Garage::getCurrentId())->whereNull('deleted_at')->ignore($warehouseId)],
-            'ad' => 'required|string|max:255',
-            'miqdar' => 'required|integer|min:0',
-            'olcu_vahidi' => 'nullable|string|max:50',
-            'qiymet' => 'nullable|numeric|min:0',
+            'code' => ['required', Rule::unique('warehouses', 'code')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')->ignore($warehouseId)],
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:0',
+            'unit' => 'nullable|string|max:50',
+            'price' => 'nullable|numeric|min:0',
         ];
     }
 }

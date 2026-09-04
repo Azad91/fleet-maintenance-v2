@@ -20,12 +20,12 @@ class DailyKmRecordController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('bus', function ($bq) use ($search) {
                     $bq->where('dqn', 'ILIKE', "%{$search}%")
-                       ->orWhere('xett_no', 'ILIKE', "%{$search}%");
-                })->orWhere('tarix', 'ILIKE', "%{$search}%");
+                       ->orWhere('route_number', 'ILIKE', "%{$search}%"); // əvvəl: xett_no
+                })->orWhere('date', 'ILIKE', "%{$search}%"); // əvvəl: tarix
             });
         }
 
-        $records = $query->orderBy('tarix', 'desc')->paginate(config('settings.pagination', 25));
+        $records = $query->orderBy('date', 'desc')->paginate(config('settings.pagination', 15));
         return view('daily-km-records.index', compact('records', 'search'));
     }
 
@@ -38,20 +38,19 @@ class DailyKmRecordController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
-            'tarix' => 'required|date',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'date' => 'required|date',      // əvvəl: tarix
             'km' => 'required|integer|min:0',
         ]);
 
-        // HasGarageScope cari qaraj və şirkəti avtomatik yazır.
         $bus = Bus::findOrFail($request->bus_id);
         $previousKm = $bus->dailyKmRecords()
-            ->whereDate('tarix', '<', $request->tarix)
-            ->orderByDesc('tarix')
+            ->whereDate('date', '<', $request->date)  // əvvəl: tarix
+            ->orderByDesc('date')
             ->first();
         $nextKm = $bus->dailyKmRecords()
-            ->whereDate('tarix', '>', $request->tarix)
-            ->orderBy('tarix')
+            ->whereDate('date', '>', $request->date)
+            ->orderBy('date')
             ->first();
 
         if ($previousKm && $request->km <= $previousKm->km) {
@@ -66,14 +65,13 @@ class DailyKmRecordController extends Controller
             ])->withInput();
         }
 
-        // 🔥 BİZNES QAYDASI: Eyni günə 2-ci qeyd əngəllənsin
         $exists = DailyKmRecord::where('bus_id', $request->bus_id)
-            ->whereDate('tarix', $request->tarix)
+            ->whereDate('date', $request->date)
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq KM qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq KM qeydi var!"
             ])->withInput();
         }
 
@@ -85,7 +83,7 @@ class DailyKmRecordController extends Controller
     {
         $record = DailyKmRecord::with('bus')->findOrFail($id);
         $history = DailyKmRecord::where('bus_id', $record->bus_id)
-                    ->orderBy('tarix', 'desc')
+                    ->orderBy('date', 'desc')
                     ->get();
         return view('daily-km-records.show', compact('record', 'history'));
     }
@@ -102,21 +100,21 @@ class DailyKmRecordController extends Controller
         $record = DailyKmRecord::findOrFail($id);
 
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
-            'tarix' => 'required|date',
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'date' => 'required|date',
             'km' => 'required|integer|min:0',
         ]);
 
         $bus = Bus::findOrFail($request->bus_id);
         $previousKm = $bus->dailyKmRecords()
             ->where('id', '!=', $id)
-            ->whereDate('tarix', '<', $request->tarix)
-            ->orderByDesc('tarix')
+            ->whereDate('date', '<', $request->date)
+            ->orderByDesc('date')
             ->first();
         $nextKm = $bus->dailyKmRecords()
             ->where('id', '!=', $id)
-            ->whereDate('tarix', '>', $request->tarix)
-            ->orderBy('tarix')
+            ->whereDate('date', '>', $request->date)
+            ->orderBy('date')
             ->first();
 
         if ($previousKm && $request->km <= $previousKm->km) {
@@ -131,15 +129,14 @@ class DailyKmRecordController extends Controller
             ])->withInput();
         }
 
-        // 🔥 BİZNES QAYDASI: Eyni günə başqa qeyd varsa (özündən başqa)
         $exists = DailyKmRecord::where('bus_id', $request->bus_id)
             ->where('id', '!=', $id)
-            ->whereDate('tarix', $request->tarix)
+            ->whereDate('date', $request->date)
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'tarix' => "Bu avtobus üçün {$request->tarix} tarixində artıq KM qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq KM qeydi var!"
             ])->withInput();
         }
 

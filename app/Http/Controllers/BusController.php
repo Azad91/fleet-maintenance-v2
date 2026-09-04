@@ -9,23 +9,20 @@ use Illuminate\Http\Request;
 
 class BusController extends Controller
 {
-    // ====== INDEX ======
     public function index()
     {
-        $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')
-        ->paginate(config('settings.pagination', 25));
+        $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')->paginate(config('settings.pagination', 15));
         return view('buses.index', compact('buses'));
     }
 
-    // ====== SEARCH ======
     public function search(Request $request)
     {
         $bus_project = $request->bus_project;
         $vin = $request->vin;
         $uzunluq = $request->uzunluq;
-        $xett_no = $request->xett_no;
+        $route_number = $request->route_number; // əvvəl: xett_no
         $dqn = $request->dqn;
-        $motor_no = $request->motor_no;
+        $engine_number = $request->engine_number; // əvvəl: motor_no
 
         $query = Bus::with('latestKmRecord');
 
@@ -38,17 +35,17 @@ class BusController extends Controller
         if (!empty($uzunluq)) {
             $query->where('uzunluq', 'ILIKE', "%{$uzunluq}%");
         }
-        if (!empty($xett_no)) {
-            $query->where('xett_no', 'ILIKE', "%{$xett_no}%");
+        if (!empty($route_number)) {
+            $query->where('route_number', 'ILIKE', "%{$route_number}%");
         }
         if (!empty($dqn)) {
             $query->where('dqn', 'ILIKE', "%{$dqn}%");
         }
-        if (!empty($motor_no)) {
-            $query->where('motor_no', 'ILIKE', "%{$motor_no}%");
+        if (!empty($engine_number)) {
+            $query->where('engine_number', 'ILIKE', "%{$engine_number}%");
         }
 
-        $buses = $query->orderBy('id', 'desc')->paginate(config('settings.pagination', 25));
+        $buses = $query->orderBy('id', 'desc')->paginate(config('settings.pagination', 15));
         $isEmpty = $buses->isEmpty();
 
         if ($request->ajax()) {
@@ -56,56 +53,44 @@ class BusController extends Controller
         }
 
         return view('buses.index', compact('buses'));
-}
+    }
 
-    // ====== SHOW ======
     public function show($id)
     {
         $bus = Bus::findOrFail($id);
         return view('buses.show', compact('bus'));
     }
 
-    // ====== CREATE ======
     public function create()
     {
         return view('buses.create');
     }
 
-    // ====== STORE ======
     public function store(BusStoreRequest $request)
     {
-        $this->authorize('create', Bus::class); // ✅ Policy yoxlayır
-
+        $this->authorize('create', Bus::class);
         $data = $request->validated();
-        $data['tarix'] = now()->format('Y-m-d');
+        $data['date'] = now()->format('Y-m-d'); // əvvəl: tarix
         $data = $this->addGarageContext($data);
-
         Bus::create($data);
-
         return redirect()->route('buses.index')->with('success', 'Avtobus uğurla əlavə edildi!');
     }
 
-    // ====== EDIT ======
     public function edit($id)
     {
         $bus = Bus::findOrFail($id);
         return view('buses.edit', compact('bus'));
     }
 
-    // ====== UPDATE ======
     public function update(BusUpdateRequest $request, $id)
     {
         $bus = Bus::findOrFail($id);
         $this->authorize('update', $bus);
-
         $data = $request->validated();
-
         $bus->update($data);
-
         return redirect()->route('buses.index')->with('success', 'Avtobus uğurla yeniləndi!');
     }
 
-    // ====== DESTROY ======
     public function destroy($id)
     {
         $bus = Bus::findOrFail($id);
@@ -113,7 +98,6 @@ class BusController extends Controller
         return redirect()->route('buses.index')->with('success', 'Avtobus uğurla silindi!');
     }
 
-    // ====== IMPORT ======
     public function importForm()
     {
         return view('buses.import');

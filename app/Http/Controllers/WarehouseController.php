@@ -16,8 +16,8 @@ class WarehouseController extends Controller
         $search = $request->search;
 
         $warehouses = Warehouse::when($search, function ($query, $search) {
-            return $query->where('kod', 'ILIKE', "%{$search}%")
-                        ->orWhere('ad', 'ILIKE', "%{$search}%");
+            return $query->where('code', 'ILIKE', "%{$search}%")
+                        ->orWhere('name', 'ILIKE', "%{$search}%");
         })
         ->orderBy('id', 'desc')
         ->paginate(config('settings.pagination', 15));
@@ -30,8 +30,8 @@ class WarehouseController extends Controller
         $search = $request->search;
 
         $warehouses = Warehouse::when($search, function ($query, $search) {
-            return $query->where('kod', 'ILIKE', "%{$search}%")
-                        ->orWhere('ad', 'ILIKE', "%{$search}%");
+            return $query->where('code', 'ILIKE', "%{$search}%")
+                        ->orWhere('name', 'ILIKE', "%{$search}%");
         })
         ->orderBy('id', 'desc')
         ->paginate(config('settings.pagination', 15));
@@ -75,8 +75,6 @@ class WarehouseController extends Controller
         $warehouse->delete();
         return redirect()->route('warehouses.index')->with('success', 'Anbar məlumatı uğurla silindi!');
     }
-
-    // =============== IMPORT ===============
 
     public function importForm()
     {

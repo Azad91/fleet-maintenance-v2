@@ -18,20 +18,20 @@ class BusUpdateRequest extends FormRequest
 
         return [
             'bus_project' => 'nullable|string|max:255',
-            'vin'         => 'nullable|string|max:17',
-            'uzunluq'     => 'nullable|numeric|min:0',
-            'xett_no'     => [
+            'vin' => 'nullable|string|max:17',
+            'uzunluq' => 'nullable|numeric|min:0',
+            'route_number' => [  // əvvəl: xett_no
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('buses', 'xett_no')
-                    ->where('garage_id', \App\Models\Garage::getCurrentId())
+                Rule::unique('buses', 'route_number')
+                    ->where('garage_id', session('current_garage_id'))
                     ->whereNull('deleted_at')
                     ->ignore($busId)
-            ], // ✅ ƏLAVƏ
-            'dqn'         => ['required', Rule::unique('buses', 'dqn')->where('garage_id', \App\Models\Garage::getCurrentId())->whereNull('deleted_at')->ignore($busId)],
-            'motor_no'    => 'nullable|string|max:255',
-            'aktiv'       => 'nullable|boolean',
+            ],
+            'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')->ignore($busId)],
+            'engine_number' => 'nullable|string|max:255', // əvvəl: motor_no
+            'is_active' => 'nullable|boolean', // əvvəl: aktiv
         ];
     }
 }
