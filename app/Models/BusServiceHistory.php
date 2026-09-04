@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BusServiceHistory extends Model
 {
-    use HasFactory;
+    use HasFactory, HasGarageScope;
 
-    protected $fillable = ['bus_id', 'service_template_id', 'km', 'tarix'];
+    protected $table = 'bus_service_history';
+    protected $fillable = ['bus_id', 'service_template_id', 'km', 'tarix', 'garage_id', 'company_id'];
 
     public function bus()
     {
