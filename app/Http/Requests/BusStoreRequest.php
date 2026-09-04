@@ -23,10 +23,10 @@ class BusStoreRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('buses', 'xett_no')
-                    ->where('garage_id', session('current_garage_id'))
+                    ->where('garage_id', \App\Models\Garage::getCurrentId())
                     ->whereNull('deleted_at')
             ], // ✅ ƏLAVƏ
-            'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')],
+            'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', \App\Models\Garage::getCurrentId())->whereNull('deleted_at')],
             'motor_no' => 'nullable|string|max:255',
             'km' => 'nullable|integer|min:0',
         ];

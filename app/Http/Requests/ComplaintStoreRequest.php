@@ -14,7 +14,7 @@ class ComplaintStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId = session('current_garage_id');
+        $garageId = \App\Models\Garage::getCurrentId();
         $busRule = Rule::exists('buses', 'id')->where('garage_id', $garageId);
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query

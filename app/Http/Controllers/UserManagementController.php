@@ -108,6 +108,6 @@ class UserManagementController extends Controller
 
     private function currentGarageId(): int
     {
-        return (int) session('current_garage_id');
+        return (int) \App\Models\Garage::getCurrentId();
     }
 }

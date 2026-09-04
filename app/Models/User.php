@@ -71,7 +71,7 @@ public function hasAnyRole($roles)
     {
         $roles = (array) $roles;
 
-        $garageId ??= session('current_garage_id');
+        $garageId ??= \App\Models\Garage::getCurrentId();
         if (! $garageId) {
             return false;
         }

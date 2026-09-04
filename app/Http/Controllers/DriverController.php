@@ -35,7 +35,7 @@ class DriverController extends Controller
             'kodu' => [
                 'required', 'string', 'max:100',
                 Rule::unique('drivers', 'kodu')->where(fn ($query) => $query
-                    ->where('garage_id', session('current_garage_id'))
+                    ->where('garage_id', \App\Models\Garage::getCurrentId())
                     ->whereNull('deleted_at')),
             ],
             'ad' => 'required|string|max:255',
@@ -78,7 +78,7 @@ class DriverController extends Controller
             'kodu' => [
                 'required', 'string', 'max:100',
                 Rule::unique('drivers', 'kodu')->ignore($driver->id)->where(fn ($query) => $query
-                    ->where('garage_id', session('current_garage_id'))
+                    ->where('garage_id', \App\Models\Garage::getCurrentId())
                     ->whereNull('deleted_at')),
             ],
             'ad' => 'required|string|max:255',

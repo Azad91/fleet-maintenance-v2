@@ -45,7 +45,7 @@ class DashboardController extends Controller
             ->join('complaints', 'complaints.id', '=', 'complaint_items.complaint_id')
             ->where('complaints.created_at', '>=', now()->subDays(30))
             ->where('complaints.status', '!=', 'həll olundu')
-            ->where('complaints.garage_id', session('current_garage_id'))
+            ->where('complaints.garage_id', \App\Models\Garage::getCurrentId())
             ->groupBy('complaint_items.description', 'complaints.bus_id')
             ->having(DB::raw('COUNT(*)'), '>=', 2)
             ->with('complaint.bus')

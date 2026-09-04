@@ -25,11 +25,11 @@ class BusUpdateRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('buses', 'xett_no')
-                    ->where('garage_id', session('current_garage_id'))
+                    ->where('garage_id', \App\Models\Garage::getCurrentId())
                     ->whereNull('deleted_at')
                     ->ignore($busId)
             ], // ✅ ƏLAVƏ
-            'dqn'         => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')->ignore($busId)],
+            'dqn'         => ['required', Rule::unique('buses', 'dqn')->where('garage_id', \App\Models\Garage::getCurrentId())->whereNull('deleted_at')->ignore($busId)],
             'motor_no'    => 'nullable|string|max:255',
             'aktiv'       => 'nullable|boolean',
         ];

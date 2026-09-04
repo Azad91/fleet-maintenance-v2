@@ -28,7 +28,7 @@ class BusDailyStatusController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
             'tarix'  => 'required|date',
             'status' => 'required|string',
         ]);
@@ -66,7 +66,7 @@ class BusDailyStatusController extends Controller
         $status = BusDailyStatus::findOrFail($id);
 
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
             'tarix'  => 'required|date',
             'status' => 'required|string',
         ]);

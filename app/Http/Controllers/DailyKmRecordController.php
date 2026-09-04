@@ -38,7 +38,7 @@ class DailyKmRecordController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
             'tarix' => 'required|date',
             'km' => 'required|integer|min:0',
         ]);
@@ -102,7 +102,7 @@ class DailyKmRecordController extends Controller
         $record = DailyKmRecord::findOrFail($id);
 
         $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
+            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', \App\Models\Garage::getCurrentId())],
             'tarix' => 'required|date',
             'km' => 'required|integer|min:0',
         ]);
