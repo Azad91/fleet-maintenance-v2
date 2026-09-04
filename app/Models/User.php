@@ -32,6 +32,14 @@ class User extends Authenticatable
     ];
 
     // ==================== ROLE CHECKS ====================
+
+    // ✅ YENİ METOD: Super Admin (bütün sisteme tam nəzarət)
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    // Qaraj səviyyəsində admin (pivotda 'admin' rolu) - BU KÖHNƏ METODDUR, amma indi fərqli məna daşıyır
     public function isAdmin()
     {
         return $this->role === 'admin';
@@ -62,16 +70,21 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
-public function hasAnyRole($roles)
-{
+    public function hasAnyRole($roles)
+    {
         return $this->hasGarageRole($roles);
     }
 
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
-        $roles = (array) $roles;
+        // ✅ Super Admin hər zaman true qaytarır (bütün qaraja giriş)
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
 
+        $roles = (array) $roles;
         $garageId ??= \App\Models\Garage::getCurrentId();
+
         if (! $garageId) {
             return false;
         }
@@ -82,36 +95,37 @@ public function hasAnyRole($roles)
             ->wherePivotIn('role', $roles)
             ->exists();
     }
+
     // app/Models/User.php - class User daxilinə əlavə et:
 
-public function garages()
-{
-    return $this->belongsToMany(Garage::class, 'garage_user')->withPivot('role', 'is_active')->withTimestamps();
-}
+    public function garages()
+    {
+        return $this->belongsToMany(Garage::class, 'garage_user')->withPivot('role', 'is_active')->withTimestamps();
+    }
 
-public function currentGarage()
-{
-    return $this->belongsTo(Garage::class, 'current_garage_id');
-}
+    public function currentGarage()
+    {
+        return $this->belongsTo(Garage::class, 'current_garage_id');
+    }
 
-public function currentCompany()
-{
-    return $this->belongsTo(Company::class, 'current_company_id');
-}
+    public function currentCompany()
+    {
+        return $this->belongsTo(Company::class, 'current_company_id');
+    }
 
-public function setCurrentGarage(Garage $garage): void
-{
-    $this->update([
-        'current_garage_id' => $garage->id,
-        'current_company_id' => $garage->company_id,
-        'last_selected_garage_at' => now(),
-    ]);
+    public function setCurrentGarage(Garage $garage): void
+    {
+        $this->update([
+            'current_garage_id' => $garage->id,
+            'current_company_id' => $garage->company_id,
+            'last_selected_garage_at' => now(),
+        ]);
 
-    session([
-        'current_garage_id' => $garage->id,
-        'current_garage_name' => $garage->name,
-        'current_company_id' => $garage->company_id,
-        'current_company_name' => $garage->company->name,
-    ]);
-}
+        session([
+            'current_garage_id' => $garage->id,
+            'current_garage_name' => $garage->name,
+            'current_company_id' => $garage->company_id,
+            'current_company_name' => $garage->company->name,
+        ]);
+    }
 }

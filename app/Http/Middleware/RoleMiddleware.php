@@ -18,14 +18,23 @@ class RoleMiddleware
             return redirect()->route('garage.selection');
         }
 
+        $user = Auth::user();
+
+        // Super Admin hər şeyə girə bilər
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        // Heç bir rol tələb olunmursa, keçir
         if (empty($roles)) {
             return $next($request);
         }
 
-        if (Auth::user()->hasGarageRole($roles, session('current_garage_id'))) {
+        // İstifadəçinin cari qarajda bu rollardan biri varmı?
+        if ($user->hasGarageRole($roles, session('current_garage_id'))) {
             return $next($request);
         }
 
-        abort(403, 'Bu səhifəyə giriş icazəniz yoxdur.');
+        abort(403, 'Bu əməliyyat üçün icazəniz yoxdur.');
     }
 }

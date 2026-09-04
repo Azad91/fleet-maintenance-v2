@@ -4,45 +4,42 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Bus;
-use App\Enums\RoleEnum;
 
 class BusPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::BUS->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        if ($user->isSuperAdmin()) return true;
+        return $user->hasGarageRole(['admin', 'bus', 'directorate']);
     }
 
     public function view(User $user, Bus $bus): bool
     {
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::BUS->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        if ($user->isSuperAdmin()) return true;
+        return $user->hasGarageRole(['admin', 'bus', 'directorate']);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if ($user->isSuperAdmin()) return true;
+        return $user->hasGarageRole('admin');
     }
 
     public function update(User $user, Bus $bus): bool
     {
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if ($user->isSuperAdmin()) return true;
+        return $user->hasGarageRole('admin');
     }
 
     public function delete(User $user, Bus $bus): bool
     {
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if ($user->isSuperAdmin()) return true;
+        return $user->hasGarageRole('admin');
     }
 
     public function import(User $user): bool
     {
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if ($user->isSuperAdmin()) return true;
+        return $user->hasGarageRole('admin');
     }
 }
