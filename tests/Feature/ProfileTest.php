@@ -13,17 +13,18 @@ class ProfileTest extends TestCase
     use RefreshDatabase;
 
     protected $garage;
+    protected $company;
 
     protected function setUp(): void
     {
         parent::setUp();
-        // Create a company and garage for testing
-        $company = Company::create([
+
+        $this->company = Company::factory()->create([
             'name' => 'Test Company',
             'slug' => 'test-company'
         ]);
-        $this->garage = Garage::create([
-            'company_id' => $company->id,
+        $this->garage = Garage::factory()->create([
+            'company_id' => $this->company->id,
             'name' => 'Test Garage',
             'code' => 'TG001'
         ]);
@@ -35,7 +36,10 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['current_garage_id' => $this->garage->id])
+            ->withSession([
+                'current_garage_id' => $this->garage->id,
+                'current_company_id' => $this->company->id, // ✅ MÜTLƏQ ƏLAVƏ EDİN
+            ])
             ->get('/profile');
 
         $response->assertOk();
@@ -47,7 +51,10 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['current_garage_id' => $this->garage->id])
+            ->withSession([
+                'current_garage_id' => $this->garage->id,
+                'current_company_id' => $this->company->id, // ✅ MÜTLƏQ ƏLAVƏ EDİN
+            ])
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
@@ -70,7 +77,10 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['current_garage_id' => $this->garage->id])
+            ->withSession([
+                'current_garage_id' => $this->garage->id,
+                'current_company_id' => $this->company->id, // ✅ MÜTLƏQ ƏLAVƏ EDİN
+            ])
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => $user->email,
@@ -89,7 +99,10 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['current_garage_id' => $this->garage->id])
+            ->withSession([
+                'current_garage_id' => $this->garage->id,
+                'current_company_id' => $this->company->id, // ✅ MÜTLƏQ ƏLAVƏ EDİN
+            ])
             ->delete('/profile', [
                 'password' => 'password',
             ]);
@@ -108,7 +121,10 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->withSession(['current_garage_id' => $this->garage->id])
+            ->withSession([
+                'current_garage_id' => $this->garage->id,
+                'current_company_id' => $this->company->id, // ✅ MÜTLƏQ ƏLAVƏ EDİN
+            ])
             ->from('/profile')
             ->delete('/profile', [
                 'password' => 'wrong-password',
