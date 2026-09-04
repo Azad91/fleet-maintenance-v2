@@ -36,20 +36,7 @@ class DashboardController extends Controller
             ->get();
 
         // 5. ✅ DÜZƏLİŞ: Təkrarlanan nasazlıqlar (complaint_items cədvəlindən)
-        $recurringIssues = ComplaintItem::select(
-                'complaint_items.description',
-                'complaints.bus_id',
-                DB::raw('COUNT(*) as total'),
-                DB::raw('MAX(complaints.created_at) as last_occurrence')
-            )
-            ->join('complaints', 'complaints.id', '=', 'complaint_items.complaint_id')
-            ->where('complaints.created_at', '>=', now()->subDays(30))
-            ->where('complaints.status', '!=', 'həll olundu')
-            ->where('complaints.garage_id', \App\Models\Garage::getCurrentId())
-            ->groupBy('complaint_items.description', 'complaints.bus_id')
-            ->having(DB::raw('COUNT(*)'), '>=', 2)
-            ->with('complaint.bus')
-            ->get();
+        $recurringIssues = ComplaintItem::recurring(30)->get();
 
         // 6. Bu gün KM daxil edilməyən avtobuslar
         $today = now()->toDateString();
