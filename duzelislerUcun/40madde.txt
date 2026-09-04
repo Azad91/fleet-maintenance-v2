@@ -1,0 +1,284 @@
+🚀 FLEET MAINTENANCE – İDEAL LAYİHƏ ÜÇÜN 40 MADDƏLİK YOL XƏRİTƏSİ (FINAL)
+🔴 FASE 0 – KRİTİK TƏHLÜKƏSİZLİK VƏ DATA BÜTÖVLÜYÜ (P0)
+
+Bu addımlar olmadan production-a çıxmaq OLMAZ.
+1. Garage membership validation gücləndirilsin
+
+    Fayl: app/Http/Middleware/EnsureGarageSelected.php
+
+    İzah: Session-dakı garage_id-nin həmin istifadəçiyə məxsus olduğu yoxlanılsın. Yalnız session-a güvənmə.
+
+    Kod:
+
+php
+
+$garageId = session('current_garage_id');
+if (!$garageId || !auth()->user()->garages()->where('garage_id', $garageId)->wherePivot('is_active', true)->exists()) {
+    session()->forget('current_garage_id');
+    return redirect()->route('garage.selection');
+}
+
+2. Company ↔ Garage integrity – arxitektura qərarı
+
+    Fayl: app/Models/Traits/HasGarageScope.php, bütün modellər
+
+    İzah: company_id redundant sahədir, çünki garage->company əlaqəsi var. Lakin onu silmək üçün əvvəlcə bütün query-lər, scopes, reports, imports, exports, audit, authorization yoxlanılmalıdır. Bu maddə üçün ayrıca kod audit aparılsın, sonra qərar verilsin.
+
+3. SuperAdmin və GarageAdmin rolları ayrılsın
+
+    Fayl: database/migrations, app/Models/User.php
+
+    İzah: users.role-də yalnız super_admin və user qalsın. Bütün qaraj rolları garage_user.role-də saxlanılsın.
+
+    Metod:
+
+php
+
+public function isSuperAdmin(): bool { return $this->role === 'super_admin'; }
+public function hasGarageRole($roles, $garageId = null): bool {
+    if ($this->isSuperAdmin()) return true;
+    // qalanı eyni
+}
+
+4. Soft-delete + unique constraint düzəldilsin
+
+    Fayl: Yeni migration
+
+    İzah: code, dqn, route_number kimi sahələrdə deleted_at-i nəzərə alan UNIQUE index yaradın.
+
+sql
+
+CREATE UNIQUE INDEX warehouses_garage_code_unique ON warehouses (garage_id, code) WHERE deleted_at IS NULL;
+
+5. DB səviyyəsində məntiqi constraint-lər əlavə edilsin
+
+    Fayl: Migration
+
+    İzah: quantity >= 0, km >= 0, price >= 0 kimi check constraint-lər.
+
+sql
+
+ALTER TABLE warehouses ADD CONSTRAINT chk_quantity_nonneg CHECK (quantity >= 0);
+
+6. Foreign key ON DELETE CASCADE / RESTRICT düzgün qurulsun
+
+    Fayl: Bütün migration-lar
+
+    İzah: Historical data (Complaint, ComplaintItem, ServiceHistory, DailyKm, Audit) silinməməlidir. Bu səbəbdən ON DELETE RESTRICT istifadə edilsin. Yalnız garage_user kimi əlaqə cədvəllərində CASCADE ola bilər.
+
+    Tövsiyə: complaints.bus_id -> buses.id ON DELETE RESTRICT; bus_service_history.bus_id -> buses.id ON DELETE RESTRICT.
+
+7. Concurrency / Race-condition audit
+
+    Fayl: app/Services/Complaint/ComplaintStockService.php və digər kritik service-lər
+
+    İzah: Bütün lockForUpdate() istifadələrini yoxla. DailyKm, ServiceHistory, User/Garage membership əməliyyatları üçün də eyni yanaşma tətbiq olunsun.
+
+8. Transaction boundary audit
+
+    Fayl: Bütün service-lər
+
+    İzah: Hansı əməliyyatların atomik olması lazımdır? Complaint create/update/delete, Warehouse əməliyyatları, Import, Garage assignment, User role changes – hamısı DB::transaction ilə əhatə olunmalıdır.
+
+9. IDOR / Cross-garage URL access testləri
+
+    Fayl: tests/Feature/GarageIsolationTest.php
+
+    İzah: İstifadəçi garage_id=1-dədirsə, garage_id=2-yə aid buses/1/edit, complaints/5 kimi URL-lərə daxil olmağa çalışsın və 403/404 almalıdır.
+
+10. Production-like authorization integration testi
+
+    Fayl: tests/Feature/AuthorizationIntegrationTest.php
+
+    İzah: Auth → Garage Selection → Garage Scope → Role Middleware → Policy → Controller → Service – bütün zəncir real middleware-lərlə işləyən test yazılsın. TestCase-də withoutMiddleware istifadə edilməsin.
+
+11. Import-larda tenant isolation təmin edilsin
+
+    Fayl: Bütün app/Imports/* class-ları
+
+    İzah: Import class-larına konstruktor ilə garage_id ötürülməli, session-a güvənilməməlidir.
+
+php
+
+public function __construct(private int $garageId) {}
+public function model(array $row) { $model->garage_id = $this->garageId; }
+
+12. PDF faylları private diskdə saxlanılsın və access control qoyulsun
+
+    Fayl: app/Services/Complaint/ComplaintPdfService.php, routes/web.php
+
+    İzah: Storage::disk('private')->put(); yükləmək üçün xüsusi route + can:view,complaint middleware.
+
+13. File upload security audit
+
+    Fayl: Bütün import və upload funksiyaları
+
+    İzah: MIME validation, extension validation, max file size, filename sanitization, storage location, download authorization yoxlanılsın.
+
+14. Production environment faylı və security checklist
+
+    Fayl: .env.production.example, README.md
+
+    İzah: Bütün production parametrləri (debug=false, secure cookie, log channel, queue driver, rate limiting) göstərilsin.
+
+🟠 FASE 1 – PERFORMANS, TEST, MONİTORİNQ VƏ BİZNES MƏNTİQİ (P1)
+
+Məhsul keyfiyyətini artırmaq üçün vacibdir.
+15. Complaint update-də stock diff hesablanaraq optimallaşdırılsın
+
+    Fayl: app/Services/Complaint/ComplaintService.php
+
+    İzah: Köhnə və yeni detallar arasında fərq tapılaraq yalnız dəyişənlər üçün stock əməliyyatı aparılsın.
+
+16. Audit sistemi bulk əməliyyatlar üçün gücləndirilsin
+
+    Fayl: app/Models/Traits/Auditable.php
+
+    İzah: Model::query()->update() kimi bulk əməliyyatlar audit olunmur. Əgər belə istifadə varsa, manuel audit əlavə edilsin.
+
+17. Status transition / State machine qurulsun
+
+    Fayl: app/Services/Complaint/ComplaintStatusTransitionService.php (yeni)
+
+    İzah: Complaint statusları arasında keçid qaydaları mərkəzləşdirilsin. Məsələn, CLOSED → NEW icazəli olmamalıdır.
+
+18. Idempotency strategiyası
+
+    Fayl: app/Http/Middleware/IdempotencyMiddleware.php (yeni)
+
+    İzah: Xüsusilə POST /complaints, POST /import üçün idempotency key (UUID) ilə təkrar göndərilmələrin qarşısı alınsın.
+
+19. N+1 Query audit və eager loading tənzimlənməsi
+
+    Fayl: Bütün controller-lər, xüsusilə index metodları
+
+    İzah: with() istifadə edilməyən relation-lar müəyyənləşdirilib əlavə edilsin.
+
+20. Database indexing audit
+
+    Fayl: Yeni migration və ya EXPLAIN ANALYZE ilə manual yoxlama
+
+    İzah: garage_id, bus_id, complaint_id, status, created_at, deleted_at üzrə index-lər yoxlanılsın.
+
+21. Pagination/filter/sort standartı qurulsun
+
+    Fayl: app/Http/Controllers/*, resources/views/*
+
+    İzah: Bütün list səhifələrində eyni search, filter, sort, paginate(25) strukturu tətbiq edilsin.
+
+22. Exception handling və error architecture (Laravel 13 uyğun)
+
+    Fayl: bootstrap/app.php (Laravel 13), app/Exceptions/ (yeni)
+
+    İzah: StockInsufficientException, GarageAccessDeniedException kimi domain exception-lar yaradılsın, bootstrap/app.php-də withExceptions() ilə idarə olunsun.
+
+23. Logging & observability (Laravel 13 uyğun)
+
+    Fayl: config/logging.php, bootstrap/app.php
+
+    İzah: Request ID ilə loglama, ayrı-ayrı kanallar (fail, slack, database), Log::channel() ilə müxtəlif səviyyələr.
+
+24. Queue / Scheduler / Worker arxitekturası (Laravel 13 uyğun)
+
+    Fayl: config/queue.php, routes/console.php (Laravel 13 scheduler)
+
+    İzah: Uzun əməliyyatlar (PDF, import, export, audit archive) dispatch(new Job()) ilə queue-ya verilsin. Scheduler routes/console.php-də təyin olunsun.
+
+25. Health Check endpoint
+
+    Fayl: routes/web.php, app/Http/Controllers/HealthController.php
+
+    İzah: /health endpoint-i application, database, cache, queue, storage vəziyyətini yoxlasın.
+
+26. Backup + Disaster Recovery planı
+
+    Fayl: README.md, ayrıca backup skripti
+
+    İzah: PostgreSQL daily backup, off-site storage, restore test proseduru.
+
+27. Database migration/deployment strategy
+
+    Fayl: README.md, deployment pipeline
+
+    İzah: Production deployment: backup → maintenance mode → migrate → cache clear → config cache → queue restart → health check. Rollback proseduru da təsvir edilsin.
+
+28. CRUD feature testləri artırılsın
+
+    Fayl: tests/Feature/*
+
+    İzah: Bus, Warehouse, Driver, Employee, DailyKm, DailyStatus üçün store, update, delete testləri yazılsın.
+
+29. Import/Export testləri yazılsın
+
+    Fayl: tests/Feature/ImportTest.php
+
+    İzah: Hər import class-ı üçün nümunə Excel faylı ilə test.
+
+30. Soft-delete testləri
+
+    Fayl: tests/Feature/SoftDeleteTest.php
+
+    İzah: Silinən məlumatların təkrar bərpası və unique constraint-lərin düzgün işləməsi yoxlanılsın.
+
+🟢 FASE 2 – “PREMIUM” XÜSUSİYYƏTLƏR VƏ GƏLƏCƏK HAZIRLIĞI (P2)
+
+Layihəni kommersiya məhsulu səviyyəsinə qaldırmaq üçün.
+31. DTO / FormRequest standardı qurulsun
+
+    Fayl: app/Http/Requests/*, yeni app/DTO/*
+
+    İzah: Kompleks əməliyyatlar üçün DTO-lar yaradılsın (məsələn, CreateComplaintData).
+
+32. Automated static analysis (PHPStan / Larastan)
+
+    Fayl: phpstan.neon, CI pipeline
+
+    İzah: composer require --dev larastan/larastan; CI-da phpstan analyse əlavə edilsin.
+
+33. Event/Listener sistemi yalnız yan təsirlər üçün qurulsun
+
+    Fayl: app/Events/, app/Listeners/
+
+    İzah: ComplaintClosed event-i notification və analytics üçün istifadə olunsun, lakin stock əməliyyatları sync olaraq qalsın.
+
+34. REST API yaradılsın (Sanctum ilə)
+
+    Fayl: routes/api.php, app/Http/Controllers/Api/*
+
+    İzah: Ən azı Bus, Complaint, Warehouse üçün CRUD API; pagination, filter, rate limiting ilə.
+
+35. API Rate Limiting
+
+    Fayl: config/app.php, app/Http/Kernel.php (Laravel 13-də bootstrap/app.php ilə middleware)
+
+    İzah: Login, password reset, imports, PDF generation, API üçün ayrıca throttling strategiyası.
+
+36. Redis cache istifadəsi
+
+    Fayl: config/cache.php, controller-lər
+
+    İzah: Cache::remember() ilə tez-tez istifadə olunan məlumatlar (məsələn, dashboard statistikası) cache-lənsin.
+
+37. Advanced analytics dashboard
+
+    Fayl: app/Http/Controllers/DashboardController.php, view-lər
+
+    İzah: Chart.js və ya Livewire ilə interaktiv qrafiklər: avtobusların orta KM-i, ən çox təkrarlanan nasazlıqlar, stok tükənmə trendi.
+
+38. UI/UX professional polish
+
+    Fayl: resources/css/app-v2.css, layouts/app.blade.php
+
+    İzah: Toastr bildirişləri (Alpine.js ilə), form göndərilərkən loading state, sidebar collapsible, system default tema dəstəyi.
+
+39. Full i18n (Azərbaycan + İngilis)
+
+    Fayl: lang/*
+
+    İzah: Bütün səhifələr üçün dil faylları, app()->setLocale() dəstəyi.
+
+40. Full technical/product documentation
+
+    Fayl: README.md, docs/ qovluğu
+
+    İzah: Architecture, Installation, Environment, Database, Deployment, Backup, Restore, Queue, Scheduler, Roles, Permissions, Garage isolation, Import/Export formats, API, Troubleshooting.
