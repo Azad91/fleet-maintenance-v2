@@ -96,11 +96,9 @@ class BusController extends Controller
     public function update(BusUpdateRequest $request, $id)
     {
         $bus = Bus::findOrFail($id);
-        $this->authorize('update', $bus); // ✅ Policy yoxlayır
+        $this->authorize('update', $bus);
 
-        // 🔥 QARAJ ID YENİLƏNMƏSİN (əgər istəmirsənsə)
-        // $data['garage_id'] = session('current_garage_id');
-        // $data['company_id'] = session('current_company_id');
+        $data = $request->validated();
 
         $bus->update($data);
 
