@@ -30,11 +30,8 @@ public function index()
 
     public function selectGarage(Request $request)
     {
-        $request->validate([
-            'garage_id' => 'required|exists:garages,id',
-        ]);
+        // ... validasiya ...
 
-        // 🔥 YALNIZ İSTİFADƏÇİNİN ÖZ QARAJLARI
         $garage = auth()->user()
             ->garages()
             ->whereKey($request->garage_id)
@@ -50,7 +47,10 @@ public function index()
             'current_company_name' => $garage->company->name,
         ]);
 
-        // İstifadəçinin məlumatlarını yenilə
+        // ✅ Context-ə də yaz
+        \App\Services\GarageContext::set($garage->id, $garage->company_id);
+
+        // İstifadəçini yenilə
         $user = auth()->user();
         $user->update([
             'current_garage_id' => $garage->id,

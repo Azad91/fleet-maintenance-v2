@@ -3,7 +3,7 @@
 namespace App\Models\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Garage;
+use App\Services\GarageContext;
 
 trait HasGarageScope
 {
@@ -11,18 +11,18 @@ trait HasGarageScope
     {
         // 🔥 GLOBAL SCOPE (OXUYANDA)
         static::addGlobalScope('garage', function (Builder $builder) {
-            $garageId = Garage::getCurrentId();
-            if (!app()->runningInConsole() && $garageId) {
-                $builder->where('garage_id', $garageId);
+            // ✅ YALNIZ HTTP REQUEST ZAMANI TƏTBİQ ET
+            if (!app()->runningInConsole() && GarageContext::has()) {
+                $builder->where('garage_id', GarageContext::getGarageId());
             }
         });
 
         // 🔥 YARADANDA AVTOMATİK YAZ
         static::creating(function ($model) {
-            $garageId = Garage::getCurrentId();
-            if (!app()->runningInConsole() && $garageId) {
-                $model->garage_id = $garageId;
-                $model->company_id = Garage::getCurrentCompanyId();
+            // ✅ YALNIZ HTTP REQUEST ZAMANI YAZ
+            if (!app()->runningInConsole() && GarageContext::has()) {
+                $model->garage_id = GarageContext::getGarageId();
+                $model->company_id = GarageContext::getCompanyId();
             }
         });
     }
