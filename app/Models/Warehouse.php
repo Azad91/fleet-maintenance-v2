@@ -14,20 +14,20 @@ class Warehouse extends Model
     protected $fillable = [
         'garage_id',
         'company_id',
-        'kod',
-        'ad',
-        'kateqoriya',
-        'olcu_vahidi',
-        'miqdar',
-        'minimum_miqdar',
-        'qiymet',
-        'tedarikci',
-        'qeyd',
+        'code',              // əvvəl: kod
+        'name',              // əvvəl: ad
+        'category',          // əvvəl: kateqoriya
+        'unit',              // əvvəl: olcu_vahidi
+        'quantity',          // əvvəl: miqdar
+        'minimum_quantity',  // əvvəl: minimum_miqdar
+        'price',             // əvvəl: qiymet
+        'supplier',          // əvvəl: tedarikci
+        'notes',             // əvvəl: qeyd
     ];
 
     protected $casts = [
-        'miqdar' => 'integer',
-        'minimum_miqdar' => 'integer',
-        'qiymet' => 'decimal:2',
+        'quantity' => 'integer',
+        'minimum_quantity' => 'integer',
+        'price' => 'decimal:2',
     ];
 }

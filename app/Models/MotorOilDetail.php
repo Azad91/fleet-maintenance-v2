@@ -9,23 +9,22 @@ use Illuminate\Database\Eloquent\Model;
  * Class MotorOilDetail
  *
  * 📌 QEYD: Bu model qlobal kataloqdur, HasGarageScope tətbiq edilmir.
- * Bütün qarajlar üçün ortaq motor yağı detallarını saxlayır.
  */
 class MotorOilDetail extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'detal_kodu',
-        'detal_adi',
-        'olcu_vahidi',
-        'miqdar',
+        'part_code',    // əvvəl: detal_kodu
+        'part_name',    // əvvəl: detal_adi
+        'unit',         // əvvəl: olcu_vahidi
+        'quantity',     // əvvəl: miqdar
         'km',
-        'say',
+        'count',        // əvvəl: say
     ];
 
     public function getTotalMiqdarAttribute()
     {
-        return $this->miqdar * $this->say;
+        return $this->quantity * $this->count;
     }
 }

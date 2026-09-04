@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\Traits\HasGarageScope;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Complaint extends Model
@@ -17,32 +16,32 @@ class Complaint extends Model
         'company_id',
         'bus_id',
         'driver_id',
-        'yer',
-        'surucu_adi',
-        'sikayet_tipi',
+        'yer',               // hələlik saxlanılır (sonra 'location' olacaq)
+        'driver_name',       // əvvəl: surucu_adi
+        'complaint_type',    // əvvəl: sikayet_tipi
         'status',
         'km',
-        'bildirilme_tarix',
-        'bildirilme_saat',
-        'is_baslama_tarix',
-        'is_baslama_saat',
-        'is_bitme_tarix',
-        'is_bitme_saat',
-        'kim_is_gorub',
+        'reported_date',     // əvvəl: bildirilme_tarix
+        'reported_time',     // əvvəl: bildirilme_saat
+        'start_date',        // əvvəl: is_baslama_tarix
+        'start_time',        // əvvəl: is_baslama_saat
+        'end_date',          // əvvəl: is_bitme_tarix
+        'end_time',          // əvvəl: is_bitme_saat
+        'work_done_by',      // əvvəl: kim_is_gorub
         'employee_id',
         'service_template_id',
         'service_km',
-        'qeyd',
+        'notes',             // əvvəl: qeyd
         'closed_at',
         'closed_by',
         'created_by',
     ];
 
     protected $casts = [
-        'detallar' => 'array',
-        'bildirilme_tarix' => 'date',
-        'is_baslama_tarix' => 'date',
-        'is_bitme_tarix' => 'date',
+        'detallar' => 'array', // Bu hələlik JSON olaraq qalır (deprecated, amma hələ var)
+        'reported_date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'closed_at' => 'datetime',
     ];
 
@@ -95,7 +94,7 @@ class Complaint extends Model
 
     public function scopeByType($query, $type)
     {
-        return $query->where('sikayet_tipi', $type);
+        return $query->where('complaint_type', $type);
     }
 
     // ==================== AKSESSORLAR ====================
@@ -106,8 +105,8 @@ class Complaint extends Model
 
     public function getDurationAttribute()
     {
-        if ($this->is_baslama_tarix && $this->is_bitme_tarix) {
-            return $this->is_baslama_tarix->diffInDays($this->is_bitme_tarix) . ' gün';
+        if ($this->start_date && $this->end_date) {
+            return $this->start_date->diffInDays($this->end_date) . ' gün';
         }
         return '-';
     }

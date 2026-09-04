@@ -13,14 +13,13 @@ class BusDailyStatus extends Model
     use HasGarageScope;
 
     protected $fillable = [
-        'bus_id', 'tarix', 'status', 'qeyd', 'garage_id', 'company_id'
+        'bus_id', 'date', 'status', 'notes', 'garage_id', 'company_id'  // əvvəl: tarix, qeyd
     ];
 
     protected $casts = [
-        'tarix' => 'date',
+        'date' => 'date',
     ];
 
-    // Əlaqə: Bu status hansı avtobusa aiddir?
     public function bus()
     {
         return $this->belongsTo(Bus::class);

@@ -18,17 +18,17 @@ class Bus extends Model
         'bus_project',
         'vin',
         'uzunluq',
-        'xett_no',
+        'route_number',   // əvvəl: xett_no
         'dqn',
-        'motor_no',
+        'engine_number',  // əvvəl: motor_no
         'km',
-        'tarix',
-        'aktiv',
+        'date',           // əvvəl: tarix
+        'is_active',      // əvvəl: aktiv
     ];
 
     protected $casts = [
-        'aktiv' => 'boolean',
-        'tarix' => 'date',
+        'is_active' => 'boolean',
+        'date' => 'date',
         'km' => 'integer',
     ];
 
@@ -39,17 +39,17 @@ class Bus extends Model
 
     public function dailyKmRecords()
     {
-        return $this->hasMany(DailyKmRecord::class)->orderBy('tarix', 'desc');
+        return $this->hasMany(DailyKmRecord::class)->orderBy('date', 'desc');
     }
 
     public function dailyStatuses()
     {
-        return $this->hasMany(BusDailyStatus::class)->orderBy('tarix', 'desc');
+        return $this->hasMany(BusDailyStatus::class)->orderBy('date', 'desc');
     }
 
     public function latestKmRecord()
     {
-        return $this->hasOne(DailyKmRecord::class)->latestOfMany('tarix');
+        return $this->hasOne(DailyKmRecord::class)->latestOfMany('date');
     }
 
     public function getLatestKmAttribute()
@@ -59,11 +59,11 @@ class Bus extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('aktiv', true);
+        return $query->where('is_active', true);
     }
 
     public function scopeInactive($query)
     {
-        return $query->where('aktiv', false);
+        return $query->where('is_active', false);
     }
 }
