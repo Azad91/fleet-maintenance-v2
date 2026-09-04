@@ -12,8 +12,8 @@ class BusController extends Controller
     // ====== INDEX ======
     public function index()
     {
-        // 🔥 DƏYİŞİKLİK: paginate(50) əlavə edildi
-        $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')->paginate(config('settings.pagination'));
+        $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')
+        ->paginate(config('settings.pagination', 25));
         return view('buses.index', compact('buses'));
     }
 
@@ -48,7 +48,7 @@ class BusController extends Controller
             $query->where('motor_no', 'ILIKE', "%{$motor_no}%");
         }
 
-        $buses = $query->orderBy('id', 'desc')->paginate(config('settings.pagination'));
+        $buses = $query->orderBy('id', 'desc')->paginate(config('settings.pagination', 25));
         $isEmpty = $buses->isEmpty();
 
         if ($request->ajax()) {

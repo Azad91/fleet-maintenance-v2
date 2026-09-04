@@ -12,7 +12,8 @@ class EmployeeController extends Controller
     public function index()
     {
         // 🔥 DƏYİŞİKLİK: paginate(30) əlavə edildi
-        $employees = Employee::orderBy('ad')->paginate(config('settings.pagination'));
+        $employees = Employee::orderBy('ad')
+        ->paginate(config('settings.pagination', 25));
         return view('employees.index', compact('employees'));
     }
 

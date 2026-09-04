@@ -15,7 +15,7 @@ class BusDailyStatusController extends Controller
         // 🔥 DƏYİŞİKLİK: paginate(50) əlavə edildi
         $statuses = BusDailyStatus::with('bus')
             ->orderBy('tarix', 'desc')
-            ->paginate(config('settings.pagination'));
+            ->paginate(config('settings.pagination', 25));
         return view('bus-daily-statuses.index', compact('statuses'));
     }
 

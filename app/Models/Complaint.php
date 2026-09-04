@@ -19,10 +19,8 @@ class Complaint extends Model
         'driver_id',
         'yer',
         'surucu_adi',
-        'shikayet',
         'sikayet_tipi',
         'status',
-        'detallar',
         'km',
         'bildirilme_tarix',
         'bildirilme_saat',
@@ -37,6 +35,7 @@ class Complaint extends Model
         'qeyd',
         'closed_at',
         'closed_by',
+        'created_by',
     ];
 
     protected $casts = [
