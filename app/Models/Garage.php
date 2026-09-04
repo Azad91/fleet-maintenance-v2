@@ -56,4 +56,14 @@ class Garage extends Model
     {
         return $this->hasMany(BusDailyStatus::class);
     }
+
+    public static function getCurrentId()
+    {
+        return session('current_garage_id') ?? auth()->user()?->current_garage_id;
+    }
+
+    public static function getCurrentCompanyId()
+    {
+        return session('current_company_id') ?? auth()->user()?->current_company_id;
+    }
 }
