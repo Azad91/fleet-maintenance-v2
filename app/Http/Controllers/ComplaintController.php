@@ -32,10 +32,10 @@ class ComplaintController extends Controller
 
     public function create()
     {
-        $buses = Bus::orderBy('xett_no')->get();
+        $buses = Bus::orderBy('route_number')->get();  // dəyişdi
         $complaintTypes = ComplaintType::orderBy('name')->get();
-        $employees = Employee::active()->orderBy('ad')->get();
-        $drivers = Driver::active()->orderBy('kodu')->get();
+        $employees = Employee::active()->orderBy('first_name')->get();  // dəyişdi
+        $drivers = Driver::active()->orderBy('code')->get();  // dəyişdi
 
         return view('complaints.create', compact('buses', 'complaintTypes', 'employees', 'drivers'));
     }
@@ -59,7 +59,6 @@ class ComplaintController extends Controller
     {
         $complaint = Complaint::with(['bus', 'details.employee'])->findOrFail($id);
 
-        // employee-ləri ayrıca indexed array kimi hazırla (PDF üçün)
         $employeesById = Employee::whereIn(
             'id',
             $complaint->details->pluck('employee_id')->filter()->unique()
@@ -71,21 +70,20 @@ class ComplaintController extends Controller
     public function edit($id)
     {
         $complaint = Complaint::with('details')->findOrFail($id);
-        $buses = Bus::orderBy('xett_no')->get();
+        $buses = Bus::orderBy('route_number')->get();  // dəyişdi
         $complaintTypes = ComplaintType::orderBy('name')->get();
-        $employees = Employee::active()->orderBy('ad')->get();
-        $drivers = Driver::active()->orderBy('kodu')->get();
+        $employees = Employee::active()->orderBy('first_name')->get();  // dəyişdi
+        $drivers = Driver::active()->orderBy('code')->get();  // dəyişdi
 
-        // detalları view-ə ötürmək üçün array-ə çevir
         $detallar = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,
-                'kodu' => $detail->kodu,
-                'adi' => $detail->adi,
-                'depo_miqdari' => $detail->depo_miqdari,
-                'islenen_miqdar' => $detail->islenen_miqdar,
+                'kodu' => $detail->code,  // dəyişdi
+                'adi' => $detail->name,   // dəyişdi
+                'depo_miqdari' => $detail->stock_quantity,  // dəyişdi
+                'islenen_miqdar' => $detail->used_quantity,  // dəyişdi
                 'employee_id' => $detail->employee_id,
-                'qeyd' => $detail->qeyd,
+                'qeyd' => $detail->notes,  // dəyişdi
             ];
         })->toArray();
 
@@ -127,14 +125,13 @@ class ComplaintController extends Controller
         }
 
         $request->validate([
-            'is_bitme_tarix' => 'required|date',
-            'is_bitme_saat' => 'required|date_format:H:i',
-            'gorulen_is' => 'required|string|min:5',
+            'end_date' => 'required|date',      // dəyişdi
+            'end_time' => 'required|date_format:H:i',  // dəyişdi
+            'work_done_by' => 'required|string|min:5', // dəyişdi
         ]);
 
         $this->complaintService->close($complaint, $request->all());
 
-        // PDF yarat
         try {
             $this->pdfService->save($complaint);
         } catch (\Exception $e) {

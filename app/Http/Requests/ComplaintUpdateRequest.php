@@ -14,26 +14,24 @@ class ComplaintUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId = \App\Models\Garage::getCurrentId();
+        $garageId = session('current_garage_id');
         $busRule = Rule::exists('buses', 'id')->where('garage_id', $garageId);
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
-
-        // ✅ DÜZƏLİŞ: Driver rule-u əlavə et
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
             ->where('garage_id', $garageId)
-            ->where('aktiv', true)
+            ->where('is_active', true)   // dəyişdi
             ->whereNull('deleted_at'));
 
         return [
             'bus_id' => ['required', $busRule],
             'yer' => 'required|in:yol,qaraj',
-            'surucu_adi' => 'nullable|string|max:255',
-            'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule], // ✅ ƏLAVƏ ET
+            'driver_name' => 'nullable|string|max:255',  // dəyişdi
+            'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule],
             'shikayet' => 'required|array|min:1',
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            'sikayet_tipi' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
+            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',  // dəyişdi
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',
@@ -52,8 +50,8 @@ class ComplaintUpdateRequest extends FormRequest
             'bus_id.exists' => 'Seçilən avtobus mövcud deyil.',
             'yer.required' => 'Yer seçilməlidir.',
             'yer.in' => 'Yer yalnız "yol" və ya "qaraj" ola bilər.',
-            'driver_id.required_if' => 'Yol üçün aktiv sürücü seçilməlidir.', // ✅ ƏLAVƏ ET
-            'driver_id.exists' => 'Sürücü tapılmadı və ya cari qaraja aid deyil.', // ✅ ƏLAVƏ ET
+            'driver_id.required_if' => 'Yol üçün aktiv sürücü seçilməlidir.',
+            'driver_id.exists' => 'Sürücü tapılmadı və ya cari qaraja aid deyil.',
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
@@ -72,15 +70,15 @@ class ComplaintUpdateRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $validator->sometimes('surucu_adi', 'required|string|max:255', function ($input) {
+        $validator->sometimes('driver_name', 'required|string|max:255', function ($input) {  // dəyişdi (əvvəl: surucu_adi)
             return $input->yer == 'yol';
         });
 
-        $validator->sometimes('bildirilme_tarix', 'required|date', function ($input) {
+        $validator->sometimes('reported_date', 'required|date', function ($input) {  // dəyişdi
             return $input->yer == 'yol';
         });
 
-        $validator->sometimes('bildirilme_saat', 'required|date_format:H:i', function ($input) {
+        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) {  // dəyişdi
             return $input->yer == 'yol';
         });
 

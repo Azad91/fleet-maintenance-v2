@@ -11,9 +11,9 @@ use App\Models\Warehouse;
 
 class GarageDataController extends Controller
 {
-    public function busByLine(string $xettNo)
+    public function busByLine(string $routeNumber)  // dəyişdi (əvvəl: xettNo)
     {
-        $bus = Bus::where('xett_no', $xettNo)->first();
+        $bus = Bus::where('route_number', $routeNumber)->first();  // dəyişdi
 
         return response()->json([
             'dqn' => $bus?->dqn,
@@ -21,20 +21,20 @@ class GarageDataController extends Controller
         ]);
     }
 
-    public function detailByCode(string $kod)
+    public function detailByCode(string $code)  // dəyişdi (əvvəl: kod)
     {
-        $detail = Warehouse::where('kod', $kod)->first();
+        $detail = Warehouse::where('code', $code)->first();  // dəyişdi
 
         return response()->json([
-            'detal_adi' => $detail?->ad,
-            'depo_miqdari' => $detail?->miqdar,
+            'detal_adi' => $detail?->name,  // dəyişdi (əvvəl: ad)
+            'depo_miqdari' => $detail?->quantity,  // dəyişdi
         ]);
     }
 
     public function busKm(int $busId)
     {
         $bus = Bus::findOrFail($busId);
-        $latestKm = $bus->dailyKmRecords()->latest('tarix')->value('km');
+        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km');  // dəyişdi
 
         return response()->json(['km' => $latestKm ?? $bus->km]);
     }
@@ -59,31 +59,31 @@ class GarageDataController extends Controller
     public function motorOilServices(int $busId)
     {
         $bus = Bus::findOrFail($busId);
-        $latestKm = $bus->dailyKmRecords()->latest('tarix')->value('km') ?? $bus->km ?? 0;
+        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;  // dəyişdi
 
         return response()->json(
             MotorOilDetail::where('km', '>', $latestKm)
                 ->orderBy('km')
-                ->orderBy('detal_adi')
+                ->orderBy('part_name')  // dəyişdi (əvvəl: detal_adi)
                 ->get()
                 ->groupBy('km')
                 ->map(fn ($details, $km) => [
                     'km' => (int) $km,
                     'details' => $details->map(fn (MotorOilDetail $detail) => [
-                        'kodu' => $detail->detal_kodu,
-                        'adi' => $detail->detal_adi,
-                        'miqdar' => $detail->miqdar,
-                        'say' => $detail->say,
-                        'olcu_vahidi' => $detail->olcu_vahidi,
+                        'kodu' => $detail->part_code,  // dəyişdi
+                        'adi' => $detail->part_name,    // dəyişdi
+                        'miqdar' => $detail->quantity,  // dəyişdi
+                        'say' => $detail->count,        // dəyişdi
+                        'olcu_vahidi' => $detail->unit, // dəyişdi
                     ])->values(),
                 ])->values()
         );
     }
 
-    public function driverByCode(string $kod)
+    public function driverByCode(string $code)  // dəyişdi (əvvəl: kod)
     {
         $driver = Driver::active()
-            ->where('kodu', mb_strtoupper(trim($kod)))
+            ->where('code', mb_strtoupper(trim($code)))  // dəyişdi
             ->first();
 
         return response()->json([

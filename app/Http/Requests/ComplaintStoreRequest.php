@@ -14,24 +14,24 @@ class ComplaintStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId = \App\Models\Garage::getCurrentId();
+        $garageId = session('current_garage_id');
         $busRule = Rule::exists('buses', 'id')->where('garage_id', $garageId);
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
             ->where('garage_id', $garageId)
-            ->where('aktiv', true)
+            ->where('is_active', true)   // dəyişdi
             ->whereNull('deleted_at'));
 
         return [
             'bus_id' => ['required', $busRule],
             'yer' => 'required|in:yol,qaraj',
-            'surucu_adi' => 'nullable|string|max:255',
+            'driver_name' => 'nullable|string|max:255',  // dəyişdi (əvvəl: surucu_adi)
             'driver_id' => ['nullable', 'required_if:yer,yol', $driverRule],
             'shikayet' => 'required|array|min:1',
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            'sikayet_tipi' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
+            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',  // dəyişdi (əvvəl: sikayet_tipi)
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',
@@ -55,9 +55,9 @@ class ComplaintStoreRequest extends FormRequest
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
-            'sikayet_tipi.in' => 'Şikayət tipi düzgün seçilməyib.',
+            'complaint_type.in' => 'Şikayət tipi düzgün seçilməyib.',  // dəyişdi
             'status.required' => 'Status seçilməlidir.',
-            'status.in' => 'Yeni kart yalnız "gözləmədə" və ya "işdə" statusunda açıla bilər. Kartı bağlamaq üçün ayrıca bağlama əməliyyatından istifadə edin.',
+            'status.in' => 'Yeni kart yalnız "gözləmədə" və ya "işdə" statusunda açıla bilər.',
             'km.integer' => 'KM tam ədəd olmalıdır.',
             'km.min' => 'KM 0-dan kiçik ola bilməz.',
             'employee_id.exists' => 'Seçilən işçi mövcud deyil.',
@@ -72,11 +72,11 @@ class ComplaintStoreRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        $validator->sometimes('bildirilme_tarix', 'required|date', function ($input) {
+        $validator->sometimes('reported_date', 'required|date', function ($input) {  // dəyişdi
             return $input->yer == 'yol';
         });
 
-        $validator->sometimes('bildirilme_saat', 'required|date_format:H:i', function ($input) {
+        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) {  // dəyişdi
             return $input->yer == 'yol';
         });
 
