@@ -18,12 +18,12 @@ class Bus extends Model
         'bus_project',
         'vin',
         'uzunluq',
-        'route_number',   // əvvəl: xett_no
+        'route_number',
         'dqn',
-        'engine_number',  // əvvəl: motor_no
+        'engine_number',
         'km',
-        'date',           // əvvəl: tarix
-        'is_active',      // əvvəl: aktiv
+        'date',
+        'is_active',
     ];
 
     protected $casts = [

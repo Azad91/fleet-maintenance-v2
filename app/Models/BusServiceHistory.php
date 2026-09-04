@@ -11,7 +11,7 @@ class BusServiceHistory extends Model
     use HasFactory, HasGarageScope;
 
     protected $table = 'bus_service_history';
-    protected $fillable = ['bus_id', 'service_template_id', 'km', 'date', 'garage_id', 'company_id'];  // əvvəl: tarix
+    protected $fillable = ['bus_id', 'service_template_id', 'km', 'date', 'garage_id', 'company_id'];
 
     public function bus()
     {

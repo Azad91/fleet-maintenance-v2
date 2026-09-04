@@ -13,7 +13,7 @@ class DailyKmRecord extends Model
     use HasGarageScope;
 
     protected $fillable = [
-        'bus_id', 'date', 'km', 'notes', 'garage_id', 'company_id'  // əvvəl: tarix, qeyd
+        'bus_id', 'date', 'km', 'notes', 'garage_id', 'company_id'
     ];
 
     protected $casts = [

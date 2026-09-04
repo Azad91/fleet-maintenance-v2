@@ -8,13 +8,13 @@ class ComplaintDetail extends Model
 {
     protected $fillable = [
         'complaint_id',
-        'shikayet_index',    // hələlik saxlanılır (sonra 'issue_index' olacaq)
-        'code',              // əvvəl: kodu
-        'name',              // əvvəl: adi
-        'stock_quantity',    // əvvəl: depo_miqdari
-        'used_quantity',     // əvvəl: islenen_miqdar
+        'shikayet_index',
+        'code',
+        'name',
+        'stock_quantity',
+        'used_quantity',
         'employee_id',
-        'notes',             // əvvəl: qeyd
+        'notes',
     ];
 
     public function complaint()

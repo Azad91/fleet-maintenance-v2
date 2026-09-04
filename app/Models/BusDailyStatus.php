@@ -13,7 +13,7 @@ class BusDailyStatus extends Model
     use HasGarageScope;
 
     protected $fillable = [
-        'bus_id', 'date', 'status', 'notes', 'garage_id', 'company_id'  // əvvəl: tarix, qeyd
+        'bus_id', 'date', 'status', 'notes', 'garage_id', 'company_id'
     ];
 
     protected $casts = [

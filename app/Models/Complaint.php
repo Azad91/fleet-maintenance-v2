@@ -35,11 +35,9 @@ class Complaint extends Model
         'closed_at',
         'closed_by',
         'created_by',
-        // ✅ shikayet və detallar SILINDI
     ];
 
     protected $casts = [
-        // ✅ detallar SILINDI (artıq JSON istifadə olunmur)
         'reported_date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
