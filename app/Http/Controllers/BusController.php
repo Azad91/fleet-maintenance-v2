@@ -195,4 +195,72 @@ class BusController extends Controller
                 ->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
         }
     }
+
+    // ==================== BULK OPERATIONS ====================
+
+    /**
+     * Bulk deactivate - seçilmiş avtobusları passiv et
+     */
+    public function bulkDeactivate(Request $request)
+    {
+        $this->authorize('update', Bus::class);
+
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        }
+
+        // Bulk update
+        Bus::whereIn('id', $ids)->update(['is_active' => false]);
+
+        // ✅ Bulk audit
+        Bus::auditBulkUpdate($ids, ['is_active' => false], 'bulk_deactivated');
+
+        return redirect()->route('buses.index')
+            ->with('success', count($ids) . ' avtobus passiv edildi.');
+    }
+
+    /**
+     * Bulk activate - seçilmiş avtobusları aktiv et
+     */
+    public function bulkActivate(Request $request)
+    {
+        $this->authorize('update', Bus::class);
+
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        }
+
+        // Bulk update
+        Bus::whereIn('id', $ids)->update(['is_active' => true]);
+
+        // ✅ Bulk audit
+        Bus::auditBulkUpdate($ids, ['is_active' => true], 'bulk_activated');
+
+        return redirect()->route('buses.index')
+            ->with('success', count($ids) . ' avtobus aktiv edildi.');
+    }
+
+    /**
+     * Bulk delete - seçilmiş avtobusları sil
+     */
+    public function bulkDelete(Request $request)
+    {
+        $this->authorize('delete', Bus::class);
+
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        }
+
+        // ✅ Bulk audit (silinmədən əvvəl)
+        Bus::auditBulkDelete($ids);
+
+        // Bulk delete
+        Bus::whereIn('id', $ids)->delete();
+
+        return redirect()->route('buses.index')
+            ->with('success', count($ids) . ' avtobus silindi.');
+    }
 }

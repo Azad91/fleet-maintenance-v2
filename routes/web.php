@@ -258,4 +258,11 @@ Route::middleware(['role:' . implode(',', [
     Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
 });
 
+// ==================== BULK OPERATIONS ====================
+Route::prefix('buses')->name('buses.')->middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+    Route::post('/bulk-deactivate', [BusController::class, 'bulkDeactivate'])->name('bulk.deactivate');
+    Route::post('/bulk-activate', [BusController::class, 'bulkActivate'])->name('bulk.activate');
+    Route::delete('/bulk-delete', [BusController::class, 'bulkDelete'])->name('bulk.delete');
+});
+
 }); // ✅ BÜTÜN QRUPLAR BAĞLANDI

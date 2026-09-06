@@ -1,16 +1,12 @@
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">🚌 Avtobuslar</h5>
-            <span class="badge bg-primary rounded-pill">
-                Cəmi: {{ $buses->count() }} ədəd
-            </span>
-        </div>
-
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll">
+                        </th>
                         <th style="width: 50px; text-align: center;">№</th>
                         <th>BUS PROJECT</th>
                         <th>VIN</th>
@@ -22,6 +18,7 @@
                         <th style="width: 150px; text-align: center;">Əməliyyatlar</th>
                     </tr>
                     <tr id="busTableFilter" style="background-color: #f8f9fa;">
+                        <th></th>
                         <th></th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="bus_project"
@@ -36,7 +33,6 @@
                                 placeholder="🔍 Uzunluq..." style="font-size: 13px;">
                         </th>
                         <th>
-                            <!-- ✅ xett_no → route_number -->
                             <input type="text" class="form-control form-control-sm" name="route_number"
                                 placeholder="🔍 Xətt..." style="font-size: 13px;">
                         </th>
@@ -45,7 +41,6 @@
                                 placeholder="🔍 DQN..." style="font-size: 13px;">
                         </th>
                         <th>
-                            <!-- ✅ motor_no → engine_number -->
                             <input type="text" class="form-control form-control-sm" name="engine_number"
                                 placeholder="🔍 Motor..." style="font-size: 13px;">
                         </th>
@@ -56,18 +51,21 @@
                 <tbody>
                     @forelse($buses as $bus)
                     <tr>
+                        <td>
+                            <input type="checkbox" class="bus-checkbox" value="{{ $bus->id }}">
+                        </td>
                         <td style="text-align: center;">{{ $buses->firstItem() + $loop->index }}</td>
                         <td>{{ $bus->bus_project ?? '-' }}</td>
                         <td>{{ $bus->vin ?? '-' }}</td>
                         <td>{{ $bus->uzunluq ? number_format($bus->uzunluq, 1) . ' m' : '-' }}</td>
-                        <td>{{ $bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
+                        <td>{{ $bus->route_number ?? '-' }}</td>
                         <td><strong>{{ $bus->dqn }}</strong></td>
-                        <td>{{ $bus->engine_number ?? '-' }}</td> <!-- ✅ motor_no → engine_number -->
+                        <td>{{ $bus->engine_number ?? '-' }}</td>
                         <td style="text-align: center;">
                             @if($bus->latestKmRecord)
                                 <strong>{{ number_format($bus->latestKmRecord->km, 0, ',', '.') }} km</strong>
                                 <br>
-                                <small class="text-muted">{{ $bus->latestKmRecord->date->format('d.m.Y') }}</small> <!-- ✅ tarix → date -->
+                                <small class="text-muted">{{ $bus->latestKmRecord->date->format('d.m.Y') }}</small>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
@@ -94,7 +92,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="10" class="text-center text-muted py-4">
                             <i class="bi bi-bus-front" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                             @if(isset($isEmpty) && $isEmpty)
                                 <p class="mb-0">Axtarış nəticəsində heç nə tapılmadı.</p>
