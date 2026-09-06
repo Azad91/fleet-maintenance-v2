@@ -7,13 +7,14 @@ use App\Models\Complaint;
 use App\Models\ComplaintItem;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate; // ✅ ƏLAVƏ EDİLDİ
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $this->authorize('viewAny', DashboardController::class);  // ✅ ƏLAVƏ
+        // ✅ Gate ilə yoxlama
+        Gate::authorize('viewAny', DashboardController::class);
 
         // 1. Statistik məlumatlar (kartlar üçün)
         $totalBuses = Bus::count();
@@ -41,15 +42,15 @@ class DashboardController extends Controller
         $recurringIssues = ComplaintItem::select(
                 'complaint_items.description',
                 'complaints.bus_id',
-                DB::raw('COUNT(*) as total'),
-                DB::raw('MAX(complaints.created_at) as last_occurrence')
+                \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'),
+                \Illuminate\Support\Facades\DB::raw('MAX(complaints.created_at) as last_occurrence')
             )
             ->join('complaints', 'complaints.id', '=', 'complaint_items.complaint_id')
             ->where('complaints.created_at', '>=', now()->subDays(30))
             ->where('complaints.status', '!=', 'həll olundu')
             ->where('complaints.garage_id', session('current_garage_id'))
             ->groupBy('complaint_items.description', 'complaints.bus_id')
-            ->having(DB::raw('COUNT(*)'), '>=', 2)
+            ->having(\Illuminate\Support\Facades\DB::raw('COUNT(*)'), '>=', 2)
             ->with('complaint.bus')
             ->get();
 

@@ -37,7 +37,6 @@ class ComplaintStockTest extends TestCase
         $this->stockService = new ComplaintStockService();
         $this->complaintService = new ComplaintService(
             $this->stockService,
-            new ComplaintItemService()
             new ComplaintItemService(),
             new \App\Services\Complaint\ComplaintStatusTransitionService()
         );

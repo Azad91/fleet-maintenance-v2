@@ -26,7 +26,7 @@ class EmployeePolicy
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function update(User $user, Employee $employee): bool
+    public function update(User $user, ?Employee $employee = null): bool
     {
         if ($user->isSuperAdmin()) return true;
         return $user->hasGarageRole(RoleEnum::ADMIN->value);

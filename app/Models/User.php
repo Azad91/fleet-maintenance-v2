@@ -80,11 +80,6 @@ class User extends Authenticatable
             ->exists();
     }
 
-    // ❌ SİLİNMİŞ METODLAR (heç yerdə çağırılmır)
-    // public function isBus(): bool
-    // public function isComplaint(): bool
-    // public function isWarehouse(): bool
-    // public function isDirectorate(): bool
 
     // ==================== RELATIONSHIPS ====================
 

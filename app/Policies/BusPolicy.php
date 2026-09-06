@@ -17,7 +17,7 @@ class BusPolicy
         ]);
     }
 
-    public function view(User $user, Bus $bus): bool
+    public function view(User $user, ?Bus $bus = null): bool
     {
         if ($user->isSuperAdmin()) return true;
         return $user->hasGarageRole([
@@ -32,13 +32,13 @@ class BusPolicy
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function update(User $user, Bus $bus): bool
+    public function update(User $user, ?Bus $bus = null): bool
     {
         if ($user->isSuperAdmin()) return true;
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function delete(User $user, Bus $bus): bool
+    public function delete(User $user, ?Bus $bus = null): bool
     {
         if ($user->isSuperAdmin()) return true;
         return $user->hasGarageRole(RoleEnum::ADMIN->value);

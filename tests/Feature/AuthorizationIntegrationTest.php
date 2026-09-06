@@ -99,19 +99,23 @@ class AuthorizationIntegrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_inactive_garage_membership_is_denied()
+public function test_inactive_garage_membership_is_denied()
     {
-        $inactiveUser = User::factory()->create(['role' => 'user']);
-        $inactiveUser->garages()->attach($this->garage, ['role' => 'admin', 'is_active' => false]);
+        $this->withMiddleware([\App\Http\Middleware\EnsureGarageSelected::class]);
 
-        $response = $this->actingAs($inactiveUser)
+        $company = Company::factory()->create();
+        $garage = Garage::factory()->create(['company_id' => $company->id]);
+
+        $user = User::factory()->create(['role' => 'user']);
+        $user->garages()->attach($garage, ['role' => 'admin', 'is_active' => false]);
+
+        $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
-                'current_company_id' => $this->company->id,
+                'current_garage_id' => $garage->id,
+                'current_company_id' => $company->id,
             ])
             ->get(route('dashboard'));
 
         $response->assertRedirect(route('garage.selection'));
     }
 }
-

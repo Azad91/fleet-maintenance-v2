@@ -18,6 +18,7 @@ class EnsureGarageSelected
             ? $request->session()->get('current_company_id')
             : session('current_company_id');
 
+        // Qaraj seçilməyibsə, seçim səhifəsinə yönləndir
         if (!$garageId) {
             return redirect()->route('garage.selection');
         }
@@ -34,13 +35,18 @@ class EnsureGarageSelected
             return $next($request);
         }
 
-        // Digər istifadəçilər qarajın aktiv üzvü olmalıdır
-        $hasAccess = $user->garages()
+        // 🔍 DEBUG: İstifadəçinin qarajlarını yoxla
+        $userGarages = $user->garages()->get();
+        \Log::info('User garages:', ['user_id' => $user->id, 'garages' => $userGarages->pluck('id', 'pivot.is_active')]);
+
+        // İstifadəçi bu qaraja aid deyilsə və ya passivdirsə
+        $membership = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
-            ->exists();
+            ->first();
 
-        if (!$hasAccess) {
+        if (!$membership) {
+            // Session-ı təmizlə
             if ($request->hasSession()) {
                 $request->session()->forget([
                     'current_garage_id',
@@ -50,6 +56,8 @@ class EnsureGarageSelected
                 ]);
             }
             GarageContext::clear();
+
+            // ✅ Qaraj seçim səhifəsinə yönləndir
             return redirect()->route('garage.selection')
                 ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
         }

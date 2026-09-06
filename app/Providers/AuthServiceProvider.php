@@ -8,12 +8,21 @@ use App\Models\Warehouse;
 use App\Models\Driver;
 use App\Models\Employee;
 use App\Models\User;
+use App\Models\BusDailyStatus;
+use App\Models\DailyKmRecord;
+use App\Models\MotorOilDetail;
+use App\Models\ComplaintType;
 use App\Policies\BusPolicy;
 use App\Policies\ComplaintPolicy;
 use App\Policies\WarehousePolicy;
 use App\Policies\DriverPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\UserPolicy;
+use App\Policies\BusDailyStatusPolicy;
+use App\Policies\DailyKmRecordPolicy;
+use App\Policies\MotorOilPolicy;
+use App\Policies\ComplaintTypePolicy;
+use App\Policies\DashboardPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -25,6 +34,11 @@ class AuthServiceProvider extends ServiceProvider
         Driver::class => DriverPolicy::class,
         Employee::class => EmployeePolicy::class,
         User::class => UserPolicy::class,
+        BusDailyStatus::class => BusDailyStatusPolicy::class,
+        DailyKmRecord::class => DailyKmRecordPolicy::class,
+        MotorOilDetail::class => MotorOilPolicy::class,
+        ComplaintType::class => ComplaintTypePolicy::class,
+        DashboardController::class => DashboardPolicy::class,
     ];
 
     public function boot(): void

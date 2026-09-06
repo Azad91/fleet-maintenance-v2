@@ -48,7 +48,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'errors' => $e->errors(),
                 ], 422);
             }
-            return redirect()->back()->withErrors($e->errors())->withInput();
+            // ✅ DÜZƏLİŞ: $e->errorBag parametri əlavə edildi ki, named bag-lər itməsin
+            return redirect()->back()->withErrors($e->errors(), $e->errorBag)->withInput();
         });
 
         // ✅ ModelNotFoundException - 404

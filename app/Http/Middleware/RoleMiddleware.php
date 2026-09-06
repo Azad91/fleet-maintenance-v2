@@ -34,8 +34,13 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // İstifadəçi bu qaraja aid deyilsə
-        if (!$user->garages()->whereKey($garageId)->wherePivot('is_active', true)->exists()) {
+        // İstifadəçi bu qaraja aid deyilsə və ya passivdirsə
+        $membership = $user->garages()
+            ->whereKey($garageId)
+            ->wherePivot('is_active', true)
+            ->first();
+
+        if (!$membership) {
             if ($request->hasSession()) {
                 $request->session()->forget([
                     'current_garage_id',

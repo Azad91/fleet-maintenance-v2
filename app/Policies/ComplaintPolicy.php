@@ -37,7 +37,7 @@ class ComplaintPolicy
         ]);
     }
 
-    public function update(User $user, Complaint $complaint): bool
+    public function update(User $user, ?Complaint $complaint = null): bool
     {
         if ($user->isSuperAdmin()) return true;
         return $user->hasGarageRole([

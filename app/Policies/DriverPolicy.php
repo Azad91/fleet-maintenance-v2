@@ -26,7 +26,7 @@ class DriverPolicy
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function update(User $user, Driver $driver): bool
+    public function update(User $user, ?Driver $driver = null): bool
     {
         if ($user->isSuperAdmin()) return true;
         return $user->hasGarageRole(RoleEnum::ADMIN->value);

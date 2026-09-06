@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Garage;
 use App\Enums\RoleEnum;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 abstract class Controller
 {
+    use AuthorizesRequests; // ✅ ƏLAVƏ EDİLDİ
+
     /**
      * Cari qaraj və company ID-lərini götürüb data-ya əlavə edir
      */
