@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Garage;
+use App\Enums\RoleEnum;
 
 abstract class Controller
 {
@@ -14,5 +15,16 @@ abstract class Controller
         $data['garage_id'] = Garage::getCurrentId();
         $data['company_id'] = Garage::getCurrentCompanyId();
         return $data;
+    }
+
+    /**
+     * Rol string-lərini RoleEnum-dan al
+     */
+    protected function getRoleString(array|string $roles): string
+    {
+        if (is_string($roles)) {
+            return $roles;
+        }
+        return implode(',', $roles);
     }
 }

@@ -37,7 +37,7 @@ class User extends Authenticatable
      */
     public function isSuperAdmin(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin'], true);
+        return $this->role === 'super_admin' || $this->role === 'admin';
     }
 
     /**
@@ -79,6 +79,12 @@ class User extends Authenticatable
             ->wherePivotIn('role', $roles)
             ->exists();
     }
+
+    // ❌ SİLİNMİŞ METODLAR (heç yerdə çağırılmır)
+    // public function isBus(): bool
+    // public function isComplaint(): bool
+    // public function isWarehouse(): bool
+    // public function isDirectorate(): bool
 
     // ==================== RELATIONSHIPS ====================
 

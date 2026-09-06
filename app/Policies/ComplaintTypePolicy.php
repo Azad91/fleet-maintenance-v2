@@ -4,42 +4,51 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\ComplaintType;
+use App\Enums\RoleEnum;
 
 class ComplaintTypePolicy
 {
     public function viewAny(User $user): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole(['admin', 'complaint', 'directorate']);
+        return $user->hasGarageRole([
+            RoleEnum::ADMIN->value,
+            RoleEnum::COMPLAINT->value,
+            RoleEnum::DIRECTORATE->value,
+        ]);
     }
 
     public function view(User $user, ComplaintType $type): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole(['admin', 'complaint', 'directorate']);
+        return $user->hasGarageRole([
+            RoleEnum::ADMIN->value,
+            RoleEnum::COMPLAINT->value,
+            RoleEnum::DIRECTORATE->value,
+        ]);
     }
 
     public function create(User $user): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole('admin');
+        return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function update(User $user, ComplaintType $type): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole('admin');
+        return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function delete(User $user, ComplaintType $type): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole('admin');
+        return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function import(User $user): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole('admin');
+        return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 }

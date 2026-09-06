@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\RoleEnum;
 
 class RoleMiddleware
 {
@@ -55,7 +56,6 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // İstifadəçinin cari qarajda bu rollardan biri varmı?
         if ($user->hasGarageRole($roles, $garageId)) {
             return $next($request);
         }
