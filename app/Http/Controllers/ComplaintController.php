@@ -165,7 +165,10 @@ class ComplaintController extends Controller
 
         try {
             \Maatwebsite\Excel\Facades\Excel::import(
-                new \App\Imports\ComplaintsImport(),
+                new \App\Imports\ComplaintsImport(
+                    (int) session('current_garage_id'),
+                    session('current_company_id') ? (int) session('current_company_id') : null
+                ),
                 $request->file('file')
             );
             return redirect()->route('complaints.index')

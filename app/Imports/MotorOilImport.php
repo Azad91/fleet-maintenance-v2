@@ -30,26 +30,27 @@ class MotorOilImport implements OnEachRow, WithHeadingRow, ShouldQueue, WithChun
             }
         }
 
-        $detal_kodu = $rowArray['kod'] ?? null;
-        $detal_adi = $rowArray['adi'] ?? null;
-        $olcu_vahidi = $rowArray['olcu_vahidi'] ?? null;
-        $miqdar = $rowArray['miqdar'] ?? 0;
+        $partCode = $rowArray['part_code'] ?? $rowArray['detal_kodu'] ?? $rowArray['kod'] ?? null;
+        $partName = $rowArray['part_name'] ?? $rowArray['detal_adi'] ?? $rowArray['adi'] ?? null;
+        $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
+        $quantity = (float) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
 
-        if (!$detal_kodu) return;
+        if (!$partCode) return;
 
         foreach ($this->kmColumns as $columnIndex => $km) {
-            $say = (int) ($rowArray[$columnIndex] ?? 0);
+            $count = (int) ($rowArray[$columnIndex] ?? 0);
 
-            if ($say > 0) {
+            if ($count > 0) {
                 MotorOilDetail::create([
-                    'detal_kodu' => $detal_kodu,
-                    'detal_adi' => $detal_adi,
-                    'olcu_vahidi' => $olcu_vahidi,
-                    'miqdar' => $miqdar,
+                    'part_code' => $partCode,
+                    'part_name' => $partName,
+                    'unit' => $unit,
+                    'quantity' => $quantity,
                     'km' => $km,
-                    'say' => $say,
+                    'count' => $count,
                 ]);
             }
         }
     }
 }
+

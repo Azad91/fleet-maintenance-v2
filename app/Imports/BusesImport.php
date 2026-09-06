@@ -11,6 +11,14 @@ use Illuminate\Validation\ValidationException;
 
 class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading
 {
+    public function __construct(
+        public ?int $garageId = null,
+        public ?int $companyId = null
+    ) {
+        $this->garageId ??= session('current_garage_id');
+        $this->companyId ??= session('current_company_id');
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -24,12 +32,12 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
             return null;
         }
 
-        $garageId = session('current_garage_id');
-        $companyId = session('current_company_id');
+        $garageId = $this->garageId;
+        $companyId = $this->companyId;
 
         $existingInAnotherGarage = Bus::withoutGlobalScopes()
             ->where('dqn', $dqn)
-            ->where('garage_id', '!=', $garageId)
+            ->when($garageId, fn($q) => $q->where('garage_id', '!=', $garageId))
             ->exists();
 
         if ($existingInAnotherGarage) {
@@ -38,7 +46,12 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
             ]);
         }
 
-        $bus = Bus::withTrashed()->where('dqn', $dqn)->where('garage_id', $garageId)->first();
+        $bus = Bus::withoutGlobalScopes()
+            ->withTrashed()
+            ->where('dqn', $dqn)
+            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->first();
+
         if ($bus?->trashed()) {
             $bus->restore();
         }
@@ -51,12 +64,13 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
             'bus_project' => $row['bus_project'] ?? null,
             'vin' => $row['vin'] ?? null,
             'uzunluq' => $row['uzunluq'] ?? null,
-            'xett_no' => $row['xett'] ?? null,
-            'motor_no' => $row['motor'] ?? null,
-            'tarix' => now()->format('Y-m-d'),
-            'aktiv' => true,
+            'route_number' => $row['route_number'] ?? $row['xett'] ?? $row['xett_no'] ?? null,
+            'engine_number' => $row['engine_number'] ?? $row['motor'] ?? $row['motor_no'] ?? null,
+            'date' => now()->format('Y-m-d'),
+            'is_active' => true,
         ]);
 
         return $bus;
     }
 }
+

@@ -11,6 +11,14 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class EmployeesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
+    public function __construct(
+        public ?int $garageId = null,
+        public ?int $companyId = null
+    ) {
+        $this->garageId ??= session('current_garage_id');
+        $this->companyId ??= session('current_company_id');
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -18,24 +26,26 @@ class EmployeesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Should
 
     public function model(array $row)
     {
-        $ad = $row['ad'] ?? null;
-        $soyad = $row['soyad'] ?? null;
-        $vezife = $row['vezife'] ?? 'digər';
+        $firstName = trim((string) ($row['first_name'] ?? $row['ad'] ?? ''));
+        $lastName = trim((string) ($row['last_name'] ?? $row['soyad'] ?? ''));
+        $position = trim((string) ($row['position'] ?? $row['vezifesi'] ?? $row['vezife'] ?? 'digər'));
 
-        if (empty($ad)) {
+        if (empty($firstName)) {
             return null;
         }
 
-        if (empty($soyad)) {
-            $soyad = '';
-        }
+        $garageId = $this->garageId;
+        $companyId = $this->companyId;
 
         return new Employee([
-            'ad' => $ad,
-            'soyad' => $soyad,
-            'vezifesi' => $vezife,
-            'aktiv' => true,
-            'qeyd' => null,
+            'garage_id' => $garageId,
+            'company_id' => $companyId,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'position' => $position,
+            'is_active' => true,
+            'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
         ]);
     }
 }
+

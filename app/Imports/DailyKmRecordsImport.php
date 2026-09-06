@@ -14,6 +14,14 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, ShouldQueue, WithChunkReading
 {
+    public function __construct(
+        public ?int $garageId = null,
+        public ?int $companyId = null
+    ) {
+        $this->garageId ??= session('current_garage_id');
+        $this->companyId ??= session('current_company_id');
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -35,25 +43,31 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, Shou
             }
         }
 
+        $garageId = $this->garageId;
+
         foreach ($rows->slice(2) as $row) {
             $dqn = trim((string) ($row[3] ?? ''));
             if ($dqn === '') {
                 continue;
             }
 
-            $bus = Bus::where('dqn', $dqn)->first();
+            $bus = Bus::withoutGlobalScopes()
+                ->where('dqn', $dqn)
+                ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+                ->first();
+
             if (! $bus) {
                 continue;
             }
 
-            foreach ($dailyKmColumns as $column => $tarix) {
+            foreach ($dailyKmColumns as $column => $dateVal) {
                 $km = $row[$column] ?? null;
                 if (! is_numeric($km) || (int) $km <= 0) {
                     continue;
                 }
 
                 DailyKmRecord::withoutGlobalScopes()->updateOrCreate(
-                    ['bus_id' => $bus->id, 'tarix' => $tarix],
+                    ['bus_id' => $bus->id, 'date' => $dateVal],
                     [
                         'km' => (int) $km,
                         'garage_id' => $bus->garage_id,
@@ -77,3 +91,4 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, Shou
         return null;
     }
 }
+

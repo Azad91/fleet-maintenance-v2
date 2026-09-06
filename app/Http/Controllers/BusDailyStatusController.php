@@ -100,7 +100,13 @@ class BusDailyStatusController extends Controller
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
-            Excel::import(new BusDailyStatusesImport, $request->file('file'));
+            Excel::import(
+                new BusDailyStatusesImport(
+                    (int) session('current_garage_id'),
+                    session('current_company_id') ? (int) session('current_company_id') : null
+                ),
+                $request->file('file')
+            );
             return redirect()->route('bus-daily-statuses.index')->with('success', 'Statuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);

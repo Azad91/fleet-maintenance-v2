@@ -10,7 +10,8 @@ class ComplaintService
 {
     public function __construct(
         protected ComplaintStockService $stockService,
-        protected ComplaintItemService $itemService
+        protected ComplaintItemService $itemService,
+        protected ComplaintStatusTransitionService $transitionService
     ) {}
 
     public function create(array $data, array $detallar = null, array $shikayet = []): Complaint
@@ -46,6 +47,10 @@ class ComplaintService
 
     public function update(Complaint $complaint, array $data, array $detallar = null, array $shikayet = []): Complaint
     {
+        if (isset($data['status'])) {
+            $this->transitionService->validateTransition($complaint, $data['status']);
+        }
+
         if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
             $driver = Driver::active()->findOrFail($data['driver_id']);
             $data['driver_name'] = $driver->full_name;
@@ -55,22 +60,17 @@ class ComplaintService
         }
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-            // ✅ YENİ: Köhnə detalları silib stoku geri qaytarırıq
-            if ($complaint->details->isNotEmpty()) {
-                $this->stockService->restoreStock($complaint->details->toArray());
-                $complaint->details()->delete();
-            }
-
             $processedDetails = [];
-            if (!empty($detallar) && is_array($detallar)) {
-                $processedDetails = $this->stockService->deductStock($detallar);
+            if ($detallar !== null && is_array($detallar)) {
+                $oldDetails = $complaint->details->toArray();
+                $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar);
+                $complaint->details()->delete();
+                if (!empty($processedDetails)) {
+                    $complaint->details()->createMany($processedDetails);
+                }
             }
 
             $complaint->update($data);
-
-            if (!empty($processedDetails)) {
-                $complaint->details()->createMany($processedDetails);
-            }
 
             $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 

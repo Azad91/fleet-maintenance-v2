@@ -26,6 +26,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/health', [\App\Http\Controllers\HealthController::class, 'check'])->name('health.check');
+
 /*
 |--------------------------------------------------------------------------
 | Auth Routes (Breeze)
@@ -48,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
 | Authenticated Routes (Auth + Garage Selected)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'garage.selected'])->group(function () {
+Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

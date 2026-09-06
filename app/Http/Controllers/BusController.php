@@ -113,7 +113,13 @@ class BusController extends Controller
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\BusesImport, $request->file('file'));
+            \Maatwebsite\Excel\Facades\Excel::import(
+                new \App\Imports\BusesImport(
+                    (int) session('current_garage_id'),
+                    session('current_company_id') ? (int) session('current_company_id') : null
+                ),
+                $request->file('file')
+            );
             return redirect()->route('buses.index')->with('success', 'Avtobuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);

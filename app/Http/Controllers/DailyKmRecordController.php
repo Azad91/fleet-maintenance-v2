@@ -160,7 +160,13 @@ class DailyKmRecordController extends Controller
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
-            Excel::import(new DailyKmRecordsImport, $request->file('file'));
+            Excel::import(
+                new DailyKmRecordsImport(
+                    (int) session('current_garage_id'),
+                    session('current_company_id') ? (int) session('current_company_id') : null
+                ),
+                $request->file('file')
+            );
             return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatları uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);

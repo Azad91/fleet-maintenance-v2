@@ -33,44 +33,20 @@ class User extends Authenticatable
 
     // ==================== ROLE CHECKS ====================
 
-    // ✅ YENİ METOD: Super Admin (bütün sisteme tam nəzarət)
+    /**
+     * Super Admin yoxlanışı (bütün sistemə tam nəzarət)
+     */
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['super_admin', 'admin'], true);
     }
 
-    // Qaraj səviyyəsində admin (pivotda 'admin' rolu) - BU KÖHNƏ METODDUR, amma indi fərqli məna daşıyır
-    public function isAdmin()
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isBus()
-    {
-        return $this->role === 'bus';
-    }
-
-    public function isComplaint()
-    {
-        return $this->role === 'complaint';
-    }
-
-    public function isWarehouse()
-    {
-        return $this->role === 'warehouse';
-    }
-
-    public function isDirectorate()
-    {
-        return $this->role === 'directorate';
-    }
-
-    public function hasRole($role)
+    public function hasRole(string $role): bool
     {
         return $this->role === $role;
     }
 
-    public function hasAnyRole($roles)
+    public function hasAnyRole(string|array $roles): bool
     {
         return $this->hasGarageRole($roles);
     }

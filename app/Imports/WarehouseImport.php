@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\DB;
 
 class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
+    public function __construct(
+        public ?int $garageId = null,
+        public ?int $companyId = null
+    ) {
+        $this->garageId ??= session('current_garage_id');
+        $this->companyId ??= session('current_company_id');
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -24,33 +32,54 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
     {
         $rowArray = $row->toArray();
 
-        $kod = trim((string) ($rowArray['kod'] ?? ''));
+        $code = trim((string) ($rowArray['code'] ?? $rowArray['kod'] ?? ''));
 
-        if (empty($kod)) {
+        if (empty($code)) {
             Log::warning('Boş kod sətri keçildi');
             return;
         }
 
-        $garageId = session('current_garage_id');
-        $companyId = session('current_company_id');
+        $garageId = $this->garageId;
+        $companyId = $this->companyId;
 
-        DB::transaction(function () use ($kod, $rowArray, $garageId, $companyId) {
-            $warehouse = Warehouse::where('kod', $kod)->lockForUpdate()->first();
+        DB::transaction(function () use ($code, $rowArray, $garageId, $companyId) {
+            $warehouse = Warehouse::withoutGlobalScopes()
+                ->where('code', $code)
+                ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+                ->lockForUpdate()
+                ->first();
+
+            $quantity = (int) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
+            $price = isset($rowArray['price']) ? (float) $rowArray['price'] : (isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : 0);
+            $name = $rowArray['name'] ?? $rowArray['ad'] ?? '';
+            $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
+            $category = $rowArray['category'] ?? $rowArray['kateqoriya'] ?? null;
+            $minimumQuantity = $rowArray['minimum_quantity'] ?? $rowArray['minimum_miqdar'] ?? null;
+            $supplier = $rowArray['supplier'] ?? $rowArray['tedarikci'] ?? null;
+            $notes = $rowArray['notes'] ?? $rowArray['qeyd'] ?? null;
 
             if ($warehouse) {
                 $warehouse->update([
-                    'miqdar' => (int) ($rowArray['miqdar'] ?? 0),
-                    'qiymet' => isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : $warehouse->qiymet,
-                    'ad' => $rowArray['ad'] ?? $warehouse->ad,
-                    'olcu_vahidi' => $rowArray['olcu_vahidi'] ?? $warehouse->olcu_vahidi,
+                    'quantity' => $quantity,
+                    'price' => $price ?: $warehouse->price,
+                    'name' => $name ?: $warehouse->name,
+                    'unit' => $unit ?? $warehouse->unit,
+                    'category' => $category ?? $warehouse->category,
+                    'minimum_quantity' => $minimumQuantity ?? $warehouse->minimum_quantity,
+                    'supplier' => $supplier ?? $warehouse->supplier,
+                    'notes' => $notes ?? $warehouse->notes,
                 ]);
             } else {
                 Warehouse::create([
-                    'kod' => $kod,
-                    'ad' => $rowArray['ad'] ?? '',
-                    'miqdar' => (int) ($rowArray['miqdar'] ?? 0),
-                    'olcu_vahidi' => $rowArray['olcu_vahidi'] ?? null,
-                    'qiymet' => (float) ($rowArray['qiymet'] ?? 0),
+                    'code' => $code,
+                    'name' => $name,
+                    'quantity' => $quantity,
+                    'unit' => $unit,
+                    'price' => $price,
+                    'category' => $category,
+                    'minimum_quantity' => $minimumQuantity,
+                    'supplier' => $supplier,
+                    'notes' => $notes,
                     'garage_id' => $garageId,
                     'company_id' => $companyId,
                 ]);
@@ -61,23 +90,15 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
     public function rules(): array
     {
         return [
-            'kod' => 'required|string|max:255',
-            'ad' => 'required|string|max:255',
+            'code' => 'sometimes|nullable|string|max:255',
+            'kod' => 'sometimes|nullable|string|max:255',
+            'name' => 'sometimes|nullable|string|max:255',
+            'ad' => 'sometimes|nullable|string|max:255',
+            'quantity' => 'nullable|numeric|min:0',
             'miqdar' => 'nullable|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
             'qiymet' => 'nullable|numeric|min:0',
-            'olcu_vahidi' => 'nullable|string|max:50',
-        ];
-    }
-
-    public function customValidationMessages()
-    {
-        return [
-            'kod.required' => 'Kod sütunu boş ola bilməz.',
-            'ad.required' => 'Ad sütunu boş ola bilməz.',
-            'miqdar.numeric' => 'Miqdar yalnız rəqəm ola bilər.',
-            'miqdar.min' => 'Miqdar 0-dan kiçik ola bilməz.',
-            'qiymet.numeric' => 'Qiymət yalnız rəqəm ola bilər.',
-            'qiymet.min' => 'Qiymət 0-dan kiçik ola bilməz.',
         ];
     }
 }
+

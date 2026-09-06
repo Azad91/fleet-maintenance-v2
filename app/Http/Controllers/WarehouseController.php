@@ -88,7 +88,13 @@ class WarehouseController extends Controller
         ]);
 
         try {
-            Excel::import(new WarehouseImport, $request->file('file'));
+            Excel::import(
+                new WarehouseImport(
+                    (int) session('current_garage_id'),
+                    session('current_company_id') ? (int) session('current_company_id') : null
+                ),
+                $request->file('file')
+            );
             return redirect()->route('warehouses.index')->with('success', 'Anbar məlumatları uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);

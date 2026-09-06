@@ -14,7 +14,10 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        if (!session('current_garage_id')) {
+        $garageId = $request->hasSession() ? $request->session()->get('current_garage_id') : session('current_garage_id');
+        $companyId = $request->hasSession() ? $request->session()->get('current_company_id') : session('current_company_id');
+
+        if (!$garageId) {
             return redirect()->route('garage.selection');
         }
 
@@ -22,8 +25,24 @@ class RoleMiddleware
 
         // Super Admin hər şeyə girə bilər
         if ($user->isSuperAdmin()) {
+            \App\Services\GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
             return $next($request);
         }
+
+        if (!$user->garages()->whereKey($garageId)->wherePivot('is_active', true)->exists()) {
+            if ($request->hasSession()) {
+                $request->session()->forget([
+                    'current_garage_id',
+                    'current_garage_name',
+                    'current_company_id',
+                    'current_company_name',
+                ]);
+            }
+            \App\Services\GarageContext::clear();
+            return redirect()->route('garage.selection');
+        }
+
+        \App\Services\GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
 
         // Heç bir rol tələb olunmursa, keçir
         if (empty($roles)) {
@@ -31,7 +50,7 @@ class RoleMiddleware
         }
 
         // İstifadəçinin cari qarajda bu rollardan biri varmı?
-        if ($user->hasGarageRole($roles, session('current_garage_id'))) {
+        if ($user->hasGarageRole($roles, $garageId)) {
             return $next($request);
         }
 

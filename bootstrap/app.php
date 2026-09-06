@@ -18,8 +18,22 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'garage.selected' => EnsureGarageSelected::class,
+            'idempotent' => \App\Http\Middleware\IdempotencyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\App\Exceptions\GarageAccessDeniedException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 403);
+            }
+            return redirect()->route('garage.selection')->with('error', $e->getMessage());
+        });
+
+        $exceptions->render(function (\App\Exceptions\StockInsufficientException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+            return back()->with('error', $e->getMessage())->withInput();
+        });
     })->create();
+

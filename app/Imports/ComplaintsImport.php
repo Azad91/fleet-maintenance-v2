@@ -16,6 +16,14 @@ use Illuminate\Validation\ValidationException;
 
 class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, ShouldQueue, WithChunkReading
 {
+    public function __construct(
+        public ?int $garageId = null,
+        public ?int $companyId = null
+    ) {
+        $this->garageId ??= session('current_garage_id');
+        $this->companyId ??= session('current_company_id');
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -25,64 +33,92 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
     {
         $rowArray = $row->toArray();
 
-        $bus = Bus::where('dqn', $rowArray['bus_dqn'])->first();
+        $busDqn = trim((string) ($rowArray['bus_dqn'] ?? $rowArray['dqn'] ?? ''));
+        if (empty($busDqn)) {
+            return;
+        }
+
+        $garageId = $this->garageId;
+        $companyId = $this->companyId;
+
+        $bus = Bus::withoutGlobalScopes()
+            ->where('dqn', $busDqn)
+            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->first();
+
         if (!$bus) {
             return;
         }
 
-        DB::transaction(function () use ($rowArray, $bus) {
-            $detallar = [];
-            if (!empty($rowArray['detal_kodu']) && !empty($rowArray['islenen_miqdar']) && $rowArray['islenen_miqdar'] > 0) {
-                $warehouse = Warehouse::where('kod', $rowArray['detal_kodu'])->lockForUpdate()->first();
+        DB::transaction(function () use ($rowArray, $bus, $garageId, $companyId) {
+            $partCode = trim((string) ($rowArray['part_code'] ?? $rowArray['code'] ?? $rowArray['detal_kodu'] ?? $rowArray['kodu'] ?? ''));
+            $usedQuantity = (int) ($rowArray['used_quantity'] ?? $rowArray['quantity'] ?? $rowArray['islenen_miqdar'] ?? $rowArray['miqdar'] ?? 0);
+            $partName = $rowArray['part_name'] ?? $rowArray['name'] ?? $rowArray['detal_adi'] ?? null;
+            $stockQuantity = 0;
+
+            if (!empty($partCode) && $usedQuantity > 0) {
+                $warehouse = Warehouse::withoutGlobalScopes()
+                    ->where('code', $partCode)
+                    ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+                    ->lockForUpdate()
+                    ->first();
 
                 if (!$warehouse) {
-                    throw ValidationException::withMessages(['detal_kodu' => 'Detal cari qarajın anbarında tapılmadı.']);
+                    throw ValidationException::withMessages(['part_code' => "Detal ({$partCode}) cari qarajın anbarında tapılmadı."]);
                 }
 
-                $quantity = (int) $rowArray['islenen_miqdar'];
-                if ($quantity > $warehouse->miqdar) {
-                    throw ValidationException::withMessages(['islenen_miqdar' => "Anbarda kifayət qədər '{$warehouse->ad}' yoxdur."]);
+                if ($usedQuantity > $warehouse->quantity) {
+                    throw ValidationException::withMessages(['used_quantity' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur."]);
                 }
 
-                $warehouse->decrement('miqdar', $quantity);
-                $detallar[] = [
-                    'kodu' => $rowArray['detal_kodu'],
-                    'adi' => $rowArray['detal_adi'] ?? $warehouse->ad,
-                    'depo_miqdari' => $warehouse->miqdar,
-                    'islenen_miqdar' => $quantity,
-                    'qeyd' => $rowArray['qeyd'] ?? null,
-                    'shikayet_index' => 0,
-                ];
+                $warehouse->decrement('quantity', $usedQuantity);
+                $stockQuantity = $warehouse->quantity;
+                $partName ??= $warehouse->name;
             }
 
-            Complaint::create([
+            $complaint = Complaint::create([
+                'garage_id' => $garageId ?? $bus->garage_id,
+                'company_id' => $companyId ?? $bus->company_id,
                 'bus_id' => $bus->id,
                 'yer' => $rowArray['yer'] ?? null,
-                'surucu_adi' => $rowArray['surucu_adi'] ?? null,
-                'shikayet' => $rowArray['shikayet'] ?? null,
-                'sikayet_tipi' => $rowArray['sikayet_tipi'] ?? null,
-                'bildirilme_tarix' => $rowArray['bildirilme_tarix'] ?? null,
-                'bildirilme_saat' => $rowArray['bildirilme_saat'] ?? null,
-                'is_baslama_tarix' => $rowArray['is_baslama_tarix'] ?? null,
-                'is_baslama_saat' => $rowArray['is_baslama_saat'] ?? null,
-                'is_bitme_tarix' => $rowArray['is_bitme_tarix'] ?? null,
-                'is_bitme_saat' => $rowArray['is_bitme_saat'] ?? null,
+                'driver_name' => $rowArray['driver_name'] ?? $rowArray['surucu_adi'] ?? null,
+                'complaint_type' => $rowArray['complaint_type'] ?? $rowArray['sikayet_tipi'] ?? null,
+                'reported_date' => $rowArray['reported_date'] ?? $rowArray['bildirilme_tarix'] ?? null,
+                'reported_time' => $rowArray['reported_time'] ?? $rowArray['bildirilme_saat'] ?? null,
+                'start_date' => $rowArray['start_date'] ?? $rowArray['is_baslama_tarix'] ?? null,
+                'start_time' => $rowArray['start_time'] ?? $rowArray['is_baslama_saat'] ?? null,
+                'end_date' => $rowArray['end_date'] ?? $rowArray['is_bitme_tarix'] ?? null,
+                'end_time' => $rowArray['end_time'] ?? $rowArray['is_bitme_saat'] ?? null,
                 'status' => $rowArray['status'] ?? 'gözləmədə',
-                'detallar' => $detallar,
                 'km' => $rowArray['km'] ?? null,
-                'kim_is_gorub' => $rowArray['kim_is_gorub'] ?? null,
+                'work_done_by' => $rowArray['work_done_by'] ?? $rowArray['kim_is_gorub'] ?? null,
+                'notes' => $rowArray['notes'] ?? $rowArray['shikayet'] ?? $rowArray['qeyd'] ?? null,
             ]);
+
+            if (!empty($partCode) && $usedQuantity > 0) {
+                $complaint->details()->create([
+                    'shikayet_index' => 0,
+                    'code' => $partCode,
+                    'name' => $partName ?? $partCode,
+                    'stock_quantity' => $stockQuantity,
+                    'used_quantity' => $usedQuantity,
+                    'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? $rowArray['qeyd'] ?? null,
+                ]);
+            }
         });
     }
 
     public function rules(): array
     {
         return [
-            'bus_dqn' => 'required',
+            'bus_dqn' => 'sometimes|nullable',
+            'dqn' => 'sometimes|nullable',
             'status' => 'nullable|in:gözləmədə,işdə,həll olundu',
             'yer' => 'nullable|in:yol,qaraj',
-            'sikayet_tipi' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
+            'complaint_type' => 'nullable|string',
+            'sikayet_tipi' => 'nullable|string',
             'km' => 'nullable|integer|min:0',
         ];
     }
 }
+

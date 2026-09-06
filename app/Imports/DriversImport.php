@@ -11,6 +11,14 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
+    public function __construct(
+        public ?int $garageId = null,
+        public ?int $companyId = null
+    ) {
+        $this->garageId ??= session('current_garage_id');
+        $this->companyId ??= session('current_company_id');
+    }
+
     public function chunkSize(): int
     {
         return 100;
@@ -18,23 +26,31 @@ class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQu
 
     public function model(array $row)
     {
-        $kodu = trim($row['kodu'] ?? '');
-        $ad = trim($row['ad'] ?? '');
+        $code = trim((string) ($row['code'] ?? $row['kodu'] ?? ''));
+        $firstName = trim((string) ($row['first_name'] ?? $row['ad'] ?? ''));
 
-        if (empty($kodu) || empty($ad)) {
+        if (empty($code) || empty($firstName)) {
             return null;
         }
 
-        return Driver::updateOrCreate(
-            ['kodu' => $kodu],
+        $garageId = $this->garageId;
+        $companyId = $this->companyId;
+
+        return Driver::withoutGlobalScopes()->updateOrCreate(
             [
-                'ad' => $ad,
-                'soyad' => $row['soyad'] ?? null,
-                'telefon' => $row['telefon'] ?? null,
-                'vezifesi' => $row['vezifesi'] ?? null,
-                'aktiv' => true,
-                'qeyd' => $row['qeyd'] ?? null,
+                'garage_id' => $garageId,
+                'code' => $code,
+            ],
+            [
+                'company_id' => $companyId,
+                'first_name' => $firstName,
+                'last_name' => $row['last_name'] ?? $row['soyad'] ?? null,
+                'phone' => $row['phone'] ?? $row['telefon'] ?? null,
+                'position' => $row['position'] ?? $row['vezifesi'] ?? null,
+                'is_active' => true,
+                'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
             ]
         );
     }
 }
+

@@ -37,7 +37,8 @@ class ComplaintStockTest extends TestCase
         $this->stockService = new ComplaintStockService();
         $this->complaintService = new ComplaintService(
             $this->stockService,
-            new ComplaintItemService()
+            new ComplaintItemService(),
+            new \App\Services\Complaint\ComplaintStatusTransitionService()
         );
     }
 
@@ -215,4 +216,24 @@ class ComplaintStockTest extends TestCase
         $warehouse->refresh();
         $this->assertEquals(17, $warehouse->quantity);
     }
+
+    public function test_it_prevents_illegal_status_transition_from_closed()
+    {
+        $bus = Bus::factory()->create(['garage_id' => 1, 'company_id' => 1]);
+
+        $complaint = Complaint::create([
+            'bus_id' => $bus->id,
+            'yer' => 'qaraj',
+            'status' => 'həll olundu',
+            'garage_id' => 1,
+            'company_id' => 1,
+        ]);
+
+        $this->expectException(ValidationException::class);
+        $this->complaintService->update($complaint, [
+            'status' => 'gözləmədə',
+            'yer' => 'qaraj',
+        ]);
+    }
 }
+
