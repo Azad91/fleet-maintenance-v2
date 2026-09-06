@@ -35,7 +35,9 @@ class MotorOilImport implements OnEachRow, WithHeadingRow, ShouldQueue, WithChun
         $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
         $quantity = (float) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
 
-        if (!$partCode) return;
+        if (!$partCode) {
+            return;
+        }
 
         foreach ($this->kmColumns as $columnIndex => $km) {
             $count = (int) ($rowArray[$columnIndex] ?? 0);
@@ -53,4 +55,3 @@ class MotorOilImport implements OnEachRow, WithHeadingRow, ShouldQueue, WithChun
         }
     }
 }
-

@@ -11,7 +11,8 @@ class MotorOilController extends Controller
 {
     public function index()
     {
-        // ✅ detal_adi → part_name
+        $this->authorize('viewAny', MotorOilDetail::class);  // ✅ ƏLAVƏ
+
         $details = MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
         $grouped = $details->groupBy('km');
 
@@ -20,13 +21,15 @@ class MotorOilController extends Controller
 
     public function search(Request $request)
     {
+        $this->authorize('viewAny', MotorOilDetail::class);  // ✅ ƏLAVƏ
+
         $search = preg_replace('/[^\d]/', '', (string) $request->search);
 
         $details = MotorOilDetail::when($search, function ($query, $search) {
             return $query->where('km', (int) $search);
         })
         ->orderBy('km')
-        ->orderBy('part_name') // ✅ detal_adi → part_name
+        ->orderBy('part_name')
         ->get();
 
         $grouped = $details->groupBy('km');
@@ -36,11 +39,15 @@ class MotorOilController extends Controller
 
     public function importForm()
     {
+        $this->authorize('import', MotorOilDetail::class);  // ✅ ƏLAVƏ
+
         return view('motor-oil.import');
     }
 
     public function import(Request $request)
     {
+        $this->authorize('import', MotorOilDetail::class);  // ✅ ƏLAVƏ
+
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240'
         ]);

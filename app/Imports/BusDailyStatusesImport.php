@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Carbon\Carbon;
 
 class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading
 {
@@ -15,8 +16,8 @@ class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, Wi
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -26,8 +27,8 @@ class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, Wi
 
     public function model(array $row)
     {
-        $dqn = $row['dqn'] ?? $row['DQN'] ?? null;
-        $durum = $row['status'] ?? $row['durum'] ?? $row['STATUS'] ?? $row['DURUM'] ?? null;
+        $dqn = trim((string) ($row['dqn'] ?? $row['DQN'] ?? ''));
+        $status = $row['status'] ?? $row['durum'] ?? $row['STATUS'] ?? $row['DURUM'] ?? null;
 
         if (empty($dqn)) {
             return null;
@@ -37,7 +38,7 @@ class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, Wi
         $companyId = $this->companyId;
 
         $bus = Bus::withoutGlobalScopes()
-            ->where('dqn', trim((string) $dqn))
+            ->where('dqn', $dqn)
             ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
             ->first();
 
@@ -48,15 +49,14 @@ class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, Wi
         return BusDailyStatus::withoutGlobalScopes()->updateOrCreate(
             [
                 'bus_id' => $bus->id,
-                'date'  => now()->toDateString(),
+                'date' => now()->toDateString(),
             ],
             [
                 'garage_id' => $bus->garage_id ?? $garageId,
                 'company_id' => $bus->company_id ?? $companyId,
-                'status' => $durum ?? 'MƏLUMAT YOXDUR',
-                'notes'   => $row['notes'] ?? $row['qeyd'] ?? null,
+                'status' => $status ?? 'MƏLUMAT YOXDUR',
+                'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
             ]
         );
     }
 }
-

@@ -14,8 +14,12 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        $garageId = $request->hasSession() ? $request->session()->get('current_garage_id') : session('current_garage_id');
-        $companyId = $request->hasSession() ? $request->session()->get('current_company_id') : session('current_company_id');
+        $garageId = $request->hasSession()
+            ? $request->session()->get('current_garage_id')
+            : session('current_garage_id');
+        $companyId = $request->hasSession()
+            ? $request->session()->get('current_company_id')
+            : session('current_company_id');
 
         if (!$garageId) {
             return redirect()->route('garage.selection');
@@ -29,6 +33,7 @@ class RoleMiddleware
             return $next($request);
         }
 
+        // İstifadəçi bu qaraja aid deyilsə
         if (!$user->garages()->whereKey($garageId)->wherePivot('is_active', true)->exists()) {
             if ($request->hasSession()) {
                 $request->session()->forget([
@@ -39,7 +44,8 @@ class RoleMiddleware
                 ]);
             }
             \App\Services\GarageContext::clear();
-            return redirect()->route('garage.selection');
+            return redirect()->route('garage.selection')
+                ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
         }
 
         \App\Services\GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);

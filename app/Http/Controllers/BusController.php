@@ -6,20 +6,35 @@ use App\Models\Bus;
 use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // ✅ ƏLAVƏ ET
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\BusesImport;
 
 class BusController extends Controller
 {
-    use AuthorizesRequests; // ✅ ƏLAVƏ ET
+    use AuthorizesRequests;
 
+    /**
+     * Avtobuslar siyahısı
+     */
     public function index()
     {
-        $buses = Bus::with('latestKmRecord')->orderBy('id', 'desc')->paginate(config('settings.pagination', 15));
+        $this->authorize('viewAny', Bus::class);
+
+        $buses = Bus::with('latestKmRecord')
+            ->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15));
+
         return view('buses.index', compact('buses'));
     }
 
+    /**
+     * Avtobus axtarışı (AJAX)
+     */
     public function search(Request $request)
     {
+        $this->authorize('viewAny', Bus::class);
+
         $bus_project = $request->bus_project;
         $vin = $request->vin;
         $uzunluq = $request->uzunluq;
@@ -48,7 +63,9 @@ class BusController extends Controller
             $query->where('engine_number', 'ILIKE', "%{$engine_number}%");
         }
 
-        $buses = $query->orderBy('id', 'desc')->paginate(config('settings.pagination', 15));
+        $buses = $query->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15));
+
         $isEmpty = $buses->isEmpty();
 
         if ($request->ajax()) {
@@ -58,72 +75,124 @@ class BusController extends Controller
         return view('buses.index', compact('buses'));
     }
 
+    /**
+     * Avtobus məlumatları
+     */
     public function show($id)
     {
         $bus = Bus::findOrFail($id);
+
+        $this->authorize('view', $bus);
+
         return view('buses.show', compact('bus'));
     }
 
+    /**
+     * Yeni avtobus yaratmaq üçün forma
+     */
     public function create()
     {
+        $this->authorize('create', Bus::class);
+
         return view('buses.create');
     }
 
+    /**
+     * Yeni avtobus yarat
+     */
     public function store(BusStoreRequest $request)
     {
         $this->authorize('create', Bus::class);
+
         $data = $request->validated();
         $data['date'] = now()->format('Y-m-d');
         $data = $this->addGarageContext($data);
+
         Bus::create($data);
-        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla əlavə edildi!');
+
+        return redirect()->route('buses.index')
+            ->with('success', 'Avtobus uğurla əlavə edildi!');
     }
 
+    /**
+     * Avtobus redaktə etmək üçün forma
+     */
     public function edit($id)
     {
         $bus = Bus::findOrFail($id);
+
+        $this->authorize('update', $bus);
+
         return view('buses.edit', compact('bus'));
     }
 
+    /**
+     * Avtobus məlumatlarını yenilə
+     */
     public function update(BusUpdateRequest $request, $id)
     {
         $bus = Bus::findOrFail($id);
+
         $this->authorize('update', $bus);
+
         $data = $request->validated();
         $bus->update($data);
-        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla yeniləndi!');
+
+        return redirect()->route('buses.index')
+            ->with('success', 'Avtobus uğurla yeniləndi!');
     }
 
+    /**
+     * Avtobus sil (soft delete)
+     */
     public function destroy($id)
     {
         $bus = Bus::findOrFail($id);
+
+        $this->authorize('delete', $bus);
+
         $bus->delete();
-        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla silindi!');
+
+        return redirect()->route('buses.index')
+            ->with('success', 'Avtobus uğurla silindi!');
     }
 
+    /**
+     * Excel import forması
+     */
     public function importForm()
     {
+        $this->authorize('import', Bus::class);
+
         return view('buses.import');
     }
 
+    /**
+     * Excel import et
+     */
     public function import(Request $request)
     {
+        $this->authorize('import', Bus::class);
+
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240'
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(
-                new \App\Imports\BusesImport(
+            Excel::import(
+                new BusesImport(
                     (int) session('current_garage_id'),
                     session('current_company_id') ? (int) session('current_company_id') : null
                 ),
                 $request->file('file')
             );
-            return redirect()->route('buses.index')->with('success', 'Avtobuslar uğurla idxal edildi!');
+
+            return redirect()->route('buses.index')
+                ->with('success', 'Avtobuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
-            return redirect()->route('buses.index')->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
+            return redirect()->route('buses.index')
+                ->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
         }
     }
 }

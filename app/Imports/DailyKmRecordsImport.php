@@ -18,8 +18,8 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, Shou
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -67,11 +67,15 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, Shou
                 }
 
                 DailyKmRecord::withoutGlobalScopes()->updateOrCreate(
-                    ['bus_id' => $bus->id, 'date' => $dateVal],
+                    [
+                        'bus_id' => $bus->id,
+                        'date' => $dateVal,
+                    ],
                     [
                         'km' => (int) $km,
-                        'garage_id' => $bus->garage_id,
-                        'company_id' => $bus->company_id,
+                        'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
+                        'garage_id' => $bus->garage_id ?? $garageId,
+                        'company_id' => $bus->company_id ?? $companyId,
                     ]
                 );
             }
@@ -91,4 +95,3 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, Shou
         return null;
     }
 }
-

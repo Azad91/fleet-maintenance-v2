@@ -13,18 +13,20 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', DashboardController::class);  // ✅ ƏLAVƏ
+
         // 1. Statistik məlumatlar (kartlar üçün)
         $totalBuses = Bus::count();
-        $activeBuses = Bus::where('is_active', true)->count(); // ✅ aktiv → is_active
+        $activeBuses = Bus::where('is_active', true)->count();
         $activeComplaints = Complaint::where('status', '!=', 'həll olundu')->count();
-        $totalWarehouseItems = Warehouse::sum('quantity'); // ✅ miqdar → quantity
+        $totalWarehouseItems = Warehouse::sum('quantity');
 
         // 2. Son 5 avtobus
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();
 
         // 3. Kritik stok (5-dən az)
-        $lowStockItems = Warehouse::where('quantity', '<', 5) // ✅ miqdar → quantity
-            ->orderBy('quantity', 'asc') // ✅ miqdar → quantity
+        $lowStockItems = Warehouse::where('quantity', '<', 5)
+            ->orderBy('quantity', 'asc')
             ->limit(10)
             ->get();
 
@@ -54,7 +56,7 @@ class DashboardController extends Controller
         // 6. Bu gün KM daxil edilməyən avtobuslar
         $today = now()->toDateString();
         $busesWithoutKmToday = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
-            $query->whereDate('date', $today); // ✅ tarix → date
+            $query->whereDate('date', $today);
         })->get();
 
         return view('dashboard', compact(

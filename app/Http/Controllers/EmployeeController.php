@@ -11,18 +11,24 @@ class EmployeeController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Employee::class);  // ✅ ƏLAVƏ
+
         $employees = Employee::orderBy('first_name')->paginate(config('settings.pagination', 30));
         return view('employees.index', compact('employees'));
     }
 
     public function create()
     {
+        $this->authorize('create', Employee::class);  // ✅ ƏLAVƏ
+
         $positions = config('settings.employee_positions');
         return view('employees.create', compact('positions'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Employee::class);  // ✅ ƏLAVƏ
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -40,12 +46,18 @@ class EmployeeController extends Controller
     public function show($id)
     {
         $employee = Employee::findOrFail($id);
+
+        $this->authorize('view', $employee);  // ✅ ƏLAVƏ
+
         return view('employees.show', compact('employee'));
     }
 
     public function edit($id)
     {
         $employee = Employee::findOrFail($id);
+
+        $this->authorize('update', $employee);  // ✅ ƏLAVƏ
+
         $positions = config('settings.employee_positions');
         return view('employees.edit', compact('employee', 'positions'));
     }
@@ -53,6 +65,8 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+
+        $this->authorize('update', $employee);  // ✅ ƏLAVƏ
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -71,17 +85,23 @@ class EmployeeController extends Controller
     public function destroy($id)
     {
         $employee = Employee::findOrFail($id);
+
+        $this->authorize('delete', $employee);  // ✅ ƏLAVƏ
+
         $employee->delete();
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla silindi!');
     }
 
     public function importForm()
     {
+        $this->authorize('import', Employee::class);  // ✅ ƏLAVƏ
         return view('employees.import');
     }
 
     public function import(Request $request)
     {
+        $this->authorize('import', Employee::class);  // ✅ ƏLAVƏ
+
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240'
         ]);

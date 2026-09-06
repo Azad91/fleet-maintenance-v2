@@ -47,7 +47,7 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes (Auth + Garage Selected)
+| Authenticated Routes (Auth + Garage Selected + Idempotent)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () {
@@ -71,7 +71,14 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== BUS ROUTES ====================
     Route::prefix('buses')->name('buses.')->group(function () {
-        Route::middleware(['auth', 'garage.selected'])->group(function () {            Route::get('/import', [BusController::class, 'importForm'])->name('import');
+        Route::middleware(['role:admin,bus,directorate'])->group(function () {
+            Route::get('/', [BusController::class, 'index'])->name('index');
+            Route::get('/search', [BusController::class, 'search'])->name('search');
+            Route::get('/{bus}', [BusController::class, 'show'])->name('show');
+        });
+
+        Route::middleware(['role:admin'])->group(function () {
+            Route::get('/import', [BusController::class, 'importForm'])->name('import');
             Route::post('/import', [BusController::class, 'import'])->name('import.store');
             Route::get('/create', [BusController::class, 'create'])->name('create');
             Route::post('/', [BusController::class, 'store'])->name('store');
@@ -79,16 +86,17 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::put('/{bus}', [BusController::class, 'update'])->name('update');
             Route::delete('/{bus}', [BusController::class, 'destroy'])->name('destroy');
         });
-
-        Route::middleware(['role:admin,bus,directorate'])->group(function () {
-            Route::get('/', [BusController::class, 'index'])->name('index');
-            Route::get('/search', [BusController::class, 'search'])->name('search');
-            Route::get('/{bus}', [BusController::class, 'show'])->name('show');
-        });
     });
 
     // ==================== COMPLAINT ROUTES ====================
     Route::prefix('complaints')->name('complaints.')->group(function () {
+        Route::middleware(['role:admin,complaint,directorate'])->group(function () {
+            Route::get('/', [ComplaintController::class, 'index'])->name('index');
+            Route::get('/search', [ComplaintController::class, 'search'])->name('search');
+            Route::get('/{complaint}/pdf', [ComplaintController::class, 'downloadPdf'])->name('pdf');
+            Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
+        });
+
         Route::middleware(['role:admin,complaint'])->group(function () {
             Route::get('/import', [ComplaintController::class, 'importForm'])->name('import');
             Route::post('/import', [ComplaintController::class, 'import'])->name('import.store');
@@ -97,13 +105,6 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::get('/{complaint}/edit', [ComplaintController::class, 'edit'])->name('edit');
             Route::put('/{complaint}', [ComplaintController::class, 'update'])->name('update');
             Route::delete('/{complaint}', [ComplaintController::class, 'destroy'])->name('destroy');
-        });
-
-        Route::middleware(['role:admin,complaint,directorate'])->group(function () {
-            Route::get('/', [ComplaintController::class, 'index'])->name('index');
-            Route::get('/search', [ComplaintController::class, 'search'])->name('search');
-            Route::get('/{complaint}/pdf', [ComplaintController::class, 'downloadPdf'])->name('pdf');
-            Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
         });
     });
 
@@ -115,7 +116,6 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:admin'])->group(function () {
         Route::get('/import', [ComplaintTypeController::class, 'importForm'])->name('import');
         Route::post('/import', [ComplaintTypeController::class, 'import'])->name('import.store');
-        // ✅ DÜZƏLİŞ: except(['show']) əlavə edildi (Problem #4)
         Route::resource('/', ComplaintTypeController::class)
             ->except(['show'])
             ->parameters(['' => 'complaint_type']);
@@ -123,6 +123,12 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== WAREHOUSE ROUTES ====================
     Route::prefix('warehouses')->name('warehouses.')->group(function () {
+        Route::middleware(['role:admin,warehouse,directorate'])->group(function () {
+            Route::get('/', [WarehouseController::class, 'index'])->name('index');
+            Route::get('/search', [WarehouseController::class, 'search'])->name('search');
+            Route::get('/{warehouse}', [WarehouseController::class, 'show'])->name('show');
+        });
+
         Route::middleware(['role:admin,warehouse'])->group(function () {
             Route::get('/import', [WarehouseController::class, 'importForm'])->name('import');
             Route::post('/import', [WarehouseController::class, 'import'])->name('import.store');
@@ -131,12 +137,6 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::get('/{warehouse}/edit', [WarehouseController::class, 'edit'])->name('edit');
             Route::put('/{warehouse}', [WarehouseController::class, 'update'])->name('update');
             Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->name('destroy');
-        });
-
-        Route::middleware(['role:admin,warehouse,directorate'])->group(function () {
-            Route::get('/', [WarehouseController::class, 'index'])->name('index');
-            Route::get('/search', [WarehouseController::class, 'search'])->name('search');
-            Route::get('/{warehouse}', [WarehouseController::class, 'show'])->name('show');
         });
     });
 
@@ -163,6 +163,11 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== BUS DAILY STATUS ROUTES ====================
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->group(function () {
+        Route::middleware(['role:admin,daily_status,directorate'])->group(function () {
+            Route::get('/', [BusDailyStatusController::class, 'index'])->name('index');
+            Route::get('/{bus_daily_status}', [BusDailyStatusController::class, 'show'])->name('show');
+        });
+
         Route::middleware(['role:admin,daily_status'])->group(function () {
             Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
             Route::post('/import', [BusDailyStatusController::class, 'import'])->name('import.store');
@@ -172,14 +177,15 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::put('/{bus_daily_status}', [BusDailyStatusController::class, 'update'])->name('update');
             Route::delete('/{bus_daily_status}', [BusDailyStatusController::class, 'destroy'])->name('destroy');
         });
-        Route::middleware(['role:admin,daily_status,directorate'])->group(function () {
-            Route::get('/', [BusDailyStatusController::class, 'index'])->name('index');
-            Route::get('/{bus_daily_status}', [BusDailyStatusController::class, 'show'])->name('show');
-        });
     });
 
     // ==================== DAILY KM RECORDS ROUTES ====================
     Route::prefix('daily-km-records')->name('daily-km-records.')->group(function () {
+        Route::middleware(['role:admin,daily_km,directorate'])->group(function () {
+            Route::get('/', [DailyKmRecordController::class, 'index'])->name('index');
+            Route::get('/{daily_km_record}', [DailyKmRecordController::class, 'show'])->name('show');
+        });
+
         Route::middleware(['role:admin,daily_km'])->group(function () {
             Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
             Route::post('/import', [DailyKmRecordController::class, 'import'])->name('import.store');
@@ -188,10 +194,6 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::get('/{daily_km_record}/edit', [DailyKmRecordController::class, 'edit'])->name('edit');
             Route::put('/{daily_km_record}', [DailyKmRecordController::class, 'update'])->name('update');
             Route::delete('/{daily_km_record}', [DailyKmRecordController::class, 'destroy'])->name('destroy');
-        });
-        Route::middleware(['role:admin,daily_km,directorate'])->group(function () {
-            Route::get('/', [DailyKmRecordController::class, 'index'])->name('index');
-            Route::get('/{daily_km_record}', [DailyKmRecordController::class, 'show'])->name('show');
         });
     });
 
@@ -210,7 +212,6 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== API ROUTES (JSON) ====================
-    // ✅ DÜZƏLİŞ: Bütün API endpoint-lərinə uyğun role middleware əlavə edildi (Problem #5)
     Route::middleware(['role:admin,complaint,bus,daily_km,daily_status,directorate'])->group(function () {
         Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
@@ -225,4 +226,5 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
         Route::get('get-motor-oil-services/{bus_id}', [GarageDataController::class, 'motorOilServices'])->name('get.motor.oil.services');
         Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
     });
-});
+
+}); // ✅ BÜTÜN QRUPLAR BAĞLANDI

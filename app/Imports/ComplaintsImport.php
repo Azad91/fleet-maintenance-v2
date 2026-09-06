@@ -20,8 +20,8 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -90,11 +90,20 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
                 'end_date' => $rowArray['end_date'] ?? $rowArray['is_bitme_tarix'] ?? null,
                 'end_time' => $rowArray['end_time'] ?? $rowArray['is_bitme_saat'] ?? null,
                 'status' => $rowArray['status'] ?? 'gözləmədə',
-                'km' => $rowArray['km'] ?? null,
+                'km' => isset($rowArray['km']) ? (int) $rowArray['km'] : null,
                 'work_done_by' => $rowArray['work_done_by'] ?? $rowArray['kim_is_gorub'] ?? null,
                 'notes' => $rowArray['notes'] ?? $rowArray['shikayet'] ?? $rowArray['qeyd'] ?? null,
             ]);
 
+            // ✅ Şikayət items-ləri əlavə et (əgər varsa)
+            if (!empty($rowArray['shikayet'])) {
+                $complaint->items()->create([
+                    'description' => $rowArray['shikayet'],
+                    'type' => $rowArray['complaint_type'] ?? $rowArray['sikayet_tipi'] ?? null,
+                ]);
+            }
+
+            // ✅ Detalları əlavə et
             if (!empty($partCode) && $usedQuantity > 0) {
                 $complaint->details()->create([
                     'shikayet_index' => 0,
@@ -121,4 +130,3 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
         ];
     }
 }
-

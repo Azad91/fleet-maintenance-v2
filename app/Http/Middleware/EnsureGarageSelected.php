@@ -10,20 +10,37 @@ class EnsureGarageSelected
 {
     public function handle(Request $request, Closure $next)
     {
-        $garageId = $request->hasSession() ? $request->session()->get('current_garage_id') : session('current_garage_id');
-        $companyId = $request->hasSession() ? $request->session()->get('current_company_id') : session('current_company_id');
+        $garageId = $request->hasSession()
+            ? $request->session()->get('current_garage_id')
+            : session('current_garage_id');
 
-        $user = $request->user();
+        $companyId = $request->hasSession()
+            ? $request->session()->get('current_company_id')
+            : session('current_company_id');
 
-        if (!$garageId || !$user) {
+        if (!$garageId) {
             return redirect()->route('garage.selection');
         }
 
-        // Super admin istənilən qaraja girə bilər, digər istifadəçilər isə qarajın aktiv üzvü olmalıdır
-        $isSuperAdmin = method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin();
-        $hasGarageAccess = $isSuperAdmin || $user->garages()->whereKey($garageId)->wherePivot('is_active', true)->exists();
+        $user = $request->user();
 
-        if (!$hasGarageAccess) {
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Super Admin istənilən qaraja girə bilər
+        if ($user->isSuperAdmin()) {
+            GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+            return $next($request);
+        }
+
+        // Digər istifadəçilər qarajın aktiv üzvü olmalıdır
+        $hasAccess = $user->garages()
+            ->whereKey($garageId)
+            ->wherePivot('is_active', true)
+            ->exists();
+
+        if (!$hasAccess) {
             if ($request->hasSession()) {
                 $request->session()->forget([
                     'current_garage_id',
@@ -33,14 +50,11 @@ class EnsureGarageSelected
                 ]);
             }
             GarageContext::clear();
-
-            return redirect()->route('garage.selection')->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
+            return redirect()->route('garage.selection')
+                ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
         }
 
-        // Qaraj ID-ni Context-ə yaz
         GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
-
         return $next($request);
     }
 }
-

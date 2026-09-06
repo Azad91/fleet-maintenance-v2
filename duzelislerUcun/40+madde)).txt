@@ -1,0 +1,84 @@
+2. 🔴 YENİ AŞKARLANAN KRİTİK PROBLEMLƏR (siyahınızda yoxdur)
+A. Import sinifləri kütləvi şəkildə SINIQDIR (AZ→EN sütun adı uyğunsuzluğu)
+
+2026_09_04_000000_rename_az_columns_to_en.php miqrasiyası warehouses.kod→code, miqdar→quantity, ad→name, qiymet→price, drivers.kodu→code, employees.ad→first_name və s. dəyişib, complaints.detallar və shikayet sütunlarını isə tamamilə silib. Amma:
+
+ComplaintsImport.php — hələ də Warehouse::where('kod', ...), $warehouse->miqdar, ->ad, və Complaint::create(['surucu_adi'=>..., 'sikayet_tipi'=>..., 'detallar'=>...]) istifadə edir. Bu sütunlar artıq mövcud deyil → hər import cəhdində SQL xətası (column "kod" does not exist) alınacaq. Complaint importu hazırda 100% sınıqdır.
+WarehouseImport.php, DriversImport.php, EmployeesImport.php, MotorOilImport.php — eyni səbəbdən köhnə (kod, ad, soyad, vezifesi, miqdar, qiymet, olcu_vahidi, detal_kodu) sütun adlarını istifadə edir → hamısı sınıqdır.
+Yalnız BusesImport.php düzgün yenilənib (code, garage_id və s. istifadə edir).
+
+Bu, planınızdakı istənilən maddədən daha təcili düzəlişdir — çünki bu, gələcəkdə yaranacaq risk deyil, hazırda istifadəçinin toxunacağı bir feature-in tam sınmasıdır.
+
+B. ShouldQueue + session() kombinasiyası — tenant-context tamamilə itir
+
+Bütün Import class-ları ShouldQueue işarələnib, .env.example-da isə QUEUE_CONNECTION=database (default) — yəni bu import-lar əsl queue worker prosesində (php artisan queue:work) icra olunur, HTTP sessiyası olmayan ayrı CLI prosesində. WarehouseImport/BusesImport içindəki session('current_garage_id') belə kontekstdə null qaytaracaq (StartSession middleware queue job-larda işləmir). Nəticə:
+
+İdxal edilən qeydlər garage_id = NULL ilə yaranacaq;
+HasGarageScope global scope-u GarageContext::has() false olduğu üçün tamamilə söndürülür → bu qeydlər scope-suz sorğularda bütün qarajlara "sızır".
+
+Bu, planınızın 11-ci maddəsində qeyd olunan "tenant isolation" probleminin sizin düşündüyünüzdən qat-qat ciddi versiyasıdır — sadəcə "yoxdur" deyil, fəal şəkildə səhv işləyir. Düzəliş: import class konstruktoruna garageId/companyId explicit ötürülməli (planınızda 11-ci maddədə düzgün göstərilib, amma kök səbəb kimi ShouldQueue+session problemini əlavə edin).
+
+C. GarageContext — statik class, Octane/queue üçün gizli minaya bənzəyir
+php
+class GarageContext {
+    protected static ?int $garageId = null;
+    ...
+}
+
+Hazırda Octane istifadə olunmur, ona görə klassik PHP-FPM/artisan serve modelində hər request təzə proses alır və bu təhlükəsizdir. Amma bu, gələcəkdə Octane/Swoole-a keçid (performans üçün çox güman ki lazım olacaq — planınızın "performans" fazasında) və ya eyni worker-də ardıcıl queue job-ların icrası zamanı cross-tenant data leak riski yaradır: bir istifadəçinin garage context-i statik dəyişəndə qalıb, sonrakı sorğuya/job-a "sıza" bilər. Tövsiyə: GarageContext-i request-scoped (məs. Laravel-in Context facade-i və ya singleton app()->instance()) et, statik property-dən uzaqlaş.
+
+Əlavə: GarageContext::set(int $garageId, int $companyId) — parametrlər int (nullable deyil) elan olunub, amma EnsureGarageSelected middleware session('current_company_id') null ola bilən halda birbaşa ötürür → bu, TypeError yaradacaq (məs. köhnə sessiyalarda current_company_id set olunmayıbsa).
+
+D. PDF-lər PUBLIC diskdə saxlanılır — planınızın 12-ci maddəsi təsdiqlənir, konkret sübutla
+php
+$path = storage_path("app/public/akt/akt-{$complaint->id}.pdf");
+
+Bu, php artisan storage:link işlədilibsə, https://sizin-domen/storage/akt/akt-5.pdf kimi heç bir autentifikasiya olmadan, sadəcə ID-ni dəyişməklə kim olursa olsun bütün akt-ları yükləyə bilər. IDOR-un ən klassik nümunəsidir. 12-ci maddə həqiqətən P0 olmalıdır, sadəcə "vacib" yox — artıq kod var və dərhal sızma yaradır.
+
+E. Policy-lər yazılıb, amma demək olar heç yerdə çağırılmır
+
+ComplaintPolicy, WarehousePolicy, DriverPolicy, EmployeePolicy, UserPolicy bütün AuthServiceProvider-də qeydiyyatdan keçib, amma kontrollerlərdə yalnız BusController $this->authorize() çağırır. Qalan bütün resurslarda icazə yoxlanışı YALNIZ route-level role:admin,complaint kimi string-based middleware ilə aparılır. Bu o deməkdir ki:
+
+Policy class-larınız praktiki olaraq ölü koddur (test yazılsa belə, real axında işə düşmür);
+İki paralel avtorizasiya mexanizmi var (route middleware + Policy) və onlar sinxron deyil — məsələn ComplaintPolicy::delete() yalnız admin icazə verir, amma route-da complaints.destroy role:admin,complaint ilə həm admin, həm də complaint roluna açıqdır → uyğunsuzluq, təhlükəsizlik baxımından qeyri-müəyyənlik.
+
+Tövsiyə: ya hər yerdə authorizeResource()/$this->authorize() işlədin (Policy-lər real təsir versin), ya da Policy class-larını silin və sadəcə middleware saxlayın — ikisini paralel saxlamaq texniki borcdur və 10-cu maddədəki inteqrasiya testinizin nəticəsini şübhəli edir.
+
+F. ComplaintPdfService — silinmiş sütuna müraciət
+php
+collect($complaint->detallar ?? [])->pluck('employee_id')...
+
+detallar sütunu artıq DB-dən silinib (complaint_details cədvəlinə keçib, details relation-u var). Bu sətir səssizcə boş collection qaytarır (Eloquent olmayan atributu null kimi görür) → PDF-lərdə işçi adları göstərilməyəcək, heç bir xəta atmadan. Düzəliş: $complaint->details relation-undan istifadə.
+
+G. Kiçik, amma toplananda əhəmiyyətli tapıntılar
+bootstrap/app.php-də trustProxies(at: '*') — bütün proxy-lərə etibar edir. Production-da bu, X-Forwarded-For spoofinqinə (IP-based rate-limit/audit bypass) yol aça bilər. Yalnız real load-balancer/CDN IP-lərini göstərin.
+withExceptions(function (Exceptions $exceptions) { // boş }) — 22-ci maddə həqiqətən sıfırdan başlayır, heç nə yoxdur.
+User::isBus()/isComplaint()/isWarehouse()/isDirectorate() metodları $this->role (qlobal user rolu) yoxlayır, amma real icazə yoxlaması hər yerdə hasGarageRole() (qaraj-səviyyəli pivot rolu) ilə gedir. Bu 4 metod heç yerdə çağırılmır — ölü kod, silinməlidir (3-cü maddə ilə birlikdə).
+3-cü maddədə planladığınız role === 'super_admin' kodu, real kodda role === 'admin' kimi yazılıb — plan sənədi ilə kod arasında termin uyğunsuzluğu var, sadəcə diqqətə çatdırım ki, plan yenilənərkən qarışıqlıq yaranmasın.
+RoleEnum yaradılıb, amma Policy/Middleware-lərdə hər yerdə "magic string" ('admin', 'complaint'...) işlədilir, enum demək olar istifadə olunmur — tip təhlükəsizliyi itirilir.
+garage_id/company_id — Company modelinin garages() münasibəti var, amma 2-ci maddədə özünüz qeyd etdiyiniz kimi, redundant company_id sahəsi demək olar hər cədvəldə təkrarlanır; bunu Fase 0-da deyil, ayrıca kiçik bir "audit spike" kimi planlaşdırmaq daha realdır (özünüz də belə yazmısınız — düzgün qiymətləndirmisiniz).
+3. Planınızın öz statusu (qısa yoxlama)
+#	Maddə	Real vəziyyət
+1	Garage membership validation	❌ Hələ yoxdur — middleware sadəcə session-a baxır, DB-də membership yoxlamır
+4	Soft-delete unique constraint	✅ Artıq var (2026_08_30_140000 miqrasiyası)
+7,8	Concurrency/Transaction (Complaint)	✅ ComplaintStockService düzgün lockForUpdate()+DB::transaction işlədir
+11	Import tenant isolation	⚠️ Planda yazdığınızdan qat-qat ciddi (bax B bəndi)
+12	PDF access control	❌ Hələ yoxdur, üstəlik public diskdə (bax D bəndi)
+15	Stock diff optimallaşdırma	❌ Hələ yoxdur — update həmişə tam restore+deduct edir
+16	Bulk audit	❌ Auditable trait yalnız tək-model event-lərini tutur
+22	Exception handling	❌ withExceptions() tam boşdur
+25	Health check	⚠️ Laravel-in default /up route-u var, amma DB/cache/queue/storage yoxlamır — planladığınız kimi genişləndirilməlidir
+4. Siyahınıza əlavə etməyi tövsiyə etdiyim yeni maddələr
+
+Fase 0-a (P0) əlavə et:
+
+0.1 — Bütün Import class-larını AZ→EN sütun adlarına uyğunlaşdır və ShouldQueue-lu job-lara garage_id/company_id-ni konstruktor vasitəsilə ötür (session-a güvənmə). Bu, mövcud 11-ci maddəni əvəz/genişləndirir.
+0.2 — ComplaintPdfService::generate()-də detallar-ı details relation-u ilə əvəz et.
+0.3 — GarageContext-i statik property-dən request-scoped konteksə keçir (Octane-a hazırlıq üçün, hətta indi istifadə olunmasa belə).
+0.4 — Policy vs route-middleware ikili sistemini vahidləşdir (hansı yanaşma seçiləcək, qərar ver və hər yerdə tətbiq et).
+
+Fase 1-ə (P1) əlavə et:
+
+bootstrap/app.php-də trustProxies()-i real IP/CIDR siyahısı ilə məhdudlaşdır.
+RoleEnum-u kodun hər yerində magic string-lərin əvəzinə tətbiq et.
+Ölü kod təmizliyi (isBus()/isComplaint() və s.).

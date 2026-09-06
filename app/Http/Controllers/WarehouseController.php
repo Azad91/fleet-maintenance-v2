@@ -13,6 +13,8 @@ class WarehouseController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Warehouse::class);  // ✅ ƏLAVƏ
+
         $search = $request->search;
 
         $warehouses = Warehouse::when($search, function ($query, $search) {
@@ -27,6 +29,8 @@ class WarehouseController extends Controller
 
     public function search(Request $request)
     {
+        $this->authorize('viewAny', Warehouse::class);  // ✅ ƏLAVƏ
+
         $search = $request->search;
 
         $warehouses = Warehouse::when($search, function ($query, $search) {
@@ -41,11 +45,14 @@ class WarehouseController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Warehouse::class);  // ✅ ƏLAVƏ
         return view('warehouses.create');
     }
 
     public function store(WarehouseStoreRequest $request)
     {
+        $this->authorize('create', Warehouse::class);  // ✅ ƏLAVƏ
+
         Warehouse::create($request->validated());
         return redirect()->route('warehouses.index')->with('success', 'Anbar məlumatı uğurla əlavə edildi!');
     }
@@ -53,18 +60,27 @@ class WarehouseController extends Controller
     public function show($id)
     {
         $warehouse = Warehouse::findOrFail($id);
+
+        $this->authorize('view', $warehouse);  // ✅ ƏLAVƏ
+
         return view('warehouses.show', compact('warehouse'));
     }
 
     public function edit($id)
     {
         $warehouse = Warehouse::findOrFail($id);
+
+        $this->authorize('update', $warehouse);  // ✅ ƏLAVƏ
+
         return view('warehouses.edit', compact('warehouse'));
     }
 
     public function update(WarehouseUpdateRequest $request, $id)
     {
         $warehouse = Warehouse::findOrFail($id);
+
+        $this->authorize('update', $warehouse);  // ✅ ƏLAVƏ
+
         $warehouse->update($request->validated());
         return redirect()->route('warehouses.index')->with('success', 'Anbar məlumatı uğurla yeniləndi!');
     }
@@ -72,17 +88,23 @@ class WarehouseController extends Controller
     public function destroy($id)
     {
         $warehouse = Warehouse::findOrFail($id);
+
+        $this->authorize('delete', $warehouse);  // ✅ ƏLAVƏ
+
         $warehouse->delete();
         return redirect()->route('warehouses.index')->with('success', 'Anbar məlumatı uğurla silindi!');
     }
 
     public function importForm()
     {
+        $this->authorize('import', Warehouse::class);  // ✅ ƏLAVƏ
         return view('warehouses.import');
     }
 
     public function import(Request $request)
     {
+        $this->authorize('import', Warehouse::class);  // ✅ ƏLAVƏ
+
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240'
         ]);

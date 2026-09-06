@@ -52,3 +52,4 @@ class IdempotencyTest extends TestCase
         $this->assertEquals('HIT-IDEMPOTENT', $response2->headers->get('X-Cache-Lookup'));
     }
 }
+

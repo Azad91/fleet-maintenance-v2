@@ -34,6 +34,7 @@
         <div class="row"><span class="label">KM:</span><span class="value">{{ $complaint->km ?? '-' }}</span></div>
 
         <!-- Şikayət Məlumatları -->
+        <div class="row"><span class="label">Şikayət:</span><span class="value">{{ $complaint->shikayet ?? '-' }}</span></div>
         <div class="row"><span class="label">Şikayət:</span><span class="value">{{ $complaint->notes ?? $complaint->shikayet ?? '-' }}</span></div>
         <div class="row"><span class="label">Tip:</span><span class="value">{{ $complaint->complaint_type ?? '-' }}</span></div>
         <div class="row"><span class="label">Status:</span><span class="value">{{ $complaint->status ?? '-' }}</span></div>

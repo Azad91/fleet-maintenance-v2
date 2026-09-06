@@ -13,6 +13,8 @@ class DailyKmRecordController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', DailyKmRecord::class);  // ✅ ƏLAVƏ
+
         $search = $request->search;
         $query = DailyKmRecord::with('bus');
 
@@ -20,8 +22,8 @@ class DailyKmRecordController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('bus', function ($bq) use ($search) {
                     $bq->where('dqn', 'ILIKE', "%{$search}%")
-                       ->orWhere('route_number', 'ILIKE', "%{$search}%"); // əvvəl: xett_no
-                })->orWhere('date', 'ILIKE', "%{$search}%"); // əvvəl: tarix
+                       ->orWhere('route_number', 'ILIKE', "%{$search}%");
+                })->orWhere('date', 'ILIKE', "%{$search}%");
             });
         }
 
@@ -31,21 +33,25 @@ class DailyKmRecordController extends Controller
 
     public function create()
     {
+        $this->authorize('create', DailyKmRecord::class);  // ✅ ƏLAVƏ
+
         $buses = Bus::orderBy('dqn')->get();
         return view('daily-km-records.create', compact('buses'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', DailyKmRecord::class);  // ✅ ƏLAVƏ
+
         $validated = $request->validate([
             'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
-            'date' => 'required|date',      // əvvəl: tarix
+            'date' => 'required|date',
             'km' => 'required|integer|min:0',
         ]);
 
         $bus = Bus::findOrFail($request->bus_id);
         $previousKm = $bus->dailyKmRecords()
-            ->whereDate('date', '<', $request->date)  // əvvəl: tarix
+            ->whereDate('date', '<', $request->date)
             ->orderByDesc('date')
             ->first();
         $nextKm = $bus->dailyKmRecords()
@@ -82,6 +88,9 @@ class DailyKmRecordController extends Controller
     public function show($id)
     {
         $record = DailyKmRecord::with('bus')->findOrFail($id);
+
+        $this->authorize('view', $record);  // ✅ ƏLAVƏ
+
         $history = DailyKmRecord::where('bus_id', $record->bus_id)
                     ->orderBy('date', 'desc')
                     ->get();
@@ -91,6 +100,9 @@ class DailyKmRecordController extends Controller
     public function edit($id)
     {
         $record = DailyKmRecord::findOrFail($id);
+
+        $this->authorize('update', $record);  // ✅ ƏLAVƏ
+
         $buses = Bus::orderBy('dqn')->get();
         return view('daily-km-records.edit', compact('record', 'buses'));
     }
@@ -98,6 +110,8 @@ class DailyKmRecordController extends Controller
     public function update(Request $request, $id)
     {
         $record = DailyKmRecord::findOrFail($id);
+
+        $this->authorize('update', $record);  // ✅ ƏLAVƏ
 
         $validated = $request->validate([
             'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
@@ -147,17 +161,24 @@ class DailyKmRecordController extends Controller
     public function destroy($id)
     {
         $record = DailyKmRecord::findOrFail($id);
+
+        $this->authorize('delete', $record);  // ✅ ƏLAVƏ
+
         $record->delete();
         return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatı silindi!');
     }
 
     public function importForm()
     {
+        $this->authorize('import', DailyKmRecord::class);  // ✅ ƏLAVƏ
+
         return view('daily-km-records.import');
     }
 
     public function import(Request $request)
     {
+        $this->authorize('import', DailyKmRecord::class);  // ✅ ƏLAVƏ
+
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
             Excel::import(

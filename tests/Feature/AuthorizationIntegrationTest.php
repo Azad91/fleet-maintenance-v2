@@ -114,3 +114,4 @@ class AuthorizationIntegrationTest extends TestCase
         $response->assertRedirect(route('garage.selection'));
     }
 }
+

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -41,19 +40,28 @@ class User extends Authenticatable
         return in_array($this->role, ['super_admin', 'admin'], true);
     }
 
+    /**
+     * İstifadəçinin rolu var?
+     */
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
     }
 
+    /**
+     * İstifadəçi hər hansı bir rola sahibdir?
+     */
     public function hasAnyRole(string|array $roles): bool
     {
         return $this->hasGarageRole($roles);
     }
 
+    /**
+     * Qaraj səviyyəsində rol yoxlanışı
+     */
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
-        // ✅ Super Admin hər zaman true qaytarır (bütün qaraja giriş)
+        // Super Admin hər zaman true qaytarır
         if ($this->isSuperAdmin()) {
             return true;
         }
@@ -72,11 +80,13 @@ class User extends Authenticatable
             ->exists();
     }
 
-    // app/Models/User.php - class User daxilinə əlavə et:
+    // ==================== RELATIONSHIPS ====================
 
     public function garages()
     {
-        return $this->belongsToMany(Garage::class, 'garage_user')->withPivot('role', 'is_active')->withTimestamps();
+        return $this->belongsToMany(Garage::class, 'garage_user')
+            ->withPivot('role', 'is_active')
+            ->withTimestamps();
     }
 
     public function currentGarage()

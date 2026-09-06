@@ -15,8 +15,8 @@ class EmployeesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Should
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -30,7 +30,7 @@ class EmployeesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Should
         $lastName = trim((string) ($row['last_name'] ?? $row['soyad'] ?? ''));
         $position = trim((string) ($row['position'] ?? $row['vezifesi'] ?? $row['vezife'] ?? 'digər'));
 
-        if (empty($firstName)) {
+        if (empty($firstName) || empty($lastName)) {
             return null;
         }
 
@@ -48,4 +48,3 @@ class EmployeesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Should
         ]);
     }
 }
-

@@ -15,8 +15,8 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -37,7 +37,7 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
 
         $existingInAnotherGarage = Bus::withoutGlobalScopes()
             ->where('dqn', $dqn)
-            ->when($garageId, fn($q) => $q->where('garage_id', '!=', $garageId))
+            ->where('garage_id', '!=', $garageId)
             ->exists();
 
         if ($existingInAnotherGarage) {
@@ -68,9 +68,9 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
             'engine_number' => $row['engine_number'] ?? $row['motor'] ?? $row['motor_no'] ?? null,
             'date' => now()->format('Y-m-d'),
             'is_active' => true,
+            'km' => isset($row['km']) ? (int) $row['km'] : null,
         ]);
 
         return $bus;
     }
 }
-

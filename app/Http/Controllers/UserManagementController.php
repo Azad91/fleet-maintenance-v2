@@ -12,6 +12,8 @@ class UserManagementController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', User::class);  // ✅ ƏLAVƏ
+
         $garageId = $this->currentGarageId();
         $users = User::query()
             ->whereHas('garages', fn ($query) => $query->whereKey($garageId))
@@ -24,11 +26,15 @@ class UserManagementController extends Controller
 
     public function create()
     {
+        $this->authorize('create', User::class);  // ✅ ƏLAVƏ
+
         return view('users.create', ['roles' => RoleEnum::labels()]);
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);  // ✅ ƏLAVƏ
+
         $data = $this->validateUser($request);
         $garageId = $this->currentGarageId();
 
@@ -49,6 +55,8 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
+        $this->authorize('update', $user);  // ✅ ƏLAVƏ
+
         $garageRole = $this->garageRoleFor($user);
 
         return view('users.edit', [
@@ -60,6 +68,8 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $this->authorize('update', $user);  // ✅ ƏLAVƏ
+
         $garageRole = $this->garageRoleFor($user);
         $data = $this->validateUser($request, $user, false);
 

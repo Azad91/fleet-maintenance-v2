@@ -19,8 +19,8 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -51,7 +51,7 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
 
             $quantity = (int) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
             $price = isset($rowArray['price']) ? (float) $rowArray['price'] : (isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : 0);
-            $name = $rowArray['name'] ?? $rowArray['ad'] ?? '';
+            $name = trim((string) ($rowArray['name'] ?? $rowArray['ad'] ?? ''));
             $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
             $category = $rowArray['category'] ?? $rowArray['kateqoriya'] ?? null;
             $minimumQuantity = $rowArray['minimum_quantity'] ?? $rowArray['minimum_miqdar'] ?? null;
@@ -98,7 +98,20 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
             'miqdar' => 'nullable|numeric|min:0',
             'price' => 'nullable|numeric|min:0',
             'qiymet' => 'nullable|numeric|min:0',
+            'unit' => 'nullable|string|max:50',
+            'olcu_vahidi' => 'nullable|string|max:50',
+        ];
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            'code.required' => 'Kod sütunu boş ola bilməz.',
+            'name.required' => 'Ad sütunu boş ola bilməz.',
+            'quantity.numeric' => 'Miqdar yalnız rəqəm ola bilər.',
+            'quantity.min' => 'Miqdar 0-dan kiçik ola bilməz.',
+            'price.numeric' => 'Qiymət yalnız rəqəm ola bilər.',
+            'price.min' => 'Qiymət 0-dan kiçik ola bilməz.',
         ];
     }
 }
-

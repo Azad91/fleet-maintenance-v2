@@ -15,8 +15,8 @@ class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQu
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= session('current_garage_id');
-        $this->companyId ??= session('current_company_id');
+        $this->garageId ??= (int) session('current_garage_id');
+        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
     }
 
     public function chunkSize(): int
@@ -38,8 +38,8 @@ class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQu
 
         return Driver::withoutGlobalScopes()->updateOrCreate(
             [
-                'garage_id' => $garageId,
                 'code' => $code,
+                'garage_id' => $garageId,
             ],
             [
                 'company_id' => $companyId,
@@ -53,4 +53,3 @@ class DriversImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQu
         );
     }
 }
-

@@ -36,9 +36,35 @@ class ComplaintPdfService
         $pdf = $this->generate($complaint);
         $relativePath = "akt/akt-{$complaint->id}.pdf";
 
-        Storage::disk('local')->put("private/{$relativePath}", $pdf->output());
+        // ✅ PRIVATE diskdə saxla
+        $fullPath = storage_path("app/private/{$relativePath}");
 
-        return storage_path("app/private/{$relativePath}");
+        if (!is_dir(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0755, true);
+        }
+
+        Storage::disk('local')->put($relativePath, $pdf->output());
+
+        // ✅ Public-dən sil (əgər varsa)
+        if (Storage::disk('public')->exists($relativePath)) {
+            Storage::disk('public')->delete($relativePath);
+        }
+
+        return $fullPath;
+    }
+
+    public function getFilePath(Complaint $complaint): string
+    {
+        return storage_path("app/private/akt/akt-{$complaint->id}.pdf");
+    }
+
+    public function exists(Complaint $complaint): bool
+    {
+        return Storage::disk('local')->exists("akt/akt-{$complaint->id}.pdf");
+    }
+
+    public function delete(Complaint $complaint): bool
+    {
+        return Storage::disk('local')->delete("akt/akt-{$complaint->id}.pdf");
     }
 }
-

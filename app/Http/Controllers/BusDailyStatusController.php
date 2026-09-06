@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusDailyStatus;
+use App\Models\Bus;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\BusDailyStatusesImport;
@@ -12,6 +13,8 @@ class BusDailyStatusController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', BusDailyStatus::class);  // ✅ ƏLAVƏ
+
         $statuses = BusDailyStatus::with('bus')
             ->orderBy('date', 'desc')
             ->paginate(config('settings.pagination', 15));
@@ -20,12 +23,16 @@ class BusDailyStatusController extends Controller
 
     public function create()
     {
-        $buses = \App\Models\Bus::orderBy('dqn')->get();
+        $this->authorize('create', BusDailyStatus::class);  // ✅ ƏLAVƏ
+
+        $buses = Bus::orderBy('dqn')->get();
         return view('bus-daily-statuses.create', compact('buses'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', BusDailyStatus::class);  // ✅ ƏLAVƏ
+
         $validated = $request->validate([
             'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
             'date' => 'required|date',
@@ -49,19 +56,27 @@ class BusDailyStatusController extends Controller
     public function show($id)
     {
         $status = BusDailyStatus::with('bus')->findOrFail($id);
+
+        $this->authorize('view', $status);  // ✅ ƏLAVƏ
+
         return view('bus-daily-statuses.show', compact('status'));
     }
 
     public function edit($id)
     {
         $status = BusDailyStatus::findOrFail($id);
-        $buses = \App\Models\Bus::orderBy('dqn')->get();
+
+        $this->authorize('update', $status);  // ✅ ƏLAVƏ
+
+        $buses = Bus::orderBy('dqn')->get();
         return view('bus-daily-statuses.edit', compact('status', 'buses'));
     }
 
     public function update(Request $request, $id)
     {
         $status = BusDailyStatus::findOrFail($id);
+
+        $this->authorize('update', $status);  // ✅ ƏLAVƏ
 
         $validated = $request->validate([
             'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
@@ -87,17 +102,24 @@ class BusDailyStatusController extends Controller
     public function destroy($id)
     {
         $status = BusDailyStatus::findOrFail($id);
+
+        $this->authorize('delete', $status);  // ✅ ƏLAVƏ
+
         $status->delete();
         return redirect()->route('bus-daily-statuses.index')->with('success', 'Status silindi!');
     }
 
     public function importForm()
     {
+        $this->authorize('import', BusDailyStatus::class);  // ✅ ƏLAVƏ
+
         return view('bus-daily-statuses.import');
     }
 
     public function import(Request $request)
     {
+        $this->authorize('import', BusDailyStatus::class);  // ✅ ƏLAVƏ
+
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
         try {
             Excel::import(

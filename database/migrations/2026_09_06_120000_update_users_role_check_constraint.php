@@ -17,3 +17,4 @@ return new class extends Migration
         DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'bus', 'complaint', 'warehouse', 'daily_km', 'daily_status', 'directorate'))");
     }
 };
+
