@@ -17,7 +17,6 @@ class BusController extends Controller
 
         $query = Bus::with('latestKmRecord');
 
-        // Axtarış
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('dqn', 'ILIKE', "%{$request->search}%")
