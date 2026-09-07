@@ -11,17 +11,13 @@ use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Row;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
     public function __construct(
-        public ?int $garageId = null,
+        public int $garageId,
         public ?int $companyId = null
-    ) {
-        // ✅ Session fallback LƏĞV EDİLDİ – yalnız constructor parametrləri istifadə olunur
-        // Bu dəyişiklik queue-safe edir
-    }
+    ) {}
 
     public function chunkSize(): int
     {
@@ -42,7 +38,7 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $garageId = $this->garageId;
         $companyId = $this->companyId;
 
-        // ✅ DƏYİŞİKLİK: withTrashed() əlavə edildi ki, soft-delete olanlar da tapsın
+        // ✅ DB::transaction BURADAN ÇIXARILDI
         $warehouse = Warehouse::withoutGlobalScopes()
             ->withTrashed()
             ->where('code', $code)
@@ -60,7 +56,6 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $notes = $rowArray['notes'] ?? $rowArray['qeyd'] ?? null;
 
         if ($warehouse) {
-            // ✅ YENİ: Əgər soft-delete olunubsa, bərpa et
             if ($warehouse->trashed()) {
                 $warehouse->restore();
             }
