@@ -34,7 +34,7 @@ class User extends Authenticatable
 
     /**
      * Super Admin yoxlanışı (bütün sistemə tam nəzarət)
-     * ✅ DƏYİŞDİRİLDİ: yalnız 'super_admin' rolu super admindir
+     * ✅ DƏYİŞİKLİK: yalnız 'super_admin' rolu üçün true qaytarır
      */
     public function isSuperAdmin(): bool
     {
