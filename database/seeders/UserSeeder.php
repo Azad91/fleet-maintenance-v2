@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Enums\RoleEnum;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,13 +11,13 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin
+        // Admin – super_admin olaraq qalır
         User::updateOrCreate(
             ['email' => 'admin@fleet.com'],
             [
                 'name' => 'Admin',
                 'password' => Hash::make('password'),
-                'role' => 'admin',
+                'role' => 'super_admin',
             ]
         );
 
@@ -50,12 +51,13 @@ class UserSeeder extends Seeder
             ]
         );
 
+        // ✅ DƏYİŞİKLİK: 'bus' əvəzinə 'viewer' (və ya 'user')
         User::updateOrCreate(
             ['email' => 'daily-km@fleet.com'],
             [
                 'name' => 'Günlük KM İşçisi',
                 'password' => Hash::make('password'),
-                'role' => 'bus',
+                'role' => RoleEnum::VIEWER->value, // 'viewer'
             ]
         );
 
@@ -64,7 +66,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Günlük Status İşçisi',
                 'password' => Hash::make('password'),
-                'role' => 'bus',
+                'role' => RoleEnum::VIEWER->value, // 'viewer'
             ]
         );
     }
