@@ -30,8 +30,8 @@
                     @forelse($recentBuses as $bus)
                         <a href="{{ route('buses.show', $bus) }}" class="fleet-list__item text-decoration-none">
                             <span class="fleet-list__icon"><i class="fas fa-bus"></i></span>
-                            <span class="fleet-list__content"><strong>{{ $bus->bus_project ?? 'Model qeyd edilməyib' }}</strong><small>{{ $bus->dqn ?? 'DQN qeyd edilməyib' }} · Xətt {{ $bus->route_number ?? '—' }}</small></span> <!-- ✅ xett_no → route_number -->
-                            <span class="fleet-status {{ $bus->is_active ? 'fleet-status--success' : 'fleet-status--muted' }}">{{ $bus->is_active ? 'Aktiv' : 'Qeyri-aktiv' }}</span><i class="fas fa-chevron-right fleet-list__arrow"></i> <!-- ✅ aktiv → is_active -->
+                            <span class="fleet-list__content"><strong>{{ $bus->bus_project ?? 'Model qeyd edilməyib' }}</strong><small>{{ $bus->dqn ?? 'DQN qeyd edilməyib' }} · Xətt {{ $bus->route_number ?? '—' }}</small></span>
+                            <span class="fleet-status {{ $bus->is_active ? 'fleet-status--success' : 'fleet-status--muted' }}">{{ $bus->is_active ? 'Aktiv' : 'Qeyri-aktiv' }}</span><i class="fas fa-chevron-right fleet-list__arrow"></i>
                         </a>
                     @empty
                         <div class="fleet-empty-state"><i class="fas fa-bus"></i><p>Hələ avtobus əlavə edilməyib.</p></div>
@@ -53,7 +53,15 @@
                 <header class="fleet-panel__header"><div><span class="fleet-eyebrow">TEXNİKİ İŞLƏR</span><h2>Son açıq kartlar</h2></div><a href="{{ route('complaints.index') }}" class="fleet-text-link">Kartlar <i class="fas fa-arrow-right"></i></a></header>
                 <div class="fleet-table-wrap"><table class="fleet-table"><thead><tr><th>Avtobus</th><th>Şikayət</th><th>Status</th><th>Tarix</th></tr></thead><tbody>
                     @forelse($recentComplaints as $complaint)
-                        <tr><td><strong>{{ optional($complaint->bus)->dqn ?? '—' }}</strong></td><td>{{ Str::limit($complaint->shikayet, 54) }}</td><td><span class="fleet-status fleet-status--warning">{{ $complaint->status }}</span></td><td>{{ optional($complaint->created_at)->format('d.m.Y') }}</td></tr>
+                        <tr>
+                            <td><strong>{{ optional($complaint->bus)->dqn ?? '—' }}</strong></td>
+                            <td>
+                                {{-- ✅ DƏYİŞİKLİK: shikayet əvəzinə items-dən götür --}}
+                                {{ Str::limit($complaint->items->first()->description ?? 'Şikayət yoxdur', 54) }}
+                            </td>
+                            <td><span class="fleet-status fleet-status--warning">{{ $complaint->status }}</span></td>
+                            <td>{{ optional($complaint->created_at)->format('d.m.Y') }}</td>
+                        </tr>
                     @empty
                         <tr><td colspan="4" class="fleet-table__empty">Açıq kart yoxdur.</td></tr>
                     @endforelse
@@ -63,7 +71,7 @@
                 <header class="fleet-panel__header"><div><span class="fleet-eyebrow">STOK XƏBƏRDARLIĞI</span><h2>Kritik qalıqlar</h2></div></header>
                 <div class="fleet-stock-list">
                     @forelse($lowStockItems as $item)
-                        <a href="{{ route('warehouses.index') }}" class="fleet-stock-item text-decoration-none"><span><strong>{{ $item->name }}</strong><small>{{ $item->code ?? 'Kod yoxdur' }}</small></span><b>{{ $item->quantity }}</b></a> <!-- ✅ ad → name, kod → code, miqdar → quantity -->
+                        <a href="{{ route('warehouses.index') }}" class="fleet-stock-item text-decoration-none"><span><strong>{{ $item->name }}</strong><small>{{ $item->code ?? 'Kod yoxdur' }}</small></span><b>{{ $item->quantity }}</b></a>
                     @empty
                         <div class="fleet-empty-state fleet-empty-state--compact"><i class="fas fa-circle-check"></i><p>Kritik stok yoxdur.</p></div>
                     @endforelse

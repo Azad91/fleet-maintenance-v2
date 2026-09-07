@@ -4,6 +4,11 @@ namespace App\Enums;
 
 enum RoleEnum: string
 {
+    // Global user rolları
+    case SUPER_ADMIN = 'super_admin';
+    case USER = 'user';
+
+    // Garage-level rollar
     case ADMIN = 'admin';
     case COMPLAINT = 'complaint';
     case WAREHOUSE = 'warehouse';
@@ -16,6 +21,8 @@ enum RoleEnum: string
     public function label(): string
     {
         return match($this) {
+            self::SUPER_ADMIN => 'Super Admin',
+            self::USER => 'İstifadəçi',
             self::ADMIN => 'Admin',
             self::COMPLAINT => 'Kartlar / Şikayətlər',
             self::WAREHOUSE => 'Anbar',
@@ -25,6 +32,25 @@ enum RoleEnum: string
             self::MANAGER => 'Menecer',
             self::VIEWER => 'Baxış',
         };
+    }
+
+    public static function globalRoles(): array
+    {
+        return [self::SUPER_ADMIN->value, self::USER->value];
+    }
+
+    public static function garageRoles(): array
+    {
+        return [
+            self::ADMIN->value,
+            self::COMPLAINT->value,
+            self::WAREHOUSE->value,
+            self::DAILY_KM->value,
+            self::DAILY_STATUS->value,
+            self::DIRECTORATE->value,
+            self::MANAGER->value,
+            self::VIEWER->value,
+        ];
     }
 
     public static function labels(): array

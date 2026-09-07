@@ -15,7 +15,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'role',              // yalnız 'super_admin' | 'user'
         'current_garage_id',
         'current_company_id',
         'last_selected_garage_at',
@@ -31,11 +31,10 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    // ==================== ROLE CHECKS ====================
+    // ==================== GLOBAL ROLE CHECKS ====================
 
     /**
-     * Super Admin yoxlanışı (bütün sistemə tam nəzarət)
-     * ✅ DƏYİŞİKLİK: yalnız 'super_admin' rolu üçün true qaytarır
+     * Super Admin yoxlanışı – yalnız users.role ilə
      */
     public function isSuperAdmin(): bool
     {
@@ -43,23 +42,18 @@ class User extends Authenticatable
     }
 
     /**
-     * İstifadəçinin rolu var?
+     * İstifadəçinin əsas rolu 'user'-dursa true
      */
-    public function hasRole(string $role): bool
+    public function isRegularUser(): bool
     {
-        return $this->role === $role;
+        return $this->role === 'user';
     }
 
-    /**
-     * İstifadəçi hər hansı bir rola sahibdir?
-     */
-    public function hasAnyRole(string|array $roles): bool
-    {
-        return $this->hasGarageRole($roles);
-    }
+    // ==================== GARAGE-LEVEL ROLE CHECKS ====================
 
     /**
-     * Qaraj səviyyəsində rol yoxlanışı
+     * Qaraj səviyyəsində rol yoxlanışı – BURASI ƏSAS ROL MEXANİZMİDİR
+     * Bütün business rollar buradan yoxlanılır
      */
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
@@ -69,9 +63,9 @@ class User extends Authenticatable
         }
 
         $roles = (array) $roles;
-        $garageId ??= \App\Models\Garage::getCurrentId();
+        $garageId ??= Garage::getCurrentId();
 
-        if (! $garageId) {
+        if (!$garageId) {
             return false;
         }
 
@@ -82,7 +76,31 @@ class User extends Authenticatable
             ->exists();
     }
 
-    // ==================== RELATIONSHIPS ====================
+    /**
+     * İstifadəçinin cari qarajda ADMIN roluna sahib olub-olmaması
+     */
+    public function isGarageAdmin(?int $garageId = null): bool
+    {
+        return $this->hasGarageRole('admin', $garageId);
+    }
+
+    /**
+     * İstifadəçinin cari qarajda MANAGER roluna sahib olub-olmaması
+     */
+    public function isGarageManager(?int $garageId = null): bool
+    {
+        return $this->hasGarageRole('manager', $garageId);
+    }
+
+    /**
+     * İstifadəçinin cari qarajda yalnız baxış (viewer) roluna sahib olub-olmaması
+     */
+    public function isViewer(?int $garageId = null): bool
+    {
+        return $this->hasGarageRole('viewer', $garageId);
+    }
+
+    // ==================== GARAGE MEMBERSHIP ====================
 
     public function garages()
     {
@@ -115,5 +133,51 @@ class User extends Authenticatable
             'current_company_id' => $garage->company_id,
             'current_company_name' => $garage->company->name,
         ]);
+    }
+
+    // ==================== HELPER ====================
+
+    /**
+     * İstifadəçinin müəyyən bir qaraja üzv olub-olmaması
+     */
+    public function hasGarageAccess(int $garageId): bool
+    {
+        return $this->garages()
+            ->whereKey($garageId)
+            ->wherePivot('is_active', true)
+            ->exists();
+    }
+
+    /**
+     * İstifadəçinin cari qarajdakı rolunu qaytarır
+     */
+    public function getCurrentGarageRole(): ?string
+    {
+        $garageId = Garage::getCurrentId();
+        if (!$garageId) {
+            return null;
+        }
+
+        $membership = $this->garages()
+            ->whereKey($garageId)
+            ->first();
+
+        return $membership?->pivot->role;
+    }
+
+    /**
+     * İstifadəçinin bütün qaraj rollarını array olaraq qaytarır
+     */
+    public function getAllGarageRoles(): array
+    {
+        return $this->garages()
+            ->wherePivot('is_active', true)
+            ->get()
+            ->map(fn($garage) => [
+                'garage_id' => $garage->id,
+                'garage_name' => $garage->name,
+                'role' => $garage->pivot->role,
+            ])
+            ->toArray();
     }
 }
