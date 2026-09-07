@@ -28,13 +28,13 @@ class RoleMiddleware
 
         $user = Auth::user();
 
-        // ✅ Dəyişiklik: yalnız super_admin hər şeyə girə bilər
+        // ✅ DƏYİŞİKLİK: yalnız super_admin hər şeyə girə bilər
         if ($user->isSuperAdmin()) {
             \App\Services\GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
             return $next($request);
         }
 
-        // İstifadəçinin bu qaraja üzvlüyünü yoxla
+        // İstifadəçi bu qaraja aid deyilsə və ya passivdirsə
         $membership = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)

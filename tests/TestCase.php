@@ -6,12 +6,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Bütün testlərdə garage.selected middleware-ni söndür
-        $this->withoutMiddleware(\App\Http\Middleware\EnsureGarageSelected::class);
-    }
-    //
+    // ✅ DƏYİŞİKLİK: withoutMiddleware SİLİNDİ
+    // İndi testlər production ilə eyni middleware pipeline-ı istifadə edəcək.
+    // Hər bir test özü üçün lazım olan middleware-i ayrıca idarə edə bilər.
 }
