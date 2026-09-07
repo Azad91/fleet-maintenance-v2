@@ -22,13 +22,13 @@ class DriversExport implements FromCollection, WithHeadings, WithMapping
     public function map($driver): array
     {
         return [
-            $driver->kodu,
-            $driver->ad,
-            $driver->soyad ?? '',
-            $driver->telefon ?? '',
-            $driver->vezifesi ?? '',
-            $driver->aktiv ? 'Aktiv' : 'Passiv',
-            $driver->qeyd ?? '',
+            $driver->code,
+            $driver->first_name,
+            $driver->last_name ?? '',
+            $driver->phone ?? '',
+            $driver->position ?? '',
+            $driver->is_active ? 'Aktiv' : 'Passiv',
+            $driver->notes ?? '',
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\GarageContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,23 +16,30 @@ class BusUpdateRequest extends FormRequest
     public function rules(): array
     {
         $busId = $this->route('bus');
+        $garageId = GarageContext::getGarageId();
 
         return [
             'bus_project' => 'nullable|string|max:255',
             'vin' => 'nullable|string|max:17',
             'uzunluq' => 'nullable|numeric|min:0',
-            'route_number' => [  // əvvəl: xett_no
+            'route_number' => [
                 'nullable',
                 'string',
                 'max:255',
                 Rule::unique('buses', 'route_number')
-                    ->where('garage_id', session('current_garage_id'))
+                    ->where('garage_id', $garageId)
                     ->whereNull('deleted_at')
                     ->ignore($busId),
             ],
-            'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')->ignore($busId)],
-            'engine_number' => 'nullable|string|max:255', // əvvəl: motor_no
-            'is_active' => 'nullable|boolean', // əvvəl: aktiv
+            'dqn' => [
+                'required',
+                Rule::unique('buses', 'dqn')
+                    ->where('garage_id', $garageId)
+                    ->whereNull('deleted_at')
+                    ->ignore($busId),
+            ],
+            'engine_number' => 'nullable|string|max:255',
+            'is_active' => 'nullable|boolean',
         ];
     }
 }

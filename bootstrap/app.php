@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'garage.selected' => EnsureGarageSelected::class,
             'idempotent' => IdempotencyMiddleware::class,
+            'api.garage' => \App\Http\Middleware\EnsureApiGarageContext::class, // ✅ ƏLAVƏ EDİLDİ
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

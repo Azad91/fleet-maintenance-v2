@@ -16,7 +16,7 @@ class MotorOilPolicy
 
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
-            RoleEnum->DIRECTORATE->value,
+            RoleEnum::DIRECTORATE->value,
             RoleEnum::WAREHOUSE->value, // ✅ Ehtiyacınıza görə bura əlavə edə bilərsiniz
         ]);
     }

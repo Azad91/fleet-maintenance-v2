@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\GarageContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,7 +15,9 @@ class ComplaintStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId = session('current_garage_id');
+        // ✅ API və Web uyğunluğu üçün Context-dən oxuyuruq
+        $garageId = GarageContext::getGarageId();
+        
         $busRule = Rule::exists('buses', 'id')->where('garage_id', $garageId);
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
@@ -31,8 +34,8 @@ class ComplaintStoreRequest extends FormRequest
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            // ✅ DƏYİŞDİRİLƏN HİSSƏ: hardcoded-dan exists-ə keçid
-            'complaint_type' => 'nullable|exists:complaint_types,name',
+            // ✅ Formadan gələn real kateqoriyalar
+            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',
@@ -56,7 +59,7 @@ class ComplaintStoreRequest extends FormRequest
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
-            'complaint_type.exists' => 'Seçilən şikayət tipi mövcud deyil.', // ✅ YENİ MESAJ
+            'complaint_type.in' => 'Seçilən şikayət tipi düzgün deyil.',
             'status.required' => 'Status seçilməlidir.',
             'status.in' => 'Yeni kart yalnız "gözləmədə" və ya "işdə" statusunda açıla bilər.',
             'km.integer' => 'KM tam ədəd olmalıdır.',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\GarageContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,8 +15,7 @@ class DailyKmUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId = session('current_garage_id');
-        $recordId = $this->route('daily_km_record');
+        $garageId = GarageContext::getGarageId();
 
         return [
             'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', $garageId)],

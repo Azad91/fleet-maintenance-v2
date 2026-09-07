@@ -101,12 +101,9 @@ class UserManagementController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
-            'role' => ['required', Rule::in(RoleEnum::values())],
+            'role' => ['required', Rule::in(RoleEnum::garageRoles())],
             'password' => $passwordRules,
             'is_active' => [$creating ? 'nullable' : 'required', 'boolean'],
-        ], [
-            'password.min' => 'Şifrə ən azı 8 simvol olmalıdır.',
-            'password.confirmed' => 'Şifrə təkrarı uyğun deyil.',
         ]);
     }
 
