@@ -17,12 +17,9 @@ use Illuminate\Validation\ValidationException;
 class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, ShouldQueue, WithChunkReading
 {
     public function __construct(
-        public ?int $garageId = null,
+        public int $garageId,
         public ?int $companyId = null
-    ) {
-        $this->garageId ??= (int) session('current_garage_id');
-        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
-    }
+    ) {}
 
     public function chunkSize(): int
     {
@@ -95,7 +92,6 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
                 'notes' => $rowArray['notes'] ?? $rowArray['shikayet'] ?? $rowArray['qeyd'] ?? null,
             ]);
 
-            // ✅ Şikayət items-ləri əlavə et (əgər varsa)
             if (!empty($rowArray['shikayet'])) {
                 $complaint->items()->create([
                     'description' => $rowArray['shikayet'],
@@ -103,7 +99,6 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
                 ]);
             }
 
-            // ✅ Detalları əlavə et
             if (!empty($partCode) && $usedQuantity > 0) {
                 $complaint->details()->create([
                     'shikayet_index' => 0,

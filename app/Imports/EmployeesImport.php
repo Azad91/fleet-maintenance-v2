@@ -12,12 +12,9 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 class EmployeesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
     public function __construct(
-        public ?int $garageId = null,
+        public int $garageId,
         public ?int $companyId = null
-    ) {
-        $this->garageId ??= (int) session('current_garage_id');
-        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
-    }
+    ) {}
 
     public function chunkSize(): int
     {

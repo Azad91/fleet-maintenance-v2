@@ -13,12 +13,9 @@ use Carbon\Carbon;
 class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading
 {
     public function __construct(
-        public ?int $garageId = null,
+        public int $garageId,
         public ?int $companyId = null
-    ) {
-        $this->garageId ??= (int) session('current_garage_id');
-        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
-    }
+    ) {}
 
     public function chunkSize(): int
     {
