@@ -34,8 +34,7 @@ class User extends Authenticatable
 
     /**
      * Super Admin yoxlanışı (bütün sistemə tam nəzarət)
-     * ✅ DƏYİŞDİRİLDİ: Yalnız 'super_admin' rolu super admindir.
-     * 'admin' rolu yalnız qaraj səviyyəsində istifadə olunur.
+     * ✅ DƏYİŞDİRİLDİ: yalnız 'super_admin' rolu super admindir
      */
     public function isSuperAdmin(): bool
     {
@@ -81,7 +80,6 @@ class User extends Authenticatable
             ->wherePivotIn('role', $roles)
             ->exists();
     }
-
 
     // ==================== RELATIONSHIPS ====================
 
