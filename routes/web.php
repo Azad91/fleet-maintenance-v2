@@ -160,7 +160,11 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== MOTOR OIL ROUTES ====================
-    Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+    Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:'.implode(',', [
+        RoleEnum::ADMIN->value,
+        RoleEnum::DIRECTORATE->value,
+        RoleEnum::WAREHOUSE->value,
+    ])])->group(function () {
         Route::get('/import', [MotorOilController::class, 'importForm'])->name('import');
         Route::post('/import', [MotorOilController::class, 'import'])->name('import.store');
         Route::get('/search', [MotorOilController::class, 'search'])->name('search');

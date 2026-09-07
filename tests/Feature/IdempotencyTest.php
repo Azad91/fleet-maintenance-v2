@@ -48,7 +48,7 @@ class IdempotencyTest extends TestCase
                 'X-Idempotency-Key' => $idempotencyKey,
             ]);
 
-        $response1->assertRedirect('/api/buses');
+        $response1->assertRedirect('/buses');
 
         // 2-ci eyni açarla göndərilən sorğu (eyni cavab keşdən qayıtmalıdır)
         $response2 = $this->actingAs($user)
@@ -57,7 +57,7 @@ class IdempotencyTest extends TestCase
                 'X-Idempotency-Key' => $idempotencyKey,
             ]);
 
-        $response2->assertRedirect('/api/buses');
+        $response2->assertRedirect('/buses');
         $this->assertSame($response1->getStatusCode(), $response2->getStatusCode());
     }
 }

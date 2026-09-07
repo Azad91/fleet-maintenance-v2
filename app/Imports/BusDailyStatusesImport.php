@@ -4,7 +4,7 @@ namespace App\Imports;
 
 use App\Models\Bus;
 use App\Models\BusDailyStatus;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;

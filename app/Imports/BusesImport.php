@@ -3,8 +3,8 @@
 namespace App\Imports;
 
 use App\Models\Bus;
+use Illuminate\Contracts\Queue\ShouldQueue; // ✅ DÜZGÜN NAMESPACE
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
