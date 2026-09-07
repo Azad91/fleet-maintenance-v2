@@ -29,17 +29,13 @@ class EnsureGarageSelected
             return redirect()->route('login');
         }
 
-        // Super Admin istənilən qaraja girə bilər
+        // ✅ Dəyişiklik: yalnız super_admin istənilən qaraja girə bilər
         if ($user->isSuperAdmin()) {
             GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
             return $next($request);
         }
 
-        // 🔍 DEBUG: İstifadəçinin qarajlarını yoxla
-        $userGarages = $user->garages()->get();
-        \Log::info('User garages:', ['user_id' => $user->id, 'garages' => $userGarages->pluck('id', 'pivot.is_active')]);
-
-        // İstifadəçi bu qaraja aid deyilsə və ya passivdirsə
+        // İstifadəçinin bu qaraja üzvlüyünü yoxla
         $membership = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
@@ -57,7 +53,6 @@ class EnsureGarageSelected
             }
             GarageContext::clear();
 
-            // ✅ Qaraj seçim səhifəsinə yönləndir
             return redirect()->route('garage.selection')
                 ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
         }
