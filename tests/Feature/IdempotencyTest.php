@@ -23,7 +23,7 @@ class IdempotencyTest extends TestCase
     {
         $company = Company::factory()->create();
         $garage = Garage::factory()->create(['company_id' => $company->id]);
-        $user = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create(['role' => 'user']);
         $user->garages()->attach($garage->id, ['role' => 'admin', 'is_active' => true]);
 
         GarageContext::set($garage->id, $company->id);
