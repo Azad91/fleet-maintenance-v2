@@ -38,7 +38,7 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $garageId = $this->garageId;
         $companyId = $this->companyId;
 
-        // ✅ DB::transaction ÇIXARILDI – chunk artıq transaction təmin edir
+        // ✅ DƏYİŞİKLİK: DB::transaction çıxarıldı
         $warehouse = Warehouse::withoutGlobalScopes()
             ->withTrashed()
             ->where('code', $code)
