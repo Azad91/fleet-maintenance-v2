@@ -50,14 +50,12 @@ class UserSeeder extends Seeder
                 'role' => 'warehouse',
             ]
         );
-
-        // ✅ DƏYİŞİKLİK: 'bus' əvəzinə 'viewer' (və ya 'user')
         User::updateOrCreate(
             ['email' => 'daily-km@fleet.com'],
             [
                 'name' => 'Günlük KM İşçisi',
                 'password' => Hash::make('password'),
-                'role' => RoleEnum::VIEWER->value, // 'viewer'
+                'role' => 'daily_km',
             ]
         );
 
@@ -66,7 +64,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Günlük Status İşçisi',
                 'password' => Hash::make('password'),
-                'role' => RoleEnum::VIEWER->value, // 'viewer'
+                'role' => 'daily_status',
             ]
         );
     }
