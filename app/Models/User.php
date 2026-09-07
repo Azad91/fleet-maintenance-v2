@@ -34,10 +34,12 @@ class User extends Authenticatable
 
     /**
      * Super Admin yoxlanışı (bütün sistemə tam nəzarət)
+     * ✅ DƏYİŞDİRİLDİ: Yalnız 'super_admin' rolu super admindir.
+     * 'admin' rolu yalnız qaraj səviyyəsində istifadə olunur.
      */
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin' || $this->role === 'admin';
+        return $this->role === 'super_admin';
     }
 
     /**
