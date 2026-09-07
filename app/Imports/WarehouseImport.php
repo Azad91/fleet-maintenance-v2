@@ -19,8 +19,8 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         public ?int $garageId = null,
         public ?int $companyId = null
     ) {
-        $this->garageId ??= (int) session('current_garage_id');
-        $this->companyId ??= session('current_company_id') ? (int) session('current_company_id') : null;
+        // ✅ Session fallback LƏĞV EDİLDİ – yalnız constructor parametrləri istifadə olunur
+        // Bu dəyişiklik queue-safe edir
     }
 
     public function chunkSize(): int
@@ -42,49 +42,54 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $garageId = $this->garageId;
         $companyId = $this->companyId;
 
-        DB::transaction(function () use ($code, $rowArray, $garageId, $companyId) {
-            $warehouse = Warehouse::withoutGlobalScopes()
-                ->where('code', $code)
-                ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
-                ->lockForUpdate()
-                ->first();
+        // ✅ DƏYİŞİKLİK: withTrashed() əlavə edildi ki, soft-delete olanlar da tapsın
+        $warehouse = Warehouse::withoutGlobalScopes()
+            ->withTrashed()
+            ->where('code', $code)
+            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->lockForUpdate()
+            ->first();
 
-            $quantity = (int) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
-            $price = isset($rowArray['price']) ? (float) $rowArray['price'] : (isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : 0);
-            $name = trim((string) ($rowArray['name'] ?? $rowArray['ad'] ?? ''));
-            $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
-            $category = $rowArray['category'] ?? $rowArray['kateqoriya'] ?? null;
-            $minimumQuantity = $rowArray['minimum_quantity'] ?? $rowArray['minimum_miqdar'] ?? null;
-            $supplier = $rowArray['supplier'] ?? $rowArray['tedarikci'] ?? null;
-            $notes = $rowArray['notes'] ?? $rowArray['qeyd'] ?? null;
+        $quantity = (int) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
+        $price = isset($rowArray['price']) ? (float) $rowArray['price'] : (isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : 0);
+        $name = trim((string) ($rowArray['name'] ?? $rowArray['ad'] ?? ''));
+        $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
+        $category = $rowArray['category'] ?? $rowArray['kateqoriya'] ?? null;
+        $minimumQuantity = $rowArray['minimum_quantity'] ?? $rowArray['minimum_miqdar'] ?? null;
+        $supplier = $rowArray['supplier'] ?? $rowArray['tedarikci'] ?? null;
+        $notes = $rowArray['notes'] ?? $rowArray['qeyd'] ?? null;
 
-            if ($warehouse) {
-                $warehouse->update([
-                    'quantity' => $quantity,
-                    'price' => $price ?: $warehouse->price,
-                    'name' => $name ?: $warehouse->name,
-                    'unit' => $unit ?? $warehouse->unit,
-                    'category' => $category ?? $warehouse->category,
-                    'minimum_quantity' => $minimumQuantity ?? $warehouse->minimum_quantity,
-                    'supplier' => $supplier ?? $warehouse->supplier,
-                    'notes' => $notes ?? $warehouse->notes,
-                ]);
-            } else {
-                Warehouse::create([
-                    'code' => $code,
-                    'name' => $name,
-                    'quantity' => $quantity,
-                    'unit' => $unit,
-                    'price' => $price,
-                    'category' => $category,
-                    'minimum_quantity' => $minimumQuantity,
-                    'supplier' => $supplier,
-                    'notes' => $notes,
-                    'garage_id' => $garageId,
-                    'company_id' => $companyId,
-                ]);
+        if ($warehouse) {
+            // ✅ YENİ: Əgər soft-delete olunubsa, bərpa et
+            if ($warehouse->trashed()) {
+                $warehouse->restore();
             }
-        });
+
+            $warehouse->update([
+                'quantity' => $quantity,
+                'price' => $price ?: $warehouse->price,
+                'name' => $name ?: $warehouse->name,
+                'unit' => $unit ?? $warehouse->unit,
+                'category' => $category ?? $warehouse->category,
+                'minimum_quantity' => $minimumQuantity ?? $warehouse->minimum_quantity,
+                'supplier' => $supplier ?? $warehouse->supplier,
+                'notes' => $notes ?? $warehouse->notes,
+            ]);
+        } else {
+            Warehouse::create([
+                'code' => $code,
+                'name' => $name,
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'price' => $price,
+                'category' => $category,
+                'minimum_quantity' => $minimumQuantity,
+                'supplier' => $supplier,
+                'notes' => $notes,
+                'garage_id' => $garageId,
+                'company_id' => $companyId,
+            ]);
+        }
     }
 
     public function rules(): array
