@@ -11,10 +11,11 @@ class MotorOilPolicy
     public function viewAny(User $user): bool
     {
         if ($user->isSuperAdmin()) return true;
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+    return $user->hasGarageRole([
+        RoleEnum::ADMIN->value,
+        RoleEnum->DIRECTORATE->value,
+        RoleEnum::WAREHOUSE->value, // ✅ Ehtiyacınıza görə bura əlavə edə bilərsiniz
+    ]);
     }
 
     public function view(User $user, MotorOilDetail $detail): bool

@@ -31,7 +31,8 @@ class ComplaintUpdateRequest extends FormRequest
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
-            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
+            // ✅ DƏYİŞDİRİLƏN HİSSƏ
+            'complaint_type' => 'nullable|exists:complaint_types,name',
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',
@@ -55,6 +56,7 @@ class ComplaintUpdateRequest extends FormRequest
             'shikayet.required' => 'Ən azı bir şikayət daxil edilməlidir.',
             'shikayet.array' => 'Şikayət array formatında olmalıdır.',
             'shikayet.*.required' => 'Hər şikayət boş ola bilməz.',
+            'complaint_type.exists' => 'Seçilən şikayət tipi mövcud deyil.', // ✅ YENİ
             'status.required' => 'Status seçilməlidir.',
             'status.in' => 'Kartı bağlamaq üçün ayrıca bağlama əməliyyatından istifadə edin.',
             'km.integer' => 'KM tam ədəd olmalıdır.',
