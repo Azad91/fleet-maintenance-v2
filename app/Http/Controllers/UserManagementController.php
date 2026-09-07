@@ -33,18 +33,20 @@ class UserManagementController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('create', User::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', User::class);
 
         $data = $this->validateUser($request);
         $garageId = $this->currentGarageId();
 
+        // ✅ DÜZƏLİŞ: users.role həmişə 'user' olur (DB constraint qorunur)
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
-            'role' => $data['role'],
+            'role' => 'user',
         ]);
 
+        // ✅ Qaraj rolu isə pivot cədvələ yazılır
         $user->garages()->attach($garageId, [
             'role' => $data['role'],
             'is_active' => true,
@@ -68,7 +70,7 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $this->authorize('update', $user);  // ✅ ƏLAVƏ
+        $this->authorize('update', $user);
 
         $garageRole = $this->garageRoleFor($user);
         $data = $this->validateUser($request, $user, false);
@@ -77,13 +79,14 @@ class UserManagementController extends Controller
             return back()->withErrors(['role' => 'Öz admin hesabınızı passiv edə və ya rolunu dəyişə bilməzsiniz.'])->withInput();
         }
 
+        // ✅ DÜZƏLİŞ: users.role-a qaraj rolu yazılmır, toxunulmur
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'],
-            'role' => $data['role'],
             ...(! empty($data['password']) ? ['password' => $data['password']] : []),
         ]);
 
+        // ✅ Qaraj rolu yalnız pivot cədvəldə yenilənir
         $user->garages()->updateExistingPivot($this->currentGarageId(), [
             'role' => $data['role'],
             'is_active' => $data['is_active'],
