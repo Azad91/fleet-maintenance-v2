@@ -8,26 +8,26 @@ use App\Services\GarageContext;
 trait HasGarageScope
 {
     protected static function bootHasGarageScope()
-    {
-        static::addGlobalScope('garage', function (Builder $builder) {
-            if (GarageContext::has()) {
-                $builder->where($builder->getModel()->getTable() . '.garage_id', GarageContext::getGarageId());
-            }
-        });
+        {
+            static::addGlobalScope('garage', function (Builder $builder) {
+                $garageId = GarageContext::getGarageId();
+                if (!$garageId) {
+                    throw new \RuntimeException('Garage context not set. Cannot execute query without garage_id.');
+                }
+                $builder->where($builder->getModel()->getTable() . '.garage_id', $garageId);
+            });
 
-        static::creating(function ($model) {
-            // Əgər kontekst varsa, avtomatik set et
-            if (GarageContext::has()) {
-                $model->garage_id ??= GarageContext::getGarageId();
-                $model->company_id ??= GarageContext::getCompanyId();
-            }
+            static::creating(function ($model) {
+                if (GarageContext::has()) {
+                    $model->garage_id ??= GarageContext::getGarageId();
+                    $model->company_id ??= GarageContext::getCompanyId();
+                }
 
-            // Əgər nə modeldə, nə də kontekstdə garage_id yoxdursa, xəta at
-            if (empty($model->garage_id)) {
-                throw new \RuntimeException('Garage context not set. Cannot create model without garage_id.');
-            }
-        });
-    }
+                if (empty($model->garage_id)) {
+                    throw new \RuntimeException('Garage context not set. Cannot create model without garage_id.');
+                }
+            });
+        }
 
     public function garage()
     {
