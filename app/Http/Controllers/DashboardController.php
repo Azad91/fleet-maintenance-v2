@@ -7,13 +7,12 @@ use App\Models\Complaint;
 use App\Models\ComplaintItem;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate; // ✅ ƏLAVƏ EDİLDİ
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // ✅ Gate ilə yoxlama
         Gate::authorize('viewAny', DashboardController::class);
 
         // 1. Statistik məlumatlar (kartlar üçün)
@@ -54,11 +53,16 @@ class DashboardController extends Controller
             ->with('complaint.bus')
             ->get();
 
-        // 6. Bu gün KM daxil edilməyən avtobuslar
+        // 6. ✅ DƏYİŞİKLİK: Yalnız SAYINI göstər, bütün avtobusları yükləmə
         $today = now()->toDateString();
+        $busesWithoutKmTodayCount = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
+            $query->whereDate('date', $today);
+        })->count();
+
+        // ✅ ƏLAVƏ: Əgər siyahı lazımdırsa, limitlə (hazırda view-da istifadə olunmur, amma təhlükəsizlik üçün saxlanılır)
         $busesWithoutKmToday = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
             $query->whereDate('date', $today);
-        })->get();
+        })->limit(10)->get();
 
         return view('dashboard', compact(
             'totalBuses',
@@ -69,7 +73,8 @@ class DashboardController extends Controller
             'lowStockItems',
             'recentComplaints',
             'recurringIssues',
-            'busesWithoutKmToday'
+            'busesWithoutKmToday',
+            'busesWithoutKmTodayCount' // ✅ YENİ DƏYİŞƏN
         ));
     }
 }

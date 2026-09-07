@@ -20,7 +20,7 @@
             <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--blue"><i class="fas fa-bus"></i></span><div><span>Ümumi avtobus</span><strong>{{ $totalBuses }}</strong><small>{{ $activeBuses }} aktiv nəqliyyat vasitəsi</small></div></article>
             <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--amber"><i class="fas fa-screwdriver-wrench"></i></span><div><span>Açıq kartlar</span><strong>{{ $activeComplaints }}</strong><small>Həll olunma gözləyən işlər</small></div></article>
             <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--violet"><i class="fas fa-boxes-stacked"></i></span><div><span>Anbar qalığı</span><strong>{{ $totalWarehouseItems }}</strong><small>Qeydiyyatda olan ümumi miqdar</small></div></article>
-            <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--rose"><i class="fas fa-gauge-high"></i></span><div><span>Bugünkü KM qeydi yoxdur</span><strong>{{ $busesWithoutKmToday->count() }}</strong><small>Yoxlanmalı avtobuslar</small></div></article>
+            <article class="fleet-kpi-card"><span class="fleet-kpi-card__icon fleet-kpi-card__icon--rose"><i class="fas fa-gauge-high"></i></span><div><span>Bugünkü KM qeydi yoxdur</span><strong>{{ $busesWithoutKmTodayCount }}</strong><small>Yoxlanmalı avtobuslar</small></div></article>
         </section>
 
         <section class="fleet-dashboard-grid">

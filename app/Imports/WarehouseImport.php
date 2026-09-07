@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Row;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows, ShouldQueue, WithChunkReading
 {
@@ -38,7 +39,7 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $garageId = $this->garageId;
         $companyId = $this->companyId;
 
-        // ✅ DƏYİŞİKLİK: DB::transaction çıxarıldı
+        // ✅ DƏYİŞİKLİK: DB::transaction LƏĞV EDİLDİ
         $warehouse = Warehouse::withoutGlobalScopes()
             ->withTrashed()
             ->where('code', $code)

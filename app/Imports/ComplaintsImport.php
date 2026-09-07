@@ -46,7 +46,7 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
             return;
         }
 
-        // ✅ DƏYİŞİKLİK: DB::transaction çıxarıldı (WithChunkReading özü transaction edir)
+        // ✅ DƏYİŞİKLİK: DB::transaction LƏĞV EDİLDİ – WithChunkReading özü idarə edir
         $partCode = trim((string) ($rowArray['part_code'] ?? $rowArray['code'] ?? $rowArray['detal_kodu'] ?? $rowArray['kodu'] ?? ''));
         $usedQuantity = (int) ($rowArray['used_quantity'] ?? $rowArray['quantity'] ?? $rowArray['islenen_miqdar'] ?? $rowArray['miqdar'] ?? 0);
         $partName = $rowArray['part_name'] ?? $rowArray['name'] ?? $rowArray['detal_adi'] ?? null;
