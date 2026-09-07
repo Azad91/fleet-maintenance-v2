@@ -12,7 +12,7 @@ class IdempotencyMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Yalnız state dəyişdirən sorğular üçün (POST, PUT, PATCH, DELETE)
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
             return $next($request);
         }
 
@@ -20,12 +20,12 @@ class IdempotencyMiddleware
             ?? $request->header('Idempotency-Key')
             ?? $request->input('_idempotency_key');
 
-        if (!$idempotencyKey) {
+        if (! $idempotencyKey) {
             return $next($request);
         }
 
         $userId = $request->user()?->id ?? 'guest';
-        $cacheKey = "idempotency:{$userId}:" . md5((string) $idempotencyKey);
+        $cacheKey = "idempotency:{$userId}:".md5((string) $idempotencyKey);
 
         $cachedResponse = Cache::get($cacheKey);
         if ($cachedResponse) {
@@ -50,4 +50,3 @@ class IdempotencyMiddleware
         return $response;
     }
 }
-

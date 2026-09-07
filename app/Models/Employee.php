@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\Auditable;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes, HasGarageScope, Auditable;
+    use Auditable, HasFactory, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
-        'first_name', 'last_name', 'position', 'is_active', 'notes', 'garage_id', 'company_id'
+        'first_name', 'last_name', 'position', 'is_active', 'notes', 'garage_id', 'company_id',
         // əvvəl: ad, soyad, vezifesi, aktiv, qeyd
     ];
 
@@ -27,16 +27,18 @@ class Employee extends Model
         if (empty($this->last_name)) {
             return $this->first_name;
         }
-        return $this->first_name . ' ' . $this->last_name;
+
+        return $this->first_name.' '.$this->last_name;
     }
 
     public function getFullNameWithPositionAttribute()
     {
         $name = $this->first_name;
-        if (!empty($this->last_name)) {
-            $name .= ' ' . $this->last_name;
+        if (! empty($this->last_name)) {
+            $name .= ' '.$this->last_name;
         }
-        return $name . ' (' . $this->position . ')';
+
+        return $name.' ('.$this->position.')';
     }
 
     // ==================== RELATIONSHIPS ====================

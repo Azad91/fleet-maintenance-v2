@@ -3,13 +3,13 @@
 namespace App\Imports;
 
 use App\Models\Bus;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading
+class BusesImport implements ShouldQueue, ToModel, WithChunkReading, WithHeadingRow
 {
     public function __construct(
         public int $garageId,
@@ -46,13 +46,13 @@ class BusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkRead
         $bus = Bus::withoutGlobalScopes()
             ->withTrashed()
             ->where('dqn', $dqn)
-            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
             ->first();
 
         if ($bus?->trashed()) {
             $bus->restore();
         }
-        $bus ??= new Bus();
+        $bus ??= new Bus;
 
         $bus->fill([
             'garage_id' => $garageId,

@@ -39,7 +39,7 @@ class ComplaintPdfService
         // ✅ PRIVATE diskdə saxla
         $fullPath = storage_path("app/private/{$relativePath}");
 
-        if (!is_dir(dirname($fullPath))) {
+        if (! is_dir(dirname($fullPath))) {
             mkdir(dirname($fullPath), 0755, true);
         }
 

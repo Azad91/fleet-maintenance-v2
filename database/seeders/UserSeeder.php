@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Garage;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -86,42 +86,42 @@ class UserSeeder extends Seeder
         // Super Admin – bütün qarajlara tam nəzarət
         foreach ($garages as $garage) {
             $superAdmin->garages()->syncWithoutDetaching([
-                $garage->id => ['role' => 'admin', 'is_active' => true]
+                $garage->id => ['role' => 'admin', 'is_active' => true],
             ]);
         }
 
         // Müdiriyyət – bütün qarajlara baxış
         foreach ($garages as $garage) {
             $directorate->garages()->syncWithoutDetaching([
-                $garage->id => ['role' => 'directorate', 'is_active' => true]
+                $garage->id => ['role' => 'directorate', 'is_active' => true],
             ]);
         }
 
         // Şikayət işçisi – yalnız ilk qaraja
         if ($garages->first()) {
             $complaint->garages()->syncWithoutDetaching([
-                $garages->first()->id => ['role' => 'complaint', 'is_active' => true]
+                $garages->first()->id => ['role' => 'complaint', 'is_active' => true],
             ]);
         }
 
         // Anbar işçisi – yalnız ilk qaraja
         if ($garages->first()) {
             $warehouse->garages()->syncWithoutDetaching([
-                $garages->first()->id => ['role' => 'warehouse', 'is_active' => true]
+                $garages->first()->id => ['role' => 'warehouse', 'is_active' => true],
             ]);
         }
 
         // Günlük KM – yalnız ilk qaraja
         if ($garages->first()) {
             $dailyKm->garages()->syncWithoutDetaching([
-                $garages->first()->id => ['role' => 'daily_km', 'is_active' => true]
+                $garages->first()->id => ['role' => 'daily_km', 'is_active' => true],
             ]);
         }
 
         // Günlük Status – yalnız ilk qaraja
         if ($garages->first()) {
             $dailyStatus->garages()->syncWithoutDetaching([
-                $garages->first()->id => ['role' => 'daily_status', 'is_active' => true]
+                $garages->first()->id => ['role' => 'daily_status', 'is_active' => true],
             ]);
         }
 

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -20,7 +20,7 @@ return new class extends Migration
 
         // Mövcud məlumatların itməməsi üçün (avtobusların qaraj ID-lərini bura kopyalayırıq)
         $buses = DB::table('buses')->get();
-        foreach($buses as $bus) {
+        foreach ($buses as $bus) {
             DB::table('bus_service_intervals')->where('bus_id', $bus->id)
                 ->update(['garage_id' => $bus->garage_id, 'company_id' => $bus->company_id]);
 

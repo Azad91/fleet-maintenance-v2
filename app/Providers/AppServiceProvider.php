@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\DashboardController;
 use App\Policies\DashboardPolicy;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,6 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         // ✅ DashboardPolicy-ni Gate ilə qeydiyyatdan keçir
-        Gate::policy(\App\Http\Controllers\DashboardController::class, DashboardPolicy::class);
+        Gate::policy(DashboardController::class, DashboardPolicy::class);
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\MotorOilImport;
 use App\Models\MotorOilDetail;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\MotorOilImport;
 
 class MotorOilController extends Controller
 {
@@ -28,9 +28,9 @@ class MotorOilController extends Controller
         $details = MotorOilDetail::when($search, function ($query, $search) {
             return $query->where('km', (int) $search);
         })
-        ->orderBy('km')
-        ->orderBy('part_name')
-        ->get();
+            ->orderBy('km')
+            ->orderBy('part_name')
+            ->get();
 
         $grouped = $details->groupBy('km');
 
@@ -49,14 +49,16 @@ class MotorOilController extends Controller
         $this->authorize('import', MotorOilDetail::class);  // ✅ ƏLAVƏ
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
             Excel::import(new MotorOilImport, $request->file('file'));
+
             return redirect()->route('motor-oil.index')->with('success', 'Motor yağ detalları uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->back()->with('error', 'Motor yağı idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }

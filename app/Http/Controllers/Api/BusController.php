@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bus;
 use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
+use App\Models\Bus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -20,8 +20,8 @@ class BusController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('dqn', 'ILIKE', "%{$request->search}%")
-                  ->orWhere('route_number', 'ILIKE', "%{$request->search}%")
-                  ->orWhere('bus_project', 'ILIKE', "%{$request->search}%");
+                    ->orWhere('route_number', 'ILIKE', "%{$request->search}%")
+                    ->orWhere('bus_project', 'ILIKE', "%{$request->search}%");
             });
         }
 
@@ -34,7 +34,7 @@ class BusController extends Controller
                 'per_page' => $buses->perPage(),
                 'current_page' => $buses->currentPage(),
                 'last_page' => $buses->lastPage(),
-            ]
+            ],
         ]);
     }
 
@@ -50,7 +50,7 @@ class BusController extends Controller
 
         return response()->json([
             'message' => 'Avtobus uğurla əlavə edildi!',
-            'data' => $bus
+            'data' => $bus,
         ], 201);
     }
 
@@ -61,7 +61,7 @@ class BusController extends Controller
         return response()->json([
             'data' => $bus->load(['latestKmRecord', 'dailyKmRecords' => function ($q) {
                 $q->orderBy('date', 'desc')->limit(10);
-            }])
+            }]),
         ]);
     }
 
@@ -74,7 +74,7 @@ class BusController extends Controller
 
         return response()->json([
             'message' => 'Avtobus uğurla yeniləndi!',
-            'data' => $bus->fresh()
+            'data' => $bus->fresh(),
         ]);
     }
 
@@ -85,7 +85,7 @@ class BusController extends Controller
         $bus->delete();
 
         return response()->json([
-            'message' => 'Avtobus uğurla silindi!'
+            'message' => 'Avtobus uğurla silindi!',
         ]);
     }
 
@@ -117,7 +117,7 @@ class BusController extends Controller
                 'per_page' => $buses->perPage(),
                 'current_page' => $buses->currentPage(),
                 'last_page' => $buses->lastPage(),
-            ]
+            ],
         ]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use App\Services\GarageContext;
+use Closure;
 use Illuminate\Http\Request;
 
 class EnsureGarageSelected
@@ -19,19 +19,20 @@ class EnsureGarageSelected
             : session('current_company_id');
 
         // Qaraj seçilməyibsə, seçim səhifəsinə yönləndir
-        if (!$garageId) {
+        if (! $garageId) {
             return redirect()->route('garage.selection');
         }
 
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
         // ✅ DƏYİŞİKLİK: yalnız super_admin istənilən qaraja girə bilər
         if ($user->isSuperAdmin()) {
             GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+
             return $next($request);
         }
 
@@ -41,7 +42,7 @@ class EnsureGarageSelected
             ->wherePivot('is_active', true)
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             // Session-ı təmizlə
             if ($request->hasSession()) {
                 $request->session()->forget([
@@ -59,6 +60,7 @@ class EnsureGarageSelected
         }
 
         GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+
         return $next($request);
     }
 }

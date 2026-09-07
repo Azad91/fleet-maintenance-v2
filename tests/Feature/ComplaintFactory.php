@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Complaint;
 use App\Models\Bus;
+use App\Models\Complaint;
 use App\Models\Garage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

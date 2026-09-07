@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DailyKmRecord;
-use App\Models\Bus;
 use App\Http\Requests\DailyKmStoreRequest;
 use App\Http\Requests\DailyKmUpdateRequest;
+use App\Imports\DailyKmRecordsImport;
+use App\Models\Bus;
+use App\Models\DailyKmRecord;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\DailyKmRecordsImport;
-use Illuminate\Validation\Rule;
 
 class DailyKmRecordController extends Controller
 {
@@ -24,12 +23,13 @@ class DailyKmRecordController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('bus', function ($bq) use ($search) {
                     $bq->where('dqn', 'ILIKE', "%{$search}%")
-                       ->orWhere('route_number', 'ILIKE', "%{$search}%");
+                        ->orWhere('route_number', 'ILIKE', "%{$search}%");
                 })->orWhere('date', 'ILIKE', "%{$search}%");
             });
         }
 
         $records = $query->orderBy('date', 'desc')->paginate(config('settings.pagination', 15));
+
         return view('daily-km-records.index', compact('records', 'search'));
     }
 
@@ -38,6 +38,7 @@ class DailyKmRecordController extends Controller
         $this->authorize('create', DailyKmRecord::class);
 
         $buses = Bus::orderBy('dqn')->get();
+
         return view('daily-km-records.create', compact('buses'));
     }
 
@@ -60,13 +61,13 @@ class DailyKmRecordController extends Controller
 
         if ($previousKm && $request->km <= $previousKm->km) {
             return back()->withErrors([
-                'km' => "KM dəyəri əvvəlki qeyddən ({$previousKm->km}) böyük olmalıdır!"
+                'km' => "KM dəyəri əvvəlki qeyddən ({$previousKm->km}) böyük olmalıdır!",
             ])->withInput();
         }
 
         if ($nextKm && $request->km >= $nextKm->km) {
             return back()->withErrors([
-                'km' => "KM dəyəri sonrakı qeyddən ({$nextKm->km}) kiçik olmalıdır!"
+                'km' => "KM dəyəri sonrakı qeyddən ({$nextKm->km}) kiçik olmalıdır!",
             ])->withInput();
         }
 
@@ -76,11 +77,12 @@ class DailyKmRecordController extends Controller
 
         if ($exists) {
             return back()->withErrors([
-                'date' => "Bu avtobus üçün {$request->date} tarixində artıq KM qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq KM qeydi var!",
             ])->withInput();
         }
 
         DailyKmRecord::create($validated);
+
         return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatı uğurla əlavə edildi!');
     }
 
@@ -91,8 +93,9 @@ class DailyKmRecordController extends Controller
         $this->authorize('view', $record);
 
         $history = DailyKmRecord::where('bus_id', $record->bus_id)
-                    ->orderBy('date', 'desc')
-                    ->get();
+            ->orderBy('date', 'desc')
+            ->get();
+
         return view('daily-km-records.show', compact('record', 'history'));
     }
 
@@ -103,6 +106,7 @@ class DailyKmRecordController extends Controller
         $this->authorize('update', $record);
 
         $buses = Bus::orderBy('dqn')->get();
+
         return view('daily-km-records.edit', compact('record', 'buses'));
     }
 
@@ -129,13 +133,13 @@ class DailyKmRecordController extends Controller
 
         if ($previousKm && $request->km <= $previousKm->km) {
             return back()->withErrors([
-                'km' => "KM dəyəri əvvəlki qeyddən ({$previousKm->km}) böyük olmalıdır!"
+                'km' => "KM dəyəri əvvəlki qeyddən ({$previousKm->km}) böyük olmalıdır!",
             ])->withInput();
         }
 
         if ($nextKm && $request->km >= $nextKm->km) {
             return back()->withErrors([
-                'km' => "KM dəyəri sonrakı qeyddən ({$nextKm->km}) kiçik olmalıdır!"
+                'km' => "KM dəyəri sonrakı qeyddən ({$nextKm->km}) kiçik olmalıdır!",
             ])->withInput();
         }
 
@@ -146,11 +150,12 @@ class DailyKmRecordController extends Controller
 
         if ($exists) {
             return back()->withErrors([
-                'date' => "Bu avtobus üçün {$request->date} tarixində artıq KM qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq KM qeydi var!",
             ])->withInput();
         }
 
         $record->update($validated);
+
         return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatı yeniləndi!');
     }
 
@@ -161,6 +166,7 @@ class DailyKmRecordController extends Controller
         $this->authorize('delete', $record);
 
         $record->delete();
+
         return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatı silindi!');
     }
 
@@ -184,9 +190,11 @@ class DailyKmRecordController extends Controller
                 ),
                 $request->file('file')
             );
+
             return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatları uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->route('daily-km-records.index')->with('error', 'KM idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }

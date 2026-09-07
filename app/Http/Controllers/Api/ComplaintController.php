@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Complaint;
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
-use App\Services\Complaint\ComplaintService;
+use App\Models\Complaint;
 use App\Services\Complaint\ComplaintPdfService;
+use App\Services\Complaint\ComplaintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -41,7 +41,7 @@ class ComplaintController extends Controller
                 'per_page' => $complaints->perPage(),
                 'current_page' => $complaints->currentPage(),
                 'last_page' => $complaints->lastPage(),
-            ]
+            ],
         ]);
     }
 
@@ -58,7 +58,7 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => 'Kart uğurla açıldı.',
-            'data' => $complaint->load(['bus', 'items', 'details'])
+            'data' => $complaint->load(['bus', 'items', 'details']),
         ], 201);
     }
 
@@ -67,7 +67,7 @@ class ComplaintController extends Controller
         Gate::authorize('view', $complaint);
 
         return response()->json([
-            'data' => $complaint->load(['bus', 'items', 'details.employee'])
+            'data' => $complaint->load(['bus', 'items', 'details.employee']),
         ]);
     }
 
@@ -85,7 +85,7 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => 'Kart uğurla yeniləndi.',
-            'data' => $complaint->fresh()->load(['bus', 'items', 'details'])
+            'data' => $complaint->fresh()->load(['bus', 'items', 'details']),
         ]);
     }
 
@@ -96,7 +96,7 @@ class ComplaintController extends Controller
         $this->complaintService->delete($complaint);
 
         return response()->json([
-            'message' => 'Kart uğurla silindi.'
+            'message' => 'Kart uğurla silindi.',
         ]);
     }
 
@@ -106,7 +106,7 @@ class ComplaintController extends Controller
 
         if ($complaint->status === 'həll olundu') {
             return response()->json([
-                'message' => 'Bu şikayət artıq bağlanıb.'
+                'message' => 'Bu şikayət artıq bağlanıb.',
             ], 422);
         }
 
@@ -121,12 +121,12 @@ class ComplaintController extends Controller
         try {
             $this->pdfService->save($complaint);
         } catch (\Exception $e) {
-            \Log::error('PDF yaradılmadı: ' . $e->getMessage());
+            \Log::error('PDF yaradılmadı: '.$e->getMessage());
         }
 
         return response()->json([
             'message' => 'Şikayət bağlandı! PDF yaradıldı.',
-            'data' => $complaint->fresh()
+            'data' => $complaint->fresh(),
         ]);
     }
 
@@ -134,13 +134,13 @@ class ComplaintController extends Controller
     {
         Gate::authorize('view', $complaint);
 
-        if (!$this->pdfService->exists($complaint)) {
+        if (! $this->pdfService->exists($complaint)) {
             $this->pdfService->save($complaint);
         }
 
         $filePath = $this->pdfService->getFilePath($complaint);
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             abort(404, 'PDF faylı tapılmadı.');
         }
 

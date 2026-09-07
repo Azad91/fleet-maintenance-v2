@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DriversExport;
+use App\Imports\DriversImport;
 use App\Models\Driver;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\DriversImport;
-use App\Exports\DriversExport;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DriverController extends Controller
 {
@@ -16,12 +16,14 @@ class DriverController extends Controller
         $this->authorize('viewAny', Driver::class);  // ✅ ƏLAVƏ
 
         $drivers = Driver::orderBy('code')->paginate(config('settings.pagination', 30));
+
         return view('drivers.index', compact('drivers'));
     }
 
     public function create()
     {
         $this->authorize('create', Driver::class);  // ✅ ƏLAVƏ
+
         return view('drivers.create');
     }
 
@@ -53,6 +55,7 @@ class DriverController extends Controller
         ]);
 
         Driver::create($validated);
+
         return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla əlavə edildi!');
     }
 
@@ -104,6 +107,7 @@ class DriverController extends Controller
         ]);
 
         $driver->update($validated);
+
         return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla yeniləndi!');
     }
 
@@ -114,12 +118,14 @@ class DriverController extends Controller
         $this->authorize('delete', $driver);  // ✅ ƏLAVƏ
 
         $driver->delete();
+
         return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla silindi!');
     }
 
     public function importForm()
     {
         $this->authorize('import', Driver::class);  // ✅ ƏLAVƏ
+
         return view('drivers.import');
     }
 
@@ -136,9 +142,11 @@ class DriverController extends Controller
                 ),
                 $request->file('file')
             );
+
             return redirect()->route('drivers.index')->with('success', 'Sürücülər uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->back()->with('error', 'Sürücü idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }
@@ -146,6 +154,7 @@ class DriverController extends Controller
     public function export()
     {
         $this->authorize('export', Driver::class);  // ✅ ƏLAVƏ
+
         return Excel::download(new DriversExport, 'suruculer.xlsx');
     }
 }

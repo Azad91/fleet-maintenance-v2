@@ -27,7 +27,7 @@ class BusUpdateRequest extends FormRequest
                 Rule::unique('buses', 'route_number')
                     ->where('garage_id', session('current_garage_id'))
                     ->whereNull('deleted_at')
-                    ->ignore($busId)
+                    ->ignore($busId),
             ],
             'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')->ignore($busId)],
             'engine_number' => 'nullable|string|max:255', // əvvəl: motor_no

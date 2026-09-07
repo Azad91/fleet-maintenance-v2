@@ -9,6 +9,7 @@ use Illuminate\View\Component;
 class StatusBadge extends Component
 {
     public $status;
+
     public $type;
 
     public function __construct($status, $type = 'complaint')

@@ -2,14 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Enums\RoleEnum;
+use App\Models\User;
 
 class DashboardPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,

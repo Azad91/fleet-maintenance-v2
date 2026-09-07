@@ -4,14 +4,14 @@ namespace App\Imports;
 
 use App\Models\ComplaintType;
 use Maatwebsite\Excel\Concerns\OnEachRow;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Row;
 
-class ComplaintTypesImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows, ShouldQueue, WithChunkReading
+class ComplaintTypesImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChunkReading, WithHeadingRow, WithValidation
 {
     public function chunkSize(): int
     {

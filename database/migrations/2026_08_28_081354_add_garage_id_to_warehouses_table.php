@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('warehouses', function (Blueprint $table) {
-            if (!Schema::hasColumn('warehouses', 'garage_id')) {
+            if (! Schema::hasColumn('warehouses', 'garage_id')) {
                 $table->foreignId('garage_id')->after('id')->nullable()->constrained('garages')->onDelete('cascade');
             }
-            if (!Schema::hasColumn('warehouses', 'company_id')) {
+            if (! Schema::hasColumn('warehouses', 'company_id')) {
                 $table->foreignId('company_id')->after('garage_id')->nullable()->constrained('companies')->onDelete('cascade');
             }
         });

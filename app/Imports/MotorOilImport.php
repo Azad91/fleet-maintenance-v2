@@ -4,12 +4,12 @@ namespace App\Imports;
 
 use App\Models\MotorOilDetail;
 use Maatwebsite\Excel\Concerns\OnEachRow;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
 
-class MotorOilImport implements OnEachRow, WithHeadingRow, ShouldQueue, WithChunkReading
+class MotorOilImport implements OnEachRow, ShouldQueue, WithChunkReading, WithHeadingRow
 {
     protected $kmColumns = [];
 
@@ -35,7 +35,7 @@ class MotorOilImport implements OnEachRow, WithHeadingRow, ShouldQueue, WithChun
         $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
         $quantity = (float) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
 
-        if (!$partCode) {
+        if (! $partCode) {
             return;
         }
 

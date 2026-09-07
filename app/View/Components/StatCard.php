@@ -9,8 +9,11 @@ use Illuminate\View\Component;
 class StatCard extends Component
 {
     public $count;
+
     public $label;
+
     public $icon;
+
     public $color;
 
     public function __construct($count, $label, $icon, $color = 'primary')

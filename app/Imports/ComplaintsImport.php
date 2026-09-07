@@ -5,15 +5,15 @@ namespace App\Imports;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\Warehouse;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\OnEachRow;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Row;
-use Illuminate\Validation\ValidationException;
 
-class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, ShouldQueue, WithChunkReading
+class ComplaintsImport implements OnEachRow, ShouldQueue, WithChunkReading, WithHeadingRow, WithValidation
 {
     public function __construct(
         public int $garageId,
@@ -39,10 +39,10 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
 
         $bus = Bus::withoutGlobalScopes()
             ->where('dqn', $busDqn)
-            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
             ->first();
 
-        if (!$bus) {
+        if (! $bus) {
             return;
         }
 
@@ -52,14 +52,14 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
         $partName = $rowArray['part_name'] ?? $rowArray['name'] ?? $rowArray['detal_adi'] ?? null;
         $stockQuantity = 0;
 
-        if (!empty($partCode) && $usedQuantity > 0) {
+        if (! empty($partCode) && $usedQuantity > 0) {
             $warehouse = Warehouse::withoutGlobalScopes()
                 ->where('code', $partCode)
-                ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+                ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
                 ->lockForUpdate()
                 ->first();
 
-            if (!$warehouse) {
+            if (! $warehouse) {
                 throw ValidationException::withMessages(['part_code' => "Detal ({$partCode}) cari qarajın anbarında tapılmadı."]);
             }
 
@@ -91,14 +91,14 @@ class ComplaintsImport implements OnEachRow, WithHeadingRow, WithValidation, Sho
             'notes' => $rowArray['notes'] ?? $rowArray['shikayet'] ?? $rowArray['qeyd'] ?? null,
         ]);
 
-        if (!empty($rowArray['shikayet'])) {
+        if (! empty($rowArray['shikayet'])) {
             $complaint->items()->create([
                 'description' => $rowArray['shikayet'],
                 'type' => $rowArray['complaint_type'] ?? $rowArray['sikayet_tipi'] ?? null,
             ]);
         }
 
-        if (!empty($partCode) && $usedQuantity > 0) {
+        if (! empty($partCode) && $usedQuantity > 0) {
             $complaint->details()->create([
                 'shikayet_index' => 0,
                 'code' => $partCode,

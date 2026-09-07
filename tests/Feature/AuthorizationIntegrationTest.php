@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Bus;
+use App\Http\Middleware\EnsureGarageSelected;
 use App\Models\Company;
-use App\Models\Complaint;
 use App\Models\Garage;
 use App\Models\User;
-use App\Models\Warehouse;
 use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,6 +15,7 @@ class AuthorizationIntegrationTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
 
     protected function setUp(): void
@@ -99,9 +98,9 @@ class AuthorizationIntegrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-public function test_inactive_garage_membership_is_denied()
+    public function test_inactive_garage_membership_is_denied()
     {
-        $this->withMiddleware([\App\Http\Middleware\EnsureGarageSelected::class]);
+        $this->withMiddleware([EnsureGarageSelected::class]);
 
         $company = Company::factory()->create();
         $garage = Garage::factory()->create(['company_id' => $company->id]);

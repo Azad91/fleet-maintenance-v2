@@ -6,7 +6,7 @@ use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\ComplaintItem;
 use App\Models\Warehouse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
@@ -39,17 +39,17 @@ class DashboardController extends Controller
 
         // 5. Təkrarlanan nasazlıqlar
         $recurringIssues = ComplaintItem::select(
-                'complaint_items.description',
-                'complaints.bus_id',
-                \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'),
-                \Illuminate\Support\Facades\DB::raw('MAX(complaints.created_at) as last_occurrence')
-            )
+            'complaint_items.description',
+            'complaints.bus_id',
+            DB::raw('COUNT(*) as total'),
+            DB::raw('MAX(complaints.created_at) as last_occurrence')
+        )
             ->join('complaints', 'complaints.id', '=', 'complaint_items.complaint_id')
             ->where('complaints.created_at', '>=', now()->subDays(30))
             ->where('complaints.status', '!=', 'həll olundu')
             ->where('complaints.garage_id', session('current_garage_id'))
             ->groupBy('complaint_items.description', 'complaints.bus_id')
-            ->having(\Illuminate\Support\Facades\DB::raw('COUNT(*)'), '>=', 2)
+            ->having(DB::raw('COUNT(*)'), '>=', 2)
             ->with('complaint.bus')
             ->get();
 

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Garage;
 use App\Enums\RoleEnum;
+use App\Models\Garage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 abstract class Controller
@@ -17,6 +17,7 @@ abstract class Controller
     {
         $data['garage_id'] = Garage::getCurrentId();
         $data['company_id'] = Garage::getCurrentCompanyId();
+
         return $data;
     }
 
@@ -28,6 +29,7 @@ abstract class Controller
         if (is_string($roles)) {
             return $roles;
         }
+
         return implode(',', $roles);
     }
 }

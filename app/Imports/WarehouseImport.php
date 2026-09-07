@@ -3,17 +3,17 @@
 namespace App\Imports;
 
 use App\Models\Warehouse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\OnEachRow;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Row;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
-class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, SkipsEmptyRows, ShouldQueue, WithChunkReading
+class WarehouseImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChunkReading, WithHeadingRow, WithValidation
 {
     public function __construct(
         public int $garageId,
@@ -33,6 +33,7 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
 
         if (empty($code)) {
             Log::warning('Boş kod sətri keçildi');
+
             return;
         }
 
@@ -43,7 +44,7 @@ class WarehouseImport implements OnEachRow, WithHeadingRow, WithValidation, Skip
         $warehouse = Warehouse::withoutGlobalScopes()
             ->withTrashed()
             ->where('code', $code)
-            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
             ->lockForUpdate()
             ->first();
 

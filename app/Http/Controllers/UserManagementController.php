@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Enums\RoleEnum;
+use App\Models\Garage;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
@@ -113,11 +113,12 @@ class UserManagementController extends Controller
     private function garageRoleFor(User $user): object
     {
         $garage = $user->garages()->whereKey($this->currentGarageId())->firstOrFail();
+
         return $garage->pivot;
     }
 
     private function currentGarageId(): int
     {
-        return (int) \App\Models\Garage::getCurrentId();
+        return (int) Garage::getCurrentId();
     }
 }

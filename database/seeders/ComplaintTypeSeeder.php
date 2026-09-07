@@ -1,5 +1,7 @@
 <?php
+
 // database/seeders/ComplaintTypeSeeder.php
+
 namespace Database\Seeders;
 
 use App\Models\ComplaintType;
@@ -19,7 +21,7 @@ class ComplaintTypeSeeder extends Seeder
             'Elektrik problemi',
             'Kondisioner nasazlığı',
             'Yağ sızması',
-            'Digər'
+            'Digər',
         ];
 
         foreach ($types as $type) {

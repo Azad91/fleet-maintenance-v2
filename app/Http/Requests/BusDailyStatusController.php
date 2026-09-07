@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BusDailyStatus;
-use App\Models\Bus;
 use App\Http\Requests\BusDailyStatusStoreRequest;
 use App\Http\Requests\BusDailyStatusUpdateRequest;
+use App\Imports\BusDailyStatusesImport;
+use App\Models\Bus;
+use App\Models\BusDailyStatus;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\BusDailyStatusesImport;
-use Illuminate\Validation\Rule;
 
 class BusDailyStatusController extends Controller
 {
@@ -20,6 +19,7 @@ class BusDailyStatusController extends Controller
         $statuses = BusDailyStatus::with('bus')
             ->orderBy('date', 'desc')
             ->paginate(config('settings.pagination', 15));
+
         return view('bus-daily-statuses.index', compact('statuses'));
     }
 
@@ -28,6 +28,7 @@ class BusDailyStatusController extends Controller
         $this->authorize('create', BusDailyStatus::class);
 
         $buses = Bus::orderBy('dqn')->get();
+
         return view('bus-daily-statuses.create', compact('buses'));
     }
 
@@ -44,11 +45,12 @@ class BusDailyStatusController extends Controller
 
         if ($exists) {
             return back()->withErrors([
-                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!",
             ])->withInput();
         }
 
         BusDailyStatus::create($validated);
+
         return redirect()->route('bus-daily-statuses.index')->with('success', 'Status uğurla əlavə edildi!');
     }
 
@@ -68,6 +70,7 @@ class BusDailyStatusController extends Controller
         $this->authorize('update', $status);
 
         $buses = Bus::orderBy('dqn')->get();
+
         return view('bus-daily-statuses.edit', compact('status', 'buses'));
     }
 
@@ -87,11 +90,12 @@ class BusDailyStatusController extends Controller
 
         if ($exists) {
             return back()->withErrors([
-                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!"
+                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!",
             ])->withInput();
         }
 
         $status->update($validated);
+
         return redirect()->route('bus-daily-statuses.index')->with('success', 'Status yeniləndi!');
     }
 
@@ -102,6 +106,7 @@ class BusDailyStatusController extends Controller
         $this->authorize('delete', $status);
 
         $status->delete();
+
         return redirect()->route('bus-daily-statuses.index')->with('success', 'Status silindi!');
     }
 
@@ -125,9 +130,11 @@ class BusDailyStatusController extends Controller
                 ),
                 $request->file('file')
             );
+
             return redirect()->route('bus-daily-statuses.index')->with('success', 'Statuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->route('bus-daily-statuses.index')->with('error', 'Status idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }

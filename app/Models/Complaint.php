@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\Traits\HasGarageScope;
 use App\Models\Traits\Auditable;
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Complaint extends Model
 {
-    use HasGarageScope, SoftDeletes, Auditable;
+    use Auditable, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
         'garage_id',
@@ -110,8 +110,9 @@ class Complaint extends Model
     public function getDurationAttribute()
     {
         if ($this->start_date && $this->end_date) {
-            return $this->start_date->diffInDays($this->end_date) . ' gün';
+            return $this->start_date->diffInDays($this->end_date).' gün';
         }
+
         return '-';
     }
 }

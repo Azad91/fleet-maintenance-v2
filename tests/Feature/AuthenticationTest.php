@@ -9,7 +9,6 @@ use Tests\TestCase;
 /**
  * @group skip
  */
-
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;

@@ -65,7 +65,7 @@ class User extends Authenticatable
         $roles = (array) $roles;
         $garageId ??= Garage::getCurrentId();
 
-        if (!$garageId) {
+        if (! $garageId) {
             return false;
         }
 
@@ -154,7 +154,7 @@ class User extends Authenticatable
     public function getCurrentGarageRole(): ?string
     {
         $garageId = Garage::getCurrentId();
-        if (!$garageId) {
+        if (! $garageId) {
             return null;
         }
 
@@ -173,7 +173,7 @@ class User extends Authenticatable
         return $this->garages()
             ->wherePivot('is_active', true)
             ->get()
-            ->map(fn($garage) => [
+            ->map(fn ($garage) => [
                 'garage_id' => $garage->id,
                 'garage_name' => $garage->name,
                 'role' => $garage->pivot->role,

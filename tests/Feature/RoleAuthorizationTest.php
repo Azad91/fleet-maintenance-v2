@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Garage;
 use App\Models\Company;
+use App\Models\Garage;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,6 +13,7 @@ class RoleAuthorizationTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
 
     protected function setUp(): void
@@ -22,14 +23,14 @@ class RoleAuthorizationTest extends TestCase
         $this->company = Company::create([
             'name' => 'Test Şirkəti',
             'slug' => 'test-sirketi',
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         $this->garage = Garage::create([
             'company_id' => $this->company->id,
             'name' => 'Test Qarajı',
             'code' => 'TG-001',
-            'is_active' => true
+            'is_active' => true,
         ]);
     }
 
@@ -56,7 +57,7 @@ class RoleAuthorizationTest extends TestCase
         // Düzəliş 2: Sessiyaya company_id də əlavə edirik
         session([
             'current_garage_id' => $this->garage->id,
-            'current_company_id' => $this->company->id
+            'current_company_id' => $this->company->id,
         ]);
 
         $response = $this->actingAs($user)->get(route('complaints.create'));
@@ -72,7 +73,7 @@ class RoleAuthorizationTest extends TestCase
         // Düzəliş 2: Sessiyaya company_id də əlavə edirik
         session([
             'current_garage_id' => $this->garage->id,
-            'current_company_id' => $this->company->id
+            'current_company_id' => $this->company->id,
         ]);
 
         $response = $this->actingAs($user)->get(route('complaints.create'));

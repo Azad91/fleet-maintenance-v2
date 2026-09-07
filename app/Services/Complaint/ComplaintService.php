@@ -16,7 +16,7 @@ class ComplaintService
 
     public function create(array $data, ?array $detallar = null, array $shikayet = []): Complaint
     {
-        if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
+        if (($data['yer'] ?? null) === 'yol' && ! empty($data['driver_id'])) {
             $driver = Driver::active()->findOrFail($data['driver_id']);
             $data['driver_name'] = $driver->full_name;
         } else {
@@ -28,13 +28,13 @@ class ComplaintService
 
         return DB::transaction(function () use ($data, $detallar, $shikayet) {
             $processedDetails = [];
-            if (!empty($detallar) && is_array($detallar)) {
+            if (! empty($detallar) && is_array($detallar)) {
                 $processedDetails = $this->stockService->deductStock($detallar);
             }
 
             $complaint = Complaint::create($data);
 
-            if (!empty($processedDetails)) {
+            if (! empty($processedDetails)) {
                 $complaint->details()->createMany($processedDetails);
             }
 
@@ -45,48 +45,48 @@ class ComplaintService
     }
 
     public function update(Complaint $complaint, array $data, ?array $detallar = null, array $shikayet = []): Complaint
-{
-    if (isset($data['status'])) {
-        $this->transitionService->validateTransition($complaint, $data['status']);
-    }
+    {
+        if (isset($data['status'])) {
+            $this->transitionService->validateTransition($complaint, $data['status']);
+        }
 
-    if (($data['yer'] ?? null) === 'yol' && !empty($data['driver_id'])) {
-        $driver = Driver::active()->findOrFail($data['driver_id']);
-        $data['driver_name'] = $driver->full_name;
-    } else {
-        $data['driver_id'] = null;
-        $data['driver_name'] = null;
-    }
+        if (($data['yer'] ?? null) === 'yol' && ! empty($data['driver_id'])) {
+            $driver = Driver::active()->findOrFail($data['driver_id']);
+            $data['driver_name'] = $driver->full_name;
+        } else {
+            $data['driver_id'] = null;
+            $data['driver_name'] = null;
+        }
 
-    return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-        $oldDetails = $complaint->details->toArray();
-        $processedDetails = [];
+        return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
+            $oldDetails = $complaint->details->toArray();
+            $processedDetails = [];
 
-        // Detallar dəyişibsə
-        if ($detallar !== null && is_array($detallar)) {
-            // syncStockDiff həm restore, həm deduct edir
-            $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar);
+            // Detallar dəyişibsə
+            if ($detallar !== null && is_array($detallar)) {
+                // syncStockDiff həm restore, həm deduct edir
+                $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar);
 
-            // Köhnə detalları cədvəldən sil
-            if (!empty($oldDetails)) {
-                $complaint->details()->delete();
+                // Köhnə detalları cədvəldən sil
+                if (! empty($oldDetails)) {
+                    $complaint->details()->delete();
+                }
             }
-        }
 
-        // Complaint-i yenilə
-        $complaint->update($data);
+            // Complaint-i yenilə
+            $complaint->update($data);
 
-        // Yeni detalları əlavə et
-        if (!empty($processedDetails)) {
-            $complaint->details()->createMany($processedDetails);
-        }
+            // Yeni detalları əlavə et
+            if (! empty($processedDetails)) {
+                $complaint->details()->createMany($processedDetails);
+            }
 
-        // Şikayətləri sinxronlaşdır
-        $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
+            // Şikayətləri sinxronlaşdır
+            $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
-        return $complaint;
-    });
-}
+            return $complaint;
+        });
+    }
 
     public function close(Complaint $complaint, array $data): Complaint
     {

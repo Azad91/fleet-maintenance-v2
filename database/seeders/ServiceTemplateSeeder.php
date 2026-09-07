@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\ServiceTemplate;
 use App\Models\MotorOilDetail;
+use App\Models\ServiceTemplate;
 use Illuminate\Database\Seeder;
 
 class ServiceTemplateSeeder extends Seeder
@@ -18,9 +18,9 @@ class ServiceTemplateSeeder extends Seeder
             $details = MotorOilDetail::where('km', $km)->get()->map(function ($item) {
                 return [
                     'kodu' => $item->detal_kodu,
-                    'adi'  => $item->detal_adi,
+                    'adi' => $item->detal_adi,
                     'miqdar' => $item->miqdar,
-                    'say'    => $item->say,
+                    'say' => $item->say,
                 ];
             })->toArray();
 

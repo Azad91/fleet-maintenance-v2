@@ -14,7 +14,7 @@ class WarehouseFactory extends Factory
         return [
             'garage_id' => 1,
             'company_id' => 1,
-            'code' => 'W-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'code' => 'W-'.$this->faker->unique()->numberBetween(1000, 9999),
             'name' => $this->faker->word(),
             'quantity' => 50,
             'unit' => 'ədəd',

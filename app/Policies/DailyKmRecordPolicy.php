@@ -2,15 +2,18 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use App\Models\DailyKmRecord;
 use App\Enums\RoleEnum;
+use App\Models\DailyKmRecord;
+use App\Models\User;
 
 class DailyKmRecordPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
@@ -20,7 +23,10 @@ class DailyKmRecordPolicy
 
     public function view(User $user, DailyKmRecord $record): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
@@ -30,7 +36,10 @@ class DailyKmRecordPolicy
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
@@ -39,7 +48,10 @@ class DailyKmRecordPolicy
 
     public function update(User $user, DailyKmRecord $record): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
@@ -48,7 +60,10 @@ class DailyKmRecordPolicy
 
     public function delete(User $user, DailyKmRecord $record): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
@@ -57,7 +72,10 @@ class DailyKmRecordPolicy
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,

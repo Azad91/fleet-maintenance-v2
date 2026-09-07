@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Garage;
 use App\Models\Company;
+use App\Models\Garage;
+use App\Models\User;
 use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,7 +14,9 @@ class ProfileTest extends TestCase
     use RefreshDatabase;
 
     protected Garage $garage;
+
     protected Company $company;
+
     protected User $user;
 
     protected function setUp(): void

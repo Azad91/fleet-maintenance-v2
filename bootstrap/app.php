@@ -1,12 +1,17 @@
 <?php
 
-use App\Http\Middleware\EnsureGarageSelected;
-use App\Http\Middleware\RoleMiddleware;
 use App\Exceptions\GarageAccessDeniedException;
 use App\Exceptions\StockInsufficientException;
+use App\Http\Middleware\EnsureGarageSelected;
+use App\Http\Middleware\IdempotencyMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'garage.selected' => EnsureGarageSelected::class,
-            'idempotent' => \App\Http\Middleware\IdempotencyMiddleware::class,
+            'idempotent' => IdempotencyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -30,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
             }
+
             return redirect()->route('garage.selection')->with('error', $e->getMessage());
         });
 
@@ -38,47 +44,52 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
             }
+
             return back()->with('error', $e->getMessage())->withInput();
         });
 
         // ✅ ValidationException - form xətaları (default)
-        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
+        $exceptions->render(function (ValidationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Validation error',
                     'errors' => $e->errors(),
                 ], 422);
             }
+
             // ✅ DÜZƏLİŞ: $e->errorBag parametri əlavə edildi ki, named bag-lər itməsin
             return redirect()->back()->withErrors($e->errors(), $e->errorBag)->withInput();
         });
 
         // ✅ ModelNotFoundException - 404
-        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) {
+        $exceptions->render(function (ModelNotFoundException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Resource not found'], 404);
             }
+
             return abort(404);
         });
 
         // ✅ AuthenticationException - 401
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+        $exceptions->render(function (AuthenticationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
+
             return redirect()->route('login');
         });
 
         // ✅ AuthorizationException - 403
-        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, $request) {
+        $exceptions->render(function (AuthorizationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
             }
+
             return abort(403, $e->getMessage());
         });
 
         // ✅ Ümumi exception - 500 (yalnız JSON üçün)
-        $exceptions->render(function (\Throwable $e, $request) {
+        $exceptions->render(function (Throwable $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Server error',
@@ -89,7 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // ✅ Exception reporting (Sentry və s. üçün)
-        $exceptions->reportable(function (\Throwable $e) {
+        $exceptions->reportable(function (Throwable $e) {
             // Log::error($e->getMessage(), ['exception' => $e]);
         });
     })->create();

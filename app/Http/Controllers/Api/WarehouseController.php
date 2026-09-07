@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Warehouse;
 use App\Http\Requests\WarehouseStoreRequest;
 use App\Http\Requests\WarehouseUpdateRequest;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -20,7 +20,7 @@ class WarehouseController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('code', 'ILIKE', "%{$request->search}%")
-                  ->orWhere('name', 'ILIKE', "%{$request->search}%");
+                    ->orWhere('name', 'ILIKE', "%{$request->search}%");
             });
         }
 
@@ -34,7 +34,7 @@ class WarehouseController extends Controller
                 'per_page' => $warehouses->perPage(),
                 'current_page' => $warehouses->currentPage(),
                 'last_page' => $warehouses->lastPage(),
-            ]
+            ],
         ]);
     }
 
@@ -49,7 +49,7 @@ class WarehouseController extends Controller
 
         return response()->json([
             'message' => 'Anbar məlumatı uğurla əlavə edildi!',
-            'data' => $warehouse
+            'data' => $warehouse,
         ], 201);
     }
 
@@ -68,7 +68,7 @@ class WarehouseController extends Controller
 
         return response()->json([
             'message' => 'Anbar məlumatı uğurla yeniləndi!',
-            'data' => $warehouse->fresh()
+            'data' => $warehouse->fresh(),
         ]);
     }
 
@@ -79,7 +79,7 @@ class WarehouseController extends Controller
         $warehouse->delete();
 
         return response()->json([
-            'message' => 'Anbar məlumatı uğurla silindi!'
+            'message' => 'Anbar məlumatı uğurla silindi!',
         ]);
     }
 
@@ -105,7 +105,7 @@ class WarehouseController extends Controller
                 'per_page' => $warehouses->perPage(),
                 'current_page' => $warehouses->currentPage(),
                 'last_page' => $warehouses->lastPage(),
-            ]
+            ],
         ]);
     }
 }

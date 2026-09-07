@@ -2,15 +2,18 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use App\Models\Complaint;
 use App\Enums\RoleEnum;
+use App\Models\Complaint;
+use App\Models\User;
 
 class ComplaintPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
@@ -20,7 +23,10 @@ class ComplaintPolicy
 
     public function view(User $user, Complaint $complaint): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
@@ -30,7 +36,10 @@ class ComplaintPolicy
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
@@ -39,7 +48,10 @@ class ComplaintPolicy
 
     public function update(User $user, ?Complaint $complaint = null): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
@@ -48,13 +60,19 @@ class ComplaintPolicy
 
     public function delete(User $user, Complaint $complaint): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function close(User $user, Complaint $complaint): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
@@ -63,7 +81,10 @@ class ComplaintPolicy
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,

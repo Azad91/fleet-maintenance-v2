@@ -26,6 +26,7 @@ class ArchiveAuditLogs extends Command
 
         if ($count === 0) {
             $this->info('✅ Arxivlənəcək heç bir qeyd yoxdur.');
+
             return Command::SUCCESS;
         }
 
@@ -33,6 +34,7 @@ class ArchiveAuditLogs extends Command
 
         if ($dryRun) {
             $this->info('✅ Dry-run rejimi: heç nə silinmədi.');
+
             return Command::SUCCESS;
         }
 
@@ -41,15 +43,15 @@ class ArchiveAuditLogs extends Command
 
         DB::transaction(function () use ($cutoffDate) {
             // 1. Köhnə qeydləri arxiv cədvəlinə köçür
-            DB::statement("
+            DB::statement('
                 INSERT INTO audit_log_archive (user_id, garage_id, company_id, auditable_type, auditable_id, event, old_values, new_values, created_at, archived_at)
                 SELECT user_id, garage_id, company_id, auditable_type, auditable_id, event, old_values, new_values, created_at, NOW()
                 FROM audit_logs
                 WHERE created_at < ?
-            ", [$cutoffDate]);
+            ', [$cutoffDate]);
 
             // 2. Köhnə qeydləri sil
-            DB::statement("DELETE FROM audit_logs WHERE created_at < ?", [$cutoffDate]);
+            DB::statement('DELETE FROM audit_logs WHERE created_at < ?', [$cutoffDate]);
         });
 
         $this->info('✅ Arxivləşdirmə tamamlandı!');

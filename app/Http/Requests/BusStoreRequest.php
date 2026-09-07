@@ -24,7 +24,7 @@ class BusStoreRequest extends FormRequest
                 'max:255',
                 Rule::unique('buses', 'route_number')
                     ->where('garage_id', session('current_garage_id'))
-                    ->whereNull('deleted_at')
+                    ->whereNull('deleted_at'),
             ],
             'dqn' => ['required', Rule::unique('buses', 'dqn')->where('garage_id', session('current_garage_id'))->whereNull('deleted_at')],
             'engine_number' => 'nullable|string|max:255', // əvvəl: motor_no

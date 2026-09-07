@@ -2,15 +2,18 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use App\Models\BusDailyStatus;
 use App\Enums\RoleEnum;
+use App\Models\BusDailyStatus;
+use App\Models\User;
 
 class BusDailyStatusPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
@@ -20,7 +23,10 @@ class BusDailyStatusPolicy
 
     public function view(User $user, BusDailyStatus $status): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
@@ -30,7 +36,10 @@ class BusDailyStatusPolicy
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
@@ -39,7 +48,10 @@ class BusDailyStatusPolicy
 
     public function update(User $user, BusDailyStatus $status): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
@@ -48,7 +60,10 @@ class BusDailyStatusPolicy
 
     public function delete(User $user, BusDailyStatus $status): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
@@ -57,7 +72,10 @@ class BusDailyStatusPolicy
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) return true;
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,

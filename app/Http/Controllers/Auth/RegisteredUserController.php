@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\RoleEnum;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Enums\RoleEnum; // ✅ ƏLAVƏ
+use App\Models\User; // ✅ ƏLAVƏ
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

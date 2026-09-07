@@ -13,6 +13,7 @@ class CompanyFactory extends Factory
     public function definition(): array
     {
         $name = $this->faker->company();
+
         return [
             'name' => $name,
             'slug' => Str::slug($name),

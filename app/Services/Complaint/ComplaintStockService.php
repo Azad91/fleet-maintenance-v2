@@ -21,7 +21,7 @@ class ComplaintStockService
 
             if (! $warehouse) {
                 throw ValidationException::withMessages([
-                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı."
+                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı.",
                 ]);
             }
 
@@ -29,7 +29,7 @@ class ComplaintStockService
 
             if ($warehouse->quantity < $usedQuantity) {
                 throw ValidationException::withMessages([
-                    'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->quantity})"
+                    'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->quantity})",
                 ]);
             }
 
@@ -77,7 +77,7 @@ class ComplaintStockService
         foreach ($oldDetails as $detail) {
             $code = $detail['code'] ?? $detail['kodu'] ?? null;
             $qty = (int) ($detail['used_quantity'] ?? $detail['islenen_miqdar'] ?? 0);
-            if (!empty($code) && $qty > 0) {
+            if (! empty($code) && $qty > 0) {
                 $oldUsage[$code] = ($oldUsage[$code] ?? 0) + $qty;
             }
         }
@@ -86,7 +86,7 @@ class ComplaintStockService
         foreach ($newDetails as $detail) {
             $code = $detail['code'] ?? $detail['kodu'] ?? null;
             $qty = (int) ($detail['used_quantity'] ?? $detail['islenen_miqdar'] ?? 0);
-            if (!empty($code) && $qty > 0) {
+            if (! empty($code) && $qty > 0) {
                 $newUsage[$code] = ($newUsage[$code] ?? 0) + $qty;
             }
         }
@@ -101,16 +101,16 @@ class ComplaintStockService
             $diff = $newQty - $oldQty; // Müsbət = əlavə silinməli, Mənfi = geri qaytarılmalı
 
             $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
-            if (!$warehouse && $diff > 0) {
+            if (! $warehouse && $diff > 0) {
                 throw ValidationException::withMessages([
-                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı."
+                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı.",
                 ]);
             }
 
             if ($warehouse) {
                 if ($diff > 0 && $warehouse->quantity < $diff) {
                     throw ValidationException::withMessages([
-                        'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb olunan əlavə: {$diff}, Mövcud: {$warehouse->quantity})"
+                        'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb olunan əlavə: {$diff}, Mövcud: {$warehouse->quantity})",
                     ]);
                 }
 
@@ -149,4 +149,3 @@ class ComplaintStockService
         return $processed;
     }
 }
-

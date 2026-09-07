@@ -7,7 +7,7 @@ use Exception;
 class StockInsufficientException extends Exception
 {
     public function __construct(
-        string $message = "Anbarda kifayət qədər detal yoxdur.",
+        string $message = 'Anbarda kifayət qədər detal yoxdur.',
         int $code = 422,
         ?\Throwable $previous = null
     ) {

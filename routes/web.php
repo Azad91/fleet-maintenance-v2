@@ -1,22 +1,22 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
+use App\Enums\RoleEnum;
 use App\Http\Controllers\BusController;
+use App\Http\Controllers\BusDailyStatusController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ComplaintTypeController;
+use App\Http\Controllers\DailyKmRecordController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DriverController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\GarageDataController;
+use App\Http\Controllers\GarageSelectionController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\MotorOilController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\BusDailyStatusController;
-use App\Http\Controllers\DailyKmRecordController;
-use App\Http\Controllers\DriverController;
-use App\Http\Controllers\GarageSelectionController;
-use App\Http\Controllers\GarageDataController;
-use App\Http\Controllers\UserManagementController;
-use Illuminate\Http\Request;
-use App\Enums\RoleEnum;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +27,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/health', [\App\Http\Controllers\HealthController::class, 'check'])->name('health.check');
+Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 
 // ✅ DASHBOARD ROUTE - role middleware OLMADAN
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -64,7 +64,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // ==================== USER MANAGEMENT (ADMIN ONLY) ====================
-    Route::prefix('users')->name('users.')->middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+    Route::prefix('users')->name('users.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
         Route::get('/create', [UserManagementController::class, 'create'])->name('create');
         Route::post('/', [UserManagementController::class, 'store'])->name('store');
@@ -74,7 +74,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== BUS ROUTES (Statikler əvvəldə) ====================
     Route::prefix('buses')->name('buses.')->group(function () {
-        Route::middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+        Route::middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
             Route::get('/import', [BusController::class, 'importForm'])->name('import');
             Route::post('/import', [BusController::class, 'import'])->name('import.store');
             Route::get('/create', [BusController::class, 'create'])->name('create');
@@ -87,7 +87,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::delete('/{bus}', [BusController::class, 'destroy'])->name('destroy');
         });
 
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::DIRECTORATE->value,
         ])])->group(function () {
@@ -99,7 +99,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== COMPLAINT ROUTES (Statikler əvvəldə) ====================
     Route::prefix('complaints')->name('complaints.')->group(function () {
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
         ])])->group(function () {
@@ -113,7 +113,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::post('/{complaint}/close', [ComplaintController::class, 'close'])->name('close');
         });
 
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
             RoleEnum::DIRECTORATE->value,
@@ -125,7 +125,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== COMPLAINT TYPES ====================
-    Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+    Route::prefix('complaint-types')->name('complaint-types.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [ComplaintTypeController::class, 'importForm'])->name('import');
         Route::post('/import', [ComplaintTypeController::class, 'import'])->name('import.store');
         Route::resource('/', ComplaintTypeController::class)
@@ -135,7 +135,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== WAREHOUSE ROUTES (Statikler əvvəldə) ====================
     Route::prefix('warehouses')->name('warehouses.')->group(function () {
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::WAREHOUSE->value,
         ])])->group(function () {
@@ -148,7 +148,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->name('destroy');
         });
 
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::WAREHOUSE->value,
             RoleEnum::DIRECTORATE->value,
@@ -160,7 +160,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== MOTOR OIL ROUTES ====================
-    Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+    Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [MotorOilController::class, 'importForm'])->name('import');
         Route::post('/import', [MotorOilController::class, 'import'])->name('import.store');
         Route::get('/search', [MotorOilController::class, 'search'])->name('search');
@@ -168,7 +168,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== EMPLOYEE ROUTES ====================
-    Route::prefix('employees')->name('employees.')->middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+    Route::prefix('employees')->name('employees.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [EmployeeController::class, 'importForm'])->name('import');
         Route::post('/import', [EmployeeController::class, 'import'])->name('import.store');
         Route::get('/create', [EmployeeController::class, 'create'])->name('create');
@@ -182,7 +182,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== BUS DAILY STATUS ROUTES ====================
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->group(function () {
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
         ])])->group(function () {
@@ -195,7 +195,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::delete('/{bus_daily_status}', [BusDailyStatusController::class, 'destroy'])->name('destroy');
         });
 
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_STATUS->value,
             RoleEnum::DIRECTORATE->value,
@@ -207,7 +207,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== DAILY KM RECORDS ROUTES ====================
     Route::prefix('daily-km-records')->name('daily-km-records.')->group(function () {
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
         ])])->group(function () {
@@ -220,7 +220,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
             Route::delete('/{daily_km_record}', [DailyKmRecordController::class, 'destroy'])->name('destroy');
         });
 
-        Route::middleware(['role:' . implode(',', [
+        Route::middleware(['role:'.implode(',', [
             RoleEnum::ADMIN->value,
             RoleEnum::DAILY_KM->value,
             RoleEnum::DIRECTORATE->value,
@@ -231,7 +231,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== DRIVER ROUTES ====================
-    Route::prefix('drivers')->name('drivers.')->middleware(['role:' . RoleEnum::ADMIN->value])->group(function () {
+    Route::prefix('drivers')->name('drivers.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [DriverController::class, 'importForm'])->name('import');
         Route::post('/import', [DriverController::class, 'import'])->name('import.store');
         Route::get('/export', [DriverController::class, 'export'])->name('export');
@@ -245,7 +245,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== API ROUTES (JSON) ====================
-    Route::middleware(['role:' . implode(',', [
+    Route::middleware(['role:'.implode(',', [
         RoleEnum::ADMIN->value,
         RoleEnum::COMPLAINT->value,
         RoleEnum::DIRECTORATE->value,
@@ -254,7 +254,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
     });
 
-    Route::middleware(['role:' . implode(',', [
+    Route::middleware(['role:'.implode(',', [
         RoleEnum::ADMIN->value,
         RoleEnum::COMPLAINT->value,
         RoleEnum::WAREHOUSE->value,
@@ -262,7 +262,7 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
         Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
     });
 
-    Route::middleware(['role:' . implode(',', [
+    Route::middleware(['role:'.implode(',', [
         RoleEnum::ADMIN->value,
         RoleEnum::COMPLAINT->value,
     ])])->group(function () {

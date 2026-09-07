@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employee;
 use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
-use Illuminate\Http\Request;
 use App\Imports\EmployeesImport;
+use App\Models\Employee;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
@@ -16,6 +16,7 @@ class EmployeeController extends Controller
         $this->authorize('viewAny', Employee::class);
 
         $employees = Employee::orderBy('first_name')->paginate(config('settings.pagination', 30));
+
         return view('employees.index', compact('employees'));
     }
 
@@ -24,6 +25,7 @@ class EmployeeController extends Controller
         $this->authorize('create', Employee::class);
 
         $positions = config('settings.employee_positions');
+
         return view('employees.create', compact('positions'));
     }
 
@@ -56,6 +58,7 @@ class EmployeeController extends Controller
         $this->authorize('update', $employee);
 
         $positions = config('settings.employee_positions');
+
         return view('employees.edit', compact('employee', 'positions'));
     }
 
@@ -81,12 +84,14 @@ class EmployeeController extends Controller
         $this->authorize('delete', $employee);
 
         $employee->delete();
+
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla silindi!');
     }
 
     public function importForm()
     {
         $this->authorize('import', Employee::class);
+
         return view('employees.import');
     }
 
@@ -95,7 +100,7 @@ class EmployeeController extends Controller
         $this->authorize('import', Employee::class);
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
@@ -106,9 +111,11 @@ class EmployeeController extends Controller
                 ),
                 $request->file('file')
             );
+
             return redirect()->route('employees.index')->with('success', 'İşçilər uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->route('employees.index')->with('error', 'İşçi idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }
     }

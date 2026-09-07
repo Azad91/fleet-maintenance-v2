@@ -3,25 +3,25 @@
 namespace App\Providers;
 
 use App\Models\Bus;
+use App\Models\BusDailyStatus;
 use App\Models\Complaint;
-use App\Models\Warehouse;
+use App\Models\ComplaintType;
+use App\Models\DailyKmRecord;
 use App\Models\Driver;
 use App\Models\Employee;
-use App\Models\User;
-use App\Models\BusDailyStatus;
-use App\Models\DailyKmRecord;
 use App\Models\MotorOilDetail;
-use App\Models\ComplaintType;
+use App\Models\User;
+use App\Models\Warehouse;
+use App\Policies\BusDailyStatusPolicy;
 use App\Policies\BusPolicy;
 use App\Policies\ComplaintPolicy;
-use App\Policies\WarehousePolicy;
+use App\Policies\ComplaintTypePolicy;
+use App\Policies\DailyKmRecordPolicy;
 use App\Policies\DriverPolicy;
 use App\Policies\EmployeePolicy;
-use App\Policies\UserPolicy;
-use App\Policies\BusDailyStatusPolicy;
-use App\Policies\DailyKmRecordPolicy;
 use App\Policies\MotorOilPolicy;
-use App\Policies\ComplaintTypePolicy;
+use App\Policies\UserPolicy;
+use App\Policies\WarehousePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider

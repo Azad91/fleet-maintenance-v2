@@ -6,13 +6,13 @@ use App\Models\Bus;
 use App\Models\DailyKmRecord;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
-use Maatwebsite\Excel\Concerns\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, ShouldQueue, WithChunkReading
+class DailyKmRecordsImport implements ShouldQueue, ToCollection, WithCalculatedFormulas, WithChunkReading
 {
     public function __construct(
         public int $garageId,
@@ -50,7 +50,7 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, Shou
 
             $bus = Bus::withoutGlobalScopes()
                 ->where('dqn', $dqn)
-                ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+                ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
                 ->first();
 
             if (! $bus) {

@@ -14,15 +14,15 @@ class EnsureApiGarageContext
         // 1. Header-dən qaraj ID-sini al
         $garageId = $request->header('X-Garage-Id');
 
-        if (!$garageId) {
+        if (! $garageId) {
             return response()->json([
-                'error' => 'X-Garage-Id header tələb olunur.'
+                'error' => 'X-Garage-Id header tələb olunur.',
             ], 400);
         }
 
         // 2. İstifadəçinin authenticated olduğundan əmin ol
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
@@ -32,15 +32,15 @@ class EnsureApiGarageContext
             ->wherePivot('is_active', true)
             ->exists();
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             return response()->json([
-                'error' => 'Bu qaraja daxil olmaq üçün icazəniz yoxdur.'
+                'error' => 'Bu qaraja daxil olmaq üçün icazəniz yoxdur.',
             ], 403);
         }
 
         // 4. Qaraj məlumatlarını tap
         $garage = Garage::find($garageId);
-        if (!$garage) {
+        if (! $garage) {
             return response()->json(['error' => 'Qaraj tapılmadı'], 404);
         }
 

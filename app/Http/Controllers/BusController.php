@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bus;
 use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
-use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\BusesImport;
+use App\Models\Bus;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BusController extends Controller
 {
@@ -44,22 +44,22 @@ class BusController extends Controller
 
         $query = Bus::with('latestKmRecord');
 
-        if (!empty($bus_project)) {
+        if (! empty($bus_project)) {
             $query->where('bus_project', 'ILIKE', "%{$bus_project}%");
         }
-        if (!empty($vin)) {
+        if (! empty($vin)) {
             $query->where('vin', 'ILIKE', "%{$vin}%");
         }
-        if (!empty($uzunluq)) {
+        if (! empty($uzunluq)) {
             $query->where('uzunluq', 'ILIKE', "%{$uzunluq}%");
         }
-        if (!empty($route_number)) {
+        if (! empty($route_number)) {
             $query->where('route_number', 'ILIKE', "%{$route_number}%");
         }
-        if (!empty($dqn)) {
+        if (! empty($dqn)) {
             $query->where('dqn', 'ILIKE', "%{$dqn}%");
         }
-        if (!empty($engine_number)) {
+        if (! empty($engine_number)) {
             $query->where('engine_number', 'ILIKE', "%{$engine_number}%");
         }
 
@@ -175,7 +175,7 @@ class BusController extends Controller
         $this->authorize('import', Bus::class);
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
@@ -191,6 +191,7 @@ class BusController extends Controller
                 ->with('success', 'Avtobuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->route('buses.index')
                 ->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
         }
@@ -217,7 +218,7 @@ class BusController extends Controller
         Bus::auditBulkUpdate($ids, ['is_active' => false], 'bulk_deactivated');
 
         return redirect()->route('buses.index')
-            ->with('success', count($ids) . ' avtobus passiv edildi.');
+            ->with('success', count($ids).' avtobus passiv edildi.');
     }
 
     /**
@@ -239,7 +240,7 @@ class BusController extends Controller
         Bus::auditBulkUpdate($ids, ['is_active' => true], 'bulk_activated');
 
         return redirect()->route('buses.index')
-            ->with('success', count($ids) . ' avtobus aktiv edildi.');
+            ->with('success', count($ids).' avtobus aktiv edildi.');
     }
 
     /**
@@ -261,6 +262,6 @@ class BusController extends Controller
         Bus::whereIn('id', $ids)->delete();
 
         return redirect()->route('buses.index')
-            ->with('success', count($ids) . ' avtobus silindi.');
+            ->with('success', count($ids).' avtobus silindi.');
     }
 }

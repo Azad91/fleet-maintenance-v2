@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ComplaintTypesImport;
 use App\Models\ComplaintType;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\ComplaintTypesImport;
 
 class ComplaintTypeController extends Controller
 {
@@ -14,6 +14,7 @@ class ComplaintTypeController extends Controller
         $this->authorize('viewAny', ComplaintType::class);  // ✅ ƏLAVƏ
 
         $types = ComplaintType::orderBy('id')->get();
+
         return view('complaint-types.index', compact('types'));
     }
 
@@ -84,14 +85,16 @@ class ComplaintTypeController extends Controller
         $this->authorize('import', ComplaintType::class);  // ✅ ƏLAVƏ
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
             Excel::import(new ComplaintTypesImport, $request->file('file'));
+
             return redirect()->route('complaint-types.index')->with('success', 'Şikayət növləri uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->route('complaint-types.index')->with('error', 'Şikayət növlərinin idxalı zamanı xəta baş verdi.');
         }
     }

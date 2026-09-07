@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
-use App\Models\Garage;
+use App\Services\GarageContext;
 use Illuminate\Http\Request;
 
 class GarageSelectionController extends Controller
 {
-public function index()
+    public function index()
     {
         $user = auth()->user();
 
@@ -16,12 +16,12 @@ public function index()
         $companies = Company::whereHas('garages', function ($query) use ($user) {
             $query->whereHas('users', function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                ->where('is_active', true);
+                    ->where('is_active', true);
             });
         })->with(['garages' => function ($query) use ($user) {
             $query->whereHas('users', function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                ->where('is_active', true);
+                    ->where('is_active', true);
             });
         }])->get();
 
@@ -48,7 +48,7 @@ public function index()
         ]);
 
         // ✅ Context-ə də yaz
-        \App\Services\GarageContext::set($garage->id, $garage->company_id);
+        GarageContext::set($garage->id, $garage->company_id);
 
         // İstifadəçini yenilə
         $user = auth()->user();

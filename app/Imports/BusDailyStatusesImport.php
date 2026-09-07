@@ -4,13 +4,12 @@ namespace App\Imports;
 
 use App\Models\Bus;
 use App\Models\BusDailyStatus;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\ShouldQueue;
+use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading
+class BusDailyStatusesImport implements ShouldQueue, ToModel, WithChunkReading, WithHeadingRow
 {
     public function __construct(
         public int $garageId,
@@ -36,10 +35,10 @@ class BusDailyStatusesImport implements ToModel, WithHeadingRow, ShouldQueue, Wi
 
         $bus = Bus::withoutGlobalScopes()
             ->where('dqn', $dqn)
-            ->when($garageId, fn($q) => $q->where('garage_id', $garageId))
+            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
             ->first();
 
-        if (!$bus) {
+        if (! $bus) {
             return null;
         }
 

@@ -8,9 +8,10 @@ use App\Models\Complaint;
 use App\Models\Employee;
 use App\Models\Garage;
 use App\Models\Warehouse;
-use App\Services\Complaint\ComplaintService;
-use App\Services\Complaint\ComplaintStockService;
 use App\Services\Complaint\ComplaintItemService;
+use App\Services\Complaint\ComplaintService;
+use App\Services\Complaint\ComplaintStatusTransitionService;
+use App\Services\Complaint\ComplaintStockService;
 use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +22,7 @@ class ComplaintStockTest extends TestCase
     use RefreshDatabase;
 
     private ComplaintService $complaintService;
+
     private ComplaintStockService $stockService;
 
     protected function setUp(): void
@@ -34,11 +36,11 @@ class ComplaintStockTest extends TestCase
         session(['current_company_id' => 1]);
         GarageContext::set(1, 1);
 
-        $this->stockService = new ComplaintStockService();
+        $this->stockService = new ComplaintStockService;
         $this->complaintService = new ComplaintService(
             $this->stockService,
-            new ComplaintItemService(),
-            new \App\Services\Complaint\ComplaintStatusTransitionService()
+            new ComplaintItemService,
+            new ComplaintStatusTransitionService
         );
     }
 
@@ -68,7 +70,7 @@ class ComplaintStockTest extends TestCase
                 'used_quantity' => 3,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
                 'notes' => 'Test qeydi',
-            ]
+            ],
         ];
 
         $shikayet = ['Test şikayəti'];
@@ -110,7 +112,7 @@ class ComplaintStockTest extends TestCase
                 'used_quantity' => 5,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
                 'notes' => 'Test qeydi',
-            ]
+            ],
         ];
 
         $shikayet = ['Test şikayəti'];
@@ -150,7 +152,7 @@ class ComplaintStockTest extends TestCase
                 'used_quantity' => 3,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
                 'notes' => 'Test qeydi',
-            ]
+            ],
         ];
 
         $shikayet = ['Test şikayəti'];
@@ -192,7 +194,7 @@ class ComplaintStockTest extends TestCase
                 'used_quantity' => 5,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
                 'notes' => 'Test qeydi',
-            ]
+            ],
         ];
 
         $shikayet = ['Test şikayəti'];
@@ -208,7 +210,7 @@ class ComplaintStockTest extends TestCase
                 'used_quantity' => 3,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
                 'notes' => 'Yeni qeyd',
-            ]
+            ],
         ];
 
         $this->complaintService->update($complaint, $data, $newDetallar, $shikayet);
@@ -236,4 +238,3 @@ class ComplaintStockTest extends TestCase
         ]);
     }
 }
-

@@ -12,10 +12,10 @@ return new class extends Migration
 
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
-                if (!Schema::hasColumn($tableName, 'garage_id')) {
+                if (! Schema::hasColumn($tableName, 'garage_id')) {
                     $table->foreignId('garage_id')->after('id')->nullable()->constrained('garages')->onDelete('cascade');
                 }
-                if (!Schema::hasColumn($tableName, 'company_id')) {
+                if (! Schema::hasColumn($tableName, 'company_id')) {
                     $table->foreignId('company_id')->after('garage_id')->nullable()->constrained('companies')->onDelete('cascade');
                 }
             });
@@ -27,7 +27,7 @@ return new class extends Migration
         $tables = ['buses', 'complaints', 'employees', 'drivers', 'daily_km_records', 'bus_daily_statuses'];
 
         foreach ($tables as $tableName) {
-            Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+            Schema::table($tableName, function (Blueprint $table) {
                 $table->dropForeign(['garage_id']);
                 $table->dropForeign(['company_id']);
                 $table->dropColumn(['garage_id', 'company_id']);

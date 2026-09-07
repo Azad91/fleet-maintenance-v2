@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\GarageContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\RoleEnum;
 
 class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -22,7 +22,7 @@ class RoleMiddleware
             ? $request->session()->get('current_company_id')
             : session('current_company_id');
 
-        if (!$garageId) {
+        if (! $garageId) {
             return redirect()->route('garage.selection');
         }
 
@@ -30,7 +30,8 @@ class RoleMiddleware
 
         // ✅ DƏYİŞİKLİK: yalnız super_admin hər şeyə girə bilər
         if ($user->isSuperAdmin()) {
-            \App\Services\GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+            GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+
             return $next($request);
         }
 
@@ -40,7 +41,7 @@ class RoleMiddleware
             ->wherePivot('is_active', true)
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             if ($request->hasSession()) {
                 $request->session()->forget([
                     'current_garage_id',
@@ -49,12 +50,13 @@ class RoleMiddleware
                     'current_company_name',
                 ]);
             }
-            \App\Services\GarageContext::clear();
+            GarageContext::clear();
+
             return redirect()->route('garage.selection')
                 ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
         }
 
-        \App\Services\GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+        GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
 
         // Heç bir rol tələb olunmursa, keçir
         if (empty($roles)) {

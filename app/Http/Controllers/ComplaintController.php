@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
-use App\Models\Complaint;
+use App\Imports\ComplaintsImport;
 use App\Models\Bus;
+use App\Models\Complaint;
 use App\Models\ComplaintType;
-use App\Models\Employee;
 use App\Models\Driver;
-use App\Services\Complaint\ComplaintService;
+use App\Models\Employee;
 use App\Services\Complaint\ComplaintPdfService;
+use App\Services\Complaint\ComplaintService;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ComplaintController extends Controller
 {
@@ -27,6 +29,7 @@ class ComplaintController extends Controller
         $complaints = Complaint::with(['bus', 'items'])
             ->orderBy('id', 'desc')
             ->paginate(config('settings.pagination', 15));
+
         return view('complaints.index', compact('complaints'));
     }
 
@@ -127,6 +130,7 @@ class ComplaintController extends Controller
         $this->authorize('delete', $complaint);  // ✅ ƏLAVƏ
 
         $this->complaintService->delete($complaint);
+
         return redirect()->route('complaints.index')
             ->with('success', 'Şikayət uğurla silindi! Anbar yeniləndi.');
     }
@@ -152,7 +156,7 @@ class ComplaintController extends Controller
         try {
             $this->pdfService->save($complaint);
         } catch (\Exception $e) {
-            \Log::error('PDF yaradılmadı: ' . $e->getMessage());
+            \Log::error('PDF yaradılmadı: '.$e->getMessage());
         }
 
         return redirect()->route('complaints.index')
@@ -165,13 +169,13 @@ class ComplaintController extends Controller
 
         $this->authorize('view', $complaint);  // ✅ ƏLAVƏ
 
-        if (!$this->pdfService->exists($complaint)) {
+        if (! $this->pdfService->exists($complaint)) {
             $this->pdfService->save($complaint);
         }
 
         $filePath = $this->pdfService->getFilePath($complaint);
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             abort(404, 'PDF faylı tapılmadı.');
         }
 
@@ -184,6 +188,7 @@ class ComplaintController extends Controller
     public function importForm()
     {
         $this->authorize('import', Complaint::class);  // ✅ ƏLAVƏ
+
         return view('complaints.import');
     }
 
@@ -192,21 +197,23 @@ class ComplaintController extends Controller
         $this->authorize('import', Complaint::class);  // ✅ ƏLAVƏ
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(
-                new \App\Imports\ComplaintsImport(
+            Excel::import(
+                new ComplaintsImport(
                     (int) session('current_garage_id'),
                     session('current_company_id') ? (int) session('current_company_id') : null
                 ),
                 $request->file('file')
             );
+
             return redirect()->route('complaints.index')
                 ->with('success', 'Şikayətlər uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
+
             return redirect()->route('complaints.index')
                 ->with('error', 'Şikayət idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
         }

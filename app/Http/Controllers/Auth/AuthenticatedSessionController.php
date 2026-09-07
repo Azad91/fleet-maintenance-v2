@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -58,7 +59,7 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         // ✅ Context-i təmizlə
-        \App\Services\GarageContext::clear();
+        GarageContext::clear();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

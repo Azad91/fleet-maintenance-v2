@@ -48,7 +48,7 @@ trait Auditable
      */
     public static function auditBulkUpdate(array $ids, array $newValues, string $event = 'bulk_updated'): void
     {
-        $model = new static();
+        $model = new static;
         $table = $model->getTable();
 
         // Köhnə dəyərləri al
@@ -65,7 +65,7 @@ trait Auditable
             // Yalnız dəyişən sahələri tap
             $changed = array_intersect_key($newValues, array_diff_assoc($oldArray, $newArray));
 
-            if (!empty($changed)) {
+            if (! empty($changed)) {
                 AuditLog::create([
                     'user_id' => auth()->id(),
                     'garage_id' => $model->garage_id ?? null,
@@ -85,7 +85,7 @@ trait Auditable
      */
     public static function auditBulkDelete(array $ids, string $event = 'bulk_deleted'): void
     {
-        $model = new static();
+        $model = new static;
         $table = $model->getTable();
 
         $oldRecords = DB::table($table)

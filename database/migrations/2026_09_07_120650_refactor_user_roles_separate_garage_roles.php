@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -32,7 +31,7 @@ return new class extends Migration
         // ============================================================
 
         // Köhnə constraint-i sil
-        DB::statement("ALTER TABLE garage_user DROP CONSTRAINT IF EXISTS garage_user_role_check");
+        DB::statement('ALTER TABLE garage_user DROP CONSTRAINT IF EXISTS garage_user_role_check');
 
         // Uyğunsuz rolları 'viewer' et (operator kimi köhnə dəyərlər varsa)
         DB::statement("

@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\Traits\HasGarageScope;
 use App\Models\Traits\Auditable;
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Driver extends Model
 {
-    use HasFactory, SoftDeletes, HasGarageScope, Auditable;
+    use Auditable, HasFactory, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
-        'code', 'first_name', 'last_name', 'phone', 'position', 'is_active', 'notes', 'garage_id', 'company_id'
+        'code', 'first_name', 'last_name', 'phone', 'position', 'is_active', 'notes', 'garage_id', 'company_id',
         // əvvəl: kodu, ad, soyad, telefon, vezifesi, aktiv, qeyd
     ];
 
@@ -26,12 +26,13 @@ class Driver extends Model
         if (empty($this->last_name)) {
             return $this->first_name;
         }
-        return $this->first_name . ' ' . $this->last_name;
+
+        return $this->first_name.' '.$this->last_name;
     }
 
     public function getFullNameWithCodeAttribute()
     {
-        return $this->code . ' - ' . $this->full_name;
+        return $this->code.' - '.$this->full_name;
     }
 
     public function scopeActive($query)

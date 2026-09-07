@@ -20,7 +20,7 @@ enum RoleEnum: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::SUPER_ADMIN => 'Super Admin',
             self::USER => 'İstifadəçi',
             self::ADMIN => 'Admin',
@@ -57,6 +57,7 @@ enum RoleEnum: string
     {
         return array_reduce(self::cases(), function ($carry, $case) {
             $carry[$case->value] = $case->label();
+
             return $carry;
         }, []);
     }

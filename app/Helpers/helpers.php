@@ -1,37 +1,40 @@
 <?php
 
-if (!function_exists('format_km')) {
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+
+if (! function_exists('format_km')) {
     function format_km($km)
     {
-        return $km ? number_format($km, 0, ',', '.') . ' km' : '-';
+        return $km ? number_format($km, 0, ',', '.').' km' : '-';
     }
 }
 
-if (!function_exists('format_price')) {
+if (! function_exists('format_price')) {
     function format_price($price)
     {
-        return $price ? number_format($price, 2) . ' ₼' : '-';
+        return $price ? number_format($price, 2).' ₼' : '-';
     }
 }
 
-if (!function_exists('format_date')) {
+if (! function_exists('format_date')) {
     function format_date($date, $format = 'd.m.Y')
     {
-        return $date ? \Carbon\Carbon::parse($date)->format($format) : '-';
+        return $date ? Carbon::parse($date)->format($format) : '-';
     }
 }
 
-if (!function_exists('format_datetime')) {
+if (! function_exists('format_datetime')) {
     function format_datetime($date, $format = 'd.m.Y H:i')
     {
-        return $date ? \Carbon\Carbon::parse($date)->format($format) : '-';
+        return $date ? Carbon::parse($date)->format($format) : '-';
     }
 }
 
-if (!function_exists('status_badge_class')) {
+if (! function_exists('status_badge_class')) {
     function status_badge_class($status)
     {
-        return match($status) {
+        return match ($status) {
             'gözləmədə' => 'gözləmədə',
             'işdə' => 'işdə',
             'həll olundu' => 'həll-olundu',
@@ -43,10 +46,10 @@ if (!function_exists('status_badge_class')) {
     }
 }
 
-if (!function_exists('role_label')) {
+if (! function_exists('role_label')) {
     function role_label($role)
     {
-        return match($role) {
+        return match ($role) {
             'admin' => '👑 Admin',
             'bus' => '🚌 Avtobus İşçisi',
             'complaint' => '📋 Şikayət İşçisi',
@@ -57,25 +60,27 @@ if (!function_exists('role_label')) {
     }
 }
 
-if (!function_exists('status_color')) {
+if (! function_exists('status_color')) {
     function status_color($status)
     {
         $colors = config('settings.status_colors', []);
+
         return $colors[$status] ?? 'secondary';
     }
 }
 
-if (!function_exists('complaint_type_label')) {
+if (! function_exists('complaint_type_label')) {
     function complaint_type_label($type)
     {
         $types = config('settings.complaint_types', []);
+
         return $types[$type] ?? $type;
     }
 }
 
-if (!function_exists('truncate_text')) {
+if (! function_exists('truncate_text')) {
     function truncate_text($text, $length = 30)
     {
-        return $text ? \Illuminate\Support\Str::limit($text, $length) : '-';
+        return $text ? Str::limit($text, $length) : '-';
     }
 }
