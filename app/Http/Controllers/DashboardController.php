@@ -31,7 +31,7 @@ class DashboardController extends Controller
             ->get();
 
         // 4. Açıq şikayətlər
-        $recentComplaints = Complaint::with('bus')
+        $recentComplaints = Complaint::with('bus', 'items')  // items-i də əlavə et
             ->where('status', '!=', 'həll olundu')
             ->orderBy('id', 'desc')
             ->limit(10)

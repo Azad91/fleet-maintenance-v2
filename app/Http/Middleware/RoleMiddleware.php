@@ -15,50 +15,46 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        $garageId = $request->hasSession()
-            ? $request->session()->get('current_garage_id')
-            : session('current_garage_id');
-        $companyId = $request->hasSession()
-            ? $request->session()->get('current_company_id')
-            : session('current_company_id');
+        $user = Auth::user();
 
+        // ✅ SUPER_ADMIN hər şeyə girə bilər
+        if ($user->isSuperAdmin()) {
+            // Qaraj kontekstini təyin et (əgər varsa)
+            $garageId = $request->session()->get('current_garage_id');
+            $companyId = $request->session()->get('current_company_id');
+            if ($garageId) {
+                GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+            }
+            return $next($request);
+        }
+
+        // Qaraj seçilib?
+        $garageId = $request->session()->get('current_garage_id');
         if (! $garageId) {
             return redirect()->route('garage.selection');
         }
 
-        $user = Auth::user();
-
-        // ✅ DƏYİŞİKLİK: yalnız super_admin hər şeyə girə bilər
-        if ($user->isSuperAdmin()) {
-            GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
-
-            return $next($request);
-        }
-
-        // İstifadəçi bu qaraja aid deyilsə və ya passivdirsə
+        // İstifadəçi bu qaraja aid deyilsə...
         $membership = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
             ->first();
 
         if (! $membership) {
-            if ($request->hasSession()) {
-                $request->session()->forget([
-                    'current_garage_id',
-                    'current_garage_name',
-                    'current_company_id',
-                    'current_company_name',
-                ]);
-            }
+            $request->session()->forget([
+                'current_garage_id',
+                'current_garage_name',
+                'current_company_id',
+                'current_company_name',
+            ]);
             GarageContext::clear();
-
             return redirect()->route('garage.selection')
                 ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
         }
 
-        GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
+        GarageContext::set((int) $garageId, $request->session()->get('current_company_id') ? (int) $request->session()->get('current_company_id') : null);
 
-        // Heç bir rol tələb olunmursa, keçir
+        // Əgər rol tələb olunmursa, keç
         if (empty($roles)) {
             return $next($request);
         }

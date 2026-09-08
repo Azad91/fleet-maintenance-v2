@@ -24,6 +24,7 @@ use App\Policies\MotorOilPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WarehousePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -38,11 +39,18 @@ class AuthServiceProvider extends ServiceProvider
         DailyKmRecord::class => DailyKmRecordPolicy::class,
         MotorOilDetail::class => MotorOilPolicy::class,
         ComplaintType::class => ComplaintTypePolicy::class,
-        DashboardController::class => DashboardPolicy::class,
+        // Dashboard üçün ayrıca policy yoxdur, amma əlavə etmək olar
     ];
 
     public function boot(): void
     {
         $this->registerPolicies();
+
+        // ✅ SUPER_ADMIN hər şeyə icazə alır
+        Gate::before(function ($user, $ability) {
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+        });
     }
 }
