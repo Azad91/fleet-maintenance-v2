@@ -8,10 +8,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithTransactions;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Row;
 
-class ComplaintTypesImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChunkReading, WithHeadingRow, WithValidation
+class ComplaintTypesImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, 
+WithChunkReading, WithHeadingRow, WithValidation, WithTransactions
 {
     public function chunkSize(): int
     {

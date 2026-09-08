@@ -22,14 +22,18 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
-
         $middleware->append(\App\Http\Middleware\RequestIdMiddleware::class);
 
         $middleware->alias([
-            'role' => RoleMiddleware::class,
-            'garage.selected' => EnsureGarageSelected::class,
-            'idempotent' => IdempotencyMiddleware::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'garage.selected' => \App\Http\Middleware\EnsureGarageSelected::class,
+            'idempotent' => \App\Http\Middleware\IdempotencyMiddleware::class,
             'api.garage' => \App\Http\Middleware\EnsureApiGarageContext::class,
+        ]);
+
+        // ✅ BÜTÜN API ROUTE-LARINDA QARAJ KONTEKSTİNİ MƏCBURİ EDİRİK
+        $middleware->api(append: [
+            \App\Http\Middleware\EnsureApiGarageContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

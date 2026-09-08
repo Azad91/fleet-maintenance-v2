@@ -8,8 +8,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithTransactions;
 
-class BusDailyStatusesImport implements ShouldQueue, ToModel, WithChunkReading, WithHeadingRow
+class BusDailyStatusesImport implements ShouldQueue, ToModel, WithChunkReading, 
+WithHeadingRow, WithTransactions
 {
     public function __construct(
         public int $garageId,

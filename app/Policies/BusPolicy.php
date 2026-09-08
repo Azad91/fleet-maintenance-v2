@@ -47,7 +47,7 @@ class BusPolicy
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function update(User $user, ?Bus $bus = null): bool
+        public function update(User $user, ?Bus $bus = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;

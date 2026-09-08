@@ -8,8 +8,10 @@ use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithTransactions;
 
-class EmployeesImport implements ShouldQueue, SkipsEmptyRows, ToModel, WithChunkReading, WithHeadingRow
+class EmployeesImport implements ShouldQueue, SkipsEmptyRows, ToModel, WithChunkReading, 
+WithHeadingRow, WithTransactions
 {
     public function __construct(
         public int $garageId,

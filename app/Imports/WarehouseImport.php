@@ -8,9 +8,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithTransactions;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class WarehouseImport implements ToCollection, ShouldQueue, WithChunkReading, WithHeadingRow, WithValidation
+class WarehouseImport implements ToCollection, ShouldQueue, WithChunkReading, 
+WithHeadingRow, WithValidation, WithTransactions
 {
     public function __construct(
         private int $garageId,

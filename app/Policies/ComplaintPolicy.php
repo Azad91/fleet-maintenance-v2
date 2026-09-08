@@ -51,12 +51,13 @@ class ComplaintPolicy
         ]);
     }
 
-    public function update(User $user, ?Complaint $complaint = null): bool
+        public function update(User $user, ?Complaint $complaint = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
         }
 
+        // ✅ ƏLAVƏ: Modelin qarajını yoxla
         if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
             return false;
         }
@@ -73,6 +74,7 @@ class ComplaintPolicy
             return true;
         }
 
+        // ✅ ƏLAVƏ
         if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
             return false;
         }
@@ -86,6 +88,7 @@ class ComplaintPolicy
             return true;
         }
 
+        // ✅ ƏLAVƏ
         if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
             return false;
         }

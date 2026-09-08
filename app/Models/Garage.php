@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\GarageContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -57,13 +58,18 @@ class Garage extends Model
         return $this->hasMany(BusDailyStatus::class);
     }
 
-    public static function getCurrentId()
+        public static function getCurrentId()
     {
-        return session('current_garage_id') ?? auth()->user()?->current_garage_id;
+        // ✅ DÜZƏLİŞ: İLK ÖNCƏ GARAGECONTEXT-DƏN OXUYUR
+        return GarageContext::getGarageId()
+            ?? session('current_garage_id')
+            ?? auth()->user()?->current_garage_id;
     }
 
     public static function getCurrentCompanyId()
     {
-        return session('current_company_id') ?? auth()->user()?->current_company_id;
+        return GarageContext::getCompanyId()
+            ?? session('current_company_id')
+            ?? auth()->user()?->current_company_id;
     }
 }

@@ -121,7 +121,15 @@ class BusController extends Controller
         $this->authorize('update', Bus::class);
 
         $ids = $request->input('ids', []);
-        if (empty($ids)) return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        
+        // ✅ JSON string-i array-ə çevir
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true);
+        }
+
+        if (empty($ids)) {
+            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        }
 
         $this->busService->bulkUpdateStatus($ids, false);
 
@@ -133,7 +141,14 @@ class BusController extends Controller
         $this->authorize('update', Bus::class);
 
         $ids = $request->input('ids', []);
-        if (empty($ids)) return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true);
+        }
+
+        if (empty($ids)) {
+            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        }
 
         $this->busService->bulkUpdateStatus($ids, true);
 
@@ -145,7 +160,14 @@ class BusController extends Controller
         $this->authorize('delete', Bus::class);
 
         $ids = $request->input('ids', []);
-        if (empty($ids)) return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true);
+        }
+
+        if (empty($ids)) {
+            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+        }
 
         $this->busService->bulkDelete($ids);
 
