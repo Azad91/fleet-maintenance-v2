@@ -3,90 +3,93 @@
 namespace App\Imports;
 
 use App\Models\Warehouse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\OnEachRow;
+use Illuminate\Support\Collection;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Row;
 
-class WarehouseImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChunkReading, WithHeadingRow, WithValidation
+class WarehouseImport implements ToCollection, ShouldQueue, WithChunkReading, WithHeadingRow, WithValidation
 {
     public function __construct(
-        public int $garageId,
-        public ?int $companyId = null
+        private int $garageId,
+        private ?int $companyId = null
     ) {}
 
     public function chunkSize(): int
     {
-        return 100;
+        return 500; // Performans üçün bloku 500-ə qaldırdıq
     }
 
-    public function onRow(Row $row)
+    public function collection(Collection $rows)
     {
-        $rowArray = $row->toArray();
+        // 1. Sətirlərdəki bütün "code" (və ya "kod") dəyərlərini bir yerə yığırıq
+        $codes = $rows->map(function ($row) {
+            return trim((string) ($row['code'] ?? $row['kod'] ?? ''));
+        })->filter()->unique()->toArray();
 
-        $code = trim((string) ($rowArray['code'] ?? $rowArray['kod'] ?? ''));
-
-        if (empty($code)) {
-            Log::warning('Boş kod sətri keçildi');
-
+        if (empty($codes)) {
             return;
         }
 
-        $garageId = $this->garageId;
-        $companyId = $this->companyId;
-
-        // ✅ DƏYİŞİKLİK: DB::transaction LƏĞV EDİLDİ
-        $warehouse = Warehouse::withoutGlobalScopes()
+        // 2. N+1 Probleminin Həlli: Mövcud qeydlərin hamısını TƏK SQL sorğusu ilə çəkirik
+        $existingWarehouses = Warehouse::withoutGlobalScopes()
             ->withTrashed()
-            ->where('code', $code)
-            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
-            ->lockForUpdate()
-            ->first();
+            ->where('garage_id', $this->garageId)
+            ->whereIn('code', $codes)
+            ->get()
+            ->keyBy('code');
 
-        $quantity = (int) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
-        $rawPrice = $rowArray['price'] ?? $rowArray['qiymet'] ?? '0';
-        $price = (float) str_replace([' ', ','], '', (string) $rawPrice);
-        $name = trim((string) ($rowArray['name'] ?? $rowArray['ad'] ?? ''));
-        $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
-        $category = $rowArray['category'] ?? $rowArray['kateqoriya'] ?? null;
-        $minimumQuantity = $rowArray['minimum_quantity'] ?? $rowArray['minimum_miqdar'] ?? null;
-        $supplier = $rowArray['supplier'] ?? $rowArray['tedarikci'] ?? null;
-        $notes = $rowArray['notes'] ?? $rowArray['qeyd'] ?? null;
+        foreach ($rows as $row) {
+            $code = trim((string) ($row['code'] ?? $row['kod'] ?? ''));
+            if (empty($code)) continue;
 
-        if ($warehouse) {
-            if ($warehouse->trashed()) {
-                $warehouse->restore();
+            $quantity = (int) ($row['quantity'] ?? $row['miqdar'] ?? 0);
+
+            // Qiymət formatındakı vergül/boşluq probleminin həlli
+            $rawPrice = $row['price'] ?? $row['qiymet'] ?? '0';
+            $price = (float) str_replace([' ', ','], '', (string) $rawPrice);
+
+            $name = trim((string) ($row['name'] ?? $row['ad'] ?? ''));
+            $unit = $row['unit'] ?? $row['olcu_vahidi'] ?? null;
+            $category = $row['category'] ?? $row['kateqoriya'] ?? null;
+            $minimumQuantity = isset($row['minimum_quantity']) ? (int) $row['minimum_quantity'] : (isset($row['minimum_miqdar']) ? (int) $row['minimum_miqdar'] : 0);
+            $supplier = $row['supplier'] ?? $row['tedarikci'] ?? null;
+            $notes = $row['notes'] ?? $row['qeyd'] ?? null;
+
+            // Əvvəlcədən çəkdiyimiz kolleksiyadan yoxlayırıq (Bazaya müraciət getmir)
+            $warehouse = $existingWarehouses->get($code);
+
+            if ($warehouse) {
+                if ($warehouse->trashed()) {
+                    $warehouse->restore();
+                }
+                $warehouse->update([
+                    'quantity' => $quantity,
+                    'price' => $price ?: $warehouse->price,
+                    'name' => $name ?: $warehouse->name,
+                    'unit' => $unit ?? $warehouse->unit,
+                    'category' => $category ?? $warehouse->category,
+                    'minimum_quantity' => $minimumQuantity ?: $warehouse->minimum_quantity,
+                    'supplier' => $supplier ?? $warehouse->supplier,
+                    'notes' => $notes ?? $warehouse->notes,
+                ]);
+            } else {
+                Warehouse::create([
+                    'code' => $code,
+                    'name' => $name,
+                    'quantity' => $quantity,
+                    'unit' => $unit,
+                    'price' => $price,
+                    'category' => $category,
+                    'minimum_quantity' => $minimumQuantity,
+                    'supplier' => $supplier,
+                    'notes' => $notes,
+                    'garage_id' => $this->garageId,
+                    'company_id' => $this->companyId,
+                ]);
             }
-
-            $warehouse->update([
-                'quantity' => $quantity,
-                'price' => $price ?: $warehouse->price,
-                'name' => $name ?: $warehouse->name,
-                'unit' => $unit ?? $warehouse->unit,
-                'category' => $category ?? $warehouse->category,
-                'minimum_quantity' => $minimumQuantity ?? $warehouse->minimum_quantity,
-                'supplier' => $supplier ?? $warehouse->supplier,
-                'notes' => $notes ?? $warehouse->notes,
-            ]);
-        } else {
-            Warehouse::create([
-                'code' => $code,
-                'name' => $name,
-                'quantity' => $quantity,
-                'unit' => $unit,
-                'price' => $price,
-                'category' => $category,
-                'minimum_quantity' => $minimumQuantity,
-                'supplier' => $supplier,
-                'notes' => $notes,
-                'garage_id' => $garageId,
-                'company_id' => $companyId,
-            ]);
         }
     }
 
@@ -99,22 +102,6 @@ class WarehouseImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChu
             'ad' => 'sometimes|nullable|string|max:255',
             'quantity' => 'nullable|numeric|min:0',
             'miqdar' => 'nullable|numeric|min:0',
-            'price' => 'nullable|numeric|min:0',
-            'qiymet' => 'nullable|numeric|min:0',
-            'unit' => 'nullable|string|max:50',
-            'olcu_vahidi' => 'nullable|string|max:50',
-        ];
-    }
-
-    public function customValidationMessages()
-    {
-        return [
-            'code.required' => 'Kod sütunu boş ola bilməz.',
-            'name.required' => 'Ad sütunu boş ola bilməz.',
-            'quantity.numeric' => 'Miqdar yalnız rəqəm ola bilər.',
-            'quantity.min' => 'Miqdar 0-dan kiçik ola bilməz.',
-            'price.numeric' => 'Qiymət yalnız rəqəm ola bilər.',
-            'price.min' => 'Qiymət 0-dan kiçik ola bilməz.',
         ];
     }
 }

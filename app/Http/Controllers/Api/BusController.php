@@ -6,26 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
 use App\Models\Bus;
+use App\Services\BusService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class BusController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(protected BusService $busService) {}
+
+    public function index(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Bus::class);
 
-        $query = Bus::with('latestKmRecord');
-
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('dqn', 'ILIKE', "%{$request->search}%")
-                    ->orWhere('route_number', 'ILIKE', "%{$request->search}%")
-                    ->orWhere('bus_project', 'ILIKE', "%{$request->search}%");
-            });
-        }
-
-        $buses = $query->paginate($request->per_page ?? 15);
+        $buses = $this->busService->getPaginatedBuses($request->search, $request->per_page ?? 15);
 
         return response()->json([
             'data' => $buses->items(),
@@ -38,15 +32,11 @@ class BusController extends Controller
         ]);
     }
 
-    public function store(BusStoreRequest $request)
+    public function store(BusStoreRequest $request): JsonResponse
     {
         Gate::authorize('create', Bus::class);
 
-        $data = $request->validated();
-        $data['date'] = now()->format('Y-m-d');
-        $data = $this->addGarageContext($data);
-
-        $bus = Bus::create($data);
+        $bus = $this->busService->createBus($request->validated());
 
         return response()->json([
             'message' => 'Avtobus uğurla əlavə edildi!',
@@ -54,7 +44,7 @@ class BusController extends Controller
         ], 201);
     }
 
-    public function show(Bus $bus)
+    public function show(Bus $bus): JsonResponse
     {
         Gate::authorize('view', $bus);
 
@@ -65,50 +55,34 @@ class BusController extends Controller
         ]);
     }
 
-    public function update(BusUpdateRequest $request, Bus $bus)
+    public function update(BusUpdateRequest $request, Bus $bus): JsonResponse
     {
         Gate::authorize('update', $bus);
 
-        $data = $request->validated();
-        $bus->update($data);
+        $updatedBus = $this->busService->updateBus($bus, $request->validated());
 
         return response()->json([
             'message' => 'Avtobus uğurla yeniləndi!',
-            'data' => $bus->fresh(),
+            'data' => $updatedBus,
         ]);
     }
 
-    public function destroy(Bus $bus)
+    public function destroy(Bus $bus): JsonResponse
     {
         Gate::authorize('delete', $bus);
 
-        $bus->delete();
+        $this->busService->deleteBus($bus);
 
         return response()->json([
             'message' => 'Avtobus uğurla silindi!',
         ]);
     }
 
-    public function search(Request $request)
+    public function search(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Bus::class);
 
-        $query = Bus::with('latestKmRecord');
-
-        if ($request->dqn) {
-            $query->where('dqn', 'ILIKE', "%{$request->dqn}%");
-        }
-        if ($request->route_number) {
-            $query->where('route_number', 'ILIKE', "%{$request->route_number}%");
-        }
-        if ($request->bus_project) {
-            $query->where('bus_project', 'ILIKE', "%{$request->bus_project}%");
-        }
-        if ($request->vin) {
-            $query->where('vin', 'ILIKE', "%{$request->vin}%");
-        }
-
-        $buses = $query->paginate($request->per_page ?? 15);
+        $buses = $this->busService->advancedSearch($request->all(), $request->per_page ?? 15);
 
         return response()->json([
             'data' => $buses->items(),

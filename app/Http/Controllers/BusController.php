@@ -6,66 +6,31 @@ use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
 use App\Imports\BusesImport;
 use App\Models\Bus;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Services\BusService;
+use App\Services\GarageContext;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BusController extends Controller
 {
-    use AuthorizesRequests;
+    public function __construct(protected BusService $busService) {}
 
-    /**
-     * Avtobuslar siyahısı
-     */
-    public function index()
+    public function index(): View
     {
         $this->authorize('viewAny', Bus::class);
 
-        $buses = Bus::with('latestKmRecord')
-            ->orderBy('id', 'desc')
-            ->paginate(config('settings.pagination', 15));
+        $buses = $this->busService->getPaginatedBuses(null, config('settings.pagination', 15));
 
         return view('buses.index', compact('buses'));
     }
 
-    /**
-     * Avtobus axtarışı (AJAX)
-     */
-    public function search(Request $request)
+    public function search(Request $request): View|string
     {
         $this->authorize('viewAny', Bus::class);
 
-        $bus_project = $request->bus_project;
-        $vin = $request->vin;
-        $uzunluq = $request->uzunluq;
-        $route_number = $request->route_number;
-        $dqn = $request->dqn;
-        $engine_number = $request->engine_number;
-
-        $query = Bus::with('latestKmRecord');
-
-        if (! empty($bus_project)) {
-            $query->where('bus_project', 'ILIKE', "%{$bus_project}%");
-        }
-        if (! empty($vin)) {
-            $query->where('vin', 'ILIKE', "%{$vin}%");
-        }
-        if (! empty($uzunluq)) {
-            $query->where('uzunluq', 'ILIKE', "%{$uzunluq}%");
-        }
-        if (! empty($route_number)) {
-            $query->where('route_number', 'ILIKE', "%{$route_number}%");
-        }
-        if (! empty($dqn)) {
-            $query->where('dqn', 'ILIKE', "%{$dqn}%");
-        }
-        if (! empty($engine_number)) {
-            $query->where('engine_number', 'ILIKE', "%{$engine_number}%");
-        }
-
-        $buses = $query->orderBy('id', 'desc')
-            ->paginate(config('settings.pagination', 15));
-
+        $buses = $this->busService->advancedSearch($request->all(), config('settings.pagination', 15));
         $isEmpty = $buses->isEmpty();
 
         if ($request->ajax()) {
@@ -75,193 +40,115 @@ class BusController extends Controller
         return view('buses.index', compact('buses'));
     }
 
-    /**
-     * Avtobus məlumatları
-     */
-    public function show($id)
+    public function show(int $id): View
     {
         $bus = Bus::findOrFail($id);
-
         $this->authorize('view', $bus);
 
         return view('buses.show', compact('bus'));
     }
 
-    /**
-     * Yeni avtobus yaratmaq üçün forma
-     */
-    public function create()
+    public function create(): View
     {
         $this->authorize('create', Bus::class);
 
         return view('buses.create');
     }
 
-    /**
-     * Yeni avtobus yarat
-     */
-    public function store(BusStoreRequest $request)
+    public function store(BusStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Bus::class);
 
-        $data = $request->validated();
-        $data['date'] = now()->format('Y-m-d');
-        $data = $this->addGarageContext($data);
+        $this->busService->createBus($request->validated());
 
-        Bus::create($data);
-
-        return redirect()->route('buses.index')
-            ->with('success', 'Avtobus uğurla əlavə edildi!');
+        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla əlavə edildi!');
     }
 
-    /**
-     * Avtobus redaktə etmək üçün forma
-     */
-    public function edit($id)
+    public function edit(int $id): View
     {
         $bus = Bus::findOrFail($id);
-
         $this->authorize('update', $bus);
 
         return view('buses.edit', compact('bus'));
     }
 
-    /**
-     * Avtobus məlumatlarını yenilə
-     */
-    public function update(BusUpdateRequest $request, $id)
+    public function update(BusUpdateRequest $request, int $id): RedirectResponse
     {
         $bus = Bus::findOrFail($id);
-
         $this->authorize('update', $bus);
 
-        $data = $request->validated();
-        $bus->update($data);
+        $this->busService->updateBus($bus, $request->validated());
 
-        return redirect()->route('buses.index')
-            ->with('success', 'Avtobus uğurla yeniləndi!');
+        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla yeniləndi!');
     }
 
-    /**
-     * Avtobus sil (soft delete)
-     */
-    public function destroy($id)
+    public function destroy(int $id): RedirectResponse
     {
         $bus = Bus::findOrFail($id);
-
         $this->authorize('delete', $bus);
 
-        $bus->delete();
+        $this->busService->deleteBus($bus);
 
-        return redirect()->route('buses.index')
-            ->with('success', 'Avtobus uğurla silindi!');
+        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla silindi!');
     }
 
-    /**
-     * Excel import forması
-     */
-    public function importForm()
+    public function importForm(): View
     {
         $this->authorize('import', Bus::class);
 
         return view('buses.import');
     }
 
-    /**
-     * Excel import et
-     */
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
         $this->authorize('import', Bus::class);
-
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
             Excel::import(
-                new BusesImport(
-                    (int) session('current_garage_id'),
-                    session('current_company_id') ? (int) session('current_company_id') : null
-                ),
+                new BusesImport((int) GarageContext::getGarageId(), GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null),
                 $request->file('file')
             );
-
-            return redirect()->route('buses.index')
-                ->with('success', 'Avtobuslar uğurla idxal edildi!');
+            return redirect()->route('buses.index')->with('success', 'Avtobuslar uğurla idxal edildi!');
         } catch (\Exception $e) {
             report($e);
-
-            return redirect()->route('buses.index')
-                ->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
+            return redirect()->route('buses.index')->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın.');
         }
     }
 
-    // ==================== BULK OPERATIONS ====================
-
-    /**
-     * Bulk deactivate - seçilmiş avtobusları passiv et
-     */
-    public function bulkDeactivate(Request $request)
+    public function bulkDeactivate(Request $request): RedirectResponse
     {
         $this->authorize('update', Bus::class);
 
         $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return back()->with('error', 'Heç bir avtobus seçilməyib.');
-        }
+        if (empty($ids)) return back()->with('error', 'Heç bir avtobus seçilməyib.');
 
-        // Bulk update
-        Bus::whereIn('id', $ids)->update(['is_active' => false]);
+        $this->busService->bulkUpdateStatus($ids, false);
 
-        // ✅ Bulk audit
-        Bus::auditBulkUpdate($ids, ['is_active' => false], 'bulk_deactivated');
-
-        return redirect()->route('buses.index')
-            ->with('success', count($ids).' avtobus passiv edildi.');
+        return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus passiv edildi.');
     }
 
-    /**
-     * Bulk activate - seçilmiş avtobusları aktiv et
-     */
-    public function bulkActivate(Request $request)
+    public function bulkActivate(Request $request): RedirectResponse
     {
         $this->authorize('update', Bus::class);
 
         $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return back()->with('error', 'Heç bir avtobus seçilməyib.');
-        }
+        if (empty($ids)) return back()->with('error', 'Heç bir avtobus seçilməyib.');
 
-        // Bulk update
-        Bus::whereIn('id', $ids)->update(['is_active' => true]);
+        $this->busService->bulkUpdateStatus($ids, true);
 
-        // ✅ Bulk audit
-        Bus::auditBulkUpdate($ids, ['is_active' => true], 'bulk_activated');
-
-        return redirect()->route('buses.index')
-            ->with('success', count($ids).' avtobus aktiv edildi.');
+        return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus aktiv edildi.');
     }
 
-    /**
-     * Bulk delete - seçilmiş avtobusları sil
-     */
-    public function bulkDelete(Request $request)
+    public function bulkDelete(Request $request): RedirectResponse
     {
         $this->authorize('delete', Bus::class);
 
         $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return back()->with('error', 'Heç bir avtobus seçilməyib.');
-        }
+        if (empty($ids)) return back()->with('error', 'Heç bir avtobus seçilməyib.');
 
-        // ✅ Bulk audit (silinmədən əvvəl)
-        Bus::auditBulkDelete($ids);
+        $this->busService->bulkDelete($ids);
 
-        // Bulk delete
-        Bus::whereIn('id', $ids)->delete();
-
-        return redirect()->route('buses.index')
-            ->with('success', count($ids).' avtobus silindi.');
+        return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus silindi.');
     }
 }

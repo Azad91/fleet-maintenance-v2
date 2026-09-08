@@ -8,6 +8,7 @@ use App\Models\Driver;
 use App\Models\MotorOilDetail;
 use App\Models\ServiceTemplate;
 use App\Models\Warehouse;
+use Illuminate\Support\Facades\Cache;
 
 class GarageDataController extends Controller
 {
@@ -42,7 +43,9 @@ class GarageDataController extends Controller
     public function serviceTemplates(int $busId)
     {
         $bus = Bus::findOrFail($busId);
-        $templates = ServiceTemplate::orderBy('default_km_interval')->get();
+        $templates = Cache::remember('service_templates', 3600, function () {
+            return ServiceTemplate::orderBy('default_km_interval')->get();
+        });
         $intervals = BusServiceInterval::where('bus_id', $bus->id)
             ->whereIn('service_template_id', $templates->pluck('id'))
             ->get()
@@ -61,20 +64,21 @@ class GarageDataController extends Controller
         $bus = Bus::findOrFail($busId);
         $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;  // dəyişdi
 
+        $motorOils = Cache::remember('motor_oil_details', 3600, function () {
+            return MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
+        });
+
         return response()->json(
-            MotorOilDetail::where('km', '>', $latestKm)
-                ->orderBy('km')
-                ->orderBy('part_name')  // dəyişdi (əvvəl: detal_adi)
-                ->get()
+            $motorOils->where('km', '>', $latestKm)
                 ->groupBy('km')
                 ->map(fn ($details, $km) => [
                     'km' => (int) $km,
                     'details' => $details->map(fn (MotorOilDetail $detail) => [
-                        'kodu' => $detail->part_code,  // dəyişdi
-                        'adi' => $detail->part_name,    // dəyişdi
-                        'miqdar' => $detail->quantity,  // dəyişdi
-                        'say' => $detail->count,        // dəyişdi
-                        'olcu_vahidi' => $detail->unit, // dəyişdi
+                        'kodu' => $detail->part_code,
+                        'adi' => $detail->part_name,
+                        'miqdar' => $detail->quantity,
+                        'say' => $detail->count,
+                        'olcu_vahidi' => $detail->unit,
                     ])->values(),
                 ])->values()
         );

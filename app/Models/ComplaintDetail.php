@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ComplaintDetail extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasGarageScope;
 
     protected $fillable = [
         'complaint_id',
@@ -18,6 +19,8 @@ class ComplaintDetail extends Model
         'used_quantity',
         'employee_id',
         'notes',
+        'garage_id',
+        'company_id',
     ];
 
     public function complaint()
