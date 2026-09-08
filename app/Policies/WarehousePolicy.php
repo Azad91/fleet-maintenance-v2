@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\RoleEnum;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\GarageContext;
 
 class WarehousePolicy
 {
@@ -21,10 +22,14 @@ class WarehousePolicy
         ]);
     }
 
-    public function view(User $user, Warehouse $warehouse): bool
+    public function view(User $user, ?Warehouse $warehouse = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($warehouse && $warehouse->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -49,13 +54,21 @@ class WarehousePolicy
             return true;
         }
 
+        if ($warehouse && $warehouse->garage_id !== GarageContext::getGarageId()) {
+            return false;
+        }
+
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function delete(User $user, Warehouse $warehouse): bool
+    public function delete(User $user, ?Warehouse $warehouse = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($warehouse && $warehouse->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value);

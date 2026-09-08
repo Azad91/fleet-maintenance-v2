@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\RoleEnum;
 use App\Models\Bus;
 use App\Models\User;
+use App\Services\GarageContext;
 
 class BusPolicy
 {
@@ -24,6 +25,11 @@ class BusPolicy
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        // Əgər bus obyekti varsa, ownership yoxla
+        if ($bus && $bus->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -47,6 +53,10 @@ class BusPolicy
             return true;
         }
 
+        if ($bus && $bus->garage_id !== GarageContext::getGarageId()) {
+            return false;
+        }
+
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
@@ -54,6 +64,10 @@ class BusPolicy
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($bus && $bus->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value);

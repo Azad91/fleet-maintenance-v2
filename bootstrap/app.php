@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php', // Bu sətrin olduğundan əmin olun
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -27,29 +27,27 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'garage.selected' => EnsureGarageSelected::class,
             'idempotent' => IdempotencyMiddleware::class,
-            'api.garage' => \App\Http\Middleware\EnsureApiGarageContext::class, // ✅ ƏLAVƏ EDİLDİ
+            'api.garage' => \App\Http\Middleware\EnsureApiGarageContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // ✅ GarageAccessDeniedException - 403
+        // GarageAccessDeniedException
         $exceptions->render(function (GarageAccessDeniedException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
             }
-
             return redirect()->route('garage.selection')->with('error', $e->getMessage());
         });
 
-        // ✅ StockInsufficientException - 422
+        // StockInsufficientException
         $exceptions->render(function (StockInsufficientException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
             }
-
             return back()->with('error', $e->getMessage())->withInput();
         });
 
-        // ✅ ValidationException - form xətaları (default)
+        // ValidationException
         $exceptions->render(function (ValidationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -57,39 +55,34 @@ return Application::configure(basePath: dirname(__DIR__))
                     'errors' => $e->errors(),
                 ], 422);
             }
-
-            // ✅ DÜZƏLİŞ: $e->errorBag parametri əlavə edildi ki, named bag-lər itməsin
             return redirect()->back()->withErrors($e->errors(), $e->errorBag)->withInput();
         });
 
-        // ✅ ModelNotFoundException - 404
+        // ModelNotFoundException
         $exceptions->render(function (ModelNotFoundException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Resource not found'], 404);
             }
-
             return abort(404);
         });
 
-        // ✅ AuthenticationException - 401
+        // AuthenticationException
         $exceptions->render(function (AuthenticationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
-
             return redirect()->route('login');
         });
 
-        // ✅ AuthorizationException - 403
+        // AuthorizationException
         $exceptions->render(function (AuthorizationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
             }
-
             return abort(403, $e->getMessage());
         });
 
-        // ✅ Ümumi exception - 500 (yalnız JSON üçün)
+        // Ümumi exception (yalnız JSON üçün)
         $exceptions->render(function (Throwable $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -97,10 +90,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
                 ], 500);
             }
-            // Web üçün Laravel default handler işləyəcək
         });
 
-        // ✅ Exception reporting (Sentry və s. üçün)
         $exceptions->reportable(function (Throwable $e) {
             // Log::error($e->getMessage(), ['exception' => $e]);
         });

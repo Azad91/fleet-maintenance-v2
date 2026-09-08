@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\RoleEnum;
 use App\Models\Complaint;
 use App\Models\User;
+use App\Services\GarageContext;
 
 class ComplaintPolicy
 {
@@ -21,10 +22,14 @@ class ComplaintPolicy
         ]);
     }
 
-    public function view(User $user, Complaint $complaint): bool
+    public function view(User $user, ?Complaint $complaint = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -52,25 +57,37 @@ class ComplaintPolicy
             return true;
         }
 
+        if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
+            return false;
+        }
+
         return $user->hasGarageRole([
             RoleEnum::ADMIN->value,
             RoleEnum::COMPLAINT->value,
         ]);
     }
 
-    public function delete(User $user, Complaint $complaint): bool
+    public function delete(User $user, ?Complaint $complaint = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
         }
 
+        if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
+            return false;
+        }
+
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function close(User $user, Complaint $complaint): bool
+    public function close(User $user, ?Complaint $complaint = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($complaint && $complaint->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([

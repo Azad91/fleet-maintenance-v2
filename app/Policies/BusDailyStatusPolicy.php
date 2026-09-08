@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\RoleEnum;
 use App\Models\BusDailyStatus;
 use App\Models\User;
+use App\Services\GarageContext;
 
 class BusDailyStatusPolicy
 {
@@ -21,10 +22,14 @@ class BusDailyStatusPolicy
         ]);
     }
 
-    public function view(User $user, BusDailyStatus $status): bool
+    public function view(User $user, ?BusDailyStatus $status = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($status && $status->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -46,10 +51,14 @@ class BusDailyStatusPolicy
         ]);
     }
 
-    public function update(User $user, BusDailyStatus $status): bool
+    public function update(User $user, ?BusDailyStatus $status = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($status && $status->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -58,10 +67,14 @@ class BusDailyStatusPolicy
         ]);
     }
 
-    public function delete(User $user, BusDailyStatus $status): bool
+    public function delete(User $user, ?BusDailyStatus $status = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($status && $status->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([

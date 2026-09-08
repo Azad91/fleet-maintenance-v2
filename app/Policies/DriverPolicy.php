@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\RoleEnum;
 use App\Models\Driver;
 use App\Models\User;
+use App\Services\GarageContext;
 
 class DriverPolicy
 {
@@ -17,10 +18,14 @@ class DriverPolicy
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function view(User $user, Driver $driver): bool
+    public function view(User $user, ?Driver $driver = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($driver && $driver->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
@@ -41,13 +46,21 @@ class DriverPolicy
             return true;
         }
 
+        if ($driver && $driver->garage_id !== GarageContext::getGarageId()) {
+            return false;
+        }
+
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function delete(User $user, Driver $driver): bool
+    public function delete(User $user, ?Driver $driver = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($driver && $driver->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value);

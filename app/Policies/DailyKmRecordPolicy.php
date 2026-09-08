@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\RoleEnum;
 use App\Models\DailyKmRecord;
 use App\Models\User;
+use App\Services\GarageContext;
 
 class DailyKmRecordPolicy
 {
@@ -21,10 +22,14 @@ class DailyKmRecordPolicy
         ]);
     }
 
-    public function view(User $user, DailyKmRecord $record): bool
+    public function view(User $user, ?DailyKmRecord $record = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($record && $record->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -46,10 +51,14 @@ class DailyKmRecordPolicy
         ]);
     }
 
-    public function update(User $user, DailyKmRecord $record): bool
+    public function update(User $user, ?DailyKmRecord $record = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($record && $record->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
@@ -58,10 +67,14 @@ class DailyKmRecordPolicy
         ]);
     }
 
-    public function delete(User $user, DailyKmRecord $record): bool
+    public function delete(User $user, ?DailyKmRecord $record = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;
+        }
+
+        if ($record && $record->garage_id !== GarageContext::getGarageId()) {
+            return false;
         }
 
         return $user->hasGarageRole([
