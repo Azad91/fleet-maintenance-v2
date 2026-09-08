@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EmployeeStoreRequest;
+use App\Http\Requests\EmployeeUpdateRequest;
 use App\Imports\EmployeesImport;
 use App\Models\Employee;
 use Illuminate\Http\Request;
@@ -27,19 +29,13 @@ class EmployeeController extends Controller
         return view('employees.create', compact('positions'));
     }
 
-    public function store(Request $request)
+    public function store(EmployeeStoreRequest $request)
     {
-        $this->authorize('create', Employee::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', Employee::class);
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'position' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->boolean('is_active');
+
         Employee::create($validated);
 
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla əlavə edildi!');
@@ -65,21 +61,14 @@ class EmployeeController extends Controller
         return view('employees.edit', compact('employee', 'positions'));
     }
 
-    public function update(Request $request, $id)
+    public function update(EmployeeUpdateRequest $request, $id)
     {
         $employee = Employee::findOrFail($id);
+        $this->authorize('update', $employee);
 
-        $this->authorize('update', $employee);  // ✅ ƏLAVƏ
-
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'position' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->boolean('is_active');
+
         $employee->update($validated);
 
         return redirect()->route('employees.index')->with('success', 'İşçi uğurla yeniləndi!');

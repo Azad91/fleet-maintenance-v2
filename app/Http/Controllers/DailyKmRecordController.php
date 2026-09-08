@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DailyKmStoreRequest;
+use App\Http\Requests\DailyKmUpdateRequest;
 use App\Imports\DailyKmRecordsImport;
 use App\Models\Bus;
 use App\Models\DailyKmRecord;
@@ -41,15 +43,12 @@ class DailyKmRecordController extends Controller
         return view('daily-km-records.create', compact('buses'));
     }
 
-    public function store(Request $request)
+    public function store(DailyKmStoreRequest $request)
     {
-        $this->authorize('create', DailyKmRecord::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', DailyKmRecord::class);
 
-        $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
-            'date' => 'required|date',
-            'km' => 'required|integer|min:0',
-        ]);
+        // ✅ FormRequest-dən hazır validasiya olunmuş datanı alırıq
+        $validated = $request->validated();
 
         $bus = Bus::findOrFail($request->bus_id);
         $previousKm = $bus->dailyKmRecords()
@@ -75,6 +74,7 @@ class DailyKmRecordController extends Controller
 
         $exists = DailyKmRecord::where('bus_id', $request->bus_id)
             ->whereDate('date', $request->date)
+            ->whereNull('deleted_at') // ✅ Silinmiş qeydlərlə toqquşmanın qarşısı alındı
             ->exists();
 
         if ($exists) {
@@ -112,17 +112,13 @@ class DailyKmRecordController extends Controller
         return view('daily-km-records.edit', compact('record', 'buses'));
     }
 
-    public function update(Request $request, $id)
+    public function update(DailyKmUpdateRequest $request, $id)
     {
         $record = DailyKmRecord::findOrFail($id);
+        $this->authorize('update', $record);
 
-        $this->authorize('update', $record);  // ✅ ƏLAVƏ
-
-        $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
-            'date' => 'required|date',
-            'km' => 'required|integer|min:0',
-        ]);
+        // ✅ FormRequest-dən hazır validasiya olunmuş datanı alırıq
+        $validated = $request->validated();
 
         $bus = Bus::findOrFail($request->bus_id);
         $previousKm = $bus->dailyKmRecords()
@@ -151,6 +147,7 @@ class DailyKmRecordController extends Controller
         $exists = DailyKmRecord::where('bus_id', $request->bus_id)
             ->where('id', '!=', $id)
             ->whereDate('date', $request->date)
+            ->whereNull('deleted_at') // ✅ Silinmiş qeydlərlə toqquşmanın qarşısı alındı
             ->exists();
 
         if ($exists) {

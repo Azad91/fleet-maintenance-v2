@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BusDailyStatusStoreRequest;
+use App\Http\Requests\BusDailyStatusUpdateRequest;
 use App\Imports\BusDailyStatusesImport;
 use App\Models\Bus;
 use App\Models\BusDailyStatus;
@@ -31,18 +33,15 @@ class BusDailyStatusController extends Controller
         return view('bus-daily-statuses.create', compact('buses'));
     }
 
-    public function store(Request $request)
+    public function store(BusDailyStatusStoreRequest $request)
     {
-        $this->authorize('create', BusDailyStatus::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', BusDailyStatus::class);
 
-        $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
-            'date' => 'required|date',
-            'status' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $exists = BusDailyStatus::where('bus_id', $request->bus_id)
             ->whereDate('date', $request->date)
+            ->whereNull('deleted_at') // ✅ Silinmiş qeydlərlə toqquşmanın qarşısı alındı
             ->exists();
 
         if ($exists) {
@@ -76,21 +75,17 @@ class BusDailyStatusController extends Controller
         return view('bus-daily-statuses.edit', compact('status', 'buses'));
     }
 
-    public function update(Request $request, $id)
+    public function update(BusDailyStatusUpdateRequest $request, $id)
     {
         $status = BusDailyStatus::findOrFail($id);
+        $this->authorize('update', $status);
 
-        $this->authorize('update', $status);  // ✅ ƏLAVƏ
-
-        $validated = $request->validate([
-            'bus_id' => ['required', Rule::exists('buses', 'id')->where('garage_id', session('current_garage_id'))],
-            'date' => 'required|date',
-            'status' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $exists = BusDailyStatus::where('bus_id', $request->bus_id)
             ->where('id', '!=', $id)
             ->whereDate('date', $request->date)
+            ->whereNull('deleted_at') // ✅ Silinmiş qeydlərlə toqquşmanın qarşısı alındı
             ->exists();
 
         if ($exists) {

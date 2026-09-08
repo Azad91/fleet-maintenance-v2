@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\RoleEnum;
 use App\Http\Controllers\Controller;
-use App\Models\User; // ✅ ƏLAVƏ
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,8 +31,9 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            // ✅ DƏYİŞDİRİLƏN HİSSƏ: 'bus' əvəzinə RoleEnum::VIEWER->value
-            'role' => RoleEnum::VIEWER->value,
+            // ✅ DÜZƏLİŞ: 'viewer' əvəzinə 'user' yazırıq.
+            // Çünki users cədvəli yalnız 'user' və 'super_admin' qəbul edir.
+            'role' => 'user',
         ]);
 
         event(new Registered($user));

@@ -27,7 +27,7 @@ class HealthController extends Controller
             $status['services']['database'] = ['status' => 'up'];
         } catch (Throwable $e) {
             $isHealthy = false;
-            $status['services']['database'] = ['status' => 'down', 'error' => $e->getMessage()];
+            $status['services']['database'] = ['status' => 'down', 'error' => config('app.debug') ? $e->getMessage() : 'DB Error'];
         }
 
         // 2. Cache Check
@@ -43,7 +43,7 @@ class HealthController extends Controller
             }
         } catch (Throwable $e) {
             $isHealthy = false;
-            $status['services']['cache'] = ['status' => 'down', 'error' => $e->getMessage()];
+            $status['services']['cache'] = ['status' => 'down', 'error' => config('app.debug') ? $e->getMessage() : 'Cache Error'];
         }
 
         // 3. Storage Check
@@ -59,7 +59,7 @@ class HealthController extends Controller
             }
         } catch (Throwable $e) {
             $isHealthy = false;
-            $status['services']['storage'] = ['status' => 'down', 'error' => $e->getMessage()];
+            $status['services']['storage'] = ['status' => 'down', 'error' => config('app.debug') ? $e->getMessage() : 'Storage Error'];
         }
 
         $statusCode = $isHealthy ? 200 : 503;

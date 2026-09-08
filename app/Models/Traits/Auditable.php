@@ -48,18 +48,11 @@ trait Auditable
      */
     public static function auditBulkUpdate(array $ids, array $newValues, string $event = 'bulk_updated'): void
     {
-        $model = new static;
-        $table = $model->getTable();
-
-        // Köhnə dəyərləri al
-        $oldRecords = DB::table($table)
-            ->whereIn('id', $ids)
-            ->get()
-            ->keyBy('id')
-            ->toArray();
+        // ✅ DB::table əvəzinə Eloquent istifadə edirik ki, HasGarageScope avtomatik işləsin!
+        $oldRecords = static::whereIn('id', $ids)->get()->keyBy('id');
 
         foreach ($oldRecords as $id => $oldRecord) {
-            $oldArray = (array) $oldRecord;
+            $oldArray = $oldRecord->getOriginal();
             $newArray = array_merge($oldArray, $newValues);
 
             // Yalnız dəyişən sahələri tap
@@ -68,9 +61,9 @@ trait Auditable
             if (! empty($changed)) {
                 AuditLog::create([
                     'user_id' => auth()->id(),
-                    'garage_id' => $model->garage_id ?? null,
-                    'company_id' => $model->company_id ?? null,
-                    'auditable_type' => get_class($model),
+                    'garage_id' => $oldRecord->garage_id ?? null,
+                    'company_id' => $oldRecord->company_id ?? null,
+                    'auditable_type' => static::class,
                     'auditable_id' => $id,
                     'event' => $event,
                     'old_values' => array_intersect_key($oldArray, $changed),
@@ -85,23 +78,18 @@ trait Auditable
      */
     public static function auditBulkDelete(array $ids, string $event = 'bulk_deleted'): void
     {
-        $model = new static;
-        $table = $model->getTable();
-
-        $oldRecords = DB::table($table)
-            ->whereIn('id', $ids)
-            ->get();
+        // ✅ DB::table əvəzinə Eloquent istifadə edirik ki, HasGarageScope avtomatik işləsin!
+        $oldRecords = static::whereIn('id', $ids)->get();
 
         foreach ($oldRecords as $oldRecord) {
-            $oldArray = (array) $oldRecord;
             AuditLog::create([
                 'user_id' => auth()->id(),
-                'garage_id' => $model->garage_id ?? null,
-                'company_id' => $model->company_id ?? null,
-                'auditable_type' => get_class($model),
+                'garage_id' => $oldRecord->garage_id ?? null,
+                'company_id' => $oldRecord->company_id ?? null,
+                'auditable_type' => static::class,
                 'auditable_id' => $oldRecord->id,
                 'event' => $event,
-                'old_values' => $oldArray,
+                'old_values' => $oldRecord->getOriginal(),
                 'new_values' => null,
             ]);
         }
