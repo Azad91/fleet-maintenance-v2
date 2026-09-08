@@ -31,7 +31,7 @@ class ComplaintUpdateRequest extends FormRequest
             'shikayet' => 'required|array|min:1',
             'shikayet.*' => 'required|string',
             'km' => 'nullable|integer|min:0',
-            'status' => 'required|in:gözləmədə,işdə,həll olundu',
+            'status' => 'required|in:gözləmədə,işdə',
             'complaint_type' => 'nullable|exists:complaint_types,name',
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',

@@ -106,10 +106,13 @@ class ComplaintService
     public function delete(Complaint $complaint): void
     {
         DB::transaction(function () use ($complaint) {
+            // Detalları restore et (stok geri qaytar)
             if ($complaint->details->isNotEmpty()) {
                 $this->stockService->restoreStock($complaint->details->toArray());
-                $complaint->details()->delete();
             }
+            // Detalları soft-delete et
+            $complaint->details()->delete();
+            // Complaint-i soft-delete et
             $complaint->delete();
         });
     }

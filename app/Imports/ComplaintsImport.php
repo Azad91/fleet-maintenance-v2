@@ -67,8 +67,8 @@ class ComplaintsImport implements OnEachRow, ShouldQueue, WithChunkReading, With
                 throw ValidationException::withMessages(['used_quantity' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur."]);
             }
 
-            $warehouse->decrement('quantity', $usedQuantity);
             $stockQuantity = $warehouse->quantity;
+            $warehouse->decrement('quantity', $usedQuantity);
             $partName ??= $warehouse->name;
         }
 

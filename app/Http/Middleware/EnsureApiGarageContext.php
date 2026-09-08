@@ -11,7 +11,6 @@ class EnsureApiGarageContext
 {
     public function handle(Request $request, Closure $next)
     {
-        // 1. Header-dən qaraj ID-sini al
         $garageId = $request->header('X-Garage-Id');
 
         if (! $garageId) {
@@ -20,13 +19,24 @@ class EnsureApiGarageContext
             ], 400);
         }
 
-        // 2. İstifadəçinin authenticated olduğundan əmin ol
         $user = $request->user();
         if (! $user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        // 3. İstifadəçinin bu qaraja giriş icazəsi varmı?
+        // Super-admin üçün qarajın mövcudluğunu yoxla
+        if ($user->isSuperAdmin()) {
+            $garage = Garage::find($garageId);
+            if (! $garage) {
+                return response()->json([
+                    'error' => 'Qaraj tapılmadı.',
+                ], 404);
+            }
+            GarageContext::set((int) $garageId, $garage->company_id);
+            return $next($request);
+        }
+
+        // Normal istifadəçi üçün membership yoxla
         $hasAccess = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
@@ -38,13 +48,11 @@ class EnsureApiGarageContext
             ], 403);
         }
 
-        // 4. Qaraj məlumatlarını tap
         $garage = Garage::find($garageId);
         if (! $garage) {
             return response()->json(['error' => 'Qaraj tapılmadı'], 404);
         }
 
-        // 5. Context-i təyin et
         GarageContext::set((int) $garageId, $garage->company_id);
 
         return $next($request);
