@@ -3,7 +3,7 @@
 @section('title', 'Fleet Maintenance')
 
 @section('styles')
-    {{-- Bu səhifəyə xüsusi CSS yoxdur, hamısı app.css - dən gəlir --}}
+    {{-- No specific CSS for this page, all from app.css --}}
 @endsection
 
 @section('content')
@@ -14,35 +14,35 @@
         </div>
         <h1>Fleet <span>Maintenance</span></h1>
         <p class="subtitle">
-            Avtobus parkınızın idarə edilməsi üçün tam həll
+            The complete solution for managing your bus fleet
         </p>
 
         <div class="features">
             <div class="feature-item">
                 <i class="bi bi-bus-front"></i>
-                <h6>Avtobuslar</h6>
-                <p>Bütün avtobus məlumatları</p>
+                <h6>Buses</h6>
+                <p>All bus information</p>
             </div>
             <div class="feature-item">
                 <i class="bi bi-clipboard"></i>
-                <h6>Şikayətlər</h6>
-                <p>Problem və nasazlıqlar</p>
+                <h6>Complaints</h6>
+                <p>Problems and breakdowns</p>
             </div>
             <div class="feature-item">
                 <i class="bi bi-box-seam"></i>
-                <h6>Anbar</h6>
-                <p>Ehtiyat hissələri</p>
+                <h6>Warehouse</h6>
+                <p>Spare parts inventory</p>
             </div>
         </div>
 
         <div class="btn-group-custom">
             <a href="{{ route('login') }}" class="btn-custom btn-login">
-                <i class="bi bi-box-arrow-in-right"></i> Daxil Ol
+                <i class="bi bi-box-arrow-in-right"></i> Login
             </a>
         </div>
 
         <div class="footer-text">
-            &copy; {{ date('Y') }} Fleet Maintenance. Bütün hüquqlar qorunur.
+            &copy; {{ date('Y') }} Fleet Maintenance. All rights reserved.
         </div>
     </div>
 </div>

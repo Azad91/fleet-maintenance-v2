@@ -1,9 +1,9 @@
 @extends('layouts.guest')
 
-@section('title', 'Qeydiyyat - Fleet Maintenance')
+@section('title', 'Register - Fleet Maintenance')
 
 @section('styles')
-    {{-- Bu səhifəyə xüsusi CSS yoxdur, hamısı app.css - dən gəlir --}}
+    {{-- No extra CSS needed, everything is in app.css --}}
 @endsection
 
 @section('content')
@@ -12,8 +12,8 @@
         <div class="logo">
             <i class="bi bi-car-front-fill"></i>
         </div>
-        <div class="auth-title">Qeydiyyat</div>
-        <p class="auth-subtitle">Yeni hesab yarat</p>
+        <div class="auth-title">Register</div>
+        <p class="auth-subtitle">Create a new account</p>
 
         @if ($errors->any())
             <div class="alert-danger">
@@ -28,10 +28,10 @@
             @csrf
 
             <div class="form-group">
-                <label for="name">Ad Soyad</label>
+                <label for="name">Full Name</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input id="name" type="text" class="form-control" name="name" value="{{ old('name') }}" required placeholder="Ad Soyad">
+                    <input id="name" type="text" class="form-control" name="name" value="{{ old('name') }}" required placeholder="Full Name">
                 </div>
             </div>
 
@@ -44,7 +44,7 @@
             </div>
 
             <div class="form-group">
-                <label for="password">Şifrə</label>
+                <label for="password">Password</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" class="form-control" name="password" required placeholder="••••••••">
@@ -52,7 +52,7 @@
             </div>
 
             <div class="form-group">
-                <label for="password_confirmation">Şifrə Təkrar</label>
+                <label for="password_confirmation">Confirm Password</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
                     <input id="password_confirmation" type="password" class="form-control" name="password_confirmation" required placeholder="••••••••">
@@ -60,12 +60,12 @@
             </div>
 
             <button type="submit" class="btn-register">
-                <i class="bi bi-person-plus me-2"></i> Qeydiyyat
+                <i class="bi bi-person-plus me-2"></i> Register
             </button>
         </form>
 
         <div class="auth-footer">
-            Artıq hesabın var? <a href="{{ route('login') }}">Daxil Ol</a>
+            Already have an account? <a href="{{ route('login') }}">Sign In</a>
         </div>
     </div>
 </div>

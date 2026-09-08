@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Status Redaktə Et')
+@section('title', 'Edit Status')
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>✏️ Status Redaktə Et</h4>
+        <h4>✏️ Edit Status</h4>
     </div>
     <div class="card-body">
         <form action="{{ route('bus-daily-statuses.update', $status) }}" method="POST">
@@ -13,19 +13,19 @@
             @method('PUT')
 
             <div class="mb-3">
-                <label for="bus_id" class="form-label fw-bold">🚌 Avtobus <span class="text-danger">*</span></label>
+                <label for="bus_id" class="form-label fw-bold">🚌 Bus <span class="text-danger">*</span></label>
                 <select class="form-select" id="bus_id" name="bus_id" required>
-                    <option value="">Avtobus seçin...</option>
+                    <option value="">Select Bus...</option>
                     @foreach($buses as $bus)
                         <option value="{{ $bus->id }}" {{ $status->bus_id == $bus->id ? 'selected' : '' }}>
-                            {{ $bus->dqn }} - Xətt: {{ $bus->route_number ?? '-' }}
+                            {{ $bus->dqn }} - Route: {{ $bus->route_number ?? '-' }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
             <div class="mb-3">
-                <label for="date" class="form-label fw-bold">📅 Tarix <span class="text-danger">*</span></label>
+                <label for="date" class="form-label fw-bold">📅 Date <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" id="date" name="date" required value="{{ \Carbon\Carbon::parse($status->date)->format('Y-m-d') }}">
             </div>
 
@@ -35,16 +35,16 @@
             </div>
 
             <div class="mb-3">
-                <label for="notes" class="form-label fw-bold">📝 Qeyd</label>
+                <label for="notes" class="form-label fw-bold">📝 Notes</label>
                 <textarea class="form-control" id="notes" name="notes" rows="3">{{ $status->notes }}</textarea>
             </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Yenilə
+                    <i class="bi bi-save"></i> Update
                 </button>
                 <a href="{{ route('bus-daily-statuses.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Geri
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
             </div>
         </form>

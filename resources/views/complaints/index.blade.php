@@ -1,30 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Kartlar')
+@section('title', 'Work Cards')
 
 @section('content')
 <div class="page-header">
-    <h1>📋 Kartlar</h1>
-    <p class="text-muted">Bütün şikayət və iş kartları</p>
+    <h1>📋 Work Cards</h1>
+    <p class="text-muted">All complaints and work cards</p>
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex gap-2 flex-wrap">
         @can('create', App\Models\Complaint::class)
             <a href="{{ route('complaints.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> Yeni Kart
+                <i class="bi bi-plus-lg"></i> New Card
             </a>
         @endcan
         @can('import', App\Models\Complaint::class)
             <a href="{{ route('complaints.import') }}" class="btn btn-success">
-                <i class="bi bi-upload"></i> Excel-dən Yüklə
+                <i class="bi bi-upload"></i> Import from Excel
             </a>
         @endcan
         <a href="{{ route('complaint-types.index') }}" class="btn btn-outline-info">
-            <i class="bi bi-tags"></i> Şikayət Növləri
+            <i class="bi bi-tags"></i> Complaint Types
         </a>
     </div>
-    <span class="badge bg-primary rounded-pill">Cəmi: {{ $complaints->total() }} kart</span>
+    <span class="badge bg-primary rounded-pill">Total: {{ $complaints->total() }} cards</span>
 </div>
 
 <div class="card">
@@ -34,12 +34,12 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Avtobus</th>
-                        <th>Şikayət</th>
-                        <th>Tip</th>
+                        <th>Bus</th>
+                        <th>Complaint</th>
+                        <th>Type</th>
                         <th>Status</th>
-                        <th>Tarix</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Date</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,40 +52,37 @@
                             <small class="text-muted">{{ $complaint->bus->route_number ?? '-' }}</small>
                         </td>
                         <td>
-                            {{-- ✅ shikayet əvəzinə items-dən ilkini göstər --}}
                             {{ Str::limit($complaint->items->first()->description ?? '-', 30) }}
                         </td>
                         <td>
                             @if($complaint->complaint_type == 'qezali')
-                                <span class="badge bg-danger">🚗 Qəzalı</span>
+                                <span class="badge bg-danger">🚗 Accident</span>
                             @elseif($complaint->complaint_type == 'nasazliq')
-                                <span class="badge bg-warning">⚠️ Nasazlıq</span>
+                                <span class="badge bg-warning">⚠️ Breakdown</span>
                             @elseif($complaint->complaint_type == 'texniki_xidmet')
-                                <span class="badge bg-info">🔧 Texniki Xidmət</span>
+                                <span class="badge bg-info">🔧 Maintenance</span>
                             @else
                                 <span class="badge bg-secondary">-</span>
                             @endif
                         </td>
                         <td>
                             @if($complaint->status == 'həll olundu')
-                                <span class="badge bg-success">✅ Bağlandı</span>
+                                <span class="badge bg-success">✅ Completed</span>
                             @elseif($complaint->status == 'işdə')
-                                <span class="badge bg-warning">🔨 İşdə</span>
+                                <span class="badge bg-warning">🔨 In Progress</span>
                             @else
-                                <span class="badge bg-secondary">⏳ Gözləmədə</span>
+                                <span class="badge bg-secondary">⏳ Pending</span>
                             @endif
                         </td>
                         <td>{{ $complaint->created_at ? $complaint->created_at->format('d.m.Y') : '-' }}</td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
-                                <!-- Bax -->
                                 @can('view', $complaint)
                                     <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                 @endcan
 
-                                <!-- Redaktə -->
                                 @can('update', $complaint)
                                     @if($complaint->status != 'həll olundu')
                                         <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-outline-warning">
@@ -94,18 +91,16 @@
                                     @endif
                                 @endcan
 
-                                <!-- Bağla -->
                                 @can('close', $complaint)
                                     @if($complaint->status != 'həll olundu')
                                         <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#closeModal{{ $complaint->id }}">
-                                            <i class="bi bi-check-circle"></i> Bağla
+                                            <i class="bi bi-check-circle"></i> Close
                                         </button>
                                     @endif
                                 @endcan
 
-                                <!-- Sil -->
                                 @can('delete', $complaint)
-                                    <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kartı silmək istədiyinizdən əminsiniz?')">
+                                    <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this card?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -120,10 +115,10 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            Hələ heç bir kart yoxdur.
+                            No cards yet.
                             <br>
                             @can('create', App\Models\Complaint::class)
-                                <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm mt-2">Yeni Kart Aç</a>
+                                <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm mt-2">Create New Card</a>
                             @endcan
                         </td>
                     </tr>
@@ -134,12 +129,11 @@
     </div>
 </div>
 
-<!-- Pagination -->
 <div class="pagination-wrapper d-flex justify-content-center mt-4">
     {{ $complaints->withQueryString()->links() }}
 </div>
 
-<!-- ==================== BAĞLANMA MODALLARI ==================== -->
+<!-- Close Modals -->
 @foreach($complaints as $complaint)
     @if($complaint->status != 'həll olundu' && auth()->user()->can('close', $complaint))
         <div class="modal fade" id="closeModal{{ $complaint->id }}" tabindex="-1" aria-labelledby="closeModalLabel{{ $complaint->id }}" aria-hidden="true">
@@ -149,36 +143,36 @@
                         @csrf
                         <div class="modal-header">
                             <h5 class="modal-title" id="closeModalLabel{{ $complaint->id }}">
-                                <i class="bi bi-lock"></i> Şikayəti Bağla
+                                <i class="bi bi-lock"></i> Close Complaint
                             </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Bağla"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="alert alert-info">
-                                <strong>🚌 Avtobus:</strong> {{ $complaint->bus->dqn ?? '-' }}
+                                <strong>🚌 Bus:</strong> {{ $complaint->bus->dqn ?? '-' }}
                                 ({{ $complaint->bus->route_number ?? '-' }})
                             </div>
 
                             <div class="mb-3">
-                                <label for="end_date{{ $complaint->id }}" class="form-label fw-bold">📅 Bitmə Tarixi <span class="text-danger">*</span></label>
+                                <label for="end_date{{ $complaint->id }}" class="form-label fw-bold">📅 End Date <span class="text-danger">*</span></label>
                                 <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}">
                             </div>
 
                             <div class="mb-3">
-                                <label for="end_time{{ $complaint->id }}" class="form-label fw-bold">🕐 Bitmə Saatı <span class="text-danger">*</span></label>
+                                <label for="end_time{{ $complaint->id }}" class="form-label fw-bold">🕐 End Time <span class="text-danger">*</span></label>
                                 <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}">
                             </div>
 
                             <div class="mb-3">
-                                <label for="work_done{{ $complaint->id }}" class="form-label fw-bold">📝 Görülən İşlər <span class="text-danger">*</span></label>
-                                <textarea name="work_done" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea>
-                                <small class="text-muted">Ən azı 5 simvol daxil edin</small>
+                                <label for="work_done{{ $complaint->id }}" class="form-label fw-bold">📝 Work Done <span class="text-danger">*</span></label>
+                                <textarea name="work_done" class="form-control" rows="3" placeholder="Describe work done in detail..." required></textarea>
+                                <small class="text-muted">At least 5 characters</small>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv Et</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Bağla
+                                <i class="bi bi-check-circle"></i> Close
                             </button>
                         </div>
                     </form>

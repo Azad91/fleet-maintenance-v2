@@ -5,12 +5,12 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Avtobus (DQN)</th>
-                        <th>Xətt</th>
-                        <th>Yer</th>
-                        <th>Şikayət</th>
+                        <th>Bus (DQN)</th>
+                        <th>Route</th>
+                        <th>Location</th>
+                        <th>Complaint</th>
                         <th>Status</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,15 +21,14 @@
                         <td>{{ $complaint->bus->route_number ?? '-' }}</td>
                         <td>
                             @if($complaint->yer == 'yol')
-                                🛣️ Yol
+                                🛣️ Road
                             @elseif($complaint->yer == 'qaraj')
-                                🏠 Qaraj
+                                🏠 Garage
                             @else
                                 -
                             @endif
                         </td>
                         <td>
-                            {{-- ✅ shikayet əvəzinə items-dən istifadə --}}
                             {{ Str::limit($complaint->items->first()->description ?? '-', 30) }}
                         </td>
                         <td>
@@ -53,7 +52,7 @@
                                     <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Əminsən?')">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -66,11 +65,11 @@
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                             @if(isset($dqn) || isset($xett_no) || isset($yer) || isset($shikayet))
-                                Axtarış nəticəsində heç nə tapılmadı
+                                No results found.
                             @else
-                                Hələ kart yoxdur.
+                                No cards yet.
                                 @can('create', App\Models\Complaint::class)
-                                    <a href="{{ route('complaints.create') }}">Yenisini əlavə et!</a>
+                                    <a href="{{ route('complaints.create') }}">Add a new one!</a>
                                 @endcan
                             @endif
                         </td>

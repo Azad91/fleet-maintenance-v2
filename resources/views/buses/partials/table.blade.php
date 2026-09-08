@@ -7,34 +7,34 @@
                         <th style="width: 40px;">
                             <input type="checkbox" id="selectAll">
                         </th>
-                        <th style="width: 50px; text-align: center;">№</th>
+                        <th style="width: 50px; text-align: center;">#</th>
                         <th>BUS PROJECT</th>
                         <th>VIN</th>
                         <th>UZUNLUQ</th>
-                        <th>Xətt №</th>
+                        <th>Route No</th>
                         <th>DQN</th>
-                        <th>MOTOR №</th>
-                        <th style="width: 150px; text-align: center;">📊 Son KM</th>
-                        <th style="width: 150px; text-align: center;">Əməliyyatlar</th>
+                        <th>ENGINE No</th>
+                        <th style="width: 150px; text-align: center;">📊 Latest KM</th>
+                        <th style="width: 150px; text-align: center;">Actions</th>
                     </tr>
                     <tr id="busTableFilter" style="background-color: #f8f9fa;">
                         <th></th>
                         <th></th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="bus_project"
-                                placeholder="🔍 Layihə..." style="font-size: 13px;">
+                                placeholder="🔍 Project..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="vin"
-                                placeholder="🔍 Şassi..." style="font-size: 13px;">
+                                placeholder="🔍 Chassis..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="uzunluq"
-                                placeholder="🔍 Uzunluq..." style="font-size: 13px;">
+                                placeholder="🔍 Length..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="route_number"
-                                placeholder="🔍 Xətt..." style="font-size: 13px;">
+                                placeholder="🔍 Route..." style="font-size: 13px;">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="dqn"
@@ -42,7 +42,7 @@
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="engine_number"
-                                placeholder="🔍 Motor..." style="font-size: 13px;">
+                                placeholder="🔍 Engine..." style="font-size: 13px;">
                         </th>
                         <th style="text-align: center;"></th>
                         <th style="text-align: center;"></th>
@@ -79,7 +79,7 @@
                                     <a href="{{ route('buses.edit', $bus) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('buses.destroy', $bus) }}" method="POST" style="display:inline" onsubmit="return confirm('Əminsən?')">
+                                    <form action="{{ route('buses.destroy', $bus) }}" method="POST" style="display:inline" onsubmit="return confirm('Are you sure?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -95,9 +95,9 @@
                         <td colspan="10" class="text-center text-muted py-4">
                             <i class="bi bi-bus-front" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                             @if(isset($isEmpty) && $isEmpty)
-                                <p class="mb-0">Axtarış nəticəsində heç nə tapılmadı.</p>
+                                <p class="mb-0">No results found.</p>
                             @else
-                                <p class="mb-0">Hələ avtobus yoxdur. <a href="{{ route('buses.import') }}">Excel - dən yüklə!</a></p>
+                                <p class="mb-0">No buses yet. <a href="{{ route('buses.import') }}">Import from Excel!</a></p>
                             @endif
                         </td>
                     </tr>

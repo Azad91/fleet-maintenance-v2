@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Yeni Sürücü')
+@section('title', 'New Driver')
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>➕ Yeni Sürücü Əlavə Et</h4>
+        <h4>➕ Add New Driver</h4>
     </div>
     <div class="card-body">
         @if ($errors->any())
             <div class="alert alert-danger">
-                <strong>Sürücü əlavə edilmədi.</strong>
+                <strong>Driver not added.</strong>
                 <ul class="mb-0 mt-2">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

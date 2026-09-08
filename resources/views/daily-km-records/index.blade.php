@@ -1,28 +1,28 @@
 @extends('layouts.app')
 
-@section('title', 'Gündəlik KM Qeydləri')
+@section('title', 'Daily KM Records')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📊 Gündəlik KM Qeydləri</h1>
+    <h1>📊 Daily KM Records</h1>
     @if(auth()->user()?->hasGarageRole(['admin', 'daily_km']))
     <div>
         <a href="{{ route('daily-km-records.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Excel - dən Yüklə
+            <i class="bi bi-upload"></i> Import from Excel
         </a>
         <a href="{{ route('daily-km-records.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Yeni KM Qeydi
+            <i class="bi bi-plus-lg"></i> New KM Record
         </a>
     </div>
     @endif
 </div>
 
-<!-- Axtarış -->
+<!-- Search -->
 <form method="GET" class="mb-4">
     <div class="input-group">
-        <input type="text" class="form-control" name="search" placeholder="DQN, Xətt № və ya Tarix ilə axtar..." value="{{ request('search') }}">
-        <button class="btn btn-primary"><i class="bi bi-search"></i> Axtar</button>
-        <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary">Sıfırla</a>
+        <input type="text" class="form-control" name="search" placeholder="Search by DQN, Route No or Date..." value="{{ request('search') }}">
+        <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+        <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary">Reset</a>
     </div>
 </form>
 
@@ -32,13 +32,13 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>№</th>
-                        <th>Avtobus (DQN)</th>
-                        <th>Xətt №</th>
-                        <th>Tarix</th>
+                        <th>#</th>
+                        <th>Bus (DQN)</th>
+                        <th>Route No</th>
+                        <th>Date</th>
                         <th>KM</th>
-                        <th>Qeyd</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,10 +46,10 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td><strong>{{ $record->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $record->bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
-                        <td>{{ $record->date ? \Carbon\Carbon::parse($record->date)->format('d.m.Y') : '-' }}</td> <!-- ✅ tarix → date -->
+                        <td>{{ $record->bus->route_number ?? '-' }}</td>
+                        <td>{{ $record->date ? \Carbon\Carbon::parse($record->date)->format('d.m.Y') : '-' }}</td>
                         <td><strong>{{ number_format($record->km, 0, ',', '.') }} km</strong></td>
-                        <td>{{ $record->notes ?? '-' }}</td> <!-- ✅ qeyd → notes -->
+                        <td>{{ $record->notes ?? '-' }}</td>
                         <td>
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="{{ route('daily-km-records.show', $record) }}" class="btn btn-sm btn-outline-primary">
@@ -59,7 +59,7 @@
                                     <a href="{{ route('daily-km-records.edit', $record) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('Əminsən?')">
+                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('Are you sure?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -74,7 +74,7 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-graph-up" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            Hələ KM qeydi yoxdur.
+                            No KM records yet.
                         </td>
                     </tr>
                     @endforelse

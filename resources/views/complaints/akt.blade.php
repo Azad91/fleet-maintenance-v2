@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>İş Kartı - Akt</title>
+    <title>Work Card - Act</title>
     <style>
         body { font-family: 'DejaVu Sans', sans-serif; margin: 40px; }
         .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -22,40 +22,40 @@
 </head>
 <body>
     <div class="header">
-        <div class="title">İŞ KARTI / AKT</div>
-        <div>№: {{ $complaint->id }} | Tarix: {{ now()->format('d.m.Y') }}</div>
+        <div class="title">WORK CARD / ACT</div>
+        <div>No: {{ $complaint->id }} | Date: {{ now()->format('d.m.Y') }}</div>
     </div>
 
     <div class="content">
-        <!-- Avtobus Məlumatları -->
-        <div class="row"><span class="label">Avtobus:</span><span class="value">{{ $complaint->bus->dqn ?? '-' }} ({{ $complaint->bus->route_number ?? '-' }})</span></div>
-        <div class="row"><span class="label">Yer:</span><span class="value">{{ $complaint->yer ?? '-' }}</span></div>
-        <div class="row"><span class="label">Sürücü:</span><span class="value">{{ $complaint->driver_name ?? '-' }}</span></div>
+        <!-- Bus Information -->
+        <div class="row"><span class="label">Bus:</span><span class="value">{{ $complaint->bus->dqn ?? '-' }} ({{ $complaint->bus->route_number ?? '-' }})</span></div>
+        <div class="row"><span class="label">Location:</span><span class="value">{{ $complaint->yer ?? '-' }}</span></div>
+        <div class="row"><span class="label">Driver:</span><span class="value">{{ $complaint->driver_name ?? '-' }}</span></div>
         <div class="row"><span class="label">KM:</span><span class="value">{{ $complaint->km ?? '-' }}</span></div>
 
-        <!-- Şikayət Məlumatları -->
+        <!-- Complaints -->
         <div class="row">
-            <span class="label">Şikayətlər:</span>
+            <span class="label">Complaints:</span>
             <span class="value">
                 @foreach($complaint->items as $item)
                     {{ $item->description }}@if(!$loop->last), @endif
                 @endforeach
             </span>
         </div>
-        <div class="row"><span class="label">Şikayət:</span><span class="value">{{ $complaint->notes ?? $complaint->shikayet ?? '-' }}</span></div>
-        <div class="row"><span class="label">Tip:</span><span class="value">{{ $complaint->complaint_type ?? '-' }}</span></div>
+        <div class="row"><span class="label">Notes:</span><span class="value">{{ $complaint->notes ?? '-' }}</span></div>
+        <div class="row"><span class="label">Type:</span><span class="value">{{ $complaint->complaint_type ?? '-' }}</span></div>
         <div class="row"><span class="label">Status:</span><span class="value">{{ $complaint->status ?? '-' }}</span></div>
 
-        <!-- İstifadə Olunan Detallar -->
+        <!-- Used Parts -->
         @if($complaint->details && $complaint->details->count() > 0)
-            <h3>🔧 İstifadə Olunan Detallar</h3>
+            <h3>🔧 Used Parts</h3>
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Kod</th>
-                        <th>Ad</th>
-                        <th>Miqdar</th>
-                        <th>İşi görən işçi</th>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Employee</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,18 +71,18 @@
             </table>
         @endif
 
-        <!-- Görülən İşlər -->
-        <div class="row"><span class="label">Görülən İş:</span><span class="value">{{ $complaint->work_done_by ?? '-' }}</span></div>
-        <div class="row"><span class="label">Başlama:</span><span class="value">{{ $complaint->start_date ?? '-' }} {{ $complaint->start_time ?? '' }}</span></div>
-        <div class="row"><span class="label">Bitmə:</span><span class="value">{{ $complaint->end_date ?? '-' }} {{ $complaint->end_time ?? '' }}</span></div>
+        <!-- Work Done -->
+        <div class="row"><span class="label">Work Done:</span><span class="value">{{ $complaint->work_done_by ?? '-' }}</span></div>
+        <div class="row"><span class="label">Start:</span><span class="value">{{ $complaint->start_date ?? '-' }} {{ $complaint->start_time ?? '' }}</span></div>
+        <div class="row"><span class="label">End:</span><span class="value">{{ $complaint->end_date ?? '-' }} {{ $complaint->end_time ?? '' }}</span></div>
     </div>
 
-    <!-- İmzalar -->
+    <!-- Signatures -->
     <div class="signature">
-        <div>Usta / İcraçı</div>
-        <div>Rəhbər / Təsdiq</div>
+        <div>Master / Executor</div>
+        <div>Manager / Approval</div>
     </div>
 
-    <div class="footer">Bu sənəd {{ now()->format('d.m.Y H:i') }} tarixində yaradılmışdır.</div>
+    <div class="footer">This document was created on {{ now()->format('d.m.Y H:i') }}</div>
 </body>
 </html>

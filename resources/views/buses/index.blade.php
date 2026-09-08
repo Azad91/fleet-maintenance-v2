@@ -1,37 +1,37 @@
 @extends('layouts.app')
 
-@section('title', 'Avtobuslar')
+@section('title', 'Buses')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <a href="{{ route('buses.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Excel - dən Yüklə
+            <i class="bi bi-upload"></i> Import from Excel
         </a>
         @can('update', App\Models\Bus::class)
             <button type="button" class="btn btn-warning" id="bulkDeactivateBtn" disabled>
-                <i class="bi bi-x-circle"></i> Seçilənləri Passiv Et
+                <i class="bi bi-x-circle"></i> Deactivate Selected
             </button>
             <button type="button" class="btn btn-info" id="bulkActivateBtn" disabled>
-                <i class="bi bi-check-circle"></i> Seçilənləri Aktiv Et
+                <i class="bi bi-check-circle"></i> Activate Selected
             </button>
         @endcan
         @can('delete', App\Models\Bus::class)
             <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
-                <i class="bi bi-trash"></i> Seçilənləri Sil
+                <i class="bi bi-trash"></i> Delete Selected
             </button>
         @endcan
     </div>
 </div>
 
-<!-- Bulk əməliyyatlar üçün form -->
+<!-- Bulk operations form -->
 <form id="bulkForm" method="POST">
     @csrf
     @method('POST')
     <input type="hidden" name="ids" id="selectedIds" value="">
 </form>
 
-<!-- Nəticələr -->
+<!-- Results -->
 <div id="searchResults">
     @include('buses.partials.table', ['buses' => $buses])
 </div>
@@ -54,12 +54,12 @@
             bulkDeactivateBtn.disabled = count === 0;
             bulkActivateBtn.disabled = count === 0;
             bulkDeleteBtn.disabled = count === 0;
-            bulkDeactivateBtn.textContent = `Seçilənləri Passiv Et (${count})`;
-            bulkActivateBtn.textContent = `Seçilənləri Aktiv Et (${count})`;
-            bulkDeleteBtn.textContent = `Seçilənləri Sil (${count})`;
+            bulkDeactivateBtn.textContent = `Deactivate Selected (${count})`;
+            bulkActivateBtn.textContent = `Activate Selected (${count})`;
+            bulkDeleteBtn.textContent = `Delete Selected (${count})`;
         }
 
-        // Checkbox event-ləri
+        // Checkbox events
         document.addEventListener('change', function(e) {
             if (e.target.matches('.bus-checkbox')) {
                 const id = parseInt(e.target.value);
@@ -71,7 +71,7 @@
                 updateButtons();
             }
 
-            // Hamısını seç
+            // Select all
             if (e.target.matches('#selectAll')) {
                 const checkboxes = document.querySelectorAll('.bus-checkbox');
                 checkboxes.forEach(cb => {
@@ -90,7 +90,7 @@
         // Bulk Deactivate
         bulkDeactivateBtn.addEventListener('click', function() {
             if (selectedIds.size === 0) return;
-            if (!confirm(`${selectedIds.size} avtobusu passiv etmək istədiyinizə əminsiniz?`)) return;
+            if (!confirm(`Are you sure you want to deactivate ${selectedIds.size} bus(es)?`)) return;
 
             bulkForm.action = "{{ route('buses.bulk.deactivate') }}";
             selectedIdsInput.value = JSON.stringify([...selectedIds]);
@@ -100,7 +100,7 @@
         // Bulk Activate
         bulkActivateBtn.addEventListener('click', function() {
             if (selectedIds.size === 0) return;
-            if (!confirm(`${selectedIds.size} avtobusu aktiv etmək istədiyinizə əminsiniz?`)) return;
+            if (!confirm(`Are you sure you want to activate ${selectedIds.size} bus(es)?`)) return;
 
             bulkForm.action = "{{ route('buses.bulk.activate') }}";
             selectedIdsInput.value = JSON.stringify([...selectedIds]);
@@ -110,7 +110,7 @@
         // Bulk Delete
         bulkDeleteBtn.addEventListener('click', function() {
             if (selectedIds.size === 0) return;
-            if (!confirm(`${selectedIds.size} avtobusu silmək istədiyinizə əminsiniz? BU ƏMƏLİYYAT GERİ DÖNDƏRİLƏ BİLMƏZ!`)) return;
+            if (!confirm(`Are you sure you want to delete ${selectedIds.size} bus(es)? THIS ACTION CANNOT BE UNDONE!`)) return;
 
             bulkForm.action = "{{ route('buses.bulk.delete') }}";
             bulkForm.method = "POST";

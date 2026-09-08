@@ -1,9 +1,9 @@
 @extends('layouts.guest')
 
-@section('title', 'Daxil Ol - Fleet Maintenance')
+@section('title', 'Login - Fleet Maintenance')
 
 @section('styles')
-    {{-- Bu səhifəyə xüsusi CSS yoxdur, hamısı app.css - dən gəlir --}}
+    {{-- No extra CSS needed, everything is in app.css --}}
 @endsection
 
 @section('content')
@@ -12,8 +12,8 @@
         <div class="logo">
             <i class="bi bi-car-front-fill"></i>
         </div>
-        <div class="auth-title">Daxil <span>Ol</span></div>
-        <p class="auth-subtitle">Hesabınıza daxil olun</p>
+        <div class="auth-title">Login</div>
+        <p class="auth-subtitle">Sign in to your account</p>
 
         @if ($errors->any())
             <div class="alert-danger">
@@ -34,7 +34,7 @@
             </div>
 
             <div class="form-group">
-                <label for="password">Şifrə</label>
+                <label for="password">Password</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" class="form-control" name="password" required placeholder="••••••••">
@@ -44,19 +44,19 @@
             <div class="form-check d-flex justify-content-between align-items-center">
                 <div>
                     <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                    <label class="form-check-label" for="remember">Məni xatırla</label>
+                    <label class="form-check-label" for="remember">Remember me</label>
                 </div>
                 @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="auth-forgot-link">Şifrəni unutdun?</a>
+                    <a href="{{ route('password.request') }}" class="auth-forgot-link">Forgot password?</a>
                 @endif
             </div>
 
             <button type="submit" class="btn-login">
-                <i class="bi bi-box-arrow-in-right me-2"></i> Daxil Ol
+                <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
             </button>
         </form>
 
-        <div class="auth-footer">Yeni istifadəçi hesabını administrator yaradır.</div>
+        <div class="auth-footer">New users can only be created by an administrator.</div>
     </div>
 </div>
 @endsection

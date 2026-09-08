@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Yeni istifadəçi')
+@section('title', 'New User')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div><span class="fleet-eyebrow">İDARƏETMƏ</span><h1 class="mb-0">Yeni istifadəçi yarat</h1></div>
-    <a href="{{ route('users.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Geri</a>
+    <div><span class="fleet-eyebrow">ADMINISTRATION</span><h1 class="mb-0">Create New User</h1></div>
+    <a href="{{ route('users.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
 <div class="card">
     <div class="card-body">
-        @include('users.partials.form', ['submitLabel' => 'İstifadəçini yarat'])
+        @include('users.partials.form', ['submitLabel' => 'Create User'])
     </div>
 </div>
 @endsection

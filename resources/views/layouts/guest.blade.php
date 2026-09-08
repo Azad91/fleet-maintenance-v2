@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +30,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="fleet-guest__logout" type="submit">
-                    <i class="fas fa-arrow-right-from-bracket"></i> Çıxış
+                    <i class="fas fa-arrow-right-from-bracket"></i> Logout
                 </button>
             </form>
         @endauth
@@ -39,7 +39,7 @@
         @yield('content')
     </main>
     <footer class="fleet-guest__footer">
-        &copy; {{ date('Y') }} Fleet Control · Nəqliyyat parkının idarəetmə sistemi
+        &copy; {{ date('Y') }} Fleet Control · Fleet Management System
     </footer>
     @stack('scripts')
 </body>

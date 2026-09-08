@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Gündəlik Avtobus Statusları')
+@section('title', 'Daily Bus Statuses')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📋 Gündəlik Avtobus Statusları</h1>
+    <h1>📋 Daily Bus Statuses</h1>
     @if(auth()->user()?->hasGarageRole(['admin', 'daily_status']))
     <div>
         <a href="{{ route('bus-daily-statuses.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Excel - dən Yüklə
+            <i class="bi bi-upload"></i> Import from Excel
         </a>
         <a href="{{ route('bus-daily-statuses.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Yeni Status
+            <i class="bi bi-plus-lg"></i> New Status
         </a>
     </div>
     @endif
@@ -23,12 +23,12 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>№</th>
-                        <th>Avtobus (DQN)</th>
-                        <th>Xətt №</th>
-                        <th>Tarix</th>
+                        <th>#</th>
+                        <th>Bus (DQN)</th>
+                        <th>Route No</th>
+                        <th>Date</th>
                         <th>Status</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,8 +36,8 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td><strong>{{ $status->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $status->bus->route_number ?? '-' }}</td> <!-- ✅ xett_no → route_number -->
-                        <td>{{ $status->date ? \Carbon\Carbon::parse($status->date)->format('d.m.Y') : '-' }}</td> <!-- ✅ tarix → date -->
+                        <td>{{ $status->bus->route_number ?? '-' }}</td>
+                        <td>{{ $status->date ? \Carbon\Carbon::parse($status->date)->format('d.m.Y') : '-' }}</td>
                         <td>
                             @php
                                 $bgClass = match(trim($status->status)) {
@@ -69,7 +69,7 @@
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
                             <i class="bi bi-calendar2-week" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            Hələ status məlumatı yoxdur.
+                            No status data yet.
                         </td>
                     </tr>
                     @endforelse

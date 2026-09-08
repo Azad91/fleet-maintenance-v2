@@ -5,31 +5,31 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Kod</th>
-                        <th>Ad</th>
-                        <th>Miqdar</th>
-                        <th>Ölçü Vahidi</th>
-                        <th>Vahid Qiyməti</th>
-                        <th>Cəmi Qiymət</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Unit Price</th>
+                        <th>Total Price</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($warehouses as $item)
                     <tr>
                         <td>{{ $item->id }}</td>
-                        <td><strong>{{ $item->code }}</strong></td> <!-- ✅ kod → code -->
-                        <td>{{ $item->name }}</td> <!-- ✅ ad → name -->
+                        <td><strong>{{ $item->code }}</strong></td>
+                        <td>{{ $item->name }}</td>
                         <td>
-                            {{ $item->quantity }} <!-- ✅ miqdar → quantity -->
+                            {{ $item->quantity }}
                             @if($item->quantity <= 0)
-                                <span class="badge bg-danger">⚠️ Bitib</span>
+                                <span class="badge bg-danger">⚠️ Out of Stock</span>
                             @elseif($item->quantity <= $item->minimum_quantity)
-                                <span class="badge bg-warning">⚠️ Tükənir</span>
+                                <span class="badge bg-warning">⚠️ Low Stock</span>
                             @endif
                         </td>
-                        <td>{{ $item->unit ?? '-' }}</td> <!-- ✅ olcu_vahidi → unit -->
-                        <td>{{ $item->price ? number_format($item->price, 2) . ' ₼' : '-' }}</td> <!-- ✅ qiymet → price -->
+                        <td>{{ $item->unit ?? '-' }}</td>
+                        <td>{{ $item->price ? number_format($item->price, 2) . ' ₼' : '-' }}</td>
                         <td>
                             @if($item->price)
                                 <strong>{{ number_format($item->quantity * $item->price, 2) }} ₼</strong>
@@ -49,7 +49,7 @@
                                     <form action="{{ route('warehouses.destroy', $item) }}" method="POST" style="display:inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Əminsən?')">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -62,9 +62,9 @@
                         <td colspan="8" class="text-center text-muted py-4">
                             <i class="bi bi-box-seam" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                             @if(isset($search) && $search)
-                                "<strong>{{ $search }}</strong>" üzrə heç nə tapılmadı
+                                No results found for "<strong>{{ $search }}</strong>"
                             @else
-                                Hələ anbarda məhsul yoxdur. <a href="{{ route('warehouses.create') }}">Yenisini əlavə et!</a>
+                                No items in warehouse yet. <a href="{{ route('warehouses.create') }}">Add a new one!</a>
                             @endif
                         </td>
                     </tr>

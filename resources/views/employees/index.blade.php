@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'İşçilər')
+@section('title', 'Employees')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>👥 İşçilər</h1>
+    <h1>👥 Employees</h1>
     <div>
         <a href="{{ route('employees.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Excel - dən Yüklə
+            <i class="bi bi-upload"></i> Import from Excel
         </a>
         <a href="{{ route('employees.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Yeni İşçi
+            <i class="bi bi-plus-lg"></i> New Employee
         </a>
     </div>
 </div>
@@ -22,10 +22,10 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Ad Soyad</th>
-                        <th>Vəzifə</th>
+                        <th>Full Name</th>
+                        <th>Position</th>
                         <th>Status</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,10 +33,10 @@
                     <tr>
                         <td>{{ $employee->id }}</td>
                         <td><strong>{{ $employee->full_name }}</strong></td>
-                        <td>{{ $employee->position }}</td> <!-- ✅ vezifesi → position -->
+                        <td>{{ $employee->position }}</td>
                         <td>
-                            <span class="badge-status {{ $employee->is_active ? 'aktiv' : 'passiv' }}"> <!-- ✅ aktiv → is_active -->
-                                {{ $employee->is_active ? '✅ Aktiv' : '❌ Passiv' }}
+                            <span class="badge-status {{ $employee->is_active ? 'aktiv' : 'passiv' }}">
+                                {{ $employee->is_active ? '✅ Active' : '❌ Inactive' }}
                             </span>
                         </td>
                         <td>
@@ -50,7 +50,7 @@
                                 <form action="{{ route('employees.destroy', $employee) }}" method="POST" style="display:inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Əminsən?')">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -61,10 +61,10 @@
                     <tr>
                         <td colspan="5" class="text-center text-muted py-4">
                             <i class="bi bi-people" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            Hələ işçi yoxdur.
-                            <a href="{{ route('employees.create') }}">Yenisini əlavə et!</a>
-                            və ya
-                            <a href="{{ route('employees.import') }}">Excel - dən yüklə!</a>
+                            No employees yet.
+                            <a href="{{ route('employees.create') }}">Add a new one!</a>
+                            or
+                            <a href="{{ route('employees.import') }}">Import from Excel!</a>
                         </td>
                     </tr>
                     @endforelse

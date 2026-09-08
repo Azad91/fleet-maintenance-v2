@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Şikayət Növləri')
+@section('title', 'Complaint Types')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📋 Şikayət Növləri</h1>
+    <h1>📋 Complaint Types</h1>
     <div>
         <a href="{{ route('complaint-types.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Excel - dən Yüklə
+            <i class="bi bi-upload"></i> Import from Excel
         </a>
         <a href="{{ route('complaint-types.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Yeni Şikayət Növü
+            <i class="bi bi-plus-lg"></i> New Complaint Type
         </a>
         <a href="{{ route('complaints.create') }}" class="btn btn-info">
-            <i class="bi bi-plus-lg"></i> Yeni Şikayət
+            <i class="bi bi-plus-lg"></i> New Complaint
         </a>
     </div>
 </div>
@@ -25,8 +25,8 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Ad</th>
-                        <th>Əməliyyatlar</th>
+                        <th>Name</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,7 +42,7 @@
                                 <form action="{{ route('complaint-types.destroy', $type) }}" method="POST" style="display:inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Əminsən?')">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -51,7 +51,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="text-center text-muted">Hələ şikayət növü yoxdur</td>
+                        <td colspan="3" class="text-center text-muted">No complaint types yet</td>
                     </tr>
                     @endforelse
                 </tbody>

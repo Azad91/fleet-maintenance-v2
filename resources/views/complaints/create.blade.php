@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Yeni Kart')
+@section('title', 'New Work Card')
 
 @section('content')
 <div class="complaint-create-page">
     <div class="complaint-create-page__heading">
         <div>
-            <span class="fleet-eyebrow">TEXNİKİ QEYD</span>
-            <h1>Yeni kart aç</h1>
-            <p>Avtobus, yer və görülən iş məlumatlarını ardıcıl daxil edin.</p>
+            <span class="fleet-eyebrow">TECHNICAL RECORD</span>
+            <h1>Create New Work Card</h1>
+            <p>Enter bus, location and work details sequentially.</p>
         </div>
         <a href="{{ route('complaints.index') }}" class="fleet-button fleet-button--secondary">
-            <i class="fas fa-arrow-left"></i> Kartlara qayıt
+            <i class="fas fa-arrow-left"></i> Back to Cards
         </a>
     </div>
     <div class="card complaint-create-card">
         <div class="card-header">
-            <h4><i class="fas fa-screwdriver-wrench"></i> Kart məlumatları</h4>
+            <h4><i class="fas fa-screwdriver-wrench"></i> Card Information</h4>
         </div>
         <div class="card-body">
             @if ($errors->any())
@@ -46,7 +46,7 @@
             document.getElementById('dqn').value = '';
             document.getElementById('bus_id').value = '';
             document.getElementById('km').value = '';
-            document.getElementById('motor_oil_km').innerHTML = '<option value="">Baxım növünü seçin...</option>';
+            document.getElementById('motor_oil_km').innerHTML = '<option value="">Select maintenance type...</option>';
             document.getElementById('service_km').value = '';
             return;
         }
@@ -82,7 +82,7 @@
         } else {
             road.disabled = false;
             document.getElementById('service_km').value = '';
-            document.getElementById('motor_oil_km').innerHTML = '<option value="">Əvvəl avtobus seçin...</option>';
+            document.getElementById('motor_oil_km').innerHTML = '<option value="">Select bus first...</option>';
             document.getElementById('complaintsContainer').innerHTML = defaultComplaintMarkup;
             document.getElementById('detailsContainer').innerHTML = defaultDetailsMarkup;
         }
@@ -94,8 +94,8 @@
             .then(services => {
                 motorOilServices = services;
                 const select = document.getElementById('motor_oil_km');
-                select.innerHTML = '<option value="">Baxım növünü seçin...</option>';
-                services.forEach((service, index) => select.add(new Option(Number(service.km).toLocaleString('az-AZ') + ' KM yağ dəyişməsi', index)));
+                select.innerHTML = '<option value="">Select maintenance type...</option>';
+                services.forEach((service, index) => select.add(new Option(Number(service.km).toLocaleString('az-AZ') + ' KM oil change', index)));
                 if (document.getElementById('tip_texniki').checked && services.length) {
                     select.value = '0';
                     onServiceSelectChange();
@@ -107,7 +107,7 @@
         const service = motorOilServices[document.getElementById('motor_oil_km').value];
         if (!service) return;
         document.getElementById('service_km').value = service.km;
-        const title = Number(service.km).toLocaleString('az-AZ') + ' KM yağ dəyişməsi';
+        const title = Number(service.km).toLocaleString('az-AZ') + ' KM oil change';
         setServiceComplaint(title);
         setServiceDetails(service.details, title);
     }
@@ -126,13 +126,13 @@
         details.forEach((detail, index) => {
             const amount = Number(detail.quantity || detail.miqdar) * Number(detail.count || detail.say || 1);
             container.insertAdjacentHTML('beforeend',
-                '<div class="detail-item border rounded p-3 mb-2"><div class="d-flex justify-content-between align-items-center mb-2"><strong class="small">Avtomatik əlavə olunan detal</strong><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDetail(this)"><i class="bi bi-trash"></i> Detalı sil</button></div><div class="row g-3">' +
-                '<div class="col-md-2"><label class="form-label">Şikayət</label><input class="form-control" value="' + title + '" readonly><input type="hidden" name="details[' + index + '][complaint_index]" value="0"></div>' +
-                '<div class="col-md-2"><label class="form-label">Detal kodu</label><input class="form-control" name="details[' + index + '][code]" value="' + (detail.code || detail.kodu) + '" readonly></div>' +
-                '<div class="col-md-3"><label class="form-label">Detal adı</label><input class="form-control input-disabled" value="' + (detail.name || detail.adi) + '" readonly></div>' +
-                '<div class="col-md-1"><label class="form-label">Miqdar</label><input type="number" class="form-control" name="details[' + index + '][used_quantity]" value="' + amount + '" min="1" required></div>' +
-                '<div class="col-md-4"><label class="form-label">İşi görən işçi</label><select class="form-select" name="details[' + index + '][employee_id]" required>' + employeeOptions + '</select></div>' +
-                '</div><div class="mt-2"><label class="form-label">Görülən iş</label><textarea class="form-control" name="details[' + index + '][notes]" rows="2" required>' + title + '</textarea></div></div>');
+                '<div class="detail-item border rounded p-3 mb-2"><div class="d-flex justify-content-between align-items-center mb-2"><strong class="small">Auto-added part</strong><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDetail(this)"><i class="bi bi-trash"></i> Remove part</button></div><div class="row g-3">' +
+                '<div class="col-md-2"><label class="form-label">Complaint</label><input class="form-control" value="' + title + '" readonly><input type="hidden" name="details[' + index + '][complaint_index]" value="0"></div>' +
+                '<div class="col-md-2"><label class="form-label">Part code</label><input class="form-control" name="details[' + index + '][code]" value="' + (detail.code || detail.kodu) + '" readonly></div>' +
+                '<div class="col-md-3"><label class="form-label">Part name</label><input class="form-control input-disabled" value="' + (detail.name || detail.adi) + '" readonly></div>' +
+                '<div class="col-md-1"><label class="form-label">Quantity</label><input type="number" class="form-control" name="details[' + index + '][used_quantity]" value="' + amount + '" min="1" required></div>' +
+                '<div class="col-md-4"><label class="form-label">Employee</label><select class="form-select" name="details[' + index + '][employee_id]" required>' + employeeOptions + '</select></div>' +
+                '</div><div class="mt-2"><label class="form-label">Work done</label><textarea class="form-control" name="details[' + index + '][notes]" rows="2" required>' + title + '</textarea></div></div>');
         });
     }
 
@@ -188,13 +188,13 @@
         codeInput.classList.remove('is-valid', 'is-invalid');
 
         if (!normalizedCode) {
-            help.textContent = 'Kod seçildikdə sürücünün adı avtomatik doldurulur.';
+            help.textContent = 'Driver name will be auto-filled when code is selected.';
             help.className = 'form-text';
             return;
         }
 
         const requestId = ++driverLookupRequest;
-        help.textContent = 'Sürücü axtarılır...';
+        help.textContent = 'Searching for driver...';
 
         fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedCode))
             .then(response => response.json())
@@ -205,11 +205,11 @@
                     idInput.value = data.driver_id;
                     codeInput.value = normalizedCode;
                     codeInput.classList.add('is-valid');
-                    help.textContent = 'Sürücü tapıldı.';
+                    help.textContent = 'Driver found.';
                     help.className = 'form-text text-success';
                 } else {
                     codeInput.classList.add('is-invalid');
-                    help.textContent = 'Bu kodla aktiv sürücü tapılmadı.';
+                    help.textContent = 'No active driver found with this code.';
                     help.className = 'form-text text-danger';
                 }
             });
