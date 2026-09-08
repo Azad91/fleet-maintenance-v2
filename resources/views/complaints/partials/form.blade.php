@@ -87,21 +87,21 @@
 <!-- ==================== 5. DİNAMİK ŞİKAYƏTLƏR ==================== -->
 <div class="mb-3">
     <label class="form-label fw-bold">📝 Şikayətlər <span class="text-danger">*</span></label>
-    <div id="shikayetContainer">
-        <div class="shikayet-item input-group mb-2">
+    <div id="complaintsContainer">
+        <div class="complaint-item input-group mb-2">
             <span class="input-group-text shikayet-number">1.</span>
-            <select class="form-select" name="shikayet[]" required>
+            <select class="form-select" name="complaints[]" required>
                 <option value="">Şikayət seçin...</option>
                 @foreach($complaintTypes as $type)
                     <option value="{{ $type->name }}" {{ old('shikayet.0') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
                 @endforeach
             </select>
-            <button type="button" class="btn btn-danger" onclick="removeShikayet(this)">
+            <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
     </div>
-    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addShikayet()">
+    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
         <i class="bi bi-plus-circle"></i> Şikayət Əlavə Et
     </button>
     <small class="text-muted d-block mt-1">Hər şikayət ayrıca seçilir.</small>
@@ -196,13 +196,13 @@
 <!-- ==================== 12. DETALLAR ==================== -->
 <div class="complaint-details-card p-3 mb-3">
     <h5 class="fw-bold mb-3">🔧 İstifadə Olunan Detallar <span class="text-danger">*</span></h5>
-    <div id="detallarContainer">
-        <div class="detallar-item">
+    <div id="detailsContainer">
+        <div class="detail-item">
             <div class="row g-3">
                 <div class="col-md-2">
                     <div class="mb-2">
                         <label class="form-label fw-bold">Aid Olduğu Şikayət <span class="text-danger">*</span></label>
-                        <select class="form-select" name="detallar[0][shikayet_index]" required>
+                        <select class="form-select" name="details[0][shikayet_index]" required>
                             <option value="0">Şikayət 1</option>
                         </select>
                     </div>
@@ -247,7 +247,7 @@
                 <div class="col-md-2">
                     <div class="mb-2">
                         <label class="form-label fw-bold">&nbsp;</label>
-                        <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetal(this)">
+                        <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
                             <i class="bi bi-trash"></i> Sil
                         </button>
                     </div>
@@ -263,7 +263,7 @@
             </div>
         </div>
     </div>
-    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addDetal()">
+    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addDetail()">
         <i class="bi bi-plus-circle"></i> Detal Əlavə Et
     </button>
     <small class="text-muted d-block mt-1">Hər detal hansı şikayətə aid olduğunu seçin.</small>

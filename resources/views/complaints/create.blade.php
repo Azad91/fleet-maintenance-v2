@@ -41,10 +41,8 @@
     let defaultComplaintMarkup = '';
     let defaultDetailsMarkup = '';
 
-    function getBusByXett(xett_no) {
-        console.log('🔍 Axtarılan xətt:', xett_no);
-
-        if (!xett_no) {
+    function getBusByRoute(route_number) {
+        if (!route_number) {
             document.getElementById('dqn').value = '';
             document.getElementById('bus_id').value = '';
             document.getElementById('km').value = '';
@@ -53,16 +51,9 @@
             return;
         }
 
-        fetch('/get-bus-id-by-xett/' + encodeURIComponent(xett_no))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Şəbəkə xətası: ' + response.status);
-                }
-                return response.json();
-            })
+        fetch('/get-bus-id-by-xett/' + encodeURIComponent(route_number))
+            .then(response => response.json())
             .then(data => {
-                console.log('✅ Bus məlumatları:', data);
-
                 document.getElementById('dqn').value = data.dqn || '';
                 document.getElementById('bus_id').value = data.bus_id || '';
 
@@ -70,14 +61,11 @@
                     fetch('/get-bus-km-by-id/' + data.bus_id)
                         .then(response => response.json())
                         .then(kmData => {
-                            console.log('✅ KM məlumatı:', kmData);
                             document.getElementById('km').value = kmData.km || '';
                             loadMotorOilServices(data.bus_id);
-                        })
-                        .catch(error => console.error('❌ KM xətası:', error));
+                        });
                 }
-            })
-            .catch(error => console.error('❌ Bus axtarış xətası:', error));
+            });
     }
 
     function toggleServiceFields() {
@@ -95,8 +83,8 @@
             road.disabled = false;
             document.getElementById('service_km').value = '';
             document.getElementById('motor_oil_km').innerHTML = '<option value="">Əvvəl avtobus seçin...</option>';
-            document.getElementById('shikayetContainer').innerHTML = defaultComplaintMarkup;
-            document.getElementById('detallarContainer').innerHTML = defaultDetailsMarkup;
+            document.getElementById('complaintsContainer').innerHTML = defaultComplaintMarkup;
+            document.getElementById('detailsContainer').innerHTML = defaultDetailsMarkup;
         }
     }
 
@@ -112,8 +100,7 @@
                     select.value = '0';
                     onServiceSelectChange();
                 }
-            })
-            .catch(error => console.error('❌ Baxım paketi xətası:', error));
+            });
     }
 
     function onServiceSelectChange() {
@@ -126,73 +113,81 @@
     }
 
     function setServiceComplaint(title) {
-        document.getElementById('shikayetContainer').innerHTML =
-            '<div class="shikayet-item input-group mb-2"><span class="input-group-text shikayet-number">1.</span>' +
-            '<input class="form-control" name="shikayet[]" value="' + title + '" readonly required></div>';
+        document.getElementById('complaintsContainer').innerHTML =
+            '<div class="complaint-item input-group mb-2"><span class="input-group-text complaint-number">1.</span>' +
+            '<input class="form-control" name="complaints[]" value="' + title + '" readonly required></div>';
     }
 
     function setServiceDetails(details, title) {
-        const container = document.getElementById('detallarContainer');
+        const container = document.getElementById('detailsContainer');
         const employeeOptions = document.querySelector('select[name*="[employee_id]"]').innerHTML;
         container.innerHTML = '';
 
         details.forEach((detail, index) => {
-            const amount = Number(detail.miqdar) * Number(detail.say || 1);
+            const amount = Number(detail.quantity || detail.miqdar) * Number(detail.count || detail.say || 1);
             container.insertAdjacentHTML('beforeend',
-                '<div class="detallar-item border rounded p-3 mb-2"><div class="d-flex justify-content-between align-items-center mb-2"><strong class="small">Avtomatik əlavə olunan detal</strong><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeServiceDetail(this)"><i class="bi bi-trash"></i> Detalı sil</button></div><div class="row g-3">' +
-                '<div class="col-md-2"><label class="form-label">Şikayət</label><input class="form-control" value="' + title + '" readonly><input type="hidden" name="detallar[' + index + '][shikayet_index]" value="0"></div>' +
-                '<div class="col-md-2"><label class="form-label">Detal kodu</label><input class="form-control" name="detallar[' + index + '][code]" value="' + detail.kodu + '" readonly></div>' +
-                '<div class="col-md-3"><label class="form-label">Detal adı</label><input class="form-control input-disabled" value="' + detail.adi + '" readonly></div>' +
-                '<div class="col-md-1"><label class="form-label">Miqdar</label><input type="number" class="form-control" name="detallar[' + index + '][used_quantity]" value="' + amount + '" min="1" required></div>' +
-                '<div class="col-md-4"><label class="form-label">İşi görən işçi</label><select class="form-select" name="detallar[' + index + '][employee_id]" required>' + employeeOptions + '</select></div>' +
-                '</div><div class="mt-2"><label class="form-label">Görülən iş</label><textarea class="form-control" name="detallar[' + index + '][notes]" rows="2" required>' + title + '</textarea></div></div>');
+                '<div class="detail-item border rounded p-3 mb-2"><div class="d-flex justify-content-between align-items-center mb-2"><strong class="small">Avtomatik əlavə olunan detal</strong><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDetail(this)"><i class="bi bi-trash"></i> Detalı sil</button></div><div class="row g-3">' +
+                '<div class="col-md-2"><label class="form-label">Şikayət</label><input class="form-control" value="' + title + '" readonly><input type="hidden" name="details[' + index + '][complaint_index]" value="0"></div>' +
+                '<div class="col-md-2"><label class="form-label">Detal kodu</label><input class="form-control" name="details[' + index + '][code]" value="' + (detail.code || detail.kodu) + '" readonly></div>' +
+                '<div class="col-md-3"><label class="form-label">Detal adı</label><input class="form-control input-disabled" value="' + (detail.name || detail.adi) + '" readonly></div>' +
+                '<div class="col-md-1"><label class="form-label">Miqdar</label><input type="number" class="form-control" name="details[' + index + '][used_quantity]" value="' + amount + '" min="1" required></div>' +
+                '<div class="col-md-4"><label class="form-label">İşi görən işçi</label><select class="form-select" name="details[' + index + '][employee_id]" required>' + employeeOptions + '</select></div>' +
+                '</div><div class="mt-2"><label class="form-label">Görülən iş</label><textarea class="form-control" name="details[' + index + '][notes]" rows="2" required>' + title + '</textarea></div></div>');
         });
     }
 
-    function removeServiceDetail(button) {
-        button.closest('.detallar-item').remove();
-    }
-
-    function addShikayet() {
-        const source = document.querySelector('#shikayetContainer select');
+    function addComplaint() {
+        const source = document.querySelector('#complaintsContainer select') || document.querySelector('#complaintsContainer input');
         if (!source) return;
-        const item = source.closest('.shikayet-item').cloneNode(true);
-        item.querySelector('select').value = '';
-        item.querySelector('.shikayet-number').textContent = (document.querySelectorAll('.shikayet-item').length + 1) + '.';
-        document.getElementById('shikayetContainer').append(item);
+        const item = source.closest('.complaint-item').cloneNode(true);
+        if(item.querySelector('select')) item.querySelector('select').value = '';
+        if(item.querySelector('input:not([readonly])')) item.querySelector('input:not([readonly])').value = '';
+        item.querySelector('.complaint-number').textContent = (document.querySelectorAll('.complaint-item').length + 1) + '.';
+        document.getElementById('complaintsContainer').append(item);
     }
 
-    function removeShikayet(button) {
-        const items = document.querySelectorAll('.shikayet-item');
-        if (items.length > 1) button.closest('.shikayet-item').remove();
+    function removeComplaint(button) {
+        const items = document.querySelectorAll('.complaint-item');
+        if (items.length > 1) button.closest('.complaint-item').remove();
     }
 
-    function addDetal() {
-        const source = document.querySelector('.detallar-item');
+    function addDetail() {
+        const source = document.querySelector('.detail-item');
         if (!source) return;
         const item = source.cloneNode(true);
-        document.getElementById('detallarContainer').append(item);
+
+        item.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
+        item.querySelectorAll('textarea').forEach(t => t.value = '');
+
+        const newIndex = document.querySelectorAll('.detail-item').length;
+        item.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) {
+                el.name = el.name.replace(/\[\d+\]/, '[' + newIndex + ']');
+            }
+        });
+
+        document.getElementById('detailsContainer').append(item);
     }
 
-    function removeDetal(button) {
-        const items = document.querySelectorAll('.detallar-item');
-        if (items.length > 1) button.closest('.detallar-item').remove();
+    function removeDetail(button) {
+        const items = document.querySelectorAll('.detail-item');
+        if (items.length > 1) button.closest('.detail-item').remove();
     }
 
     let driverLookupRequest = 0;
 
-    function getDriverByKod(kod) {
-        const normalizedKod = kod.trim().toUpperCase();
+    function getDriverByCode(code) {
+        const normalizedCode = code.trim().toUpperCase();
         const nameInput = document.getElementById('driver_name');
         const idInput = document.getElementById('driver_id');
         const help = document.getElementById('driverHelp');
-        const codeInput = document.getElementById('driver_kodu');
+        const codeInput = document.getElementById('driver_code') || document.getElementById('driver_kodu');
 
         idInput.value = '';
         nameInput.value = '';
         codeInput.classList.remove('is-valid', 'is-invalid');
 
-        if (!normalizedKod) {
+        if (!normalizedCode) {
             help.textContent = 'Kod seçildikdə sürücünün adı avtomatik doldurulur.';
             help.className = 'form-text';
             return;
@@ -200,19 +195,15 @@
 
         const requestId = ++driverLookupRequest;
         help.textContent = 'Sürücü axtarılır...';
-        help.className = 'form-text';
 
-        fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedKod))
-            .then(response => {
-                if (!response.ok) throw new Error('Sürücü axtarışı alınmadı.');
-                return response.json();
-            })
+        fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedCode))
+            .then(response => response.json())
             .then(data => {
                 if (requestId !== driverLookupRequest) return;
                 if (data.found) {
-                    nameInput.value = data.driver_ad;
+                    nameInput.value = data.driver_ad || data.driver_name;
                     idInput.value = data.driver_id;
-                    codeInput.value = normalizedKod;
+                    codeInput.value = normalizedCode;
                     codeInput.classList.add('is-valid');
                     help.textContent = 'Sürücü tapıldı.';
                     help.className = 'form-text text-success';
@@ -221,12 +212,6 @@
                     help.textContent = 'Bu kodla aktiv sürücü tapılmadı.';
                     help.className = 'form-text text-danger';
                 }
-            })
-            .catch(() => {
-                if (requestId !== driverLookupRequest) return;
-                codeInput.classList.add('is-invalid');
-                help.textContent = 'Sürücü məlumatı yüklənmədi. Yenidən cəhd edin.';
-                help.className = 'form-text text-danger';
             });
     }
 
@@ -234,46 +219,47 @@
         const yer = document.querySelector('input[name="yer"]:checked');
         if (!yer) return;
 
-        const surucuField = document.getElementById('surucuField');
-        const bildirilmeFields = document.getElementById('bildirilmeFields');
+        const driverField = document.getElementById('surucuField');
+        const reportFields = document.getElementById('bildirilmeFields');
 
         if (yer.value === 'qaraj') {
-            surucuField.style.display = 'none';
-            bildirilmeFields.style.display = 'none';
+            if(driverField) driverField.style.display = 'none';
+            if(reportFields) reportFields.style.display = 'none';
         } else {
-            surucuField.style.display = 'block';
-            bildirilmeFields.style.display = 'block';
+            if(driverField) driverField.style.display = 'block';
+            if(reportFields) reportFields.style.display = 'block';
         }
     }
 
-    function getDetalByKod(input) {
-        const kod = input.value;
-        const item = input.closest('.detallar-item');
-        const adiInput = item.querySelector('input[name*="[name]"]');
-        const depoInput = item.querySelector('input[name*="[stock_quantity]"]');
+    function getPartByCode(input) {
+        const code = input.value;
+        const item = input.closest('.detail-item');
+        const nameInput = item.querySelector('input[name*="[name]"]');
+        const stockInput = item.querySelector('input[name*="[stock_quantity]"]');
 
-        if (!kod) {
-            adiInput.value = '';
-            depoInput.value = '';
+        if (!code) {
+            nameInput.value = '';
+            stockInput.value = '';
             return;
         }
 
-        fetch('/get-detal-by-kod/' + encodeURIComponent(kod))
+        fetch('/get-detal-by-kod/' + encodeURIComponent(code))
             .then(response => response.json())
             .then(data => {
-                adiInput.value = data.detal_adi || '';
-                depoInput.value = data.depo_miqdari || '';
-            })
-            .catch(error => console.error('❌ Detal xətası:', error));
+                nameInput.value = data.detal_adi || data.name || '';
+                stockInput.value = data.depo_miqdari || data.quantity || '';
+            });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        defaultComplaintMarkup = document.getElementById('shikayetContainer').innerHTML;
-        defaultDetailsMarkup = document.getElementById('detallarContainer').innerHTML;
+        defaultComplaintMarkup = document.getElementById('complaintsContainer') ? document.getElementById('complaintsContainer').innerHTML : '';
+        defaultDetailsMarkup = document.getElementById('detailsContainer') ? document.getElementById('detailsContainer').innerHTML : '';
+
         toggleFields();
         toggleServiceFields();
-        const driverKod = document.getElementById('driver_kodu').value;
-        if (driverKod) getDriverByKod(driverKod);
+
+        const driverCodeInput = document.getElementById('driver_code') || document.getElementById('driver_kodu');
+        if (driverCodeInput && driverCodeInput.value) getDriverByCode(driverCodeInput.value);
     });
 </script>
 @endsection
