@@ -10,11 +10,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\WithTransactions;
+
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class DailyKmRecordsImport implements ShouldQueue, ToCollection, WithCalculatedFormulas, 
-WithChunkReading, WithTransactions
+WithChunkReading
 {
     public function __construct(
         public int $garageId,

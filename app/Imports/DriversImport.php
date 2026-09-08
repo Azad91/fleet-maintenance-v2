@@ -8,10 +8,10 @@ use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithTransactions;
+
 
 class DriversImport implements ShouldQueue, SkipsEmptyRows, ToModel, WithChunkReading, 
-WithHeadingRow, WithTransactions
+WithHeadingRow
 {
     public function __construct(
         public int $garageId,

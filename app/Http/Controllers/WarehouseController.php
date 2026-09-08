@@ -8,6 +8,7 @@ use App\Imports\WarehouseImport;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Gate;
 
 class WarehouseController extends Controller
 {
@@ -29,32 +30,21 @@ class WarehouseController extends Controller
 
     public function search(Request $request)
     {
-        Gate::authorize('viewAny', Warehouse::class);
+        $this->authorize('viewAny', Warehouse::class);
 
-        // ✅ Maksimum 100 element
-        $perPage = min((int) $request->input('per_page', 15), 100);
+        $search = $request->search;
 
-        $query = Warehouse::query();
+        $warehouses = Warehouse::when($search, function ($query, $search) {
+            return $query->where('code', 'ILIKE', "%{$search}%")
+                ->orWhere('name', 'ILIKE', "%{$search}%");
+        })
+            ->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15));
 
-        if ($request->code) {
-            $query->where('code', 'ILIKE', "%{$request->code}%");
-        }
-        if ($request->name) {
-            $query->where('name', 'ILIKE', "%{$request->name}%");
-        }
-
-        $warehouses = $query->paginate($perPage);
-
-        return response()->json([
-            'data' => $warehouses->items(),
-            'meta' => [
-                'total' => $warehouses->total(),
-                'per_page' => $warehouses->perPage(),
-                'current_page' => $warehouses->currentPage(),
-                'last_page' => $warehouses->lastPage(),
-            ],
-        ]);
+        // ✅ DÜZƏLİŞ: API kimi JSON yox, Web üçün cədvəl (view) qaytarmalıyıq!
+        return view('warehouses.partials.table', compact('warehouses', 'search'));
     }
+    
     public function create()
     {
         $this->authorize('create', Warehouse::class);  // ✅ ƏLAVƏ

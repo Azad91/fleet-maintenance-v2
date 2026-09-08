@@ -7,11 +7,9 @@ use Maatwebsite\Excel\Concerns\OnEachRow;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithTransactions;
 use Maatwebsite\Excel\Row;
 
-class MotorOilImport implements OnEachRow, ShouldQueue, WithChunkReading, 
-WithHeadingRow, WithTransactions
+class MotorOilImport implements OnEachRow, ShouldQueue, WithChunkReading, WithHeadingRow
 {
     protected $kmColumns = [];
 

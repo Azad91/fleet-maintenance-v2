@@ -64,7 +64,7 @@ class ComplaintStockTest extends TestCase
             'km' => 1000,
         ];
 
-        $detallar = [
+        $details = [
             [
                 'code' => 'D-001',
                 'used_quantity' => 3,
@@ -75,8 +75,8 @@ class ComplaintStockTest extends TestCase
 
         $shikayet = ['Test şikayəti'];
 
-        $complaint = $this->complaintService->create($data, $detallar, $shikayet);
-
+        $complaint = $this->complaintService->create($data, $details, $shikayet);
+        $complaint->load('details');
         $warehouse->refresh();
         $this->assertEquals(7, $warehouse->quantity);
 
@@ -106,7 +106,7 @@ class ComplaintStockTest extends TestCase
             'km' => 1000,
         ];
 
-        $detallar = [
+        $details = [
             [
                 'code' => 'D-002',
                 'used_quantity' => 5,
@@ -120,7 +120,7 @@ class ComplaintStockTest extends TestCase
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Anbarda kifayət qədər');
 
-        $this->complaintService->create($data, $detallar, $shikayet);
+        $this->complaintService->create($data, $details, $shikayet);
 
         $warehouse->refresh();
         $this->assertEquals(2, $warehouse->quantity);
@@ -146,7 +146,7 @@ class ComplaintStockTest extends TestCase
             'km' => 1000,
         ];
 
-        $detallar = [
+        $details = [
             [
                 'code' => 'D-003',
                 'used_quantity' => 3,
@@ -157,8 +157,8 @@ class ComplaintStockTest extends TestCase
 
         $shikayet = ['Test şikayəti'];
 
-        $complaint = $this->complaintService->create($data, $detallar, $shikayet);
-
+        $complaint = $this->complaintService->create($data, $details, $shikayet);
+        $complaint->load('details');
         $warehouse->refresh();
         $this->assertEquals(7, $warehouse->quantity);
 
@@ -188,7 +188,7 @@ class ComplaintStockTest extends TestCase
             'km' => 1000,
         ];
 
-        $detallar = [
+        $details = [
             [
                 'code' => 'D-004',
                 'used_quantity' => 5,
@@ -199,12 +199,12 @@ class ComplaintStockTest extends TestCase
 
         $shikayet = ['Test şikayəti'];
 
-        $complaint = $this->complaintService->create($data, $detallar, $shikayet);
-
+        $complaint = $this->complaintService->create($data, $details, $shikayet);
+        $complaint->load('details');
         $warehouse->refresh();
         $this->assertEquals(15, $warehouse->quantity);
 
-        $newDetallar = [
+        $newdetails = [
             [
                 'code' => 'D-004',
                 'used_quantity' => 3,
@@ -213,7 +213,7 @@ class ComplaintStockTest extends TestCase
             ],
         ];
 
-        $this->complaintService->update($complaint, $data, $newDetallar, $shikayet);
+        $this->complaintService->update($complaint, $data, $newdetails, $shikayet);
 
         $warehouse->refresh();
         $this->assertEquals(17, $warehouse->quantity);
