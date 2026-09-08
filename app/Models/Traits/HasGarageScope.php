@@ -9,9 +9,7 @@ trait HasGarageScope
 {
     protected static function bootHasGarageScope()
     {
-        // 🔥 GLOBAL SCOPE (OXUYANDA)
         static::addGlobalScope('garage', function (Builder $builder) {
-            // Əgər konsoldadırsa (migrate, seed və s.) və context yoxdursa, filtri tətbiq etmə
             if (app()->runningInConsole() && ! GarageContext::has()) {
                 return;
             }
@@ -21,11 +19,23 @@ trait HasGarageScope
             }
         });
 
-        // 🔥 YARADANDA AVTOMATİK YAZ
         static::creating(function ($model) {
+            // Əgər modelə artıq əl ilə garage_id təyin olunubsa, onu dəyişmə
+            if ($model->garage_id !== null) {
+                return;
+            }
+
+            // Əgər context varsa, ondan götür
             if (GarageContext::has()) {
                 $model->garage_id = GarageContext::getGarageId();
                 $model->company_id = GarageContext::getCompanyId();
+            } else {
+                // Konsolda (məsələn, seeder) işləyirsə, xəta atma, amma xəbərdar et
+                if (! app()->runningInConsole()) {
+                    throw new \Exception('Qaraj konteksti təyin edilməyib və model üçün garage_id null qala bilər.');
+                }
+                // Konsolda olduqda, default olaraq ilk qarajı təyin et (isteğe bağlı)
+                // $model->garage_id = 1; // İstəsən aktivləşdir
             }
         });
     }

@@ -79,7 +79,7 @@ class ComplaintController extends Controller
     {
         $complaint = Complaint::with(['items', 'details'])->findOrFail($id);
 
-        $this->authorize('update', $complaint);  // ✅ ƏLAVƏ
+        $this->authorize('update', $complaint);
 
         $buses = Bus::orderBy('route_number')->get();
         $complaintTypes = ComplaintType::orderBy('name')->get();
@@ -98,6 +98,7 @@ class ComplaintController extends Controller
             ];
         })->toArray();
 
+        // ✅ Burada düzgün istifadə olunur
         $shikayetler = $complaint->items->pluck('description')->toArray();
 
         return view('complaints.edit', compact(

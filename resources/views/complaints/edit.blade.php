@@ -204,11 +204,11 @@
                                         <label class="form-label fw-bold">Aid Olduğu Şikayət</label>
                                         <select class="form-select" name="detallar[{{ $index }}][shikayet_index]">
                                             @php
-                                                $shikayetler_list = explode("\n", $complaint->shikayet ?? '');
-                                                $shikayetler_list = array_filter($shikayetler_list);
+                                                $shikayetlerList = $complaint->items->pluck('description')->toArray();
+                                                $shikayetlerList = array_filter($shikayetlerList);
                                             @endphp
-                                            @if(count($shikayetler_list) > 0)
-                                                @foreach($shikayetler_list as $i => $s)
+                                            @if(count($shikayetlerList) > 0)
+                                                @foreach($shikayetlerList as $i => $s)
                                                     <option value="{{ $i }}" {{ ($detal['shikayet_index'] ?? 0) == $i ? 'selected' : '' }}>
                                                         {{ trim($s) }}
                                                     </option>

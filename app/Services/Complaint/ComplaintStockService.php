@@ -98,10 +98,12 @@ class ComplaintStockService
         foreach ($allCodes as $code) {
             $oldQty = $oldUsage[$code] ?? 0;
             $newQty = $newUsage[$code] ?? 0;
-            $diff = $newQty - $oldQty; // Müsbət = əlavə silinməli, Mənfi = geri qaytarılmalı
+            $diff = $newQty - $oldQty;
 
             $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
-            if (! $warehouse && $diff > 0) {
+
+            // Əgər yeni miqdar artırsa və anbarda məhsul yoxdursa, xəta at
+            if ($diff > 0 && ! $warehouse) {
                 throw ValidationException::withMessages([
                     'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı.",
                 ]);
@@ -121,6 +123,9 @@ class ComplaintStockService
                 }
 
                 $warehouses[$code] = $warehouse->fresh();
+            } else {
+                // Əgər warehouse yoxdursa və diff <= 0 (yəni silinir), heç nə etmə
+                $warehouses[$code] = null;
             }
         }
 

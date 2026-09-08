@@ -29,7 +29,7 @@
                     <div class="col-md-3">
                         <div class="complaint-show-card__item">
                             <small>Xətt №</small>
-                            <strong>{{ $complaint->bus->route_number ?? '-' }}</strong> <!-- ✅ xett_no → route_number -->
+                            <strong>{{ $complaint->bus->route_number ?? '-' }}</strong>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -51,9 +51,9 @@
                             <small>🧑‍✈️ Sürücü</small>
                             <strong>
                                 @if($complaint->driver)
-                                    {{ $complaint->driver->full_name }} ({{ $complaint->driver->code }}) <!-- ✅ kodu → code -->
+                                    {{ $complaint->driver->full_name }} ({{ $complaint->driver->code }})
                                 @else
-                                    {{ $complaint->driver_name ?? '-' }} <!-- ✅ surucu_adi → driver_name -->
+                                    {{ $complaint->driver_name ?? '-' }}
                                 @endif
                             </strong>
                         </div>
@@ -65,7 +65,6 @@
         <div class="row mb-4">
             <div class="col-12">
                 <h6 class="complaint-show-card__section-title"><i class="bi bi-clipboard me-2"></i>Şikayətlər</h6>
-                {{-- Şikayətlər hissəsi --}}
                 @php
                     $shikayetler = $complaint->items->pluck('description')->toArray();
                 @endphp
@@ -94,8 +93,8 @@
                             <div class="complaint-show-card__item">
                                 <small>📅 Bildirilme</small>
                                 <strong>
-                                    {{ $complaint->reported_date ? \Carbon\Carbon::parse($complaint->reported_date)->format('d.m.Y') : '-' }} <!-- ✅ bildirilme_tarix → reported_date -->
-                                    {{ $complaint->reported_time ? ' - ' . $complaint->reported_time : '' }} <!-- ✅ bildirilme_saat → reported_time -->
+                                    {{ $complaint->reported_date ? \Carbon\Carbon::parse($complaint->reported_date)->format('d.m.Y') : '-' }}
+                                    {{ $complaint->reported_time ? ' - ' . $complaint->reported_time : '' }}
                                 </strong>
                             </div>
                         </div>
@@ -105,8 +104,8 @@
                         <div class="complaint-show-card__item">
                             <small>📅 İşə Başlama</small>
                             <strong>
-                                {{ $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('d.m.Y') : '-' }} <!-- ✅ is_baslama_tarix → start_date -->
-                                {{ $complaint->start_time ? ' - ' . $complaint->start_time : '' }} <!-- ✅ is_baslama_saat → start_time -->
+                                {{ $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('d.m.Y') : '-' }}
+                                {{ $complaint->start_time ? ' - ' . $complaint->start_time : '' }}
                             </strong>
                         </div>
                     </div>
@@ -114,8 +113,8 @@
                         <div class="complaint-show-card__item">
                             <small>📅 İşin Bitməsi</small>
                             <strong>
-                                {{ $complaint->end_date ? \Carbon\Carbon::parse($complaint->end_date)->format('d.m.Y') : '-' }} <!-- ✅ is_bitme_tarix → end_date -->
-                                {{ $complaint->end_time ? ' - ' . $complaint->end_time : '' }} <!-- ✅ is_bitme_saat → end_time -->
+                                {{ $complaint->end_date ? \Carbon\Carbon::parse($complaint->end_date)->format('d.m.Y') : '-' }}
+                                {{ $complaint->end_time ? ' - ' . $complaint->end_time : '' }}
                             </strong>
                         </div>
                     </div>
@@ -138,8 +137,7 @@
 
                 @php
                     $detallar = $complaint->details ?? collect();
-                    $shikayetler = explode("\n", $complaint->shikayet ?? '');
-                    $shikayetler = array_filter($shikayetler);
+                    $shikayetler = $complaint->items->pluck('description')->toArray();
                 @endphp
 
                 @if($detallar->count() > 0)
@@ -156,31 +154,31 @@
                                 </div>
                                 <div class="col-md-2">
                                     <small>Detal Kodu</small>
-                                    <strong>{{ $detal->code ?? '-' }}</strong> <!-- ✅ kodu → code -->
+                                    <strong>{{ $detal->code ?? '-' }}</strong>
                                 </div>
                                 <div class="col-md-2">
                                     <small>Detal Adı</small>
-                                    <strong>{{ $detal->name ?? '-' }}</strong> <!-- ✅ adi → name -->
+                                    <strong>{{ $detal->name ?? '-' }}</strong>
                                 </div>
                                 <div class="col-md-2">
                                     <small>Depo Miqdarı</small>
-                                    <strong>{{ $detal->stock_quantity ?? '-' }}</strong> <!-- ✅ depo_miqdari → stock_quantity -->
+                                    <strong>{{ $detal->stock_quantity ?? '-' }}</strong>
                                 </div>
                                 <div class="col-md-3">
                                     <small>İşlənən Miqdar</small>
-                                    <strong class="complaint-show-card__danger">{{ $detal->used_quantity ?? '-' }}</strong> <!-- ✅ islenen_miqdar → used_quantity -->
+                                    <strong class="complaint-show-card__danger">{{ $detal->used_quantity ?? '-' }}</strong>
                                 </div>
                                 <div class="col-md-3">
                                     <small>👤 İşi görən işçi</small>
                                     <strong>{{ $employeesById[$detal->employee_id ?? null]->full_name_with_position ?? '-' }}</strong>
                                 </div>
                             </div>
-                            @if(!empty($detal->notes)) <!-- ✅ qeyd → notes -->
+                            @if(!empty($detal->notes))
                                 <div class="row mt-3">
                                     <div class="col-12">
                                         <div class="complaint-show-card__note">
                                             <small>📝 Görülən İşlər</small>
-                                            <strong>{{ $detal->notes }}</strong> <!-- ✅ qeyd → notes -->
+                                            <strong>{{ $detal->notes }}</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -253,22 +251,22 @@
                     <div class="modal-body">
                         <div class="alert alert-info">
                             <strong>🚌 Avtobus:</strong> {{ $complaint->bus->dqn ?? '-' }}
-                            ({{ $complaint->bus->route_number ?? '-' }}) <!-- ✅ xett_no → route_number -->
+                            ({{ $complaint->bus->route_number ?? '-' }})
                         </div>
 
                         <div class="mb-3">
                             <label for="end_date" class="form-label fw-bold">📅 Bitmə Tarixi <span class="text-danger">*</span></label>
-                            <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}"> <!-- ✅ is_bitme_tarix → end_date -->
+                            <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}">
                         </div>
 
                         <div class="mb-3">
                             <label for="end_time" class="form-label fw-bold">🕐 Bitmə Saatı <span class="text-danger">*</span></label>
-                            <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}"> <!-- ✅ is_bitme_saat → end_time -->
+                            <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}">
                         </div>
 
                         <div class="mb-3">
                             <label for="work_done" class="form-label fw-bold">📝 Görülən İşlər <span class="text-danger">*</span></label>
-                            <textarea name="work_done" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea> <!-- ✅ gorulen_is → work_done -->
+                            <textarea name="work_done" class="form-control" rows="3" placeholder="Görülən işləri ətraflı yazın..." required></textarea>
                             <small class="text-muted">Ən azı 5 simvol daxil edin</small>
                         </div>
                     </div>
