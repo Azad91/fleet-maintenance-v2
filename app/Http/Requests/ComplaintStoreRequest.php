@@ -17,7 +17,7 @@ class ComplaintStoreRequest extends FormRequest
     {
         // ✅ API və Web uyğunluğu üçün Context-dən oxuyuruq
         $garageId = GarageContext::getGarageId();
-        
+
         $busRule = Rule::exists('buses', 'id')->where('garage_id', $garageId);
         $employeeRule = Rule::exists('employees', 'id')->where('garage_id', $garageId);
         $driverRule = Rule::exists('drivers', 'id')->where(fn ($query) => $query
@@ -35,7 +35,7 @@ class ComplaintStoreRequest extends FormRequest
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:gözləmədə,işdə',
             // ✅ Formadan gələn real kateqoriyalar
-            'complaint_type' => 'nullable|in:qezali,nasazliq,texniki_xidmet',
+            'complaint_type' => 'nullable|exists:complaint_types,name',
             'detallar' => 'nullable|array',
             'detallar.*.kodu' => 'nullable|string',
             'detallar.*.islenen_miqdar' => 'nullable|integer|min:1',

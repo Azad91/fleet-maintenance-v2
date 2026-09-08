@@ -90,6 +90,7 @@ class ComplaintService
 
     public function close(Complaint $complaint, array $data): Complaint
     {
+        $this->transitionService->validateTransition($complaint, 'həll olundu');
         $complaint->update([
             'status' => 'həll olundu',
             'end_date' => $data['end_date'],

@@ -25,7 +25,7 @@ class IdempotencyMiddleware
         }
 
         $userId = $request->user()?->id ?? 'guest';
-        $cacheKey = "idempotency:{$userId}:".md5((string) $idempotencyKey);
+        $cacheKey = "idempotency:{$userId}:{$request->method()}:{$request->path()}:".md5((string) $idempotencyKey);
 
         $cachedResponse = Cache::get($cacheKey);
         if ($cachedResponse) {

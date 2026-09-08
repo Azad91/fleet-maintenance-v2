@@ -11,7 +11,7 @@ class DriversExport implements FromCollection, WithHeadings, WithMapping
 {
     public function collection()
     {
-        return Driver::orderBy('kodu')->get();
+        return Driver::orderBy('code')->get();
     }
 
     public function headings(): array

@@ -44,7 +44,7 @@ class ArchiveAuditLogs extends Command
         DB::transaction(function () use ($cutoffDate) {
             // 1. Köhnə qeydləri arxiv cədvəlinə köçür
             DB::statement('
-                INSERT INTO audit_log_archive (user_id, garage_id, company_id, auditable_type, auditable_id, event, old_values, new_values, created_at, archived_at)
+                INSERT INTO audit_log_archives (user_id, garage_id, company_id, auditable_type, auditable_id, event, old_values, new_values, original_created_at, archived_at)
                 SELECT user_id, garage_id, company_id, auditable_type, auditable_id, event, old_values, new_values, created_at, NOW()
                 FROM audit_logs
                 WHERE created_at < ?

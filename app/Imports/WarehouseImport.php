@@ -49,7 +49,8 @@ class WarehouseImport implements OnEachRow, ShouldQueue, SkipsEmptyRows, WithChu
             ->first();
 
         $quantity = (int) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
-        $price = isset($rowArray['price']) ? (float) $rowArray['price'] : (isset($rowArray['qiymet']) ? (float) $rowArray['qiymet'] : 0);
+        $rawPrice = $rowArray['price'] ?? $rowArray['qiymet'] ?? '0';
+        $price = (float) str_replace([' ', ','], '', (string) $rawPrice);
         $name = trim((string) ($rowArray['name'] ?? $rowArray['ad'] ?? ''));
         $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
         $category = $rowArray['category'] ?? $rowArray['kateqoriya'] ?? null;
