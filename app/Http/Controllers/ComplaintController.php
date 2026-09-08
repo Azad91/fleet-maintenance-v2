@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
+use App\Http\Requests\ComplaintCloseRequest;
 use App\Imports\ComplaintsImport;
 use App\Models\Bus;
 use App\Models\Complaint;
@@ -141,23 +142,16 @@ class ComplaintController extends Controller
             ->with('success', 'Şikayət uğurla silindi! Anbar yeniləndi.');
     }
 
-    public function close(Request $request, $id)
+    public function close(ComplaintCloseRequest $request, $id)
     {
         $complaint = Complaint::findOrFail($id);
-
-        $this->authorize('close', $complaint);  // ✅ ƏLAVƏ
+        $this->authorize('close', $complaint);
 
         if ($complaint->status === 'həll olundu') {
             return back()->with('error', 'Bu şikayət artıq bağlanıb!');
         }
 
-        $request->validate([
-            'end_date' => 'required|date',
-            'end_time' => 'required|date_format:H:i',
-            'work_done' => 'required|string|min:5',
-        ]);
-
-        $this->complaintService->close($complaint, $request->all());
+        $this->complaintService->close($complaint, $request->validated());
 
         try {
             $this->pdfService->save($complaint);

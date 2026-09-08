@@ -29,20 +29,32 @@ class WarehouseController extends Controller
 
     public function search(Request $request)
     {
-        $this->authorize('viewAny', Warehouse::class);  // ✅ ƏLAVƏ
+        Gate::authorize('viewAny', Warehouse::class);
 
-        $search = $request->search;
+        // ✅ Maksimum 100 element
+        $perPage = min((int) $request->input('per_page', 15), 100);
 
-        $warehouses = Warehouse::when($search, function ($query, $search) {
-            return $query->where('code', 'ILIKE', "%{$search}%")
-                ->orWhere('name', 'ILIKE', "%{$search}%");
-        })
-            ->orderBy('id', 'desc')
-            ->paginate(config('settings.pagination', 15));
+        $query = Warehouse::query();
 
-        return view('warehouses.partials.table', compact('warehouses', 'search'));
+        if ($request->code) {
+            $query->where('code', 'ILIKE', "%{$request->code}%");
+        }
+        if ($request->name) {
+            $query->where('name', 'ILIKE', "%{$request->name}%");
+        }
+
+        $warehouses = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $warehouses->items(),
+            'meta' => [
+                'total' => $warehouses->total(),
+                'per_page' => $warehouses->perPage(),
+                'current_page' => $warehouses->currentPage(),
+                'last_page' => $warehouses->lastPage(),
+            ],
+        ]);
     }
-
     public function create()
     {
         $this->authorize('create', Warehouse::class);  // ✅ ƏLAVƏ

@@ -30,7 +30,9 @@ class GarageSelectionController extends Controller
 
     public function selectGarage(Request $request)
     {
-        // ... validasiya ...
+        $request->validate([
+            'garage_id' => 'required|integer|exists:garages,id'
+        ]);
 
         $garage = auth()->user()
             ->garages()

@@ -26,9 +26,8 @@ class UserManagementController extends Controller
 
     public function create()
     {
-        $this->authorize('create', User::class);  // ✅ ƏLAVƏ
-
-        return view('users.create', ['roles' => RoleEnum::labels()]);
+        $this->authorize('create', User::class);
+        return view('users.create', ['roles' => RoleEnum::garageRoleLabels()]);
     }
 
     public function store(Request $request)
@@ -57,13 +56,11 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
-        $this->authorize('update', $user);  // ✅ ƏLAVƏ
-
+        $this->authorize('update', $user);
         $garageRole = $this->garageRoleFor($user);
-
         return view('users.edit', [
             'user' => $user,
-            'roles' => RoleEnum::labels(),
+            'roles' => RoleEnum::garageRoleLabels(),
             'garageRole' => $garageRole,
         ]);
     }

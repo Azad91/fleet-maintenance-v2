@@ -62,6 +62,16 @@ enum RoleEnum: string
         }, []);
     }
 
+    public static function garageRoleLabels(): array
+    {
+        $garageRoles = self::garageRoles();
+        return array_filter(
+            self::labels(),
+            fn($key) => in_array($key, $garageRoles),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
     public static function values(): array
     {
         return array_column(self::cases(), 'value');

@@ -22,6 +22,8 @@ class ComplaintController extends Controller
     {
         Gate::authorize('viewAny', Complaint::class);
 
+        $perPage = min((int) $request->input('per_page', 15), 100);
+
         $query = Complaint::with(['bus', 'items']);
 
         if ($request->status) {
@@ -31,8 +33,7 @@ class ComplaintController extends Controller
             $query->where('bus_id', $request->bus_id);
         }
 
-        $complaints = $query->orderBy('id', 'desc')
-            ->paginate($request->per_page ?? 15);
+        $complaints = $query->orderBy('id', 'desc')->paginate($perPage);
 
         return response()->json([
             'data' => $complaints->items(),

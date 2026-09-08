@@ -15,6 +15,8 @@ class WarehouseController extends Controller
     {
         Gate::authorize('viewAny', Warehouse::class);
 
+        $perPage = min((int) $request->input('per_page', 15), 100);
+
         $query = Warehouse::query();
 
         if ($request->search) {
@@ -24,8 +26,7 @@ class WarehouseController extends Controller
             });
         }
 
-        $warehouses = $query->orderBy('id', 'desc')
-            ->paginate($request->per_page ?? 15);
+        $warehouses = $query->orderBy('id', 'desc')->paginate($perPage);
 
         return response()->json([
             'data' => $warehouses->items(),

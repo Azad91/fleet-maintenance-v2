@@ -19,7 +19,10 @@ class BusController extends Controller
     {
         Gate::authorize('viewAny', Bus::class);
 
-        $buses = $this->busService->getPaginatedBuses($request->search, $request->per_page ?? 15);
+        // ✅ Maksimum 100 element
+        $perPage = min((int) $request->input('per_page', 15), 100);
+
+        $buses = $this->busService->getPaginatedBuses($request->search, $perPage);
 
         return response()->json([
             'data' => $buses->items(),
@@ -82,8 +85,8 @@ class BusController extends Controller
     {
         Gate::authorize('viewAny', Bus::class);
 
-        $buses = $this->busService->advancedSearch($request->all(), $request->per_page ?? 15);
-
+        $perPage = min((int) $request->input('per_page', 15), 100);
+        $buses = $this->busService->advancedSearch($request->all(), $perPage);
         return response()->json([
             'data' => $buses->items(),
             'meta' => [
