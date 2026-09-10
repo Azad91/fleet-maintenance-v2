@@ -1,72 +1,62 @@
 <?php
 
-namespace App\Services;
+namespace Database\Seeders;
 
+use App\Models\Company;
+use App\Models\Garage;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
-class UserService
+class UserSeeder extends Seeder
 {
-    /**
-     * Yeni istifadəçi yaradır və cari qaraja təyin edir.
-     *
-     * Bütün əməliyyatlar bir transaction içindədir — ya hamısı,
-     * ya heç biri. Yarı-yaradılmış istifadəçi problemi olmaz.
-     *
-     * @param  array{name: string, email: string, password: string, role: string}  $data
-     */
-    public function createUserWithGarageRole(
-        array $data,
-        int $garageId,
-        bool $isActive = true
-    ): User {
-        return DB::transaction(function () use ($data, $garageId, $isActive) {
-            $user = User::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'password' => $data['password'],
-                'role'     => 'user', // users.role həmişə 'user' — qaraj rolu pivotdadır
-            ]);
+    public function run(): void
+    {
+        // ============================================================
+        // 1. SUPER ADMIN
+        // ============================================================
+        User::updateOrCreate(
+            ['email' => 'admin@fleet.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'role' => 'super_admin',
+                'is_active' => true,
+            ]
+        );
 
-            $user->garages()->attach($garageId, [
-                'role'      => $data['role'],
-                'is_active' => $isActive,
-            ]);
+        // ============================================================
+        // 2. TEST QARAJ ADMIN
+        // ============================================================
+        $company = Company::where('slug', 'bakubus')->first();
 
-            return $user;
-        });
-    }
+        if ($company) {
+            $garage = Garage::where('company_id', $company->id)
+                ->where('code', 'GAR-001')
+                ->first();
 
-    /**
-     * İstifadəçinin profilini və qaraj rolunu yeniləyir.
-     *
-     * @param  array{name: string, email: string, password?: ?string, role: string, is_active: bool}  $data
-     */
-    public function updateUserWithGarageRole(
-        User $user,
-        array $data,
-        int $garageId
-    ): User {
-        return DB::transaction(function () use ($user, $data, $garageId) {
-            // users.role toxunulmur — yalnız şəxsi məlumatlar
-            $userUpdate = [
-                'name'  => $data['name'],
-                'email' => $data['email'],
-            ];
+            if ($garage) {
+                $admin = User::updateOrCreate(
+                    ['employee_code' => 'QAR-001'],
+                    [
+                        'name' => 'Garage Admin',
+                        'email' => 'garage.admin@example.com',
+                        'password' => Hash::make('password'),
+                        'pin' => Hash::make('1234'),
+                        'pin_is_default' => true,
+                        'role' => 'user',
+                        'is_active' => true,
+                    ]
+                );
 
-            if (! empty($data['password'])) {
-                $userUpdate['password'] = $data['password'];
+                // Əvvəlki əlaqələri təmizlə
+                $admin->garages()->sync([
+                    $garage->id => [
+                        'role' => 'admin',
+                        'is_active' => true,
+                    ],
+                ]);
             }
-
-            $user->update($userUpdate);
-
-            // Qaraj rolu yalnız pivotda yenilənir
-            $user->garages()->updateExistingPivot($garageId, [
-                'role'      => $data['role'],
-                'is_active' => $data['is_active'],
-            ]);
-
-            return $user->fresh(['garages']);
-        });
+        }
     }
 }
