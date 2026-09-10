@@ -29,15 +29,17 @@ class EmployeesImport implements SkipsEmptyRows, ToModel, WithChunkReading, With
         $this->rowCounter++;
         $currentRow = $this->rowCounter + 1;
 
-        $firstName = trim((string) ($row['first_name'] ?? $row['ad'] ?? ''));
-        $lastName  = trim((string) ($row['last_name'] ?? $row['soyad'] ?? ''));
-        $position  = trim((string) ($row['position'] ?? $row['vezifesi'] ?? $row['vezife'] ?? 'digər'));
+        $firstName = trim((string) ($row['first_name'] ?? ''));
+        $lastName  = trim((string) ($row['last_name'] ?? ''));
+        $position  = trim((string) ($row['position'] ?? 'other'));
 
         if (empty($firstName) || empty($lastName)) {
             $this->skipped[] = [
                 'row'    => $currentRow,
                 'dqn'    => trim("{$firstName} {$lastName}") ?: '—',
-                'reason' => empty($firstName) ? 'Ad boşdur' : 'Soyad boşdur',
+                'reason' => empty($firstName)
+                    ? __('messages.imports.reasons.first_name_empty')
+                    : __('messages.imports.reasons.last_name_empty'),
             ];
             return null;
         }
@@ -49,7 +51,7 @@ class EmployeesImport implements SkipsEmptyRows, ToModel, WithChunkReading, With
             'last_name'  => $lastName,
             'position'   => $position,
             'is_active'  => true,
-            'notes'      => $row['notes'] ?? $row['qeyd'] ?? null,
+            'notes'      => $row['notes'] ?? null,
         ]);
 
         $this->importedCount++;

@@ -29,14 +29,16 @@ class DriversImport implements SkipsEmptyRows, ToModel, WithChunkReading, WithHe
         $this->rowCounter++;
         $currentRow = $this->rowCounter + 1;
 
-        $code = trim((string) ($row['code'] ?? $row['kodu'] ?? ''));
-        $firstName = trim((string) ($row['first_name'] ?? $row['ad'] ?? ''));
+        $code = trim((string) ($row['code'] ?? ''));
+        $firstName = trim((string) ($row['first_name'] ?? ''));
 
         if (empty($code) || empty($firstName)) {
             $this->skipped[] = [
                 'row'    => $currentRow,
                 'dqn'    => $code ?: '—',
-                'reason' => empty($code) ? 'Sürücü kodu boşdur' : 'Ad boşdur',
+                'reason' => empty($code)
+                    ? __('messages.imports.reasons.driver_code_empty')
+                    : __('messages.imports.reasons.first_name_empty'),
             ];
             return null;
         }
@@ -49,11 +51,11 @@ class DriversImport implements SkipsEmptyRows, ToModel, WithChunkReading, WithHe
             [
                 'company_id' => $this->companyId,
                 'first_name' => $firstName,
-                'last_name'  => $row['last_name'] ?? $row['soyad'] ?? null,
-                'phone'      => $row['phone'] ?? $row['telefon'] ?? null,
-                'position'   => $row['position'] ?? $row['vezifesi'] ?? null,
+                'last_name'  => $row['last_name'] ?? null,
+                'phone'      => $row['phone'] ?? null,
+                'position'   => $row['position'] ?? null,
                 'is_active'  => true,
-                'notes'      => $row['notes'] ?? $row['qeyd'] ?? null,
+                'notes'      => $row['notes'] ?? null,
             ]
         );
 

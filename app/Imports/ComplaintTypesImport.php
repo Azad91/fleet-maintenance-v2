@@ -33,7 +33,7 @@ class ComplaintTypesImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
             $this->skipped[] = [
                 'row'    => $row->getIndex(),
                 'dqn'    => '—',
-                'reason' => 'Ad boşdur',
+                'reason' => __('messages.imports.reasons.name_empty'),
             ];
             return;
         }
@@ -47,14 +47,6 @@ class ComplaintTypesImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
     {
         return [
             'name' => 'required|string|max:255',
-        ];
-    }
-
-    public function customValidationMessages(): array
-    {
-        return [
-            'name.required' => 'Şikayət növünün adı boş ola bilməz.',
-            'name.max'      => 'Ad 255 simvoldan çox ola bilməz.',
         ];
     }
 }

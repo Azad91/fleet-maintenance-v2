@@ -356,5 +356,25 @@ return [
         'profile_updated'         => 'Профиль успешно обновлен.',
         'profile_password_updated'=> 'Пароль успешно обновлен.',
         'profile_deleted'         => 'Ваша учетная запись удалена.',
+                // Status transitions
+        'invalid_status_transition' => "Невозможно перейти из ':from' в ':to'.",
+
+        // Stock
+        'stock_item_not_found' => "Запчасть с кодом ':code' не найдена на складе текущего гаража.",
+        'stock_insufficient'   => "Недостаточно ':name' на складе (требуется: :requested, доступно: :available).",
     ],
+
+            'reasons' => [
+            'dqn_empty'            => 'DQN пуст',
+            'dqn_missing_in_row'   => 'DQN не указан в строке',
+            'dqn_other_garage'     => 'DQN принадлежит другому гаражу',
+            'dqn_not_found'        => 'Этот DQN отсутствует в списке автобусов текущего гаража',
+            'name_empty'           => 'Название пусто',
+            'driver_code_empty'    => 'Код водителя пуст',
+            'first_name_empty'     => 'Имя пусто',
+            'last_name_empty'      => 'Фамилия пуста',
+            'part_code_empty'      => 'Код запчасти пуст',
+            'part_not_found'       => 'Запчасть (:code) не найдена на складе',
+            'no_km_columns'        => 'Ни в одном столбце КМ количество > 0',
+        ],
 ];

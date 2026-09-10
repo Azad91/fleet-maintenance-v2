@@ -7,12 +7,12 @@ use Illuminate\Validation\ValidationException;
 
 class ComplaintStockService
 {
-    public function deductStock(array $detallar): array
+    public function deductStock(array $details): array
     {
         $processed = [];
 
-        foreach ($detallar as $detal) {
-            $code = $detal['code'] ?? $detal['kodu'] ?? null;
+        foreach ($details as $detail) {
+            $code = $detail['code'] ?? null;
             if (empty($code)) {
                 continue;
             }
@@ -21,26 +21,30 @@ class ComplaintStockService
 
             if (! $warehouse) {
                 throw ValidationException::withMessages([
-                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı.",
+                    'details' => __('messages.flash.stock_item_not_found', ['code' => $code]),
                 ]);
             }
 
-            $usedQuantity = (int) ($detal['used_quantity'] ?? $detal['islenen_miqdar'] ?? 0);
+            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
 
             if ($warehouse->quantity < $usedQuantity) {
                 throw ValidationException::withMessages([
-                    'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb: {$usedQuantity}, Mövcud: {$warehouse->quantity})",
+                    'details' => __('messages.flash.stock_insufficient', [
+                        'name'      => $warehouse->name,
+                        'requested' => $usedQuantity,
+                        'available' => $warehouse->quantity,
+                    ]),
                 ]);
             }
 
             $processed[] = [
-                'shikayet_index' => $detal['shikayet_index'] ?? 0,
-                'code' => $code,
-                'name' => $warehouse->name,
-                'stock_quantity' => $warehouse->quantity,  // ❌ BEFORE
-                'used_quantity' => $usedQuantity,
-                'employee_id' => $detal['employee_id'] ?? null,
-                'notes' => $detal['notes'] ?? $detal['qeyd'] ?? null,
+                'shikayet_index' => $detail['shikayet_index'] ?? 0,
+                'code'           => $code,
+                'name'           => $warehouse->name,
+                'stock_quantity' => $warehouse->quantity,
+                'used_quantity'  => $usedQuantity,
+                'employee_id'    => $detail['employee_id'] ?? null,
+                'notes'          => $detail['notes'] ?? null,
             ];
 
             if ($usedQuantity > 0) {
@@ -52,11 +56,11 @@ class ComplaintStockService
         return $processed;
     }
 
-    public function restoreStock(array $detallar): void
+    public function restoreStock(array $details): void
     {
-        foreach ($detallar as $detal) {
-            $code = $detal['code'] ?? $detal['kodu'] ?? null;
-            $usedQuantity = (int) ($detal['used_quantity'] ?? $detal['islenen_miqdar'] ?? 0);
+        foreach ($details as $detail) {
+            $code = $detail['code'] ?? null;
+            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
 
             if (empty($code) || $usedQuantity <= 0) {
                 continue;
@@ -72,11 +76,10 @@ class ComplaintStockService
 
     public function syncStockDiff(array $oldDetails, array $newDetails): array
     {
-        // 1. Köhnə və yeni miqdarları kod üzrə cəmlə
         $oldUsage = [];
         foreach ($oldDetails as $detail) {
-            $code = $detail['code'] ?? $detail['kodu'] ?? null;
-            $qty = (int) ($detail['used_quantity'] ?? $detail['islenen_miqdar'] ?? 0);
+            $code = $detail['code'] ?? null;
+            $qty = (int) ($detail['used_quantity'] ?? 0);
             if (! empty($code) && $qty > 0) {
                 $oldUsage[$code] = ($oldUsage[$code] ?? 0) + $qty;
             }
@@ -84,8 +87,8 @@ class ComplaintStockService
 
         $newUsage = [];
         foreach ($newDetails as $detail) {
-            $code = $detail['code'] ?? $detail['kodu'] ?? null;
-            $qty = (int) ($detail['used_quantity'] ?? $detail['islenen_miqdar'] ?? 0);
+            $code = $detail['code'] ?? null;
+            $qty = (int) ($detail['used_quantity'] ?? 0);
             if (! empty($code) && $qty > 0) {
                 $newUsage[$code] = ($newUsage[$code] ?? 0) + $qty;
             }
@@ -93,7 +96,6 @@ class ComplaintStockService
 
         $allCodes = array_unique(array_merge(array_keys($oldUsage), array_keys($newUsage)));
 
-        // 2. Diff hesabla və anbarı yenilə
         $warehouses = [];
         foreach ($allCodes as $code) {
             $oldQty = $oldUsage[$code] ?? 0;
@@ -102,17 +104,20 @@ class ComplaintStockService
 
             $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
 
-            // Əgər yeni miqdar artırsa və anbarda məhsul yoxdursa, xəta at
             if ($diff > 0 && ! $warehouse) {
                 throw ValidationException::withMessages([
-                    'detallar' => "'{$code}' kodlu detal cari qarajın anbarında tapılmadı.",
+                    'details' => __('messages.flash.stock_item_not_found', ['code' => $code]),
                 ]);
             }
 
             if ($warehouse) {
                 if ($diff > 0 && $warehouse->quantity < $diff) {
                     throw ValidationException::withMessages([
-                        'detallar' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur. (Tələb olunan əlavə: {$diff}, Mövcud: {$warehouse->quantity})",
+                        'details' => __('messages.flash.stock_insufficient', [
+                            'name'      => $warehouse->name,
+                            'requested' => $diff,
+                            'available' => $warehouse->quantity,
+                        ]),
                     ]);
                 }
 
@@ -124,30 +129,28 @@ class ComplaintStockService
 
                 $warehouses[$code] = $warehouse->fresh();
             } else {
-                // Əgər warehouse yoxdursa və diff <= 0 (yəni silinir), heç nə etmə
                 $warehouses[$code] = null;
             }
         }
 
-        // 3. Yeni detallar siyahısını hazırla
         $processed = [];
-        foreach ($newDetails as $detal) {
-            $code = $detal['code'] ?? $detal['kodu'] ?? null;
+        foreach ($newDetails as $detail) {
+            $code = $detail['code'] ?? null;
             if (empty($code)) {
                 continue;
             }
 
             $warehouse = $warehouses[$code] ?? Warehouse::where('code', $code)->first();
-            $usedQuantity = (int) ($detal['used_quantity'] ?? $detal['islenen_miqdar'] ?? 0);
+            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
 
             $processed[] = [
-                'shikayet_index' => $detal['shikayet_index'] ?? 0,
-                'code' => $code,
-                'name' => $warehouse?->name ?? ($detal['name'] ?? $detal['adi'] ?? $code),
+                'shikayet_index' => $detail['shikayet_index'] ?? 0,
+                'code'           => $code,
+                'name'           => $warehouse?->name ?? ($detail['name'] ?? $code),
                 'stock_quantity' => $warehouse?->quantity ?? 0,
-                'used_quantity' => $usedQuantity,
-                'employee_id' => $detal['employee_id'] ?? null,
-                'notes' => $detal['notes'] ?? $detal['qeyd'] ?? null,
+                'used_quantity'  => $usedQuantity,
+                'employee_id'    => $detail['employee_id'] ?? null,
+                'notes'          => $detail['notes'] ?? null,
             ];
         }
 

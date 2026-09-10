@@ -372,5 +372,25 @@ return [
         'profile_updated'         => 'Profil uğurla yeniləndi.',
         'profile_password_updated'=> 'Şifrə uğurla yeniləndi.',
         'profile_deleted'         => 'Hesabınız silindi.',
+        // Status transitions
+        'invalid_status_transition' => "':from' statusundan ':to' statusuna keçid icazəli deyil.",
+
+        // Stock
+        'stock_item_not_found' => "':code' kodlu detal cari qarajın anbarında tapılmadı.",
+        'stock_insufficient'   => "Anbarda kifayət qədər ':name' yoxdur (tələb: :requested, mövcud: :available).",
     ],
+
+            'reasons' => [
+            'dqn_empty'            => 'DQN boşdur',
+            'dqn_missing_in_row'   => 'Sətirdə DQN göstərilməyib',
+            'dqn_other_garage'     => 'DQN başqa qaraja aiddir',
+            'dqn_not_found'        => 'Bu DQN cari qarajın avtobus siyahısında yoxdur',
+            'name_empty'           => 'Ad boşdur',
+            'driver_code_empty'    => 'Sürücü kodu boşdur',
+            'first_name_empty'     => 'Ad boşdur',
+            'last_name_empty'      => 'Soyad boşdur',
+            'part_code_empty'      => 'Detal kodu boşdur',
+            'part_not_found'       => 'Detal (:code) anbarda tapılmadı',
+            'no_km_columns'        => 'Heç bir KM sütununda miqdar > 0 deyil',
+        ],
 ];

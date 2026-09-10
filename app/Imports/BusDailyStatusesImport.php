@@ -29,14 +29,14 @@ class BusDailyStatusesImport implements ToModel, WithChunkReading, WithHeadingRo
         $this->rowCounter++;
         $currentRow = $this->rowCounter + 1;
 
-        $dqn = trim((string) ($row['dqn'] ?? $row['DQN'] ?? ''));
-        $status = $row['status'] ?? $row['durum'] ?? $row['STATUS'] ?? $row['DURUM'] ?? null;
+        $dqn = trim((string) ($row['dqn'] ?? ''));
+        $status = $row['status'] ?? null;
 
         if (empty($dqn)) {
             $this->skipped[] = [
                 'row'    => $currentRow,
                 'dqn'    => '—',
-                'reason' => 'DQN boşdur',
+                'reason' => __('messages.imports.reasons.dqn_empty'),
             ];
             return null;
         }
@@ -50,7 +50,7 @@ class BusDailyStatusesImport implements ToModel, WithChunkReading, WithHeadingRo
             $this->skipped[] = [
                 'row'    => $currentRow,
                 'dqn'    => $dqn,
-                'reason' => 'Bu DQN cari qarajın avtobus siyahısında yoxdur',
+                'reason' => __('messages.imports.reasons.dqn_not_found'),
             ];
             return null;
         }
@@ -63,8 +63,8 @@ class BusDailyStatusesImport implements ToModel, WithChunkReading, WithHeadingRo
             [
                 'garage_id'  => $bus->garage_id ?? $this->garageId,
                 'company_id' => $bus->company_id ?? $this->companyId,
-                'status'     => $status ?? 'MƏLUMAT YOXDUR',
-                'notes'      => $row['notes'] ?? $row['qeyd'] ?? null,
+                'status'     => $status ?? 'NO DATA',
+                'notes'      => $row['notes'] ?? null,
             ]
         );
 

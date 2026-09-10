@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\Warehouse;
-use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
@@ -18,16 +17,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
 {
     use SkipsFailures;
 
-    /**
-     * Manual olaraq atlanan sətirlər (business logic səbəbindən).
-     *
-     * @var array<int, array{row: int, dqn: string, reason: string}>
-     */
     public array $skipped = [];
-
-    /**
-     * Uğurla idxal olunan sətir sayı.
-     */
     public int $importedCount = 0;
 
     public function __construct(
@@ -51,7 +41,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             $this->skipped[] = [
                 'row'    => $rowIndex,
                 'dqn'    => '—',
-                'reason' => 'Sətirdə DQN göstərilməyib',
+                'reason' => __('messages.imports.reasons.dqn_missing_in_row'),
             ];
             return;
         }
@@ -68,31 +58,25 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             $this->skipped[] = [
                 'row'    => $rowIndex,
                 'dqn'    => $busDqn,
-                'reason' => 'Bu DQN cari qarajın avtobus siyahısında yoxdur',
+                'reason' => __('messages.imports.reasons.dqn_not_found'),
             ];
             return;
         }
 
-        // ==================== DETAIL / STOCK ====================
         $partCode = trim((string) (
             $rowArray['part_code']
             ?? $rowArray['code']
-            ?? $rowArray['detal_kodu']
-            ?? $rowArray['kodu']
             ?? ''
         ));
 
         $usedQuantity = (int) (
             $rowArray['used_quantity']
             ?? $rowArray['quantity']
-            ?? $rowArray['islenen_miqdar']
-            ?? $rowArray['miqdar']
             ?? 0
         );
 
         $partName = $rowArray['part_name']
             ?? $rowArray['name']
-            ?? $rowArray['detal_adi']
             ?? null;
 
         $stockQuantity = 0;
@@ -108,7 +92,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
                 $this->skipped[] = [
                     'row'    => $rowIndex,
                     'dqn'    => $busDqn,
-                    'reason' => "Detal ({$partCode}) anbarda tapılmadı",
+                    'reason' => __('messages.imports.reasons.part_not_found', ['code' => $partCode]),
                 ];
                 return;
             }
@@ -117,7 +101,11 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
                 $this->skipped[] = [
                     'row'    => $rowIndex,
                     'dqn'    => $busDqn,
-                    'reason' => "Anbarda kifayət qədər '{$warehouse->name}' yoxdur (tələb: {$usedQuantity}, mövcud: {$warehouse->quantity})",
+                    'reason' => __('messages.flash.stock_insufficient', [
+                        'name'      => $warehouse->name,
+                        'requested' => $usedQuantity,
+                        'available' => $warehouse->quantity,
+                    ]),
                 ];
                 return;
             }
@@ -127,30 +115,29 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             $partName ??= $warehouse->name;
         }
 
-        // ==================== COMPLAINT ====================
         $complaint = Complaint::create([
-            'garage_id'        => $garageId ?? $bus->garage_id,
-            'company_id'       => $companyId ?? $bus->company_id,
-            'bus_id'           => $bus->id,
-            'yer'              => $rowArray['yer'] ?? null,
-            'driver_name'      => $rowArray['driver_name'] ?? $rowArray['surucu_adi'] ?? null,
-            'complaint_type'   => $rowArray['complaint_type'] ?? $rowArray['sikayet_tipi'] ?? null,
-            'reported_date'    => $rowArray['reported_date'] ?? $rowArray['bildirilme_tarix'] ?? null,
-            'reported_time'    => $rowArray['reported_time'] ?? $rowArray['bildirilme_saat'] ?? null,
-            'start_date'       => $rowArray['start_date'] ?? $rowArray['is_baslama_tarix'] ?? null,
-            'start_time'       => $rowArray['start_time'] ?? $rowArray['is_baslama_saat'] ?? null,
-            'end_date'         => $rowArray['end_date'] ?? $rowArray['is_bitme_tarix'] ?? null,
-            'end_time'         => $rowArray['end_time'] ?? $rowArray['is_bitme_saat'] ?? null,
-            'status'           => $rowArray['status'] ?? 'gözləmədə',
-            'km'               => isset($rowArray['km']) ? (int) $rowArray['km'] : null,
-            'work_done_by'     => $rowArray['work_done_by'] ?? $rowArray['kim_is_gorub'] ?? null,
-            'notes'            => $rowArray['notes'] ?? $rowArray['shikayet'] ?? $rowArray['qeyd'] ?? null,
+            'garage_id'      => $garageId ?? $bus->garage_id,
+            'company_id'     => $companyId ?? $bus->company_id,
+            'bus_id'         => $bus->id,
+            'yer'            => $rowArray['yer'] ?? null,
+            'driver_name'    => $rowArray['driver_name'] ?? null,
+            'complaint_type' => $rowArray['complaint_type'] ?? null,
+            'reported_date'  => $rowArray['reported_date'] ?? null,
+            'reported_time'  => $rowArray['reported_time'] ?? null,
+            'start_date'     => $rowArray['start_date'] ?? null,
+            'start_time'     => $rowArray['start_time'] ?? null,
+            'end_date'       => $rowArray['end_date'] ?? null,
+            'end_time'       => $rowArray['end_time'] ?? null,
+            'status'         => $rowArray['status'] ?? 'pending',
+            'km'             => isset($rowArray['km']) ? (int) $rowArray['km'] : null,
+            'work_done_by'   => $rowArray['work_done_by'] ?? null,
+            'notes'          => $rowArray['notes'] ?? null,
         ]);
 
-        if (! empty($rowArray['shikayet'])) {
+        if (! empty($rowArray['complaints'])) {
             $complaint->items()->create([
-                'description' => $rowArray['shikayet'],
-                'type'        => $rowArray['complaint_type'] ?? $rowArray['sikayet_tipi'] ?? null,
+                'description' => $rowArray['complaints'],
+                'type'        => $rowArray['complaint_type'] ?? null,
             ]);
         }
 
@@ -161,7 +148,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
                 'name'           => $partName ?? $partCode,
                 'stock_quantity' => $stockQuantity,
                 'used_quantity'  => $usedQuantity,
-                'notes'          => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? $rowArray['qeyd'] ?? null,
+                'notes'          => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
             ]);
         }
 
@@ -173,24 +160,10 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
         return [
             'bus_dqn'        => 'sometimes|nullable',
             'dqn'            => 'sometimes|nullable',
-            'status'         => 'nullable|in:gözləmədə,işdə,həll olundu',
-            'yer'            => 'nullable|in:yol,qaraj',
+            'status'         => 'nullable|in:pending,in_progress,completed',
+            'yer'            => 'nullable|in:road,garage',
             'complaint_type' => 'nullable|string',
-            'sikayet_tipi'   => 'nullable|string',
             'km'             => 'nullable|integer|min:0',
-        ];
-    }
-
-    /**
-     * Validation xətaları üçün dostcasına mesajlar.
-     */
-    public function customValidationMessages(): array
-    {
-        return [
-            'status.in'    => 'Status yalnız "gözləmədə", "işdə" və ya "həll olundu" ola bilər.',
-            'yer.in'       => 'Yer yalnız "yol" və ya "qaraj" ola bilər.',
-            'km.integer'   => 'KM tam ədəd olmalıdır.',
-            'km.min'       => 'KM mənfi ola bilməz.',
         ];
     }
 }

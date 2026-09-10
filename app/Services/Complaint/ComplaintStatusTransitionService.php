@@ -7,19 +7,13 @@ use Illuminate\Validation\ValidationException;
 
 class ComplaintStatusTransitionService
 {
-    /**
-     * İcazə verilən status keçidləri xəritəsi
-     */
     protected const ALLOWED_TRANSITIONS = [
-        'gözləmədə' => ['gözləmədə', 'işdə', 'həll olundu', 'ləğv edildi'],
-        'işdə' => ['işdə', 'gözləmədə', 'həll olundu', 'ləğv edildi'],
-        'həll olundu' => ['həll olundu'], // Bağlanmış kart dəyişdirilə bilməz
-        'ləğv edildi' => ['ləğv edildi'],
+        'pending'     => ['pending', 'in_progress', 'completed', 'cancelled'],
+        'in_progress' => ['in_progress', 'pending', 'completed', 'cancelled'],
+        'completed'   => ['completed'],
+        'cancelled'   => ['cancelled'],
     ];
 
-    /**
-     * Keçidin mümkünlüyünü yoxlayır
-     */
     public function canTransition(string $currentStatus, string $newStatus): bool
     {
         $allowed = self::ALLOWED_TRANSITIONS[$currentStatus] ?? [];
@@ -27,12 +21,9 @@ class ComplaintStatusTransitionService
         return in_array($newStatus, $allowed, true);
     }
 
-    /**
-     * Keçidi yoxlayır və uyğunsuzluq olduqda exception atır
-     */
     public function validateTransition(Complaint $complaint, string $newStatus): void
     {
-        $currentStatus = $complaint->status ?? 'gözləmədə';
+        $currentStatus = $complaint->status ?? 'pending';
 
         if ($currentStatus === $newStatus) {
             return;
@@ -40,7 +31,10 @@ class ComplaintStatusTransitionService
 
         if (! $this->canTransition($currentStatus, $newStatus)) {
             throw ValidationException::withMessages([
-                'status' => "'{$currentStatus}' statusundan '{$newStatus}' statusuna keçid icazəli deyil.",
+                'status' => __('messages.flash.invalid_status_transition', [
+                    'from' => $currentStatus,
+                    'to'   => $newStatus,
+                ]),
             ]);
         }
     }

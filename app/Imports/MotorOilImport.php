@@ -32,16 +32,16 @@ class MotorOilImport implements OnEachRow, WithChunkReading, WithHeadingRow
             }
         }
 
-        $partCode = $rowArray['part_code'] ?? $rowArray['detal_kodu'] ?? $rowArray['kod'] ?? null;
-        $partName = $rowArray['part_name'] ?? $rowArray['detal_adi'] ?? $rowArray['adi'] ?? null;
-        $unit     = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
-        $quantity = (float) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
+        $partCode = $rowArray['part_code'] ?? null;
+        $partName = $rowArray['part_name'] ?? null;
+        $unit     = $rowArray['unit'] ?? null;
+        $quantity = (float) ($rowArray['quantity'] ?? 0);
 
         if (! $partCode) {
             $this->skipped[] = [
                 'row'    => $row->getIndex(),
                 'dqn'    => '—',
-                'reason' => 'Detal kodu boşdur',
+                'reason' => __('messages.imports.reasons.part_code_empty'),
             ];
             return;
         }
@@ -69,7 +69,7 @@ class MotorOilImport implements OnEachRow, WithChunkReading, WithHeadingRow
             $this->skipped[] = [
                 'row'    => $row->getIndex(),
                 'dqn'    => $partCode,
-                'reason' => 'Heç bir KM sütununda miqdar > 0 deyil',
+                'reason' => __('messages.imports.reasons.no_km_columns'),
             ];
             return;
         }

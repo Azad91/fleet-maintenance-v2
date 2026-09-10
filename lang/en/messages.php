@@ -372,5 +372,25 @@ return [
         'profile_updated'         => 'Profile updated successfully.',
         'profile_password_updated'=> 'Password updated successfully.',
         'profile_deleted'         => 'Your account has been deleted.',
+                // Status transitions
+        'invalid_status_transition' => "Cannot transition from ':from' to ':to'.",
+
+        // Stock
+        'stock_item_not_found' => "Item with code ':code' not found in the current garage's warehouse.",
+        'stock_insufficient'   => "Not enough ':name' in stock (required: :requested, available: :available).",
+    ],
+
+            'reasons' => [
+            'dqn_empty'            => 'DQN is empty',
+            'dqn_missing_in_row'   => 'DQN is not specified in the row',
+            'dqn_other_garage'     => 'DQN belongs to another garage',
+            'dqn_not_found'        => 'This DQN is not in the current garage\'s bus list',
+            'name_empty'           => 'Name is empty',
+            'driver_code_empty'    => 'Driver code is empty',
+            'first_name_empty'     => 'First name is empty',
+            'last_name_empty'      => 'Last name is empty',
+            'part_code_empty'      => 'Part code is empty',
+            'part_not_found'       => 'Part (:code) not found in warehouse',
+            'no_km_columns'        => 'No KM column has quantity > 0',
     ],
 ];

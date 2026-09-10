@@ -41,10 +41,10 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
             }
         }
 
-        $cacheKey = 'km_mapping_' . $this->garageId . '_' . ($this->companyId ?? 0);
+        $cacheKey = 'km_mapping_'.$this->garageId.'_'.($this->companyId ?? 0);
 
         if ($isFirstChunk) {
-            $dateRow   = $rows->get(0)->toArray();
+            $dateRow = $rows->get(0)->toArray();
             $headerRow = $rows->get(1)->toArray();
 
             $kmColumns = [];
@@ -85,7 +85,7 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
         foreach ($dataRows as $row) {
             $dqn = trim((string) ($row[2] ?? ''));
             if ($dqn === '') {
-                continue; // Boş sətirlər üçün skip report yazmırıq (çox gürültü olur)
+                continue;
             }
 
             $bus = Bus::withoutGlobalScopes()
@@ -97,7 +97,7 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
                 $this->skipped[] = [
                     'row'    => '—',
                     'dqn'    => $dqn,
-                    'reason' => 'Bu DQN cari qarajın avtobus siyahısında yoxdur',
+                    'reason' => __('messages.imports.reasons.dqn_not_found'),
                 ];
                 continue;
             }

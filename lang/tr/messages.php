@@ -356,5 +356,25 @@ return [
         'profile_updated'         => 'Profil başarıyla güncellendi.',
         'profile_password_updated'=> 'Şifre başarıyla güncellendi.',
         'profile_deleted'         => 'Hesabınız silindi.',
+                // Status transitions
+        'invalid_status_transition' => "':from' durumundan ':to' durumuna geçiş izinli değil.",
+
+        // Stock
+        'stock_item_not_found' => "':code' kodlu parça mevcut garajın deposunda bulunamadı.",
+        'stock_insufficient'   => "Depoda yeterli ':name' yok (gereken: :requested, mevcut: :available).",
     ],
+
+            'reasons' => [
+            'dqn_empty'            => 'DQN boş',
+            'dqn_missing_in_row'   => 'Satırda DQN belirtilmemiş',
+            'dqn_other_garage'     => 'DQN başka bir garaja ait',
+            'dqn_not_found'        => 'Bu DQN mevcut garajın otobüs listesinde yok',
+            'name_empty'           => 'Ad boş',
+            'driver_code_empty'    => 'Sürücü kodu boş',
+            'first_name_empty'     => 'Ad boş',
+            'last_name_empty'      => 'Soyad boş',
+            'part_code_empty'      => 'Parça kodu boş',
+            'part_not_found'       => 'Parça (:code) depoda bulunamadı',
+            'no_km_columns'        => 'Hiçbir KM sütununda miktar > 0 değil',
+        ],
 ];
