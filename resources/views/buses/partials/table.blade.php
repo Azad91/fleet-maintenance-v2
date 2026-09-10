@@ -22,27 +22,33 @@
                         <th></th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="bus_project"
-                                placeholder="🔍 Project..." style="font-size: 13px;">
+                                placeholder="🔍 Project..." style="font-size: 13px;"
+                                value="{{ request('bus_project') }}" autocomplete="off">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="vin"
-                                placeholder="🔍 Chassis..." style="font-size: 13px;">
+                                placeholder="🔍 Chassis..." style="font-size: 13px;"
+                                value="{{ request('vin') }}" autocomplete="off">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="uzunluq"
-                                placeholder="🔍 Length..." style="font-size: 13px;">
+                                placeholder="🔍 Length..." style="font-size: 13px;"
+                                value="{{ request('uzunluq') }}" autocomplete="off">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="route_number"
-                                placeholder="🔍 Route..." style="font-size: 13px;">
+                                placeholder="🔍 Route..." style="font-size: 13px;"
+                                value="{{ request('route_number') }}" autocomplete="off">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="dqn"
-                                placeholder="🔍 DQN..." style="font-size: 13px;">
+                                placeholder="🔍 DQN..." style="font-size: 13px;"
+                                value="{{ request('dqn') }}" autocomplete="off">
                         </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="engine_number"
-                                placeholder="🔍 Engine..." style="font-size: 13px;">
+                                placeholder="🔍 Engine..." style="font-size: 13px;"
+                                value="{{ request('engine_number') }}" autocomplete="off">
                         </th>
                         <th style="text-align: center;"></th>
                         <th style="text-align: center;"></th>
@@ -94,8 +100,11 @@
                     <tr>
                         <td colspan="10" class="text-center text-muted py-4">
                             <i class="bi bi-bus-front" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            @if(isset($isEmpty) && $isEmpty)
-                                <p class="mb-0">No results found.</p>
+                            @if($hasActiveFilters ?? false)
+                                <p class="mb-2">No results found for the given filters.</p>
+                                <a href="{{ route('buses.index') }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Clear filters
+                                </a>
                             @else
                                 <p class="mb-0">No buses yet. <a href="{{ route('buses.import') }}">Import from Excel!</a></p>
                             @endif
@@ -105,5 +114,18 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- ✅ Pagination indi partial içindədir --}}
+        @if($buses->hasPages())
+            <div class="pagination-wrapper d-flex justify-content-center mt-4">
+                {{ $buses->withQueryString()->links() }}
+            </div>
+        @endif
+
+        @if($buses->total() > 0)
+            <div class="text-center text-muted small mt-2">
+                Showing {{ $buses->firstItem() }}–{{ $buses->lastItem() }} of {{ $buses->total() }} buses
+            </div>
+        @endif
     </div>
 </div>

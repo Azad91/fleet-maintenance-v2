@@ -8,6 +8,7 @@ use App\Imports\BusesImport;
 use App\Models\Bus;
 use App\Services\BusService;
 use App\Services\GarageContext;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -23,21 +24,51 @@ class BusController extends Controller
 
         $buses = $this->busService->getPaginatedBuses(null, config('settings.pagination', 15));
 
-        return view('buses.index', compact('buses'));
+        return view('buses.index', [
+            'buses' => $buses,
+            'isEmpty' => $buses->isEmpty(),
+            'hasActiveFilters' => false,
+        ]);
     }
 
     public function search(Request $request): View|string
     {
         $this->authorize('viewAny', Bus::class);
 
-        $buses = $this->busService->advancedSearch($request->all(), config('settings.pagination', 15));
-        $isEmpty = $buses->isEmpty();
+        // ✅ DÜZƏLİŞ: yalnız filter sahələrini götür
+        $filters = $request->only([
+            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+        ]);
 
-        if ($request->ajax()) {
-            return view('buses.partials.table', compact('buses', 'isEmpty'))->render();
+        // Boş dəyərləri təmizlə
+        $filters = array_filter($filters, fn ($v) => filled($v));
+
+        $buses = $this->busService->advancedSearch(
+            $filters,
+            (int) config('settings.pagination', 15)
+        );
+
+        $isEmpty = $buses->isEmpty();
+        $hasActiveFilters = ! empty($filters);
+
+        // ✅ DÜZƏLİŞ: $request->ajax() əvəzinə explicit header yoxlaması
+        if ($this->isAjaxRequest($request)) {
+            return view('buses.partials.table', compact('buses', 'isEmpty', 'hasActiveFilters'))->render();
         }
 
-        return view('buses.index', compact('buses'));
+        return view('buses.index', compact('buses', 'isEmpty', 'hasActiveFilters'));
+    }
+
+    /**
+     * Sorğunun AJAX olub-olmadığını yoxlayır.
+     *
+     * fetch() ilə göndərilən sorğular X-Requested-With header-ini manual set etməlidir.
+     * jQuery default olaraq set edir.
+     */
+    private function isAjaxRequest(Request $request): bool
+    {
+        return $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->boolean('_ajax');
     }
 
     public function show(int $id): View
@@ -106,11 +137,15 @@ class BusController extends Controller
 
         try {
             Excel::import(
-                new BusesImport((int) GarageContext::getGarageId(), GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null),
+                new BusesImport(
+                    (int) GarageContext::getGarageId(),
+                    GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
+                ),
                 $request->file('file')
             );
+
             return redirect()->route('buses.index')->with('success', 'Avtobuslar uğurla idxal edildi!');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             report($e);
             return redirect()->route('buses.index')->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın.');
         }
@@ -118,52 +153,34 @@ class BusController extends Controller
 
     public function bulkDeactivate(Request $request): RedirectResponse
     {
-        $this->authorize('update', Bus::class);
-
-        $ids = $request->input('ids', []);
-        
-        // ✅ JSON string-i array-ə çevir
-        if (is_string($ids)) {
-            $ids = json_decode($ids, true);
-        }
-
-        if (empty($ids)) {
-            return back()->with('error', 'Heç bir avtobus seçilməyib.');
-        }
-
-        $this->busService->bulkUpdateStatus($ids, false);
-
-        return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus passiv edildi.');
+        return $this->bulkUpdateStatus($request, false, 'passiv edildi');
     }
 
     public function bulkActivate(Request $request): RedirectResponse
     {
+        return $this->bulkUpdateStatus($request, true, 'aktiv edildi');
+    }
+
+    private function bulkUpdateStatus(Request $request, bool $isActive, string $label): RedirectResponse
+    {
         $this->authorize('update', Bus::class);
 
-        $ids = $request->input('ids', []);
-        
-        if (is_string($ids)) {
-            $ids = json_decode($ids, true);
-        }
+        $ids = $this->normalizeIds($request->input('ids', []));
 
         if (empty($ids)) {
             return back()->with('error', 'Heç bir avtobus seçilməyib.');
         }
 
-        $this->busService->bulkUpdateStatus($ids, true);
+        $this->busService->bulkUpdateStatus($ids, $isActive);
 
-        return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus aktiv edildi.');
+        return redirect()->route('buses.index')->with('success', count($ids) . " avtobus {$label}.");
     }
 
     public function bulkDelete(Request $request): RedirectResponse
     {
         $this->authorize('delete', Bus::class);
 
-        $ids = $request->input('ids', []);
-        
-        if (is_string($ids)) {
-            $ids = json_decode($ids, true);
-        }
+        $ids = $this->normalizeIds($request->input('ids', []));
 
         if (empty($ids)) {
             return back()->with('error', 'Heç bir avtobus seçilməyib.');
@@ -172,5 +189,23 @@ class BusController extends Controller
         $this->busService->bulkDelete($ids);
 
         return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus silindi.');
+    }
+
+    /**
+     * ID massivini təmizləyir (JSON string və ya array).
+     *
+     * @return array<int>
+     */
+    private function normalizeIds(mixed $ids): array
+    {
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true) ?? [];
+        }
+
+        if (! is_array($ids)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('intval', $ids)));
     }
 }

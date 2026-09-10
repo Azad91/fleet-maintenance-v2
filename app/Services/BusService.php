@@ -22,14 +22,25 @@ class BusService
         return $query->orderBy('id', 'desc')->paginate($perPage);
     }
 
+    /**
+     * @param  array<string, mixed>  $filters
+     */
     public function advancedSearch(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         $query = Bus::with('latestKmRecord');
 
-        $fields = ['bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number'];
-        foreach ($fields as $field) {
-            if (!empty($filters[$field])) {
-                $query->where($field, 'ILIKE', "%{$filters[$field]}%");
+        $searchableFields = [
+            'bus_project',
+            'vin',
+            'uzunluq',
+            'route_number',
+            'dqn',
+            'engine_number',
+        ];
+
+        foreach ($searchableFields as $field) {
+            if (! empty($filters[$field])) {
+                $query->where($field, 'ILIKE', '%' . $filters[$field] . '%');
             }
         }
 
@@ -55,12 +66,20 @@ class BusService
 
     public function bulkUpdateStatus(array $ids, bool $isActive): void
     {
+        if (empty($ids)) {
+            return;
+        }
+
         Bus::whereIn('id', $ids)->update(['is_active' => $isActive]);
         Bus::auditBulkUpdate($ids, ['is_active' => $isActive], $isActive ? 'bulk_activated' : 'bulk_deactivated');
     }
 
     public function bulkDelete(array $ids): void
     {
+        if (empty($ids)) {
+            return;
+        }
+
         Bus::auditBulkDelete($ids);
         Bus::whereIn('id', $ids)->delete();
     }
