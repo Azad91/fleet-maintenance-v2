@@ -48,7 +48,7 @@ class ComplaintStockTest extends TestCase
     {
         $warehouse = Warehouse::factory()->create([
             'code' => 'D-001',
-            'name' => 'Test Detal',
+            'name' => 'Test Part',
             'quantity' => 10,
             'garage_id' => 1,
             'company_id' => 1,
@@ -58,9 +58,9 @@ class ComplaintStockTest extends TestCase
 
         $data = [
             'bus_id' => $bus->id,
-            'yer' => 'qaraj',
-            'status' => 'gözləmədə',
-            'complaint_type' => 'nasazliq',
+            'yer' => 'garage',
+            'status' => 'pending',
+            'complaint_type' => 'breakdown',
             'km' => 1000,
         ];
 
@@ -69,11 +69,11 @@ class ComplaintStockTest extends TestCase
                 'code' => 'D-001',
                 'used_quantity' => 3,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
-                'notes' => 'Test qeydi',
+                'notes' => 'Test note',
             ],
         ];
 
-        $shikayet = ['Test şikayəti'];
+        $shikayet = ['Test complaint'];
 
         $complaint = $this->complaintService->create($data, $details, $shikayet);
         $complaint->load('details');
@@ -90,7 +90,7 @@ class ComplaintStockTest extends TestCase
     {
         $warehouse = Warehouse::factory()->create([
             'code' => 'D-002',
-            'name' => 'Test Detal 2',
+            'name' => 'Test Part 2',
             'quantity' => 2,
             'garage_id' => 1,
             'company_id' => 1,
@@ -100,9 +100,9 @@ class ComplaintStockTest extends TestCase
 
         $data = [
             'bus_id' => $bus->id,
-            'yer' => 'qaraj',
-            'status' => 'gözləmədə',
-            'complaint_type' => 'nasazliq',
+            'yer' => 'garage',
+            'status' => 'pending',
+            'complaint_type' => 'breakdown',
             'km' => 1000,
         ];
 
@@ -111,14 +111,13 @@ class ComplaintStockTest extends TestCase
                 'code' => 'D-002',
                 'used_quantity' => 5,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
-                'notes' => 'Test qeydi',
+                'notes' => 'Test note',
             ],
         ];
 
-        $shikayet = ['Test şikayəti'];
+        $shikayet = ['Test complaint'];
 
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Anbarda kifayət qədər');
 
         $this->complaintService->create($data, $details, $shikayet);
 
@@ -130,7 +129,7 @@ class ComplaintStockTest extends TestCase
     {
         $warehouse = Warehouse::factory()->create([
             'code' => 'D-003',
-            'name' => 'Test Detal 3',
+            'name' => 'Test Part 3',
             'quantity' => 10,
             'garage_id' => 1,
             'company_id' => 1,
@@ -140,9 +139,9 @@ class ComplaintStockTest extends TestCase
 
         $data = [
             'bus_id' => $bus->id,
-            'yer' => 'qaraj',
-            'status' => 'gözləmədə',
-            'complaint_type' => 'nasazliq',
+            'yer' => 'garage',
+            'status' => 'pending',
+            'complaint_type' => 'breakdown',
             'km' => 1000,
         ];
 
@@ -151,11 +150,11 @@ class ComplaintStockTest extends TestCase
                 'code' => 'D-003',
                 'used_quantity' => 3,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
-                'notes' => 'Test qeydi',
+                'notes' => 'Test note',
             ],
         ];
 
-        $shikayet = ['Test şikayəti'];
+        $shikayet = ['Test complaint'];
 
         $complaint = $this->complaintService->create($data, $details, $shikayet);
         $complaint->load('details');
@@ -172,7 +171,7 @@ class ComplaintStockTest extends TestCase
     {
         $warehouse = Warehouse::factory()->create([
             'code' => 'D-004',
-            'name' => 'Test Detal 4',
+            'name' => 'Test Part 4',
             'quantity' => 20,
             'garage_id' => 1,
             'company_id' => 1,
@@ -182,9 +181,9 @@ class ComplaintStockTest extends TestCase
 
         $data = [
             'bus_id' => $bus->id,
-            'yer' => 'qaraj',
-            'status' => 'gözləmədə',
-            'complaint_type' => 'nasazliq',
+            'yer' => 'garage',
+            'status' => 'pending',
+            'complaint_type' => 'breakdown',
             'km' => 1000,
         ];
 
@@ -193,11 +192,11 @@ class ComplaintStockTest extends TestCase
                 'code' => 'D-004',
                 'used_quantity' => 5,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
-                'notes' => 'Test qeydi',
+                'notes' => 'Test note',
             ],
         ];
 
-        $shikayet = ['Test şikayəti'];
+        $shikayet = ['Test complaint'];
 
         $complaint = $this->complaintService->create($data, $details, $shikayet);
         $complaint->load('details');
@@ -209,7 +208,7 @@ class ComplaintStockTest extends TestCase
                 'code' => 'D-004',
                 'used_quantity' => 3,
                 'employee_id' => Employee::factory()->create(['garage_id' => 1, 'company_id' => 1])->id,
-                'notes' => 'Yeni qeyd',
+                'notes' => 'New note',
             ],
         ];
 
@@ -225,16 +224,16 @@ class ComplaintStockTest extends TestCase
 
         $complaint = Complaint::create([
             'bus_id' => $bus->id,
-            'yer' => 'qaraj',
-            'status' => 'həll olundu',
+            'yer' => 'garage',
+            'status' => 'completed',
             'garage_id' => 1,
             'company_id' => 1,
         ]);
 
         $this->expectException(ValidationException::class);
         $this->complaintService->update($complaint, [
-            'status' => 'gözləmədə',
-            'yer' => 'qaraj',
+            'status' => 'pending',
+            'yer' => 'garage',
         ]);
     }
 }

@@ -19,13 +19,13 @@ class ComplaintItem extends Model
     // ==================== SCOPES ====================
 
     /**
-     * Eyni avtobusda təkrar olunan şikayətləri tapır.
+     * Find recurring complaints on the same bus.
      *
-     * Bir şikayət "təkrar" sayılır əgər:
-     *  - son $days gün ərzində eyni avtobusda,
-     *  - eyni mətnlə,
-     *  - ən azı 2 dəfə,
-     *  - hələ "həll olundu" statusuna keçməyibsə.
+     * A complaint is considered "recurring" if:
+     *  - within the last $days days on the same bus,
+     *  - with the same description,
+     *  - at least twice,
+     *  - and not yet in "completed" status.
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -46,16 +46,13 @@ class ComplaintItem extends Model
                 DB::raw('MAX(complaints.created_at) as last_occurrence')
             )
             ->join('complaints', 'complaints.id', '=', 'complaint_items.complaint_id')
-            // ✅ Soft-deleted complaints-ləri sayma
             ->whereNull('complaints.deleted_at')
-            // ✅ Yalnız son $days gün
             ->where('complaints.created_at', '>=', now()->subDays($days))
-            // ✅ "həll olundu" OLMAYAN (NULL-ları da daxil etməklə)
+            // Exclude completed complaints (including NULL status)
             ->where(function ($q) {
-                $q->where('complaints.status', '!=', 'həll olundu')
+                $q->where('complaints.status', '!=', 'completed')
                   ->orWhereNull('complaints.status');
             })
-            // ✅ Cari qarajla məhdudlaşdır
             ->where('complaints.garage_id', $garageId)
             ->groupBy('complaint_items.description', 'complaints.bus_id')
             ->havingRaw('COUNT(*) >= 2')

@@ -41,19 +41,19 @@ class RecurringComplaintsTest extends TestCase
         parent::tearDown();
     }
 
-    private function createComplaintWithItem(string $description, string $status = 'gözləmədə'): Complaint
+    private function createComplaintWithItem(string $description, string $status = 'pending'): Complaint
     {
         $complaint = Complaint::create([
             'bus_id'     => $this->bus->id,
             'garage_id'  => $this->garage->id,
             'company_id' => $this->company->id,
-            'yer'        => 'qaraj',
+            'yer'        => 'garage',
             'status'     => $status,
         ]);
 
         $complaint->items()->create([
             'description' => $description,
-            'type'        => 'nasazliq',
+            'type'        => 'breakdown',
         ]);
 
         return $complaint;
@@ -73,19 +73,19 @@ class RecurringComplaintsTest extends TestCase
 
     public function test_detects_recurring_issue_when_same_description_appears_twice(): void
     {
-        $this->createComplaintWithItem('Əyləc nasazlığı');
-        $this->createComplaintWithItem('Əyləc nasazlığı');
+        $this->createComplaintWithItem('Brake failure');
+        $this->createComplaintWithItem('Brake failure');
 
         $results = ComplaintItem::recurring(30)->get();
 
         $this->assertCount(1, $results);
-        $this->assertEquals('Əyləc nasazlığı', $results->first()->description);
+        $this->assertEquals('Brake failure', $results->first()->description);
         $this->assertEquals(2, $results->first()->total);
     }
 
     public function test_ignores_single_occurrence(): void
     {
-        $this->createComplaintWithItem('Tək problem');
+        $this->createComplaintWithItem('Single problem');
 
         $results = ComplaintItem::recurring(30)->get();
 
@@ -94,8 +94,8 @@ class RecurringComplaintsTest extends TestCase
 
     public function test_excludes_closed_complaints(): void
     {
-        $this->createComplaintWithItem('Problem A', 'həll olundu');
-        $this->createComplaintWithItem('Problem A', 'həll olundu');
+        $this->createComplaintWithItem('Problem A', 'completed');
+        $this->createComplaintWithItem('Problem A', 'completed');
 
         $results = ComplaintItem::recurring(30)->get();
 
@@ -104,8 +104,8 @@ class RecurringComplaintsTest extends TestCase
 
     public function test_excludes_soft_deleted_complaints(): void
     {
-        $c1 = $this->createComplaintWithItem('Soft delete testi');
-        $this->createComplaintWithItem('Soft delete testi');
+        $c1 = $this->createComplaintWithItem('Soft delete test');
+        $this->createComplaintWithItem('Soft delete test');
 
         $c1->delete(); // soft delete
 
@@ -122,20 +122,20 @@ class RecurringComplaintsTest extends TestCase
             'company_id' => $this->company->id,
         ]);
 
-        // Cari qarajda 1 dənə
-        $this->createComplaintWithItem('Eyni problem');
+        // One in current garage
+        $this->createComplaintWithItem('Same problem');
 
-        // Digər qarajda 1 dənə (eyni açıqlama)
+        // One in another garage (same description)
         $otherComplaint = Complaint::create([
             'bus_id'     => $otherBus->id,
             'garage_id'  => $otherGarage->id,
             'company_id' => $this->company->id,
-            'yer'        => 'qaraj',
-            'status'     => 'gözləmədə',
+            'yer'        => 'garage',
+            'status'     => 'pending',
         ]);
         $otherComplaint->items()->create([
-            'description' => 'Eyni problem',
-            'type'        => 'nasazliq',
+            'description' => 'Same problem',
+            'type'        => 'breakdown',
         ]);
 
         $results = ComplaintItem::recurring(30)->get();
@@ -145,12 +145,12 @@ class RecurringComplaintsTest extends TestCase
 
     public function test_orders_by_most_recurring_first(): void
     {
-        // "Problem B" — 3 dəfə
+        // "Problem B" — 3 times
         $this->createComplaintWithItem('Problem B');
         $this->createComplaintWithItem('Problem B');
         $this->createComplaintWithItem('Problem B');
 
-        // "Problem A" — 2 dəfə
+        // "Problem A" — 2 times
         $this->createComplaintWithItem('Problem A');
         $this->createComplaintWithItem('Problem A');
 

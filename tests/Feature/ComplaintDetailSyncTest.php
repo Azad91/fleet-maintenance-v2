@@ -80,11 +80,11 @@ class ComplaintDetailSyncTest extends TestCase
     private function baseData(): array
     {
         return [
-            'bus_id' => $this->bus->id,
-            'yer' => 'qaraj',
-            'status' => 'gözləmədə',
-            'complaint_type' => 'nasazliq',
-            'km' => 1000,
+            'bus_id'         => $this->bus->id,
+            'yer'            => 'garage',
+            'status'         => 'pending',
+            'complaint_type' => 'breakdown',
+            'km'             => 1000,
         ];
     }
 

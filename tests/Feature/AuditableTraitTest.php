@@ -54,7 +54,7 @@ class AuditableTraitTest extends TestCase
             'company_id' => $this->garage->company_id,
         ]);
 
-        AuditLog::query()->delete(); // created logunu sil
+        AuditLog::query()->delete(); // remove created log
 
         $bus->update(['route_number' => 'TEST-999']);
 
@@ -70,7 +70,7 @@ class AuditableTraitTest extends TestCase
         $this->assertArrayHasKey('route_number', $newValues);
         $this->assertEquals('TEST-999', $newValues['route_number']);
 
-        // Timestamps filtrlənməlidir
+        // Timestamps must be filtered out
         $this->assertArrayNotHasKey('updated_at', $newValues);
         $this->assertArrayNotHasKey('created_at', $newValues);
     }
@@ -84,7 +84,7 @@ class AuditableTraitTest extends TestCase
 
         AuditLog::query()->delete();
 
-        // Eyni dəyəri set et — heç nə dəyişmir
+        // Set the same value — nothing changes
         $bus->update(['route_number' => $bus->route_number]);
 
         $logs = AuditLog::where('auditable_type', Bus::class)

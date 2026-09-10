@@ -88,12 +88,12 @@ class Complaint extends Model
     // ==================== SKOPLAR ====================
     public function scopeOpen($query)
     {
-        return $query->where('status', '!=', 'həll olundu');
+        return $query->where('status', '!=', 'completed');
     }
 
     public function scopeClosed($query)
     {
-        return $query->where('status', 'həll olundu');
+        return $query->where('status', 'completed');
     }
 
     public function scopeByType($query, $type)
@@ -104,7 +104,7 @@ class Complaint extends Model
     // ==================== AKSESSORLAR ====================
     public function getIsOpenAttribute()
     {
-        return $this->status !== 'həll olundu';
+        return $this->status !== 'completed';
     }
 
     public function getDurationAttribute()

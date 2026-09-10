@@ -89,8 +89,8 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->post(route('users.store'), [
-                'name'                  => 'Yeni User',
-                'email'                 => 'yeni@test.com',
+                'name'                  => 'New User',
+                'email'                 => 'new@test.com',
                 'password'              => 'password123',
                 'password_confirmation' => 'password123',
                 'role'                  => 'warehouse',
@@ -98,7 +98,7 @@ class UserManagementTest extends TestCase
 
         $response->assertRedirect(route('users.index'));
 
-        $newUser = User::where('email', 'yeni@test.com')->first();
+        $newUser = User::where('email', 'new@test.com')->first();
         $this->assertNotNull($newUser);
         $this->assertEquals('user', $newUser->role);
 

@@ -86,19 +86,19 @@ class WarehouseSearchIsolationTest extends TestCase
             'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
             'code' => 'A-001',
-            'name' => 'Eyni Ad',
+            'name' => 'Same Name',
         ]);
 
         Warehouse::factory()->create([
             'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
             'code' => 'B-001',
-            'name' => 'Eyni Ad',
+            'name' => 'Same Name',
         ]);
 
         $response = $this->actingAs($this->user)
             ->withSession($this->garageSession())
-            ->get(route('warehouses.search', ['search' => 'Eyni Ad']));
+            ->get(route('warehouses.search', ['search' => 'Same Name']));
 
         $content = $response->getContent();
         $this->assertStringContainsString('A-001', $content);
@@ -113,20 +113,20 @@ class WarehouseSearchIsolationTest extends TestCase
             'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
             'code' => 'A-002',
-            'name' => 'Ortak Ad',
+            'name' => 'Common Name',
         ]);
 
         Warehouse::factory()->create([
             'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
             'code' => 'B-002',
-            'name' => 'Ortak Ad',
+            'name' => 'Common Name',
         ]);
 
         $response = $this->actingAs($this->user)
             ->withSession($this->garageSession())
-            ->get(route('warehouses.index', ['search' => 'Ortak Ad']));
-
+            ->get(route('warehouses.index', ['search' => 'Common Name']));
+            
         $content = $response->getContent();
         $this->assertStringContainsString('A-002', $content);
         $this->assertStringNotContainsString('B-002', $content,

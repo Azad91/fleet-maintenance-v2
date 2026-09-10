@@ -32,7 +32,7 @@ class SoftDeleteTest extends TestCase
             'garage_id' => $garage->id,
             'company_id' => $company->id,
             'code' => 'W-001',
-            'name' => 'Təkər',
+            'name' => 'Tire',
             'quantity' => 10,
         ]);
 

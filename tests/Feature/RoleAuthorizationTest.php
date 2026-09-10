@@ -21,14 +21,14 @@ class RoleAuthorizationTest extends TestCase
         parent::setUp();
 
         $this->company = Company::create([
-            'name' => 'Test Şirkəti',
-            'slug' => 'test-sirketi',
+            'name' => 'Test Company',
+            'slug' => 'test-company',
             'is_active' => true,
         ]);
 
         $this->garage = Garage::create([
             'company_id' => $this->company->id,
-            'name' => 'Test Qarajı',
+            'name' => 'Test Garage',
             'code' => 'TG-001',
             'is_active' => true,
         ]);
@@ -51,10 +51,8 @@ class RoleAuthorizationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Düzəliş 1: 'bus' əvəzinə 'warehouse' yazırıq (Çünki DB constraint buna icazə verir)
         $user->garages()->attach($this->garage, ['role' => 'warehouse', 'is_active' => true]);
 
-        // Düzəliş 2: Sessiyaya company_id də əlavə edirik
         session([
             'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
@@ -70,7 +68,6 @@ class RoleAuthorizationTest extends TestCase
 
         $user->garages()->attach($this->garage, ['role' => 'complaint', 'is_active' => true]);
 
-        // Düzəliş 2: Sessiyaya company_id də əlavə edirik
         session([
             'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,

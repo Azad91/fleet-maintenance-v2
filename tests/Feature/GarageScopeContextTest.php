@@ -128,10 +128,8 @@ class GarageScopeContextTest extends TestCase
     {
         GarageContext::clear();
 
-        // Session və Auth user də yox — fallback-lar işləməyəcək
         session()->forget(['current_garage_id', 'current_company_id']);
 
-        // Production rejimini simulyasiya et
         config(['app.debug' => false]);
 
         Log::spy();
@@ -141,7 +139,6 @@ class GarageScopeContextTest extends TestCase
             'is_active' => true,
         ]);
 
-        // Model yenə də yaradıldı, amma garage_id null qaldı
         $this->assertNull($bus->garage_id);
         $this->assertNull($bus->company_id);
 
@@ -149,7 +146,7 @@ class GarageScopeContextTest extends TestCase
         Log::shouldHaveReceived('warning')
             ->once()
             ->withArgs(function ($message) {
-                return str_contains($message, 'Qaraj konteksti təyin edilməyib');
+                return str_contains($message, 'Garage context is not set');
             });
     }
 
@@ -164,7 +161,7 @@ class GarageScopeContextTest extends TestCase
         config(['app.debug' => true]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Qaraj konteksti təyin edilməyib');
+        $this->expectExceptionMessage('Garage context is not set');
 
         Bus::create([
             'dqn' => 'NO-CONTEXT-2',

@@ -86,10 +86,10 @@ class ComplaintService
 
     public function close(Complaint $complaint, array $data): Complaint
     {
-        $this->transitionService->validateTransition($complaint, 'həll olundu');
+        $this->transitionService->validateTransition($complaint, 'completed');
 
         $complaint->update([
-            'status'       => 'həll olundu',
+            'status'       => 'completed',
             'end_date'     => $data['end_date'],
             'end_time'     => $data['end_time'],
             'work_done_by' => $data['work_done'],

@@ -26,13 +26,13 @@ class GarageSelectionTest extends TestCase
 
         $this->garageA = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'name' => 'Alpha Qarajı',
+            'name' => 'Alpha Garage',
             'is_active' => true,
         ]);
 
         $this->garageB = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'name' => 'Beta Qarajı',
+            'name' => 'Beta Garage',             
             'is_active' => true,
         ]);
     }
@@ -45,8 +45,8 @@ class GarageSelectionTest extends TestCase
         $response = $this->actingAs($superAdmin)->get(route('garage.selection'));
 
         $response->assertOk();
-        $response->assertSee('Alpha Qarajı');
-        $response->assertSee('Beta Qarajı');
+        $response->assertSee('Alpha Garage');
+        $response->assertSee('Beta Garage');
     }
 
     public function test_super_admin_can_select_any_garage_without_membership(): void
@@ -70,9 +70,8 @@ class GarageSelectionTest extends TestCase
         $response = $this->actingAs($user)->get(route('garage.selection'));
 
         $response->assertOk();
-        $response->assertSee('Alpha Qarajı');
-        $response->assertDontSee('Beta Qarajı');
-    }
+        $response->assertSee('Alpha Garage');
+        $response->assertDontSee('Beta Garage');    }
 
     public function test_regular_user_cannot_select_unassigned_garage(): void
     {
@@ -90,7 +89,6 @@ class GarageSelectionTest extends TestCase
     public function test_regular_user_without_any_garage_is_redirected_to_dashboard_with_error(): void
     {
         $user = User::factory()->create(['role' => 'user']);
-        // Heç bir qaraja təyin edilməyib
 
         $response = $this->actingAs($user)->get(route('garage.selection'));
 
@@ -102,7 +100,7 @@ class GarageSelectionTest extends TestCase
     {
         $inactiveGarage = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'name' => 'Passiv Qaraj',
+            'name' => 'Inactive Garage',
             'is_active' => false,
         ]);
 
@@ -111,7 +109,7 @@ class GarageSelectionTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('garage.selection'));
 
-        $response->assertDontSee('Passiv Qaraj');
+        $response->assertDontSee('Inactive Garage');
     }
 
     public function test_selecting_garage_updates_user_current_garage(): void
