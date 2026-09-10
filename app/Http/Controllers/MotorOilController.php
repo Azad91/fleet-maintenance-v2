@@ -21,7 +21,7 @@ class MotorOilController extends Controller
 
     public function search(Request $request)
     {
-        $this->authorize('viewAny', MotorOilDetail::class);  // ✅ ƏLAVƏ
+        $this->authorize('viewAny', MotorOilDetail::class);
 
         $search = preg_replace('/[^\d]/', '', (string) $request->search);
 
@@ -33,6 +33,11 @@ class MotorOilController extends Controller
             ->get();
 
         $grouped = $details->groupBy('km');
+
+        // ✅ ƏLAVƏ: Əgər AJAX deyilsə, tam səhifə qaytar
+        if (! $request->ajax() && ! $request->wantsJson()) {
+            return view('motor-oil.index', compact('grouped', 'search'));
+        }
 
         return view('motor-oil.partials.table', compact('grouped', 'search'));
     }

@@ -1,282 +1,326 @@
-<!-- ==================== 1. COMPLAINT TYPE ==================== -->
-<div class="mb-3">
-    <label class="form-label fw-bold">🏷️ Complaint Type <span class="text-danger">*</span></label>
-    <div>
-        <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="complaint_type" id="tip_qezali" value="qezali"
-                   {{ old('complaint_type') == 'qezali' ? 'checked' : '' }} onchange="toggleServiceFields()" required>
-            <label class="form-check-label" for="tip_qezali">🚗 Accident</label>
-        </div>
-        <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="complaint_type" id="tip_nasazliq" value="nasazliq"
-                   {{ old('complaint_type') == 'nasazliq' ? 'checked' : '' }} onchange="toggleServiceFields()">
-            <label class="form-check-label" for="tip_nasazliq">⚠️ Breakdown</label>
-        </div>
-        <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="complaint_type" id="tip_texniki" value="texniki_xidmet"
-                   {{ old('complaint_type') == 'texniki_xidmet' ? 'checked' : '' }} onchange="toggleServiceFields()">
-            <label class="form-check-label" for="tip_texniki">🔧 Maintenance</label>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== 2. LOCATION ==================== -->
-<div class="mb-3">
-    <label class="form-label fw-bold">📍 Location <span class="text-danger">*</span></label>
-    <div>
-        <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="yer" id="yer_yol" value="yol" {{ old('yer', 'yol') == 'yol' ? 'checked' : '' }} onchange="toggleFields()" required>
-            <label class="form-check-label" for="yer_yol">🛣️ Road</label>
-        </div>
-        <div class="form-check form-check-inline me-3">
-            <input class="form-check-input" type="radio" name="yer" id="yer_qaraj" value="qaraj" {{ old('yer') == 'qaraj' ? 'checked' : '' }} onchange="toggleFields()">
-            <label class="form-check-label" for="yer_qaraj">🏠 Garage</label>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== 3. BUS SELECTION ==================== -->
-<div class="mb-3">
-    <label class="form-label fw-bold">🚌 Bus <span class="text-danger">*</span></label>
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label for="xett_no" class="form-label">Route No <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="xett_no" name="xett_no" required
-                   list="xettList" placeholder="Enter route number..."
-                   oninput="getBusByXett(this.value)" value="{{ old('xett_no') }}">
-            <datalist id="xettList">
-                @foreach($buses as $bus)
-                    <option value="{{ $bus->route_number }}">
-                @endforeach
-            </datalist>
-        </div>
-        <div class="col-md-6">
-            <label for="dqn" class="form-label">DQN <span class="text-danger">*</span></label>
-            <input type="text" class="form-control input-disabled" id="dqn" name="dqn" readonly required value="{{ old('dqn') }}">
-            <input type="hidden" name="bus_id" id="bus_id" value="{{ old('bus_id') }}">
-        </div>
-    </div>
-</div>
-
-<!-- ==================== 4. DRIVER ==================== -->
-<div class="mb-3" id="surucuField">
-    <label class="form-label fw-bold">🧑‍✈️ Driver <span class="text-danger">*</span></label>
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label for="driver_kodu" class="form-label">Driver Code</label>
-            <input type="text" class="form-control" id="driver_kodu" name="driver_kodu"
-                   placeholder="e.g. D-001" list="driverList"
-                   oninput="getDriverByKod(this.value)" value="{{ old('driver_kodu') }}">
-            <datalist id="driverList">
-                @foreach($drivers ?? [] as $driver)
-                    <option value="{{ $driver->code }}">
-                @endforeach
-            </datalist>
-            <div id="driverHelp" class="form-text">Driver name auto-fills when code is selected.</div>
-        </div>
-        <div class="col-md-8">
-            <label for="driver_name" class="form-label">Driver Name</label>
-            <input type="text" class="form-control input-disabled" id="driver_name" name="driver_name"
-                   placeholder="Auto-filled..." readonly
-                   value="{{ old('driver_name') }}">
-            <input type="hidden" name="driver_id" id="driver_id" value="{{ old('driver_id') }}">
-        </div>
-    </div>
-</div>
-
-<!-- ==================== 5. DYNAMIC COMPLAINTS ==================== -->
-<div class="mb-3">
-    <label class="form-label fw-bold">📝 Complaints <span class="text-danger">*</span></label>
-    <div id="complaintsContainer">
-        <div class="complaint-item input-group mb-2">
-            <span class="input-group-text shikayet-number">1.</span>
-            <select class="form-select" name="complaints[]" required>
-                <option value="">Select complaint...</option>
-                @foreach($complaintTypes as $type)
-                    <option value="{{ $type->name }}" {{ old('shikayet.0') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
-                @endforeach
-            </select>
-            <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
-                <i class="bi bi-trash"></i>
-            </button>
-        </div>
-    </div>
-    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
-        <i class="bi bi-plus-circle"></i> Add Complaint
-    </button>
-    <small class="text-muted d-block mt-1">Each complaint is selected separately.</small>
-</div>
-
-<!-- ==================== 6. KM (Mileage) ==================== -->
-<div class="mb-3">
-    <label for="km" class="form-label fw-bold">📊 KM (Mileage) <span class="text-danger">*</span></label>
-    <input type="number" class="form-control" id="km" name="km" required
-           placeholder="Auto-filled when bus is selected..." min="0" value="{{ old('km') }}">
-    <small class="text-muted">Auto-filled when bus is selected, you can change it if needed.</small>
-</div>
-
-<!-- ==================== 7. REPORTED ==================== -->
-<div id="bildirilmeFields">
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="reported_date" class="form-label fw-bold">📅 Reported Date</label>
-                <input type="date" class="form-control" id="reported_date" name="reported_date"
-                       value="{{ old('reported_date', date('Y-m-d')) }}">
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="reported_time" class="form-label fw-bold">🕐 Reported Time</label>
-                <input type="time" class="form-control" id="reported_time" name="reported_time"
-                       value="{{ old('reported_time', now()->format('H:i')) }}">
+<div class="row">
+    <!-- Status & Type -->
+    <div class="col-md-12 mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">🏷️ Şikayət Növü</label>
+                <div>
+                    <div class="form-check form-check-inline mt-1">
+                        <input class="form-check-input" type="radio" name="complaint_type" value="qezali" {{ ($complaint->complaint_type ?? '') == 'qezali' ? 'checked' : '' }}>
+                        <label class="form-check-label">🚗 Qəzalı</label>
+                    </div>
+                    <div class="form-check form-check-inline mt-1">
+                        <input class="form-check-input" type="radio" name="complaint_type" value="nasazliq" {{ ($complaint->complaint_type ?? '') == 'nasazliq' ? 'checked' : '' }}>
+                        <label class="form-check-label">⚠️ Nasazlıq</label>
+                    </div>
+                    <div class="form-check form-check-inline mt-1">
+                        <input class="form-check-input" type="radio" name="complaint_type" value="texniki_xidmet" {{ ($complaint->complaint_type ?? '') == 'texniki_xidmet' ? 'checked' : '' }}>
+                        <label class="form-check-label">🔧 Texniki Xidmət</label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- Bus -->
+    <div class="col-md-12 mb-3">
+        <label class="form-label fw-bold">🚌 Avtobus</label>
+        <div class="row">
+            <div class="col-md-6">
+                <label>Route No (və ya DQN)</label>
+                <!-- Yeni kart açanda axtarış edə bilmək üçün readonly şərti qoyuldu -->
+                <input type="text" class="form-control" id="route_number" placeholder="Xətt nömrəsi və ya DQN yazın..."
+                       value="{{ $complaint->bus->route_number ?? '' }}"
+                       oninput="getBusByRoute(this.value)"
+                       {{ isset($complaint->id) ? 'readonly style=background:#e9ecef;' : '' }}>
+            </div>
+            <div class="col-md-6">
+                <label>DQN</label>
+                <input type="text" class="form-control" id="dqn" value="{{ $complaint->bus->dqn ?? '' }}" readonly style="background:#e9ecef;">
+            </div>
+        </div>
+        <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id ?? '' }}">
+    </div>
 
-<!-- ==================== 8. START ==================== -->
-<div class="row g-3">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="start_date" class="form-label fw-bold">📅 Start Date <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="start_date" name="start_date" required value="{{ old('start_date', date('Y-m-d')) }}">
+    <!-- Location -->
+    <div class="col-md-12 mb-3">
+        <label class="form-label fw-bold">📍 Yer</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="yer" id="yer_yol" value="yol" {{ ($complaint->yer ?? '') == 'yol' ? 'checked' : '' }} onchange="toggleFields()">
+                <label class="form-check-label" for="yer_yol">🛣️ Yol</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="yer" id="yer_qaraj" value="qaraj" {{ ($complaint->yer ?? 'qaraj') == 'qaraj' ? 'checked' : '' }} onchange="toggleFields()">
+                <label class="form-check-label" for="yer_qaraj">🏠 Qaraj</label>
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="start_time" class="form-label fw-bold">🕐 Start Time <span class="text-danger">*</span></label>
-            <input type="time" class="form-control" id="start_time" name="start_time" required value="{{ old('start_time', now()->format('H:i')) }}">
+
+    <!-- Driver -->
+    <div class="col-md-12 mb-3" id="surucuField">
+        <label class="form-label fw-bold">🧑‍✈️ Sürücü</label>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="driver_code" class="form-label">Sürücü Kodu</label>
+                <input type="text" class="form-control" id="driver_code" name="driver_code"
+                    placeholder="Məs. D-001" list="driverList"
+                    oninput="getDriverByCode(this.value)"
+                    value="{{ old('driver_code', $complaint->driver?->code ?? '') }}">
+                <datalist id="driverList">
+                    @foreach($drivers ?? [] as $driver)
+                        <option value="{{ $driver->code }}">
+                    @endforeach
+                </datalist>
+                <div id="driverHelp" class="form-text">Kod seçildikdə ad avtomatik dolacaq.</div>
+            </div>
+            <div class="col-md-8">
+                <label for="driver_name" class="form-label">Sürücü Adı</label>
+                <input type="text" class="form-control input-disabled" id="driver_name" name="driver_name"
+                    placeholder="Avtomatik dolacaq..." readonly
+                    value="{{ old('driver_name', $complaint->driver_name ?? '') }}">
+                <input type="hidden" name="driver_id" id="driver_id" value="{{ old('driver_id', $complaint->driver_id ?? '') }}">
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ==================== 9. END ==================== -->
-<div class="row g-3">
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="end_date" class="form-label fw-bold">📅 End Date <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="end_date" name="end_date" required value="{{ old('end_date', date('Y-m-d')) }}">
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="end_time" class="form-label fw-bold">🕐 End Time <span class="text-danger">*</span></label>
-            <input type="time" class="form-control" id="end_time" name="end_time" required value="{{ old('end_time', now()->format('H:i')) }}">
-        </div>
-    </div>
-</div>
+    <!-- Complaints -->
+    <div class="col-md-12 mb-3">
+        <label class="form-label fw-bold">📝 Şikayətlər</label>
+        <div id="complaintsContainer">
+            @php
+                $shikayetler = isset($complaint) && $complaint->items ? $complaint->items->pluck('description')->toArray() : [];
+            @endphp
 
-<!-- ==================== 10. STATUS ==================== -->
-<div class="mb-3">
-    <label for="status" class="form-label fw-bold">📊 Status <span class="text-danger">*</span></label>
-    <select class="form-select" id="status" name="status" required>
-        <option value="">Select status...</option>
-        <option value="gözləmədə" {{ old('status') == 'gözləmədə' ? 'selected' : '' }}>⏳ Pending</option>
-        <option value="işdə" {{ old('status') == 'işdə' ? 'selected' : '' }}>🔨 In Progress</option>
-    </select>
-</div>
-
-<!-- ==================== 11. MAINTENANCE SERVICE ==================== -->
-<div id="serviceFields" class="service-fields-hidden" hidden>
-    <div class="mb-3">
-        <label for="motor_oil_km" class="form-label fw-bold">🔧 Maintenance Type</label>
-        <select class="form-select" id="motor_oil_km" onchange="onServiceSelectChange()">
-            <option value="">Select bus first...</option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label for="service_km" class="form-label fw-bold">📊 Planned Maintenance KM</label>
-        <input type="number" class="form-control input-disabled" id="service_km" name="service_km" readonly min="0">
-        <small class="text-muted">Auto-filled from Motor Oil table based on selected maintenance.</small>
-    </div>
-</div>
-
-<!-- ==================== 12. PARTS ==================== -->
-<div class="complaint-details-card p-3 mb-3">
-    <h5 class="fw-bold mb-3">🔧 Used Parts <span class="text-danger">*</span></h5>
-    <div id="detailsContainer">
-        <div class="detail-item">
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">Related Complaint <span class="text-danger">*</span></label>
-                        <select class="form-select" name="details[0][shikayet_index]" required>
-                            <option value="0">Complaint 1</option>
-                        </select>
+            @if(count($shikayetler) > 0)
+                @foreach($shikayetler as $index => $shikayet)
+                    <div class="complaint-item mb-2">
+                        <div class="input-group">
+                            <span class="input-group-text complaint-number">{{ $index + 1 }}.</span>
+                            <select class="form-select" name="complaints[]" required>
+                                <option value="">Şikayət seçin...</option>
+                                @foreach($complaintTypes as $type)
+                                    <option value="{{ $type->name }}" {{ trim($shikayet) == $type->name ? 'selected' : '' }}>
+                                        {{ $type->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">Part Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="detallar[0][code]" required
-                               placeholder="e.g. D-001" oninput="getDetalByKod(this, 0)" value="{{ old('detallar.0.code') }}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">Part Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control input-disabled" name="detallar[0][name]" required readonly disabled value="{{ old('detallar.0.name') }}">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">Stock Qty <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control input-disabled" name="detallar[0][stock_quantity]" required readonly disabled value="{{ old('detallar.0.stock_quantity') }}">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">Used Qty <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="detallar[0][used_quantity]" required
-                               placeholder="0" min="1" value="{{ old('detallar.0.used_quantity', 1) }}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">Employee <span class="text-danger">*</span></label>
-                        <select class="form-select" name="detallar[0][employee_id]" required>
-                            <option value="">Select employee...</option>
-                            @foreach($employees as $employee)
-                                <option value="{{ $employee->id }}" {{ old('detallar.0.employee_id') == $employee->id ? 'selected' : '' }}>{{ $employee->full_name_with_position }}</option>
+                @endforeach
+            @else
+                <div class="complaint-item mb-2">
+                    <div class="input-group">
+                        <span class="input-group-text complaint-number">1.</span>
+                        <select class="form-select" name="complaints[]" required>
+                            <option value="">Şikayət seçin...</option>
+                            @foreach($complaintTypes as $type)
+                                <option value="{{ $type->name }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">&nbsp;</label>
-                        <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
-                            <i class="bi bi-trash"></i> Remove
+                        <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
+                            <i class="bi bi-trash"></i>
                         </button>
                     </div>
                 </div>
+            @endif
+        </div>
+        <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
+            <i class="bi bi-plus-circle"></i> Şikayət Əlavə Et
+        </button>
+    </div>
+
+    <!-- KM -->
+    <div class="col-md-12 mb-3">
+        <label for="km" class="form-label fw-bold">📊 KM (Yürüş)</label>
+        <input type="number" class="form-control" id="km" name="km" value="{{ old('km', $complaint->km ?? '') }}" min="0" readonly style="background:#e9ecef;">
+    </div>
+
+    <!-- Reported -->
+    <div class="col-md-12" id="bildirilmeFields">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">📅 Bildirilmə Tarixi</label>
+                <input type="date" class="form-control" name="reported_date" value="{{ old('reported_date', isset($complaint->reported_date) ? \Carbon\Carbon::parse($complaint->reported_date)->format('Y-m-d') : '') }}">
             </div>
-            <div class="row mt-2">
-                <div class="col-12">
-                    <div class="mb-2">
-                        <label class="form-label fw-bold">📝 Work Done (Notes) <span class="text-danger">*</span></label>
-                        <textarea class="form-control" name="detallar[0][notes]" rows="2" required placeholder="Work done for this part...">{{ old('detallar.0.notes') }}</textarea>
-                    </div>
-                </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">🕐 Bildirilmə Saatı</label>
+                <input type="time" class="form-control" name="reported_time" value="{{ old('reported_time', $complaint->reported_time ?? '') }}">
             </div>
         </div>
     </div>
-    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addDetail()">
-        <i class="bi bi-plus-circle"></i> Add Part
-    </button>
-    <small class="text-muted d-block mt-1">Each part must be linked to a complaint.</small>
-</div>
 
-<!-- ==================== 13. BUTTONS ==================== -->
-<div class="d-flex gap-2">
-    @can('create', App\Models\Complaint::class)
-        <button type="submit" class="btn btn-success">
-            <i class="bi bi-save"></i> Save
+    <!-- Start / End -->
+    <div class="col-md-12">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">📅 Başlama Tarixi</label>
+                <input type="date" class="form-control" name="start_date" value="{{ old('start_date', isset($complaint->start_date) ? \Carbon\Carbon::parse($complaint->start_date)->format('Y-m-d') : '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">🕐 Başlama Saatı</label>
+                <input type="time" class="form-control" name="start_time" value="{{ old('start_time', $complaint->start_time ?? '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">📅 Bitmə Tarixi</label>
+                <input type="date" class="form-control" name="end_date" value="{{ old('end_date', isset($complaint->end_date) ? \Carbon\Carbon::parse($complaint->end_date)->format('Y-m-d') : '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">🕐 Bitmə Saatı</label>
+                <input type="time" class="form-control" name="end_time" value="{{ old('end_time', $complaint->end_time ?? '') }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- Status & Type -->
+    <div class="col-md-12 mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="status" class="form-label fw-bold">📊 Status</label>
+                <select class="form-select" id="status" name="status" required>
+                    <option value="gözləmədə" {{ ($complaint->status ?? '') == 'gözləmədə' ? 'selected' : '' }}>⏳ Gözləmədə</option>
+                    <option value="işdə" {{ ($complaint->status ?? '') == 'işdə' ? 'selected' : '' }}>🔨 İşdə</option>
+                    <option value="həll olundu" {{ ($complaint->status ?? '') == 'həll olundu' ? 'selected' : '' }}>✅ Həll olundu</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">🏷️ Şikayət Növü</label>
+                <select class="form-select" name="complaint_type">
+                    <option value="">Seçin...</option>
+                    <option value="qezali" {{ ($complaint->complaint_type ?? '') == 'qezali' ? 'selected' : '' }}>🚗 Qəzalı</option>
+                    <option value="nasazliq" {{ ($complaint->complaint_type ?? '') == 'nasazliq' ? 'selected' : '' }}>⚠️ Nasazlıq</option>
+                    <option value="texniki_xidmet" {{ ($complaint->complaint_type ?? '') == 'texniki_xidmet' ? 'selected' : '' }}>🔧 Texniki Xidmət</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parts -->
+    <div class="col-md-12 complaint-details-card p-3 mb-3">
+        <h5 class="fw-bold mb-3">🔧 İstifade Olunan Detallar</h5>
+        <div id="detailsContainer">
+            @php $detallarData = $detallar ?? []; @endphp
+            @if(count($detallarData) > 0)
+                @foreach($detallarData as $index => $detal)
+                    <div class="detail-item">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Şikayət İndeksi</label>
+                                <select class="form-select" name="details[{{ $index }}][shikayet_index]">
+                                    <option value="0">Şikayət 1</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Detal Kodu</label>
+                                <input type="text" class="form-control" name="details[{{ $index }}][code]"
+                                    value="{{ $detal['code'] ?? '' }}" oninput="getPartByCode(this)">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Detal Adı</label>
+                                <input type="text" class="form-control input-disabled" name="details[{{ $index }}][name]"
+                                    value="{{ $detal['name'] ?? '' }}" readonly>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label fw-bold">Anbar Qalığı</label>
+                                <input type="text" class="form-control input-disabled" name="details[{{ $index }}][stock_quantity]"
+                                    value="{{ $detal['stock_quantity'] ?? '' }}" readonly>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label fw-bold">Miqdar</label>
+                                <input type="number" class="form-control" name="details[{{ $index }}][used_quantity]"
+                                    value="{{ $detal['used_quantity'] ?? 1 }}" min="1" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">İşçi</label>
+                                <select class="form-select" name="details[{{ $index }}][employee_id]" required>
+                                    <option value="">Seçin...</option>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}" {{ old("details.$index.employee_id", $detal['employee_id'] ?? '') == $employee->id ? 'selected' : '' }}>{{ $employee->full_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">&nbsp;</label>
+                                <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
+                                    <i class="bi bi-trash"></i> Sil
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">📝 Görülən İş</label>
+                                <textarea class="form-control" name="details[{{ $index }}][notes]" rows="2">{{ $detal['notes'] ?? '' }}</textarea>
+                            </div>
+                        </div>
+                        <hr>
+                    </div>
+                @endforeach
+            @else
+                <div class="detail-item">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Şikayət</label>
+                            <select class="form-select" name="details[0][shikayet_index]">
+                                <option value="0">Şikayət 1</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Detal Kodu</label>
+                            <input type="text" class="form-control" name="details[0][code]"
+                                placeholder="Məs. D-001" oninput="getPartByCode(this)">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Detal Adı</label>
+                            <input type="text" class="form-control input-disabled" name="details[0][name]" readonly>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label fw-bold">Anbar Qalığı</label>
+                            <input type="text" class="form-control input-disabled" name="details[0][stock_quantity]" readonly>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label fw-bold">Miqdar</label>
+                            <input type="number" class="form-control" name="details[0][used_quantity]"
+                                placeholder="0" min="1" value="1" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">İşçi</label>
+                            <select class="form-select" name="details[0][employee_id]" required>
+                                <option value="">Seçin...</option>
+                                @foreach($employees as $employee)
+                                    <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">&nbsp;</label>
+                            <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
+                                <i class="bi bi-trash"></i> Sil
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">📝 Görülən İş (Qeyd)</label>
+                            <textarea class="form-control" name="details[0][notes]" rows="2" placeholder="Edilən iş barədə qeyd..."></textarea>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+            @endif
+        </div>
+        <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addDetail()">
+            <i class="bi bi-plus-circle"></i> Detal Əlavə Et
         </button>
-    @endcan
-    <a href="{{ route('complaints.index') }}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
+    </div>
+
+    <div class="col-md-12 d-flex gap-2">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> Yadda Saxla
+        </button>
+        <a href="{{ route('complaints.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Geri
+        </a>
+    </div>
 </div>

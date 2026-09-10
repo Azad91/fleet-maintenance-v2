@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 
-class BusesImport implements ShouldQueue, ToModel, WithChunkReading, 
+class BusesImport implements ShouldQueue, ToModel, WithChunkReading,
 WithHeadingRow
 {
     public function __construct(

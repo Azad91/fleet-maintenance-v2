@@ -12,9 +12,18 @@ use Illuminate\Support\Facades\Cache;
 
 class GarageDataController extends Controller
 {
-    public function busByLine(string $routeNumber)  // dəyişdi (əvvəl: xettNo)
+    public function busByLine(string $identifier)
     {
-        $bus = Bus::where('route_number', $routeNumber)->first();  // dəyişdi
+        // Ağıllı axtarış: Sistemə həm Xətt Nömrəsi, həm DQN, həm də ID göndərilə bilər
+        $bus = Bus::where(function ($query) use ($identifier) {
+            $query->where('route_number', $identifier)
+                  ->orWhere('dqn', $identifier);
+
+            // Əgər göndərilən dəyər rəqəmdirsə, İD kimi də axtar (PostgreSQL tip xətalarından qorunmaq üçün)
+            if (is_numeric($identifier)) {
+                $query->orWhere('id', (int) $identifier);
+            }
+        })->first();
 
         return response()->json([
             'dqn' => $bus?->dqn,
@@ -22,20 +31,20 @@ class GarageDataController extends Controller
         ]);
     }
 
-    public function detailByCode(string $code)  // dəyişdi (əvvəl: kod)
+    public function detailByCode(string $code)
     {
-        $detail = Warehouse::where('code', $code)->first();  // dəyişdi
+        $detail = Warehouse::where('code', $code)->first();
 
         return response()->json([
-            'detal_adi' => $detail?->name,  // dəyişdi (əvvəl: ad)
-            'depo_miqdari' => $detail?->quantity,  // dəyişdi
+            'detal_adi' => $detail?->name,
+            'depo_miqdari' => $detail?->quantity,
         ]);
     }
 
     public function busKm(int $busId)
     {
         $bus = Bus::findOrFail($busId);
-        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km');  // dəyişdi
+        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km');
 
         return response()->json(['km' => $latestKm ?? $bus->km]);
     }
@@ -46,6 +55,7 @@ class GarageDataController extends Controller
         $templates = Cache::remember('service_templates', 3600, function () {
             return ServiceTemplate::orderBy('default_km_interval')->get();
         });
+
         $intervals = BusServiceInterval::where('bus_id', $bus->id)
             ->whereIn('service_template_id', $templates->pluck('id'))
             ->get()
@@ -62,7 +72,7 @@ class GarageDataController extends Controller
     public function motorOilServices(int $busId)
     {
         $bus = Bus::findOrFail($busId);
-        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;  // dəyişdi
+        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;
 
         $motorOils = Cache::remember('motor_oil_details', 3600, function () {
             return MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
@@ -84,10 +94,10 @@ class GarageDataController extends Controller
         );
     }
 
-    public function driverByCode(string $code)  // dəyişdi (əvvəl: kod)
+    public function driverByCode(string $code)
     {
         $driver = Driver::active()
-            ->where('code', mb_strtoupper(trim($code)))  // dəyişdi
+            ->where('code', mb_strtoupper(trim($code)))
             ->first();
 
         return response()->json([

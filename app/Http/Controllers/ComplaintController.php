@@ -40,9 +40,7 @@ class ComplaintController extends Controller
         $this->authorize('create', Complaint::class);  // ✅ ƏLAVƏ
 
         $buses = Bus::orderBy('route_number')->get();
-        $complaintTypes = Cache::remember('complaint_types', 3600, function () {
-            return ComplaintType::orderBy('name')->get();
-        });
+        $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
 
@@ -86,9 +84,7 @@ class ComplaintController extends Controller
         $this->authorize('update', $complaint);
 
         $buses = Bus::orderBy('route_number')->get();
-        $complaintTypes = Cache::remember('complaint_types', 3600, function () {
-            return ComplaintType::orderBy('name')->get();
-        });
+        $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
 

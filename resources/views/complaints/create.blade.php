@@ -35,19 +35,15 @@
         </div>
     </div>
 </div>
+@endsection
 
+@section('scripts')
 <script>
-    let motorOilServices = [];
-    let defaultComplaintMarkup = '';
-    let defaultDetailsMarkup = '';
-
     function getBusByRoute(route_number) {
         if (!route_number) {
             document.getElementById('dqn').value = '';
             document.getElementById('bus_id').value = '';
             document.getElementById('km').value = '';
-            document.getElementById('motor_oil_km').innerHTML = '<option value="">Select maintenance type...</option>';
-            document.getElementById('service_km').value = '';
             return;
         }
 
@@ -62,116 +58,71 @@
                         .then(response => response.json())
                         .then(kmData => {
                             document.getElementById('km').value = kmData.km || '';
-                            loadMotorOilServices(data.bus_id);
-                        });
+                        })
+                        .catch(err => console.error("KM xətası:", err));
                 }
-            });
-    }
-
-    function toggleServiceFields() {
-        const isService = document.getElementById('tip_texniki').checked;
-        document.getElementById('serviceFields').hidden = !isService;
-        const road = document.getElementById('yer_yol');
-
-        if (isService) {
-            document.getElementById('yer_qaraj').checked = true;
-            road.disabled = true;
-            toggleFields();
-            const busId = document.getElementById('bus_id').value;
-            if (busId) loadMotorOilServices(busId);
-        } else {
-            road.disabled = false;
-            document.getElementById('service_km').value = '';
-            document.getElementById('motor_oil_km').innerHTML = '<option value="">Select bus first...</option>';
-            document.getElementById('complaintsContainer').innerHTML = defaultComplaintMarkup;
-            document.getElementById('detailsContainer').innerHTML = defaultDetailsMarkup;
-        }
-    }
-
-    function loadMotorOilServices(busId) {
-        fetch('/get-motor-oil-services/' + busId)
-            .then(response => response.json())
-            .then(services => {
-                motorOilServices = services;
-                const select = document.getElementById('motor_oil_km');
-                select.innerHTML = '<option value="">Select maintenance type...</option>';
-                services.forEach((service, index) => select.add(new Option(Number(service.km).toLocaleString('az-AZ') + ' KM oil change', index)));
-                if (document.getElementById('tip_texniki').checked && services.length) {
-                    select.value = '0';
-                    onServiceSelectChange();
-                }
-            });
-    }
-
-    function onServiceSelectChange() {
-        const service = motorOilServices[document.getElementById('motor_oil_km').value];
-        if (!service) return;
-        document.getElementById('service_km').value = service.km;
-        const title = Number(service.km).toLocaleString('az-AZ') + ' KM oil change';
-        setServiceComplaint(title);
-        setServiceDetails(service.details, title);
-    }
-
-    function setServiceComplaint(title) {
-        document.getElementById('complaintsContainer').innerHTML =
-            '<div class="complaint-item input-group mb-2"><span class="input-group-text complaint-number">1.</span>' +
-            '<input class="form-control" name="complaints[]" value="' + title + '" readonly required></div>';
-    }
-
-    function setServiceDetails(details, title) {
-        const container = document.getElementById('detailsContainer');
-        const employeeOptions = document.querySelector('select[name*="[employee_id]"]').innerHTML;
-        container.innerHTML = '';
-
-        details.forEach((detail, index) => {
-            const amount = Number(detail.quantity || detail.miqdar) * Number(detail.count || detail.say || 1);
-            container.insertAdjacentHTML('beforeend',
-                '<div class="detail-item border rounded p-3 mb-2"><div class="d-flex justify-content-between align-items-center mb-2"><strong class="small">Auto-added part</strong><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDetail(this)"><i class="bi bi-trash"></i> Remove part</button></div><div class="row g-3">' +
-                '<div class="col-md-2"><label class="form-label">Complaint</label><input class="form-control" value="' + title + '" readonly><input type="hidden" name="details[' + index + '][complaint_index]" value="0"></div>' +
-                '<div class="col-md-2"><label class="form-label">Part code</label><input class="form-control" name="details[' + index + '][code]" value="' + (detail.code || detail.kodu) + '" readonly></div>' +
-                '<div class="col-md-3"><label class="form-label">Part name</label><input class="form-control input-disabled" value="' + (detail.name || detail.adi) + '" readonly></div>' +
-                '<div class="col-md-1"><label class="form-label">Quantity</label><input type="number" class="form-control" name="details[' + index + '][used_quantity]" value="' + amount + '" min="1" required></div>' +
-                '<div class="col-md-4"><label class="form-label">Employee</label><select class="form-select" name="details[' + index + '][employee_id]" required>' + employeeOptions + '</select></div>' +
-                '</div><div class="mt-2"><label class="form-label">Work done</label><textarea class="form-control" name="details[' + index + '][notes]" rows="2" required>' + title + '</textarea></div></div>');
-        });
+            })
+            .catch(err => console.error("Avtobus axtarış xətası:", err));
     }
 
     function addComplaint() {
-        const source = document.querySelector('#complaintsContainer select') || document.querySelector('#complaintsContainer input');
+        const container = document.getElementById('complaintsContainer');
+        const source = container.querySelector('.complaint-item');
         if (!source) return;
-        const item = source.closest('.complaint-item').cloneNode(true);
+
+        const item = source.cloneNode(true);
         if(item.querySelector('select')) item.querySelector('select').value = '';
         if(item.querySelector('input:not([readonly])')) item.querySelector('input:not([readonly])').value = '';
-        item.querySelector('.complaint-number').textContent = (document.querySelectorAll('.complaint-item').length + 1) + '.';
-        document.getElementById('complaintsContainer').append(item);
+
+        container.append(item);
+
+        // Nömrələri yenilə
+        container.querySelectorAll('.complaint-number').forEach((el, idx) => {
+            el.textContent = (idx + 1) + '.';
+        });
     }
 
     function removeComplaint(button) {
-        const items = document.querySelectorAll('.complaint-item');
-        if (items.length > 1) button.closest('.complaint-item').remove();
+        const container = document.getElementById('complaintsContainer');
+        if (container.querySelectorAll('.complaint-item').length > 1) {
+            button.closest('.complaint-item').remove();
+            // Nömrələri yenilə
+            container.querySelectorAll('.complaint-number').forEach((el, idx) => {
+                el.textContent = (idx + 1) + '.';
+            });
+        }
     }
 
     function addDetail() {
-        const source = document.querySelector('.detail-item');
+        const container = document.getElementById('detailsContainer');
+        const source = container.querySelector('.detail-item');
         if (!source) return;
+
         const item = source.cloneNode(true);
 
         item.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
         item.querySelectorAll('textarea').forEach(t => t.value = '');
+        if(item.querySelector('input[name*="[used_quantity]"]')) {
+            item.querySelector('input[name*="[used_quantity]"]').value = '1';
+        }
 
-        const newIndex = document.querySelectorAll('.detail-item').length;
+        const newIndex = container.querySelectorAll('.detail-item').length;
         item.querySelectorAll('input, select, textarea').forEach(el => {
             if (el.name) {
                 el.name = el.name.replace(/\[\d+\]/, '[' + newIndex + ']');
             }
         });
 
-        document.getElementById('detailsContainer').append(item);
+        container.append(item);
     }
 
     function removeDetail(button) {
         const items = document.querySelectorAll('.detail-item');
-        if (items.length > 1) button.closest('.detail-item').remove();
+        if (items.length > 1) {
+            button.closest('.detail-item').remove();
+        } else {
+            alert('Ən azı 1 detal bloku qalmalıdır. Ehtiyac yoxdursa kod xanasını boş buraxın.');
+        }
     }
 
     let driverLookupRequest = 0;
@@ -181,20 +132,20 @@
         const nameInput = document.getElementById('driver_name');
         const idInput = document.getElementById('driver_id');
         const help = document.getElementById('driverHelp');
-        const codeInput = document.getElementById('driver_code') || document.getElementById('driver_kodu');
+        const codeInput = document.getElementById('driver_code');
 
         idInput.value = '';
         nameInput.value = '';
         codeInput.classList.remove('is-valid', 'is-invalid');
 
         if (!normalizedCode) {
-            help.textContent = 'Driver name will be auto-filled when code is selected.';
+            help.textContent = 'Kod seçildikdə ad avtomatik dolacaq.';
             help.className = 'form-text';
             return;
         }
 
         const requestId = ++driverLookupRequest;
-        help.textContent = 'Searching for driver...';
+        help.textContent = 'Sürücü axtarılır...';
 
         fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedCode))
             .then(response => response.json())
@@ -203,13 +154,12 @@
                 if (data.found) {
                     nameInput.value = data.driver_ad || data.driver_name;
                     idInput.value = data.driver_id;
-                    codeInput.value = normalizedCode;
                     codeInput.classList.add('is-valid');
-                    help.textContent = 'Driver found.';
+                    help.textContent = 'Sürücü tapıldı.';
                     help.className = 'form-text text-success';
                 } else {
                     codeInput.classList.add('is-invalid');
-                    help.textContent = 'No active driver found with this code.';
+                    help.textContent = 'Bu kodla aktiv sürücü tapılmadı.';
                     help.className = 'form-text text-danger';
                 }
             });
@@ -252,14 +202,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        defaultComplaintMarkup = document.getElementById('complaintsContainer') ? document.getElementById('complaintsContainer').innerHTML : '';
-        defaultDetailsMarkup = document.getElementById('detailsContainer') ? document.getElementById('detailsContainer').innerHTML : '';
-
         toggleFields();
-        toggleServiceFields();
 
-        const driverCodeInput = document.getElementById('driver_code') || document.getElementById('driver_kodu');
-        if (driverCodeInput && driverCodeInput.value) getDriverByCode(driverCodeInput.value);
+        // Form yükləndikdə əgər xətt nömrəsi varsa avtomatik məlumatları çək
+        const routeInput = document.getElementById('route_number');
+        if (routeInput && routeInput.value && !document.getElementById('bus_id').value) {
+            getBusByRoute(routeInput.value);
+        }
     });
 </script>
 @endsection
