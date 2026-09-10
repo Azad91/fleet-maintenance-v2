@@ -9,24 +9,24 @@ use Illuminate\Support\Facades\Storage;
 
 class ComplaintPdfService
 {
-    /**
-     * PDF-in saxlanacağı qovluq (local disk daxilində).
-     * local disk root = storage/app/private
-     * Ona görə burada yalnız "akt" yazırıq.
-     */
     private const PDF_DIR = 'akt';
 
     public function generate(Complaint $complaint): \Barryvdh\DomPDF\PDF
     {
         $complaint->loadMissing(['details.employee', 'bus', 'creator', 'closer']);
 
-        $employeeIds = $complaint->details->pluck('employee_id')->filter()->unique();
+        // Bütün əlaqəli employee ID-lərini topla (details-dən + əsas employee_id)
+        $employeeIds = $complaint->details
+            ->pluck('employee_id')
+            ->filter()
+            ->unique();
+
         if ($complaint->employee_id) {
             $employeeIds->push($complaint->employee_id);
         }
 
         $employeesById = Employee::withoutGlobalScopes()
-            ->whereIn('id', $employeeIds->unique())
+            ->whereIn('id', $employeeIds->unique()->values())
             ->get()
             ->keyBy('id');
 
@@ -38,9 +38,6 @@ class ComplaintPdfService
         ]);
     }
 
-    /**
-     * PDF-i saxlayır və tam fayl yolunu qaytarır.
-     */
     public function save(Complaint $complaint): string
     {
         $pdf = $this->generate($complaint);
@@ -51,9 +48,6 @@ class ComplaintPdfService
         return Storage::disk('local')->path($relativePath);
     }
 
-    /**
-     * PDF-in tam fayl yolunu qaytarır (mövcud olub-olmamasından asılı olmayaraq).
-     */
     public function getFilePath(Complaint $complaint): string
     {
         return Storage::disk('local')->path(
