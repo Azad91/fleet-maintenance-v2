@@ -240,12 +240,3 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
 });
-
-// Garage Data API-ləri (AJAX və Avtomatik Doldurmalar üçün)
-Route::middleware(['auth', 'garage.selected'])->group(function () {
-    Route::get('/get-bus-id-by-xett/{identifier}', [\App\Http\Controllers\GarageDataController::class, 'busByLine']);
-    Route::get('/get-bus-km-by-id/{busId}', [\App\Http\Controllers\GarageDataController::class, 'busKm']);
-    Route::get('/get-motor-oil-services/{busId}', [\App\Http\Controllers\GarageDataController::class, 'motorOilServices']);
-    Route::get('/get-driver-by-kod/{code}', [\App\Http\Controllers\GarageDataController::class, 'driverByCode']);
-    Route::get('/get-detal-by-kod/{code}', [\App\Http\Controllers\GarageDataController::class, 'detailByCode']);
-});
