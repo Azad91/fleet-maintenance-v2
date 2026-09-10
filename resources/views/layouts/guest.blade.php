@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,14 +23,14 @@
             <span>
                 <strong>Fleet</strong>
                 <span class="fleet-brand__accent">Control</span>
-                <small>MAINTENANCE SYSTEM</small>
+                <small>{{ __('messages.common.app_subtitle') }}</small>
             </span>
         </a>
         @auth
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="fleet-guest__logout" type="submit">
-                    <i class="fas fa-arrow-right-from-bracket"></i> Logout
+                    <i class="fas fa-arrow-right-from-bracket"></i> {{ __('messages.auth.logout') }}
                 </button>
             </form>
         @endauth
@@ -39,7 +39,7 @@
         @yield('content')
     </main>
     <footer class="fleet-guest__footer">
-        &copy; {{ date('Y') }} Fleet Control · Fleet Management System
+        &copy; {{ date('Y') }} Fleet Control · {{ __('messages.welcome.footer') }}
     </footer>
     @stack('scripts')
 </body>

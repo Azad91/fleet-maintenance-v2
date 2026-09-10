@@ -2,6 +2,34 @@
 
 return [
 
+    'welcome' => [
+        'title'            => 'Fleet <span>Maintenance</span>',
+        'title_plain'      => 'Fleet Maintenance',
+        'subtitle'         => 'Otobüs filonuzu yönetmek için eksiksiz çözüm',
+        'buses_title'      => 'Otobüsler',
+        'buses_desc'       => 'Tüm otobüs bilgileri',
+        'complaints_title' => 'Şikayetler',
+        'complaints_desc'  => 'Sorunlar ve arızalar',
+        'warehouse_title'  => 'Depo',
+        'warehouse_desc'   => 'Yedek parça envanteri',
+        'footer'           => 'Filo Yönetim Sistemi',
+        'copyright'        => '&copy; :year Fleet Maintenance. Tüm hakları saklıdır.',
+    ],
+
+    'garage' => [
+        'title'            => 'Garaj Seçimi',
+        'eyebrow'          => 'ÇALIŞMA ORTAMINIZI SEÇİN',
+        'heading'          => 'Hangi garajda çalışacaksınız?',
+        'subtitle'         => 'Seçiminize göre otobüs, kart, depo ve çalışan verileri filtrelenecektir.',
+        'feature_company'  => 'Şirkete göre ayrılmış veriler',
+        'feature_access'   => 'Erişim izniniz olan garajlar',
+        'card_title'       => 'Garaj Seçimi',
+        'card_subtitle'    => 'Çalışmaya devam etmek için bir garaj seçin.',
+        'label'            => 'Şirket ve Garaj',
+        'placeholder'      => 'Garaj seçin…',
+        'submit'           => 'Garaja Gir',
+    ],
+
     'common' => [
         'save'          => 'Kaydet',
         'update'        => 'Güncelle',
@@ -35,6 +63,14 @@ return [
         'import'        => 'İçe aktar',
         'add'           => 'Ekle',
         'remove'        => 'Kaldır',
+        'app_subtitle'        => 'BAKIM SİSTEMİ',
+        'active_user'         => 'Aktif kullanıcı',
+        'current_garage'      => 'Mevcut garaj',
+        'open_menu'           => 'Menüyü aç',
+        'language'            => 'Dil',
+        'theme_toggle'        => 'Temayı değiştir',
+        'theme_light'         => 'Açık moda geç',
+        'theme_dark'          => 'Koyu moda geç',
     ],
 
     'nav' => [
@@ -55,6 +91,14 @@ return [
         'garages'           => 'Garajlar',
         'reports'           => 'Raporlar',
         'settings'          => 'Ayarlar',
+        'main_menu'           => 'ANA MENÜ',
+        'operations'          => 'İŞLEMLER',
+        'daily_records'       => 'GÜNLÜK KAYITLAR',
+        'data'                => 'VERİLER',
+        'administration'      => 'YÖNETİM',
+        'main_navigation'     => 'Ana gezinme',
+        'app_name'            => 'Fleet Maintenance',
+        'super_admin'         => 'Süper Admin Paneli',
     ],
 
     'auth' => [
@@ -74,6 +118,11 @@ return [
         'select_garage_hint'=> 'Hangi garajda çalışacaksınız?',
         'select_garage_desc'=> 'Seçiminize göre veriler filtrelenecektir.',
         'enter_garage'      => 'Garaja gir',
+        'email_placeholder'     => 'sizin@email.com',
+        'full_name'             => 'Tam Ad',
+        'password_confirm'      => 'Şifreyi Onayla',
+        'register_subtitle'     => 'Yeni bir hesap oluşturun',
+        'already_have_account'  => 'Zaten hesabınız var mı?',
     ],
 
     'buses' => [
@@ -287,6 +336,8 @@ return [
         'update_password'   => 'Şifreyi güncelle',
         'delete_account'    => 'Hesabı sil',
         'delete_warning'    => 'Hesabınız silindikten sonra tüm bilgiler kalıcı olarak silinir.',
+        'updated_status'         => 'Profil başarıyla güncellendi.',
+        'password_updated_status'=> 'Şifre başarıyla güncellendi.',
     ],
 
     'imports' => [

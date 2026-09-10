@@ -2,6 +2,34 @@
 
 return [
 
+    'welcome' => [
+        'title'            => 'Fleet <span>Maintenance</span>',
+        'title_plain'      => 'Fleet Maintenance',
+        'subtitle'         => 'Avtobus parkınızı idarə etmək üçün tam həll',
+        'buses_title'      => 'Avtobuslar',
+        'buses_desc'       => 'Bütün avtobus məlumatları',
+        'complaints_title' => 'Şikayətlər',
+        'complaints_desc'  => 'Problemlər və nasazlıqlar',
+        'warehouse_title'  => 'Anbar',
+        'warehouse_desc'   => 'Ehtiyat hissələri',
+        'footer'           => 'Avtopark İdarəetmə Sistemi',
+        'copyright'        => '&copy; :year Fleet Maintenance. Bütün hüquqlar qorunur.',
+    ],
+
+    'garage' => [
+        'title'            => 'Qaraj seçimi',
+        'eyebrow'          => 'İŞ MÜHİTİNİZİ SEÇİN',
+        'heading'          => 'Hansı qarajda işləyəcəksiniz?',
+        'subtitle'         => 'Seçiminizə uyğun olaraq avtobus, kart, anbar və işçi məlumatları filtrlənəcək.',
+        'feature_company'  => 'Şirkət üzrə ayrılmış məlumatlar',
+        'feature_access'   => 'Giriş icazəniz olan qarajlar',
+        'card_title'       => 'Qaraj Seçimi',
+        'card_subtitle'    => 'İşə davam etmək üçün qaraj seçin.',
+        'label'            => 'Şirkət və Qaraj',
+        'placeholder'      => 'Qaraj seçin…',
+        'submit'           => 'Qaraja Daxil Ol',
+    ],
+
     // ==================== COMMON ====================
     'common' => [
         'save'          => 'Yadda saxla',
@@ -36,6 +64,14 @@ return [
         'import'        => 'İdxal et',
         'add'           => 'Əlavə et',
         'remove'        => 'Sil',
+        'app_subtitle'        => 'TEXNIKI XİDMƏT SİSTEMİ',
+        'active_user'         => 'Aktiv istifadəçi',
+        'current_garage'      => 'Cari qaraj',
+        'open_menu'           => 'Menyunu aç',
+        'language'            => 'Dil',
+        'theme_toggle'        => 'Temanı dəyiş',
+        'theme_light'         => 'İşıqlı rejimə keç',
+        'theme_dark'          => 'Tünd rejimə keç',
     ],
 
     // ==================== NAVIGATION ====================
@@ -57,6 +93,14 @@ return [
         'garages'           => 'Qarajlar',
         'reports'           => 'Hesabatlar',
         'settings'          => 'Parametrlər',
+        'main_menu'           => 'ƏSAS MENYU',
+        'operations'          => 'ƏMƏLİYYATLAR',
+        'daily_records'       => 'GÜNLÜK QEYDLƏR',
+        'data'                => 'MƏLUMATLAR',
+        'administration'      => 'İDARƏETMƏ',
+        'main_navigation'     => 'Əsas naviqasiya',
+        'app_name'            => 'Fleet Maintenance',
+        'super_admin'         => 'Super Admin Paneli',
     ],
 
     // ==================== AUTH ====================
@@ -77,6 +121,11 @@ return [
         'select_garage_hint'=> 'Hansı qarajda işləyəcəksiniz?',
         'select_garage_desc'=> 'Seçiminizə uyğun olaraq məlumatlar filtrlənəcək.',
         'enter_garage'      => 'Qaraja daxil ol',
+        'email_placeholder'     => 'sizin@email.com',
+        'full_name'             => 'Tam Ad',
+        'password_confirm'      => 'Şifrəni Təsdiqlə',
+        'register_subtitle'     => 'Yeni hesab yaradın',
+        'already_have_account'  => 'Artıq hesabınız var?',
     ],
 
     // ==================== BUSES ====================
@@ -302,6 +351,8 @@ return [
         'update_password'   => 'Şifrəni yenilə',
         'delete_account'    => 'Hesabı sil',
         'delete_warning'    => 'Hesabınız silindikdən sonra bütün məlumatlar geri qaytarıla bilməz.',
+        'updated_status'         => 'Profil uğurla yeniləndi.',
+        'password_updated_status'=> 'Şifrə uğurla yeniləndi.',
     ],
 
     // ==================== IMPORTS ====================

@@ -2,6 +2,34 @@
 
 return [
 
+    'welcome' => [
+        'title'            => 'Fleet <span>Maintenance</span>',
+        'title_plain'      => 'Fleet Maintenance',
+        'subtitle'         => 'Полное решение для управления вашим автопарком',
+        'buses_title'      => 'Автобусы',
+        'buses_desc'       => 'Вся информация об автобусах',
+        'complaints_title' => 'Жалобы',
+        'complaints_desc'  => 'Проблемы и поломки',
+        'warehouse_title'  => 'Склад',
+        'warehouse_desc'   => 'Запасные части',
+        'footer'           => 'Система управления автопарком',
+        'copyright'        => '&copy; :year Fleet Maintenance. Все права защищены.',
+    ],
+
+    'garage' => [
+        'title'            => 'Выбор гаража',
+        'eyebrow'          => 'ВЫБЕРИТЕ РАБОЧУЮ СРЕДУ',
+        'heading'          => 'В каком гараже вы будете работать?',
+        'subtitle'         => 'На основе вашего выбора данные автобусов, карт, склада и сотрудников будут отфильтрованы.',
+        'feature_company'  => 'Данные разделены по компаниям',
+        'feature_access'   => 'Гаражи, к которым у вас есть доступ',
+        'card_title'       => 'Выбор гаража',
+        'card_subtitle'    => 'Выберите гараж для продолжения работы.',
+        'label'            => 'Компания и Гараж',
+        'placeholder'      => 'Выберите гараж…',
+        'submit'           => 'Войти в гараж',
+    ],
+
     'common' => [
         'save'          => 'Сохранить',
         'update'        => 'Обновить',
@@ -35,6 +63,14 @@ return [
         'import'        => 'Импорт',
         'add'           => 'Добавить',
         'remove'        => 'Удалить',
+        'app_subtitle'        => 'СИСТЕМА ОБСЛУЖИВАНИЯ',
+        'active_user'         => 'Активный пользователь',
+        'current_garage'      => 'Текущий гараж',
+        'open_menu'           => 'Открыть меню',
+        'language'            => 'Язык',
+        'theme_toggle'        => 'Сменить тему',
+        'theme_light'         => 'Светлая тема',
+        'theme_dark'          => 'Темная тема',
     ],
 
     'nav' => [
@@ -55,6 +91,14 @@ return [
         'garages'           => 'Гаражи',
         'reports'           => 'Отчеты',
         'settings'          => 'Настройки',
+        'main_menu'           => 'ГЛАВНОЕ МЕНЮ',
+        'operations'          => 'ОПЕРАЦИИ',
+        'daily_records'       => 'ЕЖЕДНЕВНЫЕ ЗАПИСИ',
+        'data'                => 'ДАННЫЕ',
+        'administration'      => 'АДМИНИСТРИРОВАНИЕ',
+        'main_navigation'     => 'Главная навигация',
+        'app_name'            => 'Fleet Maintenance',
+        'super_admin'         => 'Панель супер-администратора',
     ],
 
     'auth' => [
@@ -74,6 +118,11 @@ return [
         'select_garage_hint'=> 'В каком гараже вы будете работать?',
         'select_garage_desc'=> 'На основе вашего выбора данные будут отфильтрованы.',
         'enter_garage'      => 'Войти в гараж',
+        'email_placeholder'     => 'your@email.com',
+        'full_name'             => 'Полное имя',
+        'password_confirm'      => 'Подтвердите пароль',
+        'register_subtitle'     => 'Создать новую учетную запись',
+        'already_have_account'  => 'Уже есть учетная запись?',
     ],
 
     'buses' => [
@@ -287,6 +336,8 @@ return [
         'update_password'   => 'Обновить пароль',
         'delete_account'    => 'Удалить учетную запись',
         'delete_warning'    => 'После удаления учетной записи все данные будут безвозвратно удалены.',
+        'updated_status'         => 'Профиль успешно обновлен.',
+        'password_updated_status'=> 'Пароль успешно обновлен.',
     ],
 
     'imports' => [

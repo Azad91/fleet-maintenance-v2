@@ -36,6 +36,14 @@ return [
         'import'        => 'Import',
         'add'           => 'Add',
         'remove'        => 'Remove',
+        'app_subtitle'        => 'MAINTENANCE SYSTEM',
+        'active_user'         => 'Active user',
+        'current_garage'      => 'Current garage',
+        'open_menu'           => 'Open menu',
+        'language'            => 'Language',
+        'theme_toggle'        => 'Toggle theme',
+        'theme_light'         => 'Switch to light mode',
+        'theme_dark'          => 'Switch to dark mode',
     ],
 
     // ==================== NAVIGATION ====================
@@ -57,6 +65,14 @@ return [
         'garages'           => 'Garages',
         'reports'           => 'Reports',
         'settings'          => 'Settings',
+        'main_menu'           => 'MAIN MENU',
+        'operations'          => 'OPERATIONS',
+        'daily_records'       => 'DAILY RECORDS',
+        'data'                => 'DATA',
+        'administration'      => 'ADMINISTRATION',
+        'main_navigation'     => 'Main navigation',
+        'app_name'            => 'Fleet Maintenance',
+        'super_admin'         => 'Super Admin Panel',
     ],
 
     // ==================== AUTH ====================
@@ -77,6 +93,11 @@ return [
         'select_garage_hint'=> 'Which garage will you work in?',
         'select_garage_desc'=> 'Based on your selection, data will be filtered accordingly.',
         'enter_garage'      => 'Enter Garage',
+        'email_placeholder'     => 'your@email.com',
+        'full_name'             => 'Full Name',
+        'password_confirm'      => 'Confirm Password',
+        'register_subtitle'     => 'Create a new account',
+        'already_have_account'  => 'Already have an account?',
     ],
 
     // ==================== BUSES ====================
@@ -302,6 +323,8 @@ return [
         'update_password'   => 'Update Password',
         'delete_account'    => 'Delete Account',
         'delete_warning'    => 'Once your account is deleted, all resources and data will be permanently deleted.',
+        'updated_status'         => 'Profile updated successfully.',
+        'password_updated_status'=> 'Password updated successfully.',
     ],
 
     // ==================== IMPORTS ====================
@@ -392,5 +415,35 @@ return [
             'part_code_empty'      => 'Part code is empty',
             'part_not_found'       => 'Part (:code) not found in warehouse',
             'no_km_columns'        => 'No KM column has quantity > 0',
+    ],
+
+        // ==================== WELCOME ====================
+    'welcome' => [
+        'title'            => 'Fleet <span>Maintenance</span>',
+        'title_plain'      => 'Fleet Maintenance',
+        'subtitle'         => 'The complete solution for managing your bus fleet',
+        'buses_title'      => 'Buses',
+        'buses_desc'       => 'All bus information',
+        'complaints_title' => 'Complaints',
+        'complaints_desc'  => 'Problems and breakdowns',
+        'warehouse_title'  => 'Warehouse',
+        'warehouse_desc'   => 'Spare parts inventory',
+        'footer'           => 'Fleet Management System',
+        'copyright'        => '&copy; :year Fleet Maintenance. All rights reserved.',
+    ],
+
+    // ==================== GARAGE SELECTION ====================
+    'garage' => [
+        'title'            => 'Select Garage',
+        'eyebrow'          => 'Select YOUR WORK ENVIRONMENT',
+        'heading'          => 'Which garage will you work in?',
+        'subtitle'         => 'Based on your selection, buses, cards, warehouse and employee data will be filtered accordingly.',
+        'feature_company'  => 'Data separated by company',
+        'feature_access'   => 'Garages you have access to',
+        'card_title'       => 'Garage Selection',
+        'card_subtitle'    => 'Select a garage to continue working.',
+        'label'            => 'Company and Garage',
+        'placeholder'      => 'Select garage…',
+        'submit'           => 'Enter Garage',
     ],
 ];
