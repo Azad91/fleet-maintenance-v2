@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Imports\MotorOilImport;
 use App\Models\MotorOilDetail;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Maatwebsite\Excel\Facades\Excel;
 
 class MotorOilController extends Controller
@@ -49,22 +50,31 @@ class MotorOilController extends Controller
         return view('motor-oil.import');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', MotorOilDetail::class);  // ✅ ƏLAVƏ
-
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
+        $this->authorize('import', MotorOilDetail::class);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
-            Excel::import(new MotorOilImport, $request->file('file'));
+            $import = new MotorOilImport();
+            Excel::import($import, $request->file('file'));
 
-            return redirect()->route('motor-oil.index')->with('success', 'Motor yağ detalları uğurla idxal edildi!');
-        } catch (\Exception $e) {
+            $skipped  = $import->skipped;
+            $imported = $import->importedCount;
+
+            if (empty($skipped)) {
+                return redirect()->route('motor-oil.index')
+                    ->with('success', "✅ {$imported} motor yağ detalı uğurla idxal edildi.");
+            }
+
+            return redirect()->route('motor-oil.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
+
+        } catch (\Throwable $e) {
             report($e);
-
-            return redirect()->back()->with('error', 'Motor yağı idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
+            return redirect()->route('motor-oil.index')
+                ->with('error', 'İdxal zamanı xəta baş verdi.');
         }
     }
 }

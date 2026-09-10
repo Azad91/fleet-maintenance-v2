@@ -8,6 +8,7 @@ use App\Imports\BusDailyStatusesImport;
 use App\Models\Bus;
 use App\Models\BusDailyStatus;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -117,25 +118,35 @@ class BusDailyStatusController extends Controller
         return view('bus-daily-statuses.import');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', BusDailyStatus::class);  // ✅ ƏLAVƏ
-
+        $this->authorize('import', BusDailyStatus::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
+
         try {
-            Excel::import(
-                new BusDailyStatusesImport(
-                    (int) session('current_garage_id'),
-                    session('current_company_id') ? (int) session('current_company_id') : null
-                ),
-                $request->file('file')
+            $import = new BusDailyStatusesImport(
+                (int) session('current_garage_id'),
+                session('current_company_id') ? (int) session('current_company_id') : null
             );
 
-            return redirect()->route('bus-daily-statuses.index')->with('success', 'Statuslar uğurla idxal edildi!');
-        } catch (\Exception $e) {
-            report($e);
+            Excel::import($import, $request->file('file'));
 
-            return redirect()->route('bus-daily-statuses.index')->with('error', 'Status idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
+            $skipped  = $import->skipped;
+            $imported = $import->importedCount;
+
+            if (empty($skipped)) {
+                return redirect()->route('bus-daily-statuses.index')
+                    ->with('success', "✅ {$imported} status uğurla idxal edildi.");
+            }
+
+            return redirect()->route('bus-daily-statuses.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
+
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('bus-daily-statuses.index')
+                ->with('error', 'İdxal zamanı xəta baş verdi.');
         }
     }
 }

@@ -136,18 +136,29 @@ class BusController extends Controller
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
-            Excel::import(
-                new BusesImport(
-                    (int) GarageContext::getGarageId(),
-                    GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
-                ),
-                $request->file('file')
+            $import = new BusesImport(
+                (int) GarageContext::getGarageId(),
+                GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
             );
 
-            return redirect()->route('buses.index')->with('success', 'Avtobuslar uğurla idxal edildi!');
+            Excel::import($import, $request->file('file'));
+
+            $skipped = $import->skipped;
+            $imported = $import->importedCount;
+
+            if (empty($skipped)) {
+                return redirect()->route('buses.index')
+                    ->with('success', "✅ {$imported} avtobus uğurla idxal edildi.");
+            }
+
+            return redirect()->route('buses.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
+
         } catch (\Throwable $e) {
             report($e);
-            return redirect()->route('buses.index')->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın.');
+            return redirect()->route('buses.index')
+                ->with('error', 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.');
         }
     }
 

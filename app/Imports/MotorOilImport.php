@@ -4,14 +4,16 @@ namespace App\Imports;
 
 use App\Models\MotorOilDetail;
 use Maatwebsite\Excel\Concerns\OnEachRow;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
 
-class MotorOilImport implements OnEachRow, ShouldQueue, WithChunkReading, WithHeadingRow
+class MotorOilImport implements OnEachRow, WithChunkReading, WithHeadingRow
 {
-    protected $kmColumns = [];
+    public array $skipped = [];
+    public int $importedCount = 0;
+
+    protected array $kmColumns = [];
 
     public function chunkSize(): int
     {
@@ -32,12 +34,19 @@ class MotorOilImport implements OnEachRow, ShouldQueue, WithChunkReading, WithHe
 
         $partCode = $rowArray['part_code'] ?? $rowArray['detal_kodu'] ?? $rowArray['kod'] ?? null;
         $partName = $rowArray['part_name'] ?? $rowArray['detal_adi'] ?? $rowArray['adi'] ?? null;
-        $unit = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
+        $unit     = $rowArray['unit'] ?? $rowArray['olcu_vahidi'] ?? null;
         $quantity = (float) ($rowArray['quantity'] ?? $rowArray['miqdar'] ?? 0);
 
         if (! $partCode) {
+            $this->skipped[] = [
+                'row'    => $row->getIndex(),
+                'dqn'    => '—',
+                'reason' => 'Detal kodu boşdur',
+            ];
             return;
         }
+
+        $createdForThisRow = 0;
 
         foreach ($this->kmColumns as $columnIndex => $km) {
             $count = (int) ($rowArray[$columnIndex] ?? 0);
@@ -46,12 +55,25 @@ class MotorOilImport implements OnEachRow, ShouldQueue, WithChunkReading, WithHe
                 MotorOilDetail::create([
                     'part_code' => $partCode,
                     'part_name' => $partName,
-                    'unit' => $unit,
-                    'quantity' => $quantity,
-                    'km' => $km,
-                    'count' => $count,
+                    'unit'      => $unit,
+                    'quantity'  => $quantity,
+                    'km'        => $km,
+                    'count'     => $count,
                 ]);
+
+                $createdForThisRow++;
             }
         }
+
+        if ($createdForThisRow === 0) {
+            $this->skipped[] = [
+                'row'    => $row->getIndex(),
+                'dqn'    => $partCode,
+                'reason' => 'Heç bir KM sütununda miqdar > 0 deyil',
+            ];
+            return;
+        }
+
+        $this->importedCount += $createdForThisRow;
     }
 }

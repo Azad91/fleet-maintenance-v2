@@ -8,6 +8,7 @@ use App\Http\Requests\DriverUpdateRequest;
 use App\Imports\DriversImport;
 use App\Models\Driver;
 use App\Services\GarageContext;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -81,24 +82,35 @@ class DriverController extends Controller
         return view('drivers.import');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
         $this->authorize('import', Driver::class);
-
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
+
         try {
-            Excel::import(
-                new DriversImport(
-                    (int) GarageContext::getGarageId(),
-                    GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
-                ),
-                $request->file('file')
+            $import = new DriversImport(
+                (int) GarageContext::getGarageId(),
+                GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
             );
 
-            return redirect()->route('drivers.index')->with('success', 'Sürücülər uğurla idxal edildi!');
-        } catch (\Exception $e) {
+            Excel::import($import, $request->file('file'));
+
+            $skipped  = $import->skipped;
+            $imported = $import->importedCount;
+
+            if (empty($skipped)) {
+                return redirect()->route('drivers.index')
+                    ->with('success', "✅ {$imported} sürücü uğurla idxal edildi.");
+            }
+
+            return redirect()->route('drivers.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
+
+        } catch (\Throwable $e) {
             report($e);
-            return redirect()->back()->with('error', 'Sürücü idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
+            return redirect()->route('drivers.index')
+                ->with('error', 'İdxal zamanı xəta baş verdi.');
         }
     }
 

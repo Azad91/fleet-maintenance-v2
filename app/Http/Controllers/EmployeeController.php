@@ -7,6 +7,8 @@ use App\Http\Requests\EmployeeUpdateRequest;
 use App\Imports\EmployeesImport;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use App\Services\GarageContext;
+use Illuminate\Http\RedirectResponse;
 use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
@@ -92,28 +94,35 @@ class EmployeeController extends Controller
         return view('employees.import');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', Employee::class);  // ✅ ƏLAVƏ
-
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
+        $this->authorize('import', Employee::class);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
-            Excel::import(
-                new EmployeesImport(
-                    (int) session('current_garage_id'),
-                    session('current_company_id') ? (int) session('current_company_id') : null
-                ),
-                $request->file('file')
+            $import = new EmployeesImport(
+                (int) GarageContext::getGarageId(),
+                GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
             );
 
-            return redirect()->route('employees.index')->with('success', 'İşçilər uğurla idxal edildi!');
-        } catch (\Exception $e) {
-            report($e);
+            Excel::import($import, $request->file('file'));
 
-            return redirect()->route('employees.index')->with('error', 'İşçi idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
+            $skipped  = $import->skipped;
+            $imported = $import->importedCount;
+
+            if (empty($skipped)) {
+                return redirect()->route('employees.index')
+                    ->with('success', "✅ {$imported} işçi uğurla idxal edildi.");
+            }
+
+            return redirect()->route('employees.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
+
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('employees.index')
+                ->with('error', 'İdxal zamanı xəta baş verdi.');
         }
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\DailyKmUpdateRequest;
 use App\Imports\DailyKmRecordsImport;
 use App\Models\Bus;
 use App\Models\DailyKmRecord;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -179,25 +180,35 @@ class DailyKmRecordController extends Controller
         return view('daily-km-records.import');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', DailyKmRecord::class);  // ✅ ƏLAVƏ
-
+        $this->authorize('import', DailyKmRecord::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
+
         try {
-            Excel::import(
-                new DailyKmRecordsImport(
-                    (int) session('current_garage_id'),
-                    session('current_company_id') ? (int) session('current_company_id') : null
-                ),
-                $request->file('file')
+            $import = new DailyKmRecordsImport(
+                (int) session('current_garage_id'),
+                session('current_company_id') ? (int) session('current_company_id') : null
             );
 
-            return redirect()->route('daily-km-records.index')->with('success', 'KM məlumatları uğurla idxal edildi!');
-        } catch (\Exception $e) {
-            report($e);
+            Excel::import($import, $request->file('file'));
 
-            return redirect()->route('daily-km-records.index')->with('error', 'KM idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
+            $skipped  = $import->skipped;
+            $imported = $import->importedCount;
+
+            if (empty($skipped)) {
+                return redirect()->route('daily-km-records.index')
+                    ->with('success', "✅ {$imported} KM qeydi uğurla idxal edildi.");
+            }
+
+            return redirect()->route('daily-km-records.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
+
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('daily-km-records.index')
+                ->with('error', 'İdxal zamanı xəta baş verdi.');
         }
     }
 }
