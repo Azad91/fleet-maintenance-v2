@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\RoleEnum;
+use App\Models\Garage;
 use App\Models\User;
 
 class UserPolicy
@@ -22,7 +23,11 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if (! $user->hasGarageRole(RoleEnum::ADMIN->value)) {
+            return false;
+        }
+
+        return $this->targetSharesCurrentGarage($targetUser);
     }
 
     public function create(User $user): bool
@@ -40,7 +45,17 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if (! $user->hasGarageRole(RoleEnum::ADMIN->value)) {
+            return false;
+        }
+
+        // Target user yoxdursa, yalnız admin yoxlaması kifayət edir (create halı)
+        if ($targetUser === null) {
+            return true;
+        }
+
+        // ✅ KRİTİK: target user cari qaraja aid olmalıdır
+        return $this->targetSharesCurrentGarage($targetUser);
     }
 
     public function delete(User $user, User $targetUser): bool
@@ -49,6 +64,26 @@ class UserPolicy
             return true;
         }
 
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        if (! $user->hasGarageRole(RoleEnum::ADMIN->value)) {
+            return false;
+        }
+
+        return $this->targetSharesCurrentGarage($targetUser);
+    }
+
+    /**
+     * İstifadəçinin cari qaraja üzv olub-olmadığını yoxlayır.
+     */
+    private function targetSharesCurrentGarage(User $targetUser): bool
+    {
+        $garageId = Garage::getCurrentId();
+
+        if (! $garageId) {
+            return false;
+        }
+
+        return $targetUser->garages()
+            ->whereKey($garageId)
+            ->exists();
     }
 }

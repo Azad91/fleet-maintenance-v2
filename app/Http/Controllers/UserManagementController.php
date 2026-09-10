@@ -5,16 +5,29 @@ namespace App\Http\Controllers;
 use App\Enums\RoleEnum;
 use App\Models\Garage;
 use App\Models\User;
+use App\Services\UserService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class UserManagementController extends Controller
 {
-    public function index()
-    {
-        $this->authorize('viewAny', User::class);  // ✅ ƏLAVƏ
+    public function __construct(
+        protected UserService $userService
+    ) {}
 
-        $garageId = $this->currentGarageId();
+    public function index(): View|RedirectResponse
+    {
+        $this->authorize('viewAny', User::class);
+
+        $garageId = $this->requireCurrentGarageId();
+
+        if ($garageId === null) {
+            return redirect()->route('garage.selection')
+                ->with('error', 'İstifadəçi siyahısını görmək üçün əvvəlcə qaraj seçin.');
+        }
+
         $users = User::query()
             ->whereHas('garages', fn ($query) => $query->whereKey($garageId))
             ->with(['garages' => fn ($query) => $query->whereKey($garageId)])
@@ -24,74 +37,115 @@ class UserManagementController extends Controller
         return view('users.index', compact('users'));
     }
 
-    public function create()
-    {
-        $this->authorize('create', User::class);
-        return view('users.create', ['roles' => RoleEnum::garageRoleLabels()]);
-    }
-
-    public function store(Request $request)
+    public function create(): View
     {
         $this->authorize('create', User::class);
 
-        $data = $this->validateUser($request);
-        $garageId = $this->currentGarageId();
-
-        // ✅ DÜZƏLİŞ: users.role həmişə 'user' olur (DB constraint qorunur)
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => 'user',
+        return view('users.create', [
+            'roles' => RoleEnum::garageRoleLabels(),
         ]);
-
-        // ✅ Qaraj rolu isə pivot cədvələ yazılır
-        $user->garages()->attach($garageId, [
-            'role' => $data['role'],
-            'is_active' => true,
-        ]);
-
-        return redirect()->route('users.index')->with('success', 'Yeni istifadəçi yaradıldı və cari qaraja təyin edildi.');
     }
 
-    public function edit(User $user)
+    public function store(Request $request): RedirectResponse
+    {
+        $this->authorize('create', User::class);
+
+        $garageId = $this->requireCurrentGarageId();
+
+        if ($garageId === null) {
+            return back()->with('error', 'Cari qaraj təyin olunmayıb. Səhifəni yeniləyin.');
+        }
+
+        $data = $this->validateUser($request, null, true);
+
+        $this->userService->createUserWithGarageRole($data, $garageId, true);
+
+        return redirect()->route('users.index')
+            ->with('success', 'Yeni istifadəçi yaradıldı və cari qaraja təyin edildi.');
+    }
+
+    public function edit(User $user): View|RedirectResponse
     {
         $this->authorize('update', $user);
-        $garageRole = $this->garageRoleFor($user);
+
+        $garageId = $this->requireCurrentGarageId();
+
+        if ($garageId === null) {
+            return redirect()->route('garage.selection')
+                ->with('error', 'İstifadəçini redaktə etmək üçün əvvəlcə qaraj seçin.');
+        }
+
+        $garageRole = $this->garageRoleFor($user, $garageId);
+
+        // ✅ Super admin həmişə özünü redaktə edə bilər
+        // Əgər super_admin cari qaraja üzv deyilsə, sintetik pivot göstər
+        if ($garageRole === null && auth()->user()->isSuperAdmin()) {
+            $garageRole = (object) [
+                'role'      => 'admin',
+                'is_active' => true,
+            ];
+        }
+
+        if ($garageRole === null) {
+            return redirect()->route('users.index')
+                ->with('error', 'Bu istifadəçi cari qaraja aid deyil.');
+        }
+
         return view('users.edit', [
-            'user' => $user,
-            'roles' => RoleEnum::garageRoleLabels(),
+            'user'       => $user,
+            'roles'      => RoleEnum::garageRoleLabels(),
             'garageRole' => $garageRole,
         ]);
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user): RedirectResponse
     {
         $this->authorize('update', $user);
 
-        $garageRole = $this->garageRoleFor($user);
-        $data = $this->validateUser($request, $user, false);
+        $garageId = $this->requireCurrentGarageId();
 
-        if ($user->is(auth()->user()) && ($data['role'] !== 'admin' || ! $data['is_active'])) {
-            return back()->withErrors(['role' => 'Öz admin hesabınızı passiv edə və ya rolunu dəyişə bilməzsiniz.'])->withInput();
+        if ($garageId === null) {
+            return back()->with('error', 'Cari qaraj təyin olunmayıb.');
         }
 
-        // ✅ DÜZƏLİŞ: users.role-a qaraj rolu yazılmır, toxunulmur
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            ...(! empty($data['password']) ? ['password' => $data['password']] : []),
-        ]);
+        $garageRole = $this->garageRoleFor($user, $garageId);
 
-        // ✅ Qaraj rolu yalnız pivot cədvəldə yenilənir
-        $user->garages()->updateExistingPivot($this->currentGarageId(), [
-            'role' => $data['role'],
-            'is_active' => $data['is_active'],
-        ]);
+        // Super admin özünü redaktə edirsə və pivot yoxdursa — sintetik pivot
+        if ($garageRole === null && $user->is(auth()->user()) && $user->isSuperAdmin()) {
+            $garageRole = (object) ['role' => 'admin', 'is_active' => true];
+        }
 
-        return redirect()->route('users.index')->with('success', "{$user->name} istifadəçisinin məlumatları yeniləndi.");
+        if ($garageRole === null) {
+            return back()->with('error', 'Bu istifadəçi cari qaraja aid deyil.');
+        }
+
+        $data = $this->validateUser($request, $user, false);
+
+        // ✅ Self-lockout qoruması (təkmilləşdirilmiş)
+        if ($user->is(auth()->user())) {
+            if ($data['role'] !== 'admin') {
+                return back()
+                    ->withErrors(['role' => 'Öz admin rolunuzu dəyişə bilməzsiniz.'])
+                    ->withInput();
+            }
+            if (! $data['is_active']) {
+                return back()
+                    ->withErrors(['is_active' => 'Öz hesabınızı passiv edə bilməzsiniz.'])
+                    ->withInput();
+            }
+        }
+
+        $this->userService->updateUserWithGarageRole($user, $data, $garageId);
+
+        return redirect()->route('users.index')
+            ->with('success', "{$user->name} istifadəçisinin məlumatları yeniləndi.");
     }
 
+    /**
+     * Validasiya qaydalarını qurur.
+     *
+     * @return array<string, mixed>
+     */
     private function validateUser(Request $request, ?User $user = null, bool $creating = true): array
     {
         $passwordRules = $creating
@@ -99,23 +153,38 @@ class UserManagementController extends Controller
             : ['nullable', 'string', 'min:8', 'confirmed'];
 
         return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
-            'role' => ['required', Rule::in(RoleEnum::garageRoles())],
-            'password' => $passwordRules,
+            'name'      => ['required', 'string', 'max:255'],
+            'email'     => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user?->id),
+            ],
+            'role'      => ['required', Rule::in(RoleEnum::garageRoles())],
+            'password'  => $passwordRules,
             'is_active' => [$creating ? 'nullable' : 'required', 'boolean'],
         ]);
     }
 
-    private function garageRoleFor(User $user): object
+    /**
+     * İstifadəçinin cari qarajdakı pivotunu qaytarır (yoxdursa null).
+     */
+    private function garageRoleFor(User $user, int $garageId): ?object
     {
-        $garage = $user->garages()->whereKey($this->currentGarageId())->firstOrFail();
+        $garage = $user->garages()
+            ->whereKey($garageId)
+            ->first();
 
-        return $garage->pivot;
+        return $garage?->pivot;
     }
 
-    private function currentGarageId(): int
+    /**
+     * Cari qaraj ID-sini qaytarır və ya null.
+     */
+    private function requireCurrentGarageId(): ?int
     {
-        return (int) Garage::getCurrentId();
+        $id = Garage::getCurrentId();
+
+        return $id !== null ? (int) $id : null;
     }
 }
