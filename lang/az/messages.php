@@ -322,26 +322,49 @@ return [
     ],
         // ==================== FLASH MESSAGES ====================
     'flash' => [
-        'created'         => ':Item uğurla yaradıldı.',
-        'updated'         => ':Item uğurla yeniləndi.',
-        'deleted'         => ':Item uğurla silindi.',
-        'none_selected'   => 'Heç bir element seçilməyib.',
-        'import_success'  => ':count :items uğurla idxal edildi.',
-        'import_partial'  => 'İdxal tamamlandı, lakin bəzi sətirlər atlandı.',
-        'import_error'    => 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.',
-        'bulk_activated'  => ':count :items aktiv edildi.',
-        'bulk_deactivated'=> ':count :items passiv edildi.',
-        'bulk_deleted'    => ':count :items silindi.',
-        'no_garage'       => 'Zəhmət olmasa əvvəlcə qaraj seçin.',
-        'garage_selected' => 'Qaraj seçildi: :name',
-        'no_garage_assigned' => 'Heç bir qaraja təyin olunmamısınız. Sistem administratoru ilə əlaqə saxlayın.',
+        // Common CRUD
+        'created'          => ':Item uğurla yaradıldı.',
+        'updated'          => ':Item uğurla yeniləndi.',
+        'deleted'          => ':Item uğurla silindi.',
+        'none_selected'    => 'Heç bir element seçilməyib.',
+
+        // Imports
+        'import_success'   => ':count :items uğurla idxal edildi.',
+        'import_partial'   => 'İdxal tamamlandı, lakin bəzi sətirlər atlandı.',
+        'import_error'     => 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.',
+
+        // Bulk
+        'bulk_activated'   => ':count :items aktiv edildi.',
+        'bulk_deactivated' => ':count :items passiv edildi.',
+        'bulk_deleted'     => ':count :items silindi.',
+
+        // Garage context
+        'no_garage'        => 'Zəhmət olmasa əvvəlcə qaraj seçin.',
+        'garage_selected'  => 'Qaraj seçildi: :name',
+        'no_garage_assigned'   => 'Heç bir qaraja təyin olunmamısınız. Sistem administratoru ilə əlaqə saxlayın.',
         'garage_access_denied' => 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.',
         'garage_not_found' => 'Seçilmiş qaraj tapılmadı.',
-        'already_closed'  => 'Bu kart artıq bağlanıb.',
-        'closed_success'  => 'Şikayət bağlandı! Akt PDF olaraq yaradıldı.',
-        'pdf_not_found'   => 'PDF faylı tapılmadı.',
+        'no_current_garage'=> 'Cari qaraj təyin olunmayıb. Səhifəni yeniləyin.',
+        'user_not_in_garage' => 'Bu istifadəçi cari qaraja aid deyil.',
+
+        // Complaint
+        'already_closed'   => 'Bu kart artıq bağlanıb.',
+        'closed_success'   => 'Kart bağlandı! PDF yaradıldı.',
+        'pdf_not_found'    => 'PDF faylı tapılmadı.',
+
+        // Duplicates & validations
         'duplicate_date'      => 'Bu avtobus üçün :date tarixində artıq qeyd mövcuddur.',
         'km_must_be_greater'  => 'KM dəyəri əvvəlki qeyddən (:km) böyük olmalıdır.',
         'km_must_be_less'     => 'KM dəyəri sonrakı qeyddən (:km) kiçik olmalıdır.',
+        'km_already_recorded' => 'Bu avtobus üçün :date tarixində artıq KM qeydi mövcuddur.',
+
+        // Users
+        'user_created'     => 'Yeni istifadəçi yaradıldı və cari qaraja təyin edildi.',
+        'user_updated'     => ':name istifadəçisinin məlumatları yeniləndi.',
+        'self_role_change' => 'Öz admin rolunuzu dəyişə bilməzsiniz.',
+        'self_deactivate'  => 'Öz hesabınızı passiv edə bilməzsiniz.',
+
+        // Auth
+        'user_not_assigned'=> 'Hələ heç bir qaraja təyin olunmamısınız.',
     ],
 ];

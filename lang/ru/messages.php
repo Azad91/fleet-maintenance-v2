@@ -304,28 +304,51 @@ return [
         'report_reason'     => 'Причина',
         'report_error'      => 'Ошибка',
     ],
-        // ==================== FLASH MESSAGES ====================
+         // ==================== FLASH MESSAGES ====================
     'flash' => [
-        'created'         => ':Item успешно создан.',
-        'updated'         => ':Item успешно обновлен.',
-        'deleted'         => ':Item успешно удален.',
-        'none_selected'   => 'Ничего не выбрано.',
-        'import_success'  => ':count :items успешно импортировано.',
-        'import_partial'  => 'Импорт завершен, но некоторые строки были пропущены.',
-        'import_error'    => 'Во время импорта произошла непредвиденная ошибка. Проверьте формат файла.',
-        'bulk_activated'  => ':count :items активировано.',
-        'bulk_deactivated'=> ':count :items деактивировано.',
-        'bulk_deleted'    => ':count :items удалено.',
-        'no_garage'       => 'Пожалуйста, сначала выберите гараж.',
-        'garage_selected' => 'Гараж выбран: :name',
-        'no_garage_assigned' => 'Вы не назначены ни на один гараж. Пожалуйста, свяжитесь с администратором.',
+        // Common CRUD
+        'created'          => ':Item успешно создан.',
+        'updated'          => ':Item успешно обновлен.',
+        'deleted'          => ':Item успешно удален.',
+        'none_selected'    => 'Ничего не выбрано.',
+
+        // Imports
+        'import_success'   => ':count :items успешно импортировано.',
+        'import_partial'   => 'Импорт завершен, но некоторые строки были пропущены.',
+        'import_error'     => 'Во время импорта произошла непредвиденная ошибка. Проверьте формат файла.',
+
+        // Bulk
+        'bulk_activated'   => ':count :items активировано.',
+        'bulk_deactivated' => ':count :items деактивировано.',
+        'bulk_deleted'     => ':count :items удалено.',
+
+        // Garage context
+        'no_garage'        => 'Пожалуйста, сначала выберите гараж.',
+        'garage_selected'  => 'Гараж выбран: :name',
+        'no_garage_assigned'   => 'Вы не назначены ни на один гараж. Свяжитесь с администратором.',
         'garage_access_denied' => 'У вас нет разрешения на доступ к выбранному гаражу.',
         'garage_not_found' => 'Выбранный гараж не найден.',
-        'already_closed'  => 'Эта карта уже закрыта.',
-        'closed_success'  => 'Карта закрыта! PDF создан.',
-        'pdf_not_found'   => 'PDF-файл не найден.',
+        'no_current_garage'=> 'Текущий гараж не установлен. Обновите страницу.',
+        'user_not_in_garage' => 'Этот пользователь не принадлежит текущему гаражу.',
+
+        // Complaint
+        'already_closed'   => 'Эта карта уже закрыта.',
+        'closed_success'   => 'Карта закрыта! PDF создан.',
+        'pdf_not_found'    => 'PDF-файл не найден.',
+
+        // Duplicates & validations
         'duplicate_date'      => 'Запись для этого автобуса на :date уже существует.',
         'km_must_be_greater'  => 'Значение КМ должно быть больше предыдущей записи (:km).',
         'km_must_be_less'     => 'Значение КМ должно быть меньше следующей записи (:km).',
+        'km_already_recorded' => 'Запись КМ для этого автобуса на :date уже существует.',
+
+        // Users
+        'user_created'     => 'Новый пользователь создан и назначен на текущий гараж.',
+        'user_updated'     => 'Информация пользователя :name обновлена.',
+        'self_role_change' => 'Вы не можете изменить свою роль администратора.',
+        'self_deactivate'  => 'Вы не можете деактивировать свою учетную запись.',
+
+        // Auth
+        'user_not_assigned'=> 'Вы еще не назначены ни на один гараж.',
     ],
 ];

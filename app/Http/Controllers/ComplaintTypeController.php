@@ -11,7 +11,7 @@ class ComplaintTypeController extends Controller
 {
     public function index()
     {
-        $this->authorize('viewAny', ComplaintType::class);  // ✅ ƏLAVƏ
+        $this->authorize('viewAny', ComplaintType::class);
 
         $types = ComplaintType::orderBy('id')->get();
 
@@ -20,14 +20,14 @@ class ComplaintTypeController extends Controller
 
     public function create()
     {
-        $this->authorize('create', ComplaintType::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', ComplaintType::class);
 
         return view('complaint-types.create');
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create', ComplaintType::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', ComplaintType::class);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -35,14 +35,15 @@ class ComplaintTypeController extends Controller
 
         ComplaintType::create($validated);
 
-        return redirect()->route('complaint-types.index')->with('success', 'Şikayət növü uğurla əlavə edildi!');
+        return redirect()->route('complaint-types.index')
+            ->with('success', __('messages.flash.created', ['Item' => 'Complaint type']));
     }
 
     public function edit($id)
     {
         $type = ComplaintType::findOrFail($id);
 
-        $this->authorize('update', $type);  // ✅ ƏLAVƏ
+        $this->authorize('update', $type);
 
         return view('complaint-types.edit', compact('type'));
     }
@@ -51,7 +52,7 @@ class ComplaintTypeController extends Controller
     {
         $type = ComplaintType::findOrFail($id);
 
-        $this->authorize('update', $type);  // ✅ ƏLAVƏ
+        $this->authorize('update', $type);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -59,30 +60,32 @@ class ComplaintTypeController extends Controller
 
         $type->update($validated);
 
-        return redirect()->route('complaint-types.index')->with('success', 'Şikayət növü uğurla yeniləndi!');
+        return redirect()->route('complaint-types.index')
+            ->with('success', __('messages.flash.updated', ['Item' => 'Complaint type']));
     }
 
     public function destroy($id)
     {
         $type = ComplaintType::findOrFail($id);
 
-        $this->authorize('delete', $type);  // ✅ ƏLAVƏ
+        $this->authorize('delete', $type);
 
         $type->delete();
 
-        return redirect()->route('complaint-types.index')->with('success', 'Şikayət növü uğurla silindi!');
+        return redirect()->route('complaint-types.index')
+            ->with('success', __('messages.flash.deleted', ['Item' => 'Complaint type']));
     }
 
     public function importForm()
     {
-        $this->authorize('import', ComplaintType::class);  // ✅ ƏLAVƏ
+        $this->authorize('import', ComplaintType::class);
 
         return view('complaint-types.import');
     }
 
     public function import(Request $request)
     {
-        $this->authorize('import', ComplaintType::class);  // ✅ ƏLAVƏ
+        $this->authorize('import', ComplaintType::class);
 
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
@@ -91,11 +94,16 @@ class ComplaintTypeController extends Controller
         try {
             Excel::import(new ComplaintTypesImport, $request->file('file'));
 
-            return redirect()->route('complaint-types.index')->with('success', 'Şikayət növləri uğurla idxal edildi!');
+            return redirect()->route('complaint-types.index')
+                ->with('success', __('messages.flash.import_success', [
+                    'count' => '',
+                    'items' => 'Complaint types',
+                ]));
         } catch (\Exception $e) {
             report($e);
 
-            return redirect()->route('complaint-types.index')->with('error', 'Şikayət növlərinin idxalı zamanı xəta baş verdi.');
+            return redirect()->route('complaint-types.index')
+                ->with('error', __('messages.flash.import_error'));
         }
     }
 }

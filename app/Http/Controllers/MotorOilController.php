@@ -12,7 +12,7 @@ class MotorOilController extends Controller
 {
     public function index()
     {
-        $this->authorize('viewAny', MotorOilDetail::class);  // ✅ ƏLAVƏ
+        $this->authorize('viewAny', MotorOilDetail::class);
 
         $details = MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
         $grouped = $details->groupBy('km');
@@ -35,7 +35,6 @@ class MotorOilController extends Controller
 
         $grouped = $details->groupBy('km');
 
-        // ✅ ƏLAVƏ: Əgər AJAX deyilsə, tam səhifə qaytar
         if (! $request->ajax() && ! $request->wantsJson()) {
             return view('motor-oil.index', compact('grouped', 'search'));
         }
@@ -45,7 +44,7 @@ class MotorOilController extends Controller
 
     public function importForm()
     {
-        $this->authorize('import', MotorOilDetail::class);  // ✅ ƏLAVƏ
+        $this->authorize('import', MotorOilDetail::class);
 
         return view('motor-oil.import');
     }
@@ -64,17 +63,20 @@ class MotorOilController extends Controller
 
             if (empty($skipped)) {
                 return redirect()->route('motor-oil.index')
-                    ->with('success', "✅ {$imported} motor yağ detalı uğurla idxal edildi.");
+                    ->with('success', __('messages.flash.import_success', [
+                        'count' => $imported,
+                        'items' => 'motor oil details',
+                    ]));
             }
 
             return redirect()->route('motor-oil.index')
-                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('warning', __('messages.flash.import_partial'))
                 ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
 
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('motor-oil.index')
-                ->with('error', 'İdxal zamanı xəta baş verdi.');
+                ->with('error', __('messages.flash.import_error'));
         }
     }
 }

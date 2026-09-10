@@ -51,7 +51,7 @@ class WarehouseController extends Controller
         Warehouse::create($request->validated());
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'Anbar məlumatı uğurla əlavə edildi!');
+            ->with('success', __('messages.flash.created', ['Item' => 'Warehouse item']));
     }
 
     public function show(int $id): View
@@ -81,7 +81,7 @@ class WarehouseController extends Controller
         $warehouse->update($request->validated());
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'Anbar məlumatı uğurla yeniləndi!');
+            ->with('success', __('messages.flash.updated', ['Item' => 'Warehouse item']));
     }
 
     public function destroy(int $id): RedirectResponse
@@ -93,7 +93,7 @@ class WarehouseController extends Controller
         $warehouse->delete();
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'Anbar məlumatı uğurla silindi!');
+            ->with('success', __('messages.flash.deleted', ['Item' => 'Warehouse item']));
     }
 
     public function importForm(): View
@@ -121,21 +121,24 @@ class WarehouseController extends Controller
             );
 
             return redirect()->route('warehouses.index')
-                ->with('success', 'Anbar məlumatları uğurla idxal edildi!');
+                ->with('success', __('messages.flash.import_success', [
+                    'count' => '',
+                    'items' => 'Warehouse items',
+                ]));
         } catch (\Throwable $e) {
             report($e);
 
             return redirect()->route('warehouses.index')
-                ->with('error', 'İdxal zamanı xəta baş verdi. Faylın formatını yoxlayın və yenidən cəhd edin.');
+                ->with('error', __('messages.flash.import_error'));
         }
     }
 
     /**
-     * Axtarış sərtini query-ə tətbiq edir.
+     * Apply search to query.
      *
-     * ✅ KRİTİK: `orWhere` mütləq closure içində olmalıdır.
-     * Əks halda HasGarageScope ilə birləşərkən SQL operator prioriteti
-     * səbəbindən qaraj scope-u itir və başqa qarajların məlumatları sızır.
+     * CRITICAL: `orWhere` must be inside a closure. Otherwise the garage
+     * global scope is lost due to SQL operator precedence, and other
+     * garages' data leaks.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<Warehouse>  $query
      * @return \Illuminate\Database\Eloquent\Builder<Warehouse>

@@ -322,26 +322,49 @@ return [
     ],
         // ==================== FLASH MESSAGES ====================
     'flash' => [
-        'created'         => ':Item created successfully.',
-        'updated'         => ':Item updated successfully.',
-        'deleted'         => ':Item deleted successfully.',
-        'none_selected'   => 'No items selected.',
-        'import_success'  => ':count :items imported successfully.',
-        'import_partial'  => 'Import completed, but some rows were skipped.',
-        'import_error'    => 'An unexpected error occurred during import. Please check the file format.',
-        'bulk_activated'  => ':count :items activated.',
-        'bulk_deactivated'=> ':count :items deactivated.',
-        'bulk_deleted'    => ':count :items deleted.',
-        'no_garage'       => 'Please select a garage first.',
-        'garage_selected' => 'Garage selected: :name',
-        'no_garage_assigned' => 'You are not assigned to any garage. Please contact the administrator.',
+        // Common CRUD
+        'created'          => ':Item created successfully.',
+        'updated'          => ':Item updated successfully.',
+        'deleted'          => ':Item deleted successfully.',
+        'none_selected'    => 'No items selected.',
+
+        // Imports
+        'import_success'   => ':count :items imported successfully.',
+        'import_partial'   => 'Import completed, but some rows were skipped.',
+        'import_error'     => 'An unexpected error occurred during import. Please check the file format.',
+
+        // Bulk
+        'bulk_activated'   => ':count :items activated.',
+        'bulk_deactivated' => ':count :items deactivated.',
+        'bulk_deleted'     => ':count :items deleted.',
+
+        // Garage context
+        'no_garage'        => 'Please select a garage first.',
+        'garage_selected'  => 'Garage selected: :name',
+        'no_garage_assigned'   => 'You are not assigned to any garage. Please contact the administrator.',
         'garage_access_denied' => 'You do not have permission to access the selected garage.',
         'garage_not_found' => 'The selected garage was not found.',
-        'already_closed'  => 'This card is already closed.',
-        'closed_success'  => 'Card closed successfully. PDF has been generated.',
-        'pdf_not_found'   => 'PDF file not found.',
+        'no_current_garage'=> 'Current garage is not set. Please refresh the page.',
+        'user_not_in_garage' => 'This user does not belong to the current garage.',
+
+        // Complaint
+        'already_closed'   => 'This card is already closed.',
+        'closed_success'   => 'Card closed successfully. PDF has been generated.',
+        'pdf_not_found'    => 'PDF file not found.',
+
+        // Duplicates & validations
         'duplicate_date'      => 'An entry already exists for this bus on :date.',
         'km_must_be_greater'  => 'KM value must be greater than the previous entry (:km).',
         'km_must_be_less'     => 'KM value must be less than the next entry (:km).',
+        'km_already_recorded' => 'A KM entry already exists for this bus on :date.',
+
+        // Users
+        'user_created'     => 'New user created and assigned to current garage.',
+        'user_updated'     => ':name\'s information has been updated.',
+        'self_role_change' => 'You cannot change your own admin role.',
+        'self_deactivate'  => 'You cannot deactivate your own account.',
+
+        // Auth
+        'user_not_assigned'=> 'You are not assigned to any garage yet.',
     ],
 ];

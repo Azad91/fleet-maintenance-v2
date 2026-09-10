@@ -6,7 +6,6 @@ use App\Http\Requests\ComplaintCloseRequest;
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
 use App\Imports\ComplaintsImport;
-use App\Imports\ComplaintTypesImport;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\ComplaintType;
@@ -48,8 +47,6 @@ class ComplaintController extends Controller
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
 
-        // ✅ YENİ: Boş Complaint instance — blade-də $complaint undefined olmasın
-        // Yeni model heç bir DB sətri deyil, sadəcə null-safe container-dir.
         $complaint = new Complaint();
 
         return view('complaints.create', compact(
@@ -69,13 +66,13 @@ class ComplaintController extends Controller
 
         $complaint = $this->complaintService->create(
             $data,
-            $request->input('detallar', []),
-            $request->input('shikayet', [])
+            $request->input('details', []),
+            $request->input('complaints', [])
         );
 
         return redirect()
             ->route('complaints.show', $complaint)
-            ->with('success', 'Kart uğurla açıldı. PDF formatında çap edə bilərsiniz.');
+            ->with('success', __('messages.flash.created', ['Item' => 'Card']));
     }
 
     public function show(int $id): View
@@ -103,7 +100,7 @@ class ComplaintController extends Controller
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
 
-        $detallar = $complaint->details->map(function ($detail) {
+        $details = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,
                 'code'           => $detail->code,
@@ -115,16 +112,16 @@ class ComplaintController extends Controller
             ];
         })->toArray();
 
-        $shikayetler = $complaint->items->pluck('description')->toArray();
+        $complaints = $complaint->items->pluck('description')->toArray();
 
         return view('complaints.edit', compact(
             'complaint',
             'buses',
             'complaintTypes',
-            'detallar',
+            'details',
             'employees',
             'drivers',
-            'shikayetler'
+            'complaints'
         ));
     }
 
@@ -139,14 +136,13 @@ class ComplaintController extends Controller
         $this->complaintService->update(
             $complaint,
             $data,
-            $request->input('detallar', []),
-            $request->input('shikayet', [])
+            $request->input('details', []),
+            $request->input('complaints', [])
         );
 
-        // ✅ DÜZƏLİŞ: hardcoded '/complaints' → named route
         return redirect()
             ->route('complaints.index')
-            ->with('success', 'Şikayət uğurla yeniləndi!');
+            ->with('success', __('messages.flash.updated', ['Item' => 'Card']));
     }
 
     public function destroy(int $id): RedirectResponse
@@ -159,7 +155,7 @@ class ComplaintController extends Controller
 
         return redirect()
             ->route('complaints.index')
-            ->with('success', 'Şikayət uğurla silindi! Anbar yeniləndi.');
+            ->with('success', __('messages.flash.deleted', ['Item' => 'Card']));
     }
 
     public function close(ComplaintCloseRequest $request, int $id): RedirectResponse
@@ -168,8 +164,8 @@ class ComplaintController extends Controller
 
         $this->authorize('close', $complaint);
 
-        if ($complaint->status === 'həll olundu') {
-            return back()->with('error', 'Bu şikayət artıq bağlanıb!');
+        if ($complaint->status === 'completed') {
+            return back()->with('error', __('messages.flash.already_closed'));
         }
 
         $this->complaintService->close($complaint, $request->validated());
@@ -177,7 +173,7 @@ class ComplaintController extends Controller
         try {
             $this->pdfService->save($complaint);
         } catch (\Throwable $e) {
-            Log::error('PDF yaradılmadı', [
+            Log::error('PDF generation failed', [
                 'complaint_id' => $complaint->id,
                 'error'        => $e->getMessage(),
                 'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
@@ -186,7 +182,7 @@ class ComplaintController extends Controller
 
         return redirect()
             ->route('complaints.index')
-            ->with('success', '✅ Şikayət bağlandı! Akt PDF olaraq yaradıldı.');
+            ->with('success', __('messages.flash.closed_success'));
     }
 
     public function downloadPdf(int $id): BinaryFileResponse
@@ -202,12 +198,12 @@ class ComplaintController extends Controller
         $filePath = $this->pdfService->getFilePath($complaint);
 
         if (! file_exists($filePath)) {
-            abort(404, 'PDF faylı tapılmadı.');
+            abort(404, __('messages.flash.pdf_not_found'));
         }
 
-        return response()->download($filePath, "is-karti-{$complaint->id}.pdf", [
+        return response()->download($filePath, "work-card-{$complaint->id}.pdf", [
             'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="is-karti-'.$complaint->id.'.pdf"',
+            'Content-Disposition' => 'inline; filename="work-card-'.$complaint->id.'.pdf"',
         ]);
     }
 
@@ -220,31 +216,37 @@ class ComplaintController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', ComplaintType::class);
+        $this->authorize('import', Complaint::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
-            $import = new ComplaintTypesImport();
+            $import = new ComplaintsImport(
+                (int) session('current_garage_id'),
+                session('current_company_id') ? (int) session('current_company_id') : null
+            );
+
             Excel::import($import, $request->file('file'));
 
             $skipped  = $import->skipped;
-            $failures = $import->failures();
+            $failures = method_exists($import, 'failures') ? $import->failures() : collect();
             $imported = $import->importedCount;
 
             if (empty($skipped) && $failures->isEmpty()) {
-                return redirect()->route('complaint-types.index')
-                    ->with('success', "✅ {$imported} şikayət növü uğurla idxal edildi.");
+                return redirect()->route('complaints.index')
+                    ->with('success', __('messages.flash.import_success', [
+                        'count' => $imported,
+                        'items' => 'cards',
+                    ]));
             }
 
-            return redirect()->route('complaint-types.index')
-                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+            return redirect()->route('complaints.index')
+                ->with('warning', __('messages.flash.import_partial'))
                 ->with('import_report', $this->buildImportReport($imported, $skipped, $failures));
 
         } catch (\Throwable $e) {
             report($e);
-            return redirect()->route('complaint-types.index')
-                ->with('error', 'İdxal zamanı xəta baş verdi.');
+            return redirect()->route('complaints.index')
+                ->with('error', __('messages.flash.import_error'));
         }
     }
-
 }

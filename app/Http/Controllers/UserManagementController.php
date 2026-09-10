@@ -25,7 +25,7 @@ class UserManagementController extends Controller
 
         if ($garageId === null) {
             return redirect()->route('garage.selection')
-                ->with('error', 'İstifadəçi siyahısını görmək üçün əvvəlcə qaraj seçin.');
+                ->with('error', __('messages.flash.no_garage'));
         }
 
         $users = User::query()
@@ -53,7 +53,7 @@ class UserManagementController extends Controller
         $garageId = $this->requireCurrentGarageId();
 
         if ($garageId === null) {
-            return back()->with('error', 'Cari qaraj təyin olunmayıb. Səhifəni yeniləyin.');
+            return back()->with('error', __('messages.flash.no_current_garage'));
         }
 
         $data = $this->validateUser($request, null, true);
@@ -61,7 +61,7 @@ class UserManagementController extends Controller
         $this->userService->createUserWithGarageRole($data, $garageId, true);
 
         return redirect()->route('users.index')
-            ->with('success', 'Yeni istifadəçi yaradıldı və cari qaraja təyin edildi.');
+            ->with('success', __('messages.flash.user_created'));
     }
 
     public function edit(User $user): View|RedirectResponse
@@ -72,13 +72,11 @@ class UserManagementController extends Controller
 
         if ($garageId === null) {
             return redirect()->route('garage.selection')
-                ->with('error', 'İstifadəçini redaktə etmək üçün əvvəlcə qaraj seçin.');
+                ->with('error', __('messages.flash.no_garage'));
         }
 
         $garageRole = $this->garageRoleFor($user, $garageId);
 
-        // ✅ Super admin həmişə özünü redaktə edə bilər
-        // Əgər super_admin cari qaraja üzv deyilsə, sintetik pivot göstər
         if ($garageRole === null && auth()->user()->isSuperAdmin()) {
             $garageRole = (object) [
                 'role'      => 'admin',
@@ -88,7 +86,7 @@ class UserManagementController extends Controller
 
         if ($garageRole === null) {
             return redirect()->route('users.index')
-                ->with('error', 'Bu istifadəçi cari qaraja aid deyil.');
+                ->with('error', __('messages.flash.user_not_in_garage'));
         }
 
         return view('users.edit', [
@@ -105,32 +103,30 @@ class UserManagementController extends Controller
         $garageId = $this->requireCurrentGarageId();
 
         if ($garageId === null) {
-            return back()->with('error', 'Cari qaraj təyin olunmayıb.');
+            return back()->with('error', __('messages.flash.no_current_garage'));
         }
 
         $garageRole = $this->garageRoleFor($user, $garageId);
 
-        // Super admin özünü redaktə edirsə və pivot yoxdursa — sintetik pivot
         if ($garageRole === null && $user->is(auth()->user()) && $user->isSuperAdmin()) {
             $garageRole = (object) ['role' => 'admin', 'is_active' => true];
         }
 
         if ($garageRole === null) {
-            return back()->with('error', 'Bu istifadəçi cari qaraja aid deyil.');
+            return back()->with('error', __('messages.flash.user_not_in_garage'));
         }
 
         $data = $this->validateUser($request, $user, false);
 
-        // ✅ Self-lockout qoruması (təkmilləşdirilmiş)
         if ($user->is(auth()->user())) {
             if ($data['role'] !== 'admin') {
                 return back()
-                    ->withErrors(['role' => 'Öz admin rolunuzu dəyişə bilməzsiniz.'])
+                    ->withErrors(['role' => __('messages.flash.self_role_change')])
                     ->withInput();
             }
             if (! $data['is_active']) {
                 return back()
-                    ->withErrors(['is_active' => 'Öz hesabınızı passiv edə bilməzsiniz.'])
+                    ->withErrors(['is_active' => __('messages.flash.self_deactivate')])
                     ->withInput();
             }
         }
@@ -138,14 +134,9 @@ class UserManagementController extends Controller
         $this->userService->updateUserWithGarageRole($user, $data, $garageId);
 
         return redirect()->route('users.index')
-            ->with('success', "{$user->name} istifadəçisinin məlumatları yeniləndi.");
+            ->with('success', __('messages.flash.user_updated', ['name' => $user->name]));
     }
 
-    /**
-     * Validasiya qaydalarını qurur.
-     *
-     * @return array<string, mixed>
-     */
     private function validateUser(Request $request, ?User $user = null, bool $creating = true): array
     {
         $passwordRules = $creating
@@ -166,9 +157,6 @@ class UserManagementController extends Controller
         ]);
     }
 
-    /**
-     * İstifadəçinin cari qarajdakı pivotunu qaytarır (yoxdursa null).
-     */
     private function garageRoleFor(User $user, int $garageId): ?object
     {
         $garage = $user->garages()
@@ -178,9 +166,6 @@ class UserManagementController extends Controller
         return $garage?->pivot;
     }
 
-    /**
-     * Cari qaraj ID-sini qaytarır və ya null.
-     */
     private function requireCurrentGarageId(): ?int
     {
         $id = Garage::getCurrentId();

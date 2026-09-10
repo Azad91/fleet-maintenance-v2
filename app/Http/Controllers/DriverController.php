@@ -18,7 +18,8 @@ class DriverController extends Controller
     {
         $this->authorize('viewAny', Driver::class);
 
-        $drivers = Driver::orderBy('code')->paginate(config('settings.pagination', 30));
+        $drivers = Driver::orderBy('code')
+            ->paginate(config('settings.pagination', 30));
 
         return view('drivers.index', compact('drivers'));
     }
@@ -36,7 +37,8 @@ class DriverController extends Controller
 
         Driver::create($request->validated());
 
-        return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla əlavə edildi!');
+        return redirect()->route('drivers.index')
+            ->with('success', __('messages.flash.created', ['Item' => 'Driver']));
     }
 
     public function show($id)
@@ -62,7 +64,8 @@ class DriverController extends Controller
 
         $driver->update($request->validated());
 
-        return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla yeniləndi!');
+        return redirect()->route('drivers.index')
+            ->with('success', __('messages.flash.updated', ['Item' => 'Driver']));
     }
 
     public function destroy($id)
@@ -72,7 +75,8 @@ class DriverController extends Controller
 
         $driver->delete();
 
-        return redirect()->route('drivers.index')->with('success', 'Sürücü uğurla silindi!');
+        return redirect()->route('drivers.index')
+            ->with('success', __('messages.flash.deleted', ['Item' => 'Driver']));
     }
 
     public function importForm()
@@ -100,17 +104,20 @@ class DriverController extends Controller
 
             if (empty($skipped)) {
                 return redirect()->route('drivers.index')
-                    ->with('success', "✅ {$imported} sürücü uğurla idxal edildi.");
+                    ->with('success', __('messages.flash.import_success', [
+                        'count' => $imported,
+                        'items' => 'drivers',
+                    ]));
             }
 
             return redirect()->route('drivers.index')
-                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('warning', __('messages.flash.import_partial'))
                 ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
 
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('drivers.index')
-                ->with('error', 'İdxal zamanı xəta baş verdi.');
+                ->with('error', __('messages.flash.import_error'));
         }
     }
 
@@ -118,6 +125,6 @@ class DriverController extends Controller
     {
         $this->authorize('export', Driver::class);
 
-        return Excel::download(new DriversExport, 'suruculer.xlsx');
+        return Excel::download(new DriversExport, 'drivers.xlsx');
     }
 }

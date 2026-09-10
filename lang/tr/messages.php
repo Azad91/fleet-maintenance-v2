@@ -306,26 +306,49 @@ return [
     ],
         // ==================== FLASH MESSAGES ====================
     'flash' => [
-        'created'         => ':Item başarıyla oluşturuldu.',
-        'updated'         => ':Item başarıyla güncellendi.',
-        'deleted'         => ':Item başarıyla silindi.',
-        'none_selected'   => 'Hiçbir öğe seçilmedi.',
-        'import_success'  => ':count :items başarıyla içe aktarıldı.',
-        'import_partial'  => 'İçe aktarma tamamlandı, ancak bazı satırlar atlandı.',
-        'import_error'    => 'İçe aktarma sırasında beklenmeyen bir hata oluştu. Lütfen dosya formatını kontrol edin.',
-        'bulk_activated'  => ':count :items aktifleştirildi.',
-        'bulk_deactivated'=> ':count :items pasifleştirildi.',
-        'bulk_deleted'    => ':count :items silindi.',
-        'no_garage'       => 'Lütfen önce bir garaj seçin.',
-        'garage_selected' => 'Garaj seçildi: :name',
-        'no_garage_assigned' => 'Hiçbir garaja atanmadınız. Lütfen sistem yöneticisiyle iletişime geçin.',
+        // Common CRUD
+        'created'          => ':Item başarıyla oluşturuldu.',
+        'updated'          => ':Item başarıyla güncellendi.',
+        'deleted'          => ':Item başarıyla silindi.',
+        'none_selected'    => 'Hiçbir öğe seçilmedi.',
+
+        // Imports
+        'import_success'   => ':count :items başarıyla içe aktarıldı.',
+        'import_partial'   => 'İçe aktarma tamamlandı, ancak bazı satırlar atlandı.',
+        'import_error'     => 'İçe aktarma sırasında beklenmeyen bir hata oluştu. Dosya formatını kontrol edin.',
+
+        // Bulk
+        'bulk_activated'   => ':count :items aktifleştirildi.',
+        'bulk_deactivated' => ':count :items pasifleştirildi.',
+        'bulk_deleted'     => ':count :items silindi.',
+
+        // Garage context
+        'no_garage'        => 'Lütfen önce bir garaj seçin.',
+        'garage_selected'  => 'Garaj seçildi: :name',
+        'no_garage_assigned'   => 'Hiçbir garaja atanmadınız. Sistem yöneticisiyle iletişime geçin.',
         'garage_access_denied' => 'Seçilen garaja erişim izniniz yok.',
         'garage_not_found' => 'Seçilen garaj bulunamadı.',
-        'already_closed'  => 'Bu kart zaten kapatılmış.',
-        'closed_success'  => 'Kart kapatıldı! PDF oluşturuldu.',
-        'pdf_not_found'   => 'PDF dosyası bulunamadı.',
+        'no_current_garage'=> 'Mevcut garaj ayarlanmamış. Sayfayı yenileyin.',
+        'user_not_in_garage' => 'Bu kullanıcı mevcut garaja ait değil.',
+
+        // Complaint
+        'already_closed'   => 'Bu kart zaten kapatılmış.',
+        'closed_success'   => 'Kart kapatıldı! PDF oluşturuldu.',
+        'pdf_not_found'    => 'PDF dosyası bulunamadı.',
+
+        // Duplicates & validations
         'duplicate_date'      => 'Bu otobüs için :date tarihinde zaten bir kayıt var.',
         'km_must_be_greater'  => 'KM değeri önceki kayıttan (:km) büyük olmalıdır.',
         'km_must_be_less'     => 'KM değeri sonraki kayıttan (:km) küçük olmalıdır.',
+        'km_already_recorded' => 'Bu otobüs için :date tarihinde zaten bir KM kaydı var.',
+
+        // Users
+        'user_created'     => 'Yeni kullanıcı oluşturuldu ve mevcut garaja atandı.',
+        'user_updated'     => ':name kullanıcısının bilgileri güncellendi.',
+        'self_role_change' => 'Kendi admin rolünüzü değiştiremezsiniz.',
+        'self_deactivate'  => 'Kendi hesabınızı pasifleştiremezsiniz.',
+
+        // Auth
+        'user_not_assigned'=> 'Henüz hiçbir garaja atanmadınız.',
     ],
 ];
