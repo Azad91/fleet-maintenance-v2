@@ -5,75 +5,69 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Bus (DQN)</th>
-                        <th>Route</th>
-                        <th>Location</th>
-                        <th>Complaint</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>{{ __('messages.complaints.bus') }}</th>
+                        <th>{{ __('messages.buses.route_number') }}</th>
+                        <th>{{ __('messages.complaints.location') }}</th>
+                        <th>{{ __('messages.complaints.complaint') }}</th>
+                        <th>{{ __('messages.common.status') }}</th>
+                        <th>{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($complaints as $complaint)
-                    <tr>
-                        <td>{{ $complaint->id }}</td>
-                        <td><strong>{{ $complaint->bus->dqn ?? '-' }}</strong></td>
-                        <td>{{ $complaint->bus->route_number ?? '-' }}</td>
-                        <td>
-                            @if($complaint->yer == 'yol')
-                                🛣️ Road
-                            @elseif($complaint->yer == 'qaraj')
-                                🏠 Garage
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td>
-                            {{ Str::limit($complaint->items->first()->description ?? '-', 30) }}
-                        </td>
-                        <td>
-                            <span class="badge-status {{ str_replace(' ', '-', $complaint->status) }}">
-                                {{ $complaint->status }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                @can('view', $complaint)
-                                    <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                @endcan
-                                @can('update', $complaint)
-                                    <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                @endcan
-                                @can('delete', $complaint)
-                                    <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                @endcan
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td>{{ $complaint->id }}</td>
+                            <td><strong>{{ $complaint->bus->dqn ?? '-' }}</strong></td>
+                            <td>{{ $complaint->bus->route_number ?? '-' }}</td>
+                            <td>
+                                @if($complaint->yer === 'road')
+                                    🛣️ {{ __('enums.location.road') }}
+                                @elseif($complaint->yer === 'garage')
+                                    🏠 {{ __('enums.location.garage') }}
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>{{ Str::limit($complaint->items->first()->description ?? '-', 30) }}</td>
+                            <td>
+                                <span class="badge-status {{ str_replace('_', '-', $complaint->status) }}">
+                                    {{ __('enums.complaint_status.' . $complaint->status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    @can('view', $complaint)
+                                        <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    @endcan
+                                    @can('update', $complaint)
+                                        <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    @endcan
+                                    @can('delete', $complaint)
+                                        <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.common.confirm') }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            @if(isset($dqn) || isset($xett_no) || isset($yer) || isset($shikayet))
-                                No results found.
-                            @else
-                                No cards yet.
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+                                {{ __('messages.complaints.no_cards') }}
                                 @can('create', App\Models\Complaint::class)
-                                    <a href="{{ route('complaints.create') }}">Add a new one!</a>
+                                    <a href="{{ route('complaints.create') }}">{{ __('messages.complaints.new') }}</a>
                                 @endcan
-                            @endif
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

@@ -1,30 +1,32 @@
 @extends('layouts.app')
 
-@section('title', 'Work Cards')
+@section('title', __('messages.complaints.title'))
 
 @section('content')
 <div class="page-header">
-    <h1>📋 Work Cards</h1>
-    <p class="text-muted">All complaints and work cards</p>
+    <h1>📋 {{ __('messages.complaints.title') }}</h1>
+    <p class="text-muted">{{ __('messages.complaints.subtitle') }}</p>
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex gap-2 flex-wrap">
         @can('create', App\Models\Complaint::class)
             <a href="{{ route('complaints.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> New Card
+                <i class="bi bi-plus-lg"></i> {{ __('messages.complaints.new') }}
             </a>
         @endcan
         @can('import', App\Models\Complaint::class)
             <a href="{{ route('complaints.import') }}" class="btn btn-success">
-                <i class="bi bi-upload"></i> Import from Excel
+                <i class="bi bi-upload"></i> {{ __('messages.complaints.import') }}
             </a>
         @endcan
         <a href="{{ route('complaint-types.index') }}" class="btn btn-outline-info">
-            <i class="bi bi-tags"></i> Complaint Types
+            <i class="bi bi-tags"></i> {{ __('messages.complaint_types.title') }}
         </a>
     </div>
-    <span class="badge bg-primary rounded-pill">Total: {{ $complaints->total() }} cards</span>
+    <span class="badge bg-primary rounded-pill">
+        {{ __('messages.common.total') }}: {{ $complaints->total() }} {{ __('messages.complaints.total_label') }}
+    </span>
 </div>
 
 <div class="card">
@@ -34,12 +36,12 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Bus</th>
-                        <th>Complaint</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Actions</th>
+                        <th>{{ __('messages.complaints.bus') }}</th>
+                        <th>{{ __('messages.complaints.complaint') }}</th>
+                        <th>{{ __('messages.complaints.complaint_type') }}</th>
+                        <th>{{ __('messages.common.status') }}</th>
+                        <th>{{ __('messages.complaints.col_date') }}</th>
+                        <th>{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,24 +57,31 @@
                             {{ Str::limit($complaint->items->first()->description ?? '-', 30) }}
                         </td>
                         <td>
-                            @if($complaint->complaint_type == 'qezali')
-                                <span class="badge bg-danger">🚗 Accident</span>
-                            @elseif($complaint->complaint_type == 'nasazliq')
-                                <span class="badge bg-warning">⚠️ Breakdown</span>
-                            @elseif($complaint->complaint_type == 'texniki_xidmet')
-                                <span class="badge bg-info">🔧 Maintenance</span>
+                            @if($complaint->complaint_type)
+                                <span class="badge bg-{{
+                                    match($complaint->complaint_type) {
+                                        'accident'    => 'danger',
+                                        'breakdown'   => 'warning',
+                                        'maintenance' => 'info',
+                                        default       => 'secondary',
+                                    }
+                                }}">
+                                    {{ __('enums.complaint_type.' . $complaint->complaint_type) }}
+                                </span>
                             @else
                                 <span class="badge bg-secondary">-</span>
                             @endif
                         </td>
                         <td>
-                            @if($complaint->status == 'həll olundu')
-                                <span class="badge bg-success">✅ Completed</span>
-                            @elseif($complaint->status == 'işdə')
-                                <span class="badge bg-warning">🔨 In Progress</span>
-                            @else
-                                <span class="badge bg-secondary">⏳ Pending</span>
-                            @endif
+                            <span class="badge bg-{{
+                                match($complaint->status) {
+                                    'completed'   => 'success',
+                                    'in_progress' => 'warning',
+                                    default       => 'secondary',
+                                }
+                            }}">
+                                {{ __('enums.complaint_status.' . $complaint->status) }}
+                            </span>
                         </td>
                         <td>{{ $complaint->created_at ? $complaint->created_at->format('d.m.Y') : '-' }}</td>
                         <td>
@@ -84,7 +93,7 @@
                                 @endcan
 
                                 @can('update', $complaint)
-                                    @if($complaint->status != 'həll olundu')
+                                    @if($complaint->status !== 'completed')
                                         <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-outline-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -92,15 +101,15 @@
                                 @endcan
 
                                 @can('close', $complaint)
-                                    @if($complaint->status != 'həll olundu')
+                                    @if($complaint->status !== 'completed')
                                         <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#closeModal{{ $complaint->id }}">
-                                            <i class="bi bi-check-circle"></i> Close
+                                            <i class="bi bi-check-circle"></i> {{ __('messages.complaints.close_button') }}
                                         </button>
                                     @endif
                                 @endcan
 
                                 @can('delete', $complaint)
-                                    <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this card?')">
+                                    <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline;" onsubmit="return confirm('{{ __('messages.complaints.delete_confirm') }}')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -115,10 +124,12 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            No cards yet.
+                            {{ __('messages.complaints.no_cards') }}
                             <br>
                             @can('create', App\Models\Complaint::class)
-                                <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm mt-2">Create New Card</a>
+                                <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm mt-2">
+                                    {{ __('messages.complaints.new') }}
+                                </a>
                             @endcan
                         </td>
                     </tr>
@@ -133,46 +144,46 @@
     {{ $complaints->withQueryString()->links() }}
 </div>
 
-<!-- Close Modals -->
+{{-- Close Modals --}}
 @foreach($complaints as $complaint)
-    @if($complaint->status != 'həll olundu' && auth()->user()->can('close', $complaint))
-        <div class="modal fade" id="closeModal{{ $complaint->id }}" tabindex="-1" aria-labelledby="closeModalLabel{{ $complaint->id }}" aria-hidden="true">
+    @if($complaint->status !== 'completed' && auth()->user()->can('close', $complaint))
+        <div class="modal fade" id="closeModal{{ $complaint->id }}" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form action="{{ route('complaints.close', $complaint) }}" method="POST">
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="closeModalLabel{{ $complaint->id }}">
-                                <i class="bi bi-lock"></i> Close Complaint
+                            <h5 class="modal-title">
+                                <i class="bi bi-lock"></i> {{ __('messages.complaints.close_modal_title') }}
                             </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="alert alert-info">
-                                <strong>🚌 Bus:</strong> {{ $complaint->bus->dqn ?? '-' }}
+                                <strong>🚌 {{ __('messages.complaints.bus') }}:</strong> {{ $complaint->bus->dqn ?? '-' }}
                                 ({{ $complaint->bus->route_number ?? '-' }})
                             </div>
 
                             <div class="mb-3">
-                                <label for="end_date{{ $complaint->id }}" class="form-label fw-bold">📅 End Date <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold">{{ __('messages.complaints.end_date') }} <span class="text-danger">*</span></label>
                                 <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}">
                             </div>
 
                             <div class="mb-3">
-                                <label for="end_time{{ $complaint->id }}" class="form-label fw-bold">🕐 End Time <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold">{{ __('messages.complaints.end_time') }} <span class="text-danger">*</span></label>
                                 <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}">
                             </div>
 
                             <div class="mb-3">
-                                <label for="work_done{{ $complaint->id }}" class="form-label fw-bold">📝 Work Done <span class="text-danger">*</span></label>
-                                <textarea name="work_done" class="form-control" rows="3" placeholder="Describe work done in detail..." required></textarea>
-                                <small class="text-muted">At least 5 characters</small>
+                                <label class="form-label fw-bold">{{ __('messages.complaints.work_done') }} <span class="text-danger">*</span></label>
+                                <textarea name="work_done" class="form-control" rows="3" placeholder="{{ __('messages.complaints.work_done_placeholder') }}" required></textarea>
+                                <small class="text-muted">{{ __('messages.complaints.work_done_hint') }}</small>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.common.cancel') }}</button>
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Close
+                                <i class="bi bi-check-circle"></i> {{ __('messages.complaints.close_button') }}
                             </button>
                         </div>
                     </form>
@@ -181,27 +192,4 @@
         </div>
     @endif
 @endforeach
-@endsection
-
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var modals = document.querySelectorAll('.modal');
-        modals.forEach(function(modal) {
-            new bootstrap.Modal(modal, {
-                backdrop: 'static',
-                keyboard: false
-            });
-        });
-
-        document.querySelectorAll('.modal').forEach(function(modal) {
-            modal.addEventListener('shown.bs.modal', function() {
-                var input = this.querySelector('input, textarea');
-                if (input) {
-                    input.focus();
-                }
-            });
-        });
-    });
-</script>
 @endsection

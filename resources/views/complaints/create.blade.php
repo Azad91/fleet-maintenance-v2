@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'New Work Card')
+@section('title', __('messages.complaints.new'))
 
 @section('content')
 <div class="complaint-create-page">
     <div class="complaint-create-page__heading">
         <div>
-            <span class="fleet-eyebrow">TECHNICAL RECORD</span>
-            <h1>Create New Work Card</h1>
-            <p>Enter bus, location and work details sequentially.</p>
+            <span class="fleet-eyebrow">{{ __('messages.complaints.eyebrow') }}</span>
+            <h1>{{ __('messages.complaints.new_title') }}</h1>
+            <p>{{ __('messages.complaints.new_subtitle') }}</p>
         </div>
         <a href="{{ route('complaints.index') }}" class="fleet-button fleet-button--secondary">
-            <i class="fas fa-arrow-left"></i> Back to Cards
+            <i class="fas fa-arrow-left"></i> {{ __('messages.complaints.back_to_cards') }}
         </a>
     </div>
     <div class="card complaint-create-card">
         <div class="card-header">
-            <h4><i class="fas fa-screwdriver-wrench"></i> Card Information</h4>
+            <h4><i class="fas fa-screwdriver-wrench"></i> {{ __('messages.complaints.card_info') }}</h4>
         </div>
         <div class="card-body">
             @if ($errors->any())
@@ -59,10 +59,10 @@
                         .then(kmData => {
                             document.getElementById('km').value = kmData.km || '';
                         })
-                        .catch(err => console.error("KM xətası:", err));
+                        .catch(err => console.error('KM error:', err));
                 }
             })
-            .catch(err => console.error("Avtobus axtarış xətası:", err));
+            .catch(err => console.error('Bus search error:', err));
     }
 
     function addComplaint() {
@@ -71,15 +71,11 @@
         if (!source) return;
 
         const item = source.cloneNode(true);
-
         const select = item.querySelector('select');
         if (select) select.value = '';
 
-        const editableInput = item.querySelector('input:not([readonly])');
-        if (editableInput) editableInput.value = '';
         container.append(item);
 
-        // Nömrələri yenilə
         container.querySelectorAll('.complaint-number').forEach((el, idx) => {
             el.textContent = (idx + 1) + '.';
         });
@@ -89,7 +85,6 @@
         const container = document.getElementById('complaintsContainer');
         if (container.querySelectorAll('.complaint-item').length > 1) {
             button.closest('.complaint-item').remove();
-            // Nömrələri yenilə
             container.querySelectorAll('.complaint-number').forEach((el, idx) => {
                 el.textContent = (idx + 1) + '.';
             });
@@ -102,10 +97,9 @@
         if (!source) return;
 
         const item = source.cloneNode(true);
-
         item.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
         item.querySelectorAll('textarea').forEach(t => t.value = '');
-        if(item.querySelector('input[name*="[used_quantity]"]')) {
+        if (item.querySelector('input[name*="[used_quantity]"]')) {
             item.querySelector('input[name*="[used_quantity]"]').value = '1';
         }
 
@@ -123,8 +117,6 @@
         const items = document.querySelectorAll('.detail-item');
         if (items.length > 1) {
             button.closest('.detail-item').remove();
-        } else {
-            alert('Ən azı 1 detal bloku qalmalıdır. Ehtiyac yoxdursa kod xanasını boş buraxın.');
         }
     }
 
@@ -142,27 +134,27 @@
         codeInput.classList.remove('is-valid', 'is-invalid');
 
         if (!normalizedCode) {
-            help.textContent = 'Kod seçildikdə ad avtomatik dolacaq.';
+            help.textContent = @json(__('messages.complaints.driver_help_default'));
             help.className = 'form-text';
             return;
         }
 
         const requestId = ++driverLookupRequest;
-        help.textContent = 'Sürücü axtarılır...';
+        help.textContent = @json(__('messages.complaints.driver_searching'));
 
         fetch('/get-driver-by-kod/' + encodeURIComponent(normalizedCode))
             .then(response => response.json())
             .then(data => {
                 if (requestId !== driverLookupRequest) return;
                 if (data.found) {
-                    nameInput.value = data.driver_ad || data.driver_name;
+                    nameInput.value = data.driver_name || '';
                     idInput.value = data.driver_id;
                     codeInput.classList.add('is-valid');
-                    help.textContent = 'Sürücü tapıldı.';
+                    help.textContent = @json(__('messages.complaints.driver_found'));
                     help.className = 'form-text text-success';
                 } else {
                     codeInput.classList.add('is-invalid');
-                    help.textContent = 'Bu kodla aktiv sürücü tapılmadı.';
+                    help.textContent = @json(__('messages.complaints.driver_not_found'));
                     help.className = 'form-text text-danger';
                 }
             });
@@ -175,12 +167,12 @@
         const driverField = document.getElementById('surucuField');
         const reportFields = document.getElementById('bildirilmeFields');
 
-        if (yer.value === 'qaraj') {
-            if(driverField) driverField.style.display = 'none';
-            if(reportFields) reportFields.style.display = 'none';
+        if (yer.value === 'garage') {
+            if (driverField) driverField.style.display = 'none';
+            if (reportFields) reportFields.style.display = 'none';
         } else {
-            if(driverField) driverField.style.display = 'block';
-            if(reportFields) reportFields.style.display = 'block';
+            if (driverField) driverField.style.display = 'block';
+            if (reportFields) reportFields.style.display = 'block';
         }
     }
 
@@ -199,15 +191,14 @@
         fetch('/get-detal-by-kod/' + encodeURIComponent(code))
             .then(response => response.json())
             .then(data => {
-                nameInput.value = data.detal_adi || data.name || '';
-                stockInput.value = data.depo_miqdari || data.quantity || '';
+                nameInput.value = data.detallar_name || '';
+                stockInput.value = data.stock_quantity || '';
             });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         toggleFields();
 
-        // Form yükləndikdə əgər xətt nömrəsi varsa avtomatik məlumatları çək
         const routeInput = document.getElementById('route_number');
         if (routeInput && routeInput.value && !document.getElementById('bus_id').value) {
             getBusByRoute(routeInput.value);

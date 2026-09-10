@@ -1,45 +1,38 @@
 @php
-    /**
-     * CSS faylına tam yol (Windows və Linux üçün uyğun).
-     * DomPDF `file://` protokolu ilə lokal faylları oxuya bilir.
-     */
     $cssPath = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', public_path('css/pdf-akt.css'));
 
     $statusClass = match ($complaint->status) {
-        'gözləmədə' => 'badge--pending',
-        'işdə' => 'badge--progress',
-        'həll olundu' => 'badge--done',
-        default => 'badge--default',
+        'pending'     => 'badge--pending',
+        'in_progress' => 'badge--progress',
+        'completed'   => 'badge--done',
+        default       => 'badge--default',
     };
 
-    $typeLabel = match ($complaint->complaint_type) {
-        'qezali' => '🚗 Qəzalı',
-        'nasazliq' => '⚠️ Nasazlıq',
-        'texniki_xidmet' => '🔧 Texniki Xidmət',
-        default => '—',
-    };
+    $typeLabel = $complaint->complaint_type
+        ? __('enums.complaint_type.' . $complaint->complaint_type)
+        : '—';
 
-    $yerLabel = match ($complaint->yer) {
-        'yol' => '🛣️ Yol',
-        'qaraj' => '🏠 Qaraj',
-        default => '—',
-    };
+    $yerLabel = $complaint->yer
+        ? __('enums.location.' . $complaint->yer)
+        : '—';
+
+    $statusLabel = __('enums.complaint_status.' . $complaint->status);
 @endphp
 <!DOCTYPE html>
-<html lang="az">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
-    <title>İş Kartı — Akt #{{ $complaint->id }}</title>
+    <title>{{ __('messages.complaints.pdf_title') }} — #{{ $complaint->id }}</title>
     <link rel="stylesheet" href="{{ $cssPath }}">
 </head>
 <body>
 
-    {{-- ==================== HEADER ==================== --}}
+    {{-- HEADER --}}
     <div class="pdf-header">
         <div class="pdf-header__left">
-            <div class="company-name">{{ $company->name ?? 'ŞİRKƏT' }}</div>
+            <div class="company-name">{{ $company->name ?? __('messages.common.company') }}</div>
             <div class="garage-name">
-                <strong>{{ $garage->name ?? 'QARAJ' }}</strong>
+                <strong>{{ $garage->name ?? __('messages.common.garage') }}</strong>
                 @if($garage->code ?? null) · {{ $garage->code }} @endif
             </div>
             @if(($garage->address ?? null) || ($garage->phone ?? null))
@@ -51,7 +44,7 @@
             @endif
         </div>
         <div class="pdf-header__right">
-            <div class="doc-badge">İŞ KARTI / AKT</div>
+            <div class="doc-badge">{{ __('messages.complaints.pdf_badge') }}</div>
             <div class="doc-number">
                 № <strong>{{ str_pad($complaint->id, 5, '0', STR_PAD_LEFT) }}</strong><br>
                 {{ now()->format('d.m.Y') }}
@@ -59,32 +52,32 @@
         </div>
     </div>
 
-    <div class="doc-title">TEXNİKİ XİDMƏT AKTI</div>
+    <div class="doc-title">{{ __('messages.complaints.pdf_title') }}</div>
 
-    {{-- ==================== BUS INFO ==================== --}}
+    {{-- BUS INFO --}}
     <div class="section">
-        <div class="section-title">Avtobus Məlumatları</div>
+        <div class="section-title">{{ __('messages.complaints.pdf_bus_info') }}</div>
         <table class="info-table">
             <tr>
-                <td class="label">DQN</td>
+                <td class="label">{{ __('messages.buses.dqn') }}</td>
                 <td><strong>{{ $complaint->bus->dqn ?? '—' }}</strong></td>
-                <td class="label">Xətt №</td>
+                <td class="label">{{ __('messages.buses.route_number') }}</td>
                 <td>{{ $complaint->bus->route_number ?? '—' }}</td>
             </tr>
             <tr>
-                <td class="label">Layihə</td>
+                <td class="label">{{ __('messages.buses.bus_project') }}</td>
                 <td>{{ $complaint->bus->bus_project ?? '—' }}</td>
-                <td class="label">VIN</td>
+                <td class="label">{{ __('messages.buses.vin') }}</td>
                 <td>{{ $complaint->bus->vin ?? '—' }}</td>
             </tr>
             <tr>
-                <td class="label">Yer</td>
+                <td class="label">{{ __('messages.complaints.location') }}</td>
                 <td>{{ $yerLabel }}</td>
-                <td class="label">KM</td>
+                <td class="label">{{ __('messages.complaints.km') }}</td>
                 <td>{{ $complaint->km ? number_format($complaint->km, 0, ',', '.') . ' km' : '—' }}</td>
             </tr>
             <tr>
-                <td class="label">Sürücü</td>
+                <td class="label">{{ __('messages.complaints.driver') }}</td>
                 <td>
                     @if($complaint->driver)
                         {{ $complaint->driver->full_name }}
@@ -93,76 +86,71 @@
                         {{ $complaint->driver_name ?? '—' }}
                     @endif
                 </td>
-                <td class="label">Status</td>
-                <td>
-                    <span class="badge {{ $statusClass }}">{{ $complaint->status }}</span>
-                </td>
+                <td class="label">{{ __('messages.common.status') }}</td>
+                <td><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
             </tr>
         </table>
     </div>
 
-    {{-- ==================== COMPLAINTS ==================== --}}
+    {{-- COMPLAINTS --}}
     <div class="section">
-        <div class="section-title">Şikayətlər</div>
+        <div class="section-title">{{ __('messages.complaints.pdf_complaints') }}</div>
         @if($complaint->items->count() > 0)
             <ul class="complaint-list">
                 @foreach($complaint->items as $index => $item)
                     <li>
                         <span class="num">{{ $index + 1 }}</span>
                         {{ trim($item->description) }}
-                        @if($item->type)
-                            <span class="text-muted">({{ $item->type }})</span>
-                        @endif
                     </li>
                 @endforeach
             </ul>
         @else
-            <div class="work-block text-muted">Şikayət qeyd edilməyib.</div>
+            <div class="work-block text-muted">{{ __('messages.complaints.no_complaint_entered') }}</div>
         @endif
     </div>
 
-    {{-- ==================== TIME ==================== --}}
+    {{-- TIME --}}
     <div class="section">
-        <div class="section-title">Tarix və Vaxt</div>
+        <div class="section-title">{{ __('messages.complaints.pdf_time') }}</div>
         <table class="info-table">
             <tr>
-                @if($complaint->yer === 'yol' && $complaint->reported_date)
-                    <td class="label">Bildirilmə</td>
+                @if($complaint->yer === 'road' && $complaint->reported_date)
+                    <td class="label">{{ __('messages.complaints.reported_date') }}</td>
                     <td>
                         {{ \Carbon\Carbon::parse($complaint->reported_date)->format('d.m.Y') }}
                         {{ $complaint->reported_time ? '· ' . $complaint->reported_time : '' }}
                     </td>
                 @endif
-                <td class="label">İşə başlama</td>
+                <td class="label">{{ __('messages.complaints.start_date') }}</td>
                 <td>
                     {{ $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('d.m.Y') : '—' }}
                     {{ $complaint->start_time ? '· ' . $complaint->start_time : '' }}
                 </td>
             </tr>
             <tr>
-                <td class="label">İşin bitməsi</td>
+                <td class="label">{{ __('messages.complaints.end_date') }}</td>
                 <td>
                     {{ $complaint->end_date ? \Carbon\Carbon::parse($complaint->end_date)->format('d.m.Y') : '—' }}
                     {{ $complaint->end_time ? '· ' . $complaint->end_time : '' }}
                 </td>
-                <td class="label">Növ</td>
+                <td class="label">{{ __('messages.complaints.complaint_type') }}</td>
                 <td>{{ $typeLabel }}</td>
             </tr>
         </table>
     </div>
 
-    {{-- ==================== PARTS ==================== --}}
+    {{-- PARTS --}}
     @if($complaint->details->count() > 0)
         <div class="section">
-            <div class="section-title">İstifadə Olunan Detallar</div>
+            <div class="section-title">{{ __('messages.complaints.pdf_parts') }}</div>
             <table class="parts-table">
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 6%;">#</th>
-                        <th style="width: 18%;">Kod</th>
-                        <th>Ad</th>
-                        <th class="text-center" style="width: 10%;">Miqdar</th>
-                        <th style="width: 26%;">İşi Görən İşçi</th>
+                        <th style="width: 18%;">{{ __('messages.complaints.part_code') }}</th>
+                        <th>{{ __('messages.complaints.part_name') }}</th>
+                        <th class="text-center" style="width: 10%;">{{ __('messages.complaints.used_qty') }}</th>
+                        <th style="width: 26%;">{{ __('messages.complaints.employee') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -190,34 +178,31 @@
         </div>
     @endif
 
-    {{-- ==================== WORK DONE ==================== --}}
+    {{-- WORK DONE --}}
     <div class="section">
-        <div class="section-title">Görülən İşlər</div>
-        <div class="work-block">
-            {{ $complaint->work_done_by ?: '—' }}
-        </div>
+        <div class="section-title">{{ __('messages.complaints.work_done') }}</div>
+        <div class="work-block">{{ $complaint->work_done_by ?: '—' }}</div>
     </div>
 
-    {{-- ==================== SIGNATURES ==================== --}}
+    {{-- SIGNATURES --}}
     <div class="signature-row">
         <div class="signature-cell">
-            <div class="signature-line">İşi Görən</div>
-            <div class="signature-role">Usta / Mexanik</div>
+            <div class="signature-line">{{ __('messages.complaints.pdf_sig_done') }}</div>
+            <div class="signature-role">{{ __('messages.complaints.pdf_sig_done_role') }}</div>
         </div>
         <div class="signature-cell">
-            <div class="signature-line">Yoxlayan</div>
-            <div class="signature-role">Baş Usta</div>
+            <div class="signature-line">{{ __('messages.complaints.pdf_sig_checked') }}</div>
+            <div class="signature-role">{{ __('messages.complaints.pdf_sig_checked_role') }}</div>
         </div>
         <div class="signature-cell">
-            <div class="signature-line">Təsdiq Edən</div>
-            <div class="signature-role">Qaraj Rəhbəri</div>
+            <div class="signature-line">{{ __('messages.complaints.pdf_sig_approved') }}</div>
+            <div class="signature-role">{{ __('messages.complaints.pdf_sig_approved_role') }}</div>
         </div>
     </div>
 
-    {{-- ==================== FOOTER ==================== --}}
+    {{-- FOOTER --}}
     <div class="pdf-footer">
-        Bu sənəd {{ now()->format('d.m.Y H:i') }} tarixində avtomatik yaradıldı ·
-        Fleet Control · ID #{{ $complaint->id }}
+        {{ __('messages.complaints.pdf_footer', ['date' => now()->format('d.m.Y H:i'), 'id' => $complaint->id]) }}
     </div>
 
 </body>
