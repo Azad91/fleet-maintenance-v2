@@ -32,7 +32,13 @@ return Application::configure(basePath: dirname(__DIR__))
             $middleware->trustProxies(at: $proxies);
         }
 
+        // Global middleware — hər request üçün
         $middleware->append(\App\Http\Middleware\RequestIdMiddleware::class);
+
+        // Web middleware-ə SetLocale əlavə et — dil seçimi üçün
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
 
         $middleware->alias([
             'role'            => \App\Http\Middleware\RoleMiddleware::class,
