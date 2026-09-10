@@ -16,9 +16,9 @@ class DriverStoreRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'code' => mb_strtoupper(trim((string) $this->input('code'))),
+            'code'       => mb_strtoupper(trim((string) $this->input('code'))),
             'first_name' => trim((string) $this->input('first_name')),
-            'last_name' => $this->filled('last_name') ? trim((string) $this->input('last_name')) : null,
+            'last_name'  => $this->filled('last_name') ? trim((string) $this->input('last_name')) : null,
         ]);
     }
 
@@ -34,18 +34,11 @@ class DriverStoreRequest extends FormRequest
                     ->whereNull('deleted_at')),
             ],
             'first_name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:50',
-            'position' => 'nullable|string|max:255',
-            'is_active' => 'required|boolean',
-            'notes' => 'nullable|string',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'code.unique' => 'Bu sürücü kodu seçilmiş qarajda artıq mövcuddur.',
+            'last_name'  => 'nullable|string|max:255',
+            'phone'      => 'nullable|string|max:50',
+            'position'   => 'nullable|string|max:255',
+            'is_active'  => 'required|boolean',
+            'notes'      => 'nullable|string',
         ];
     }
 }

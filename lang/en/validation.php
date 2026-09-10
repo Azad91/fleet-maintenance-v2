@@ -229,6 +229,18 @@ return [
         'pin'              => 'PIN',
         'company_id'       => 'company',
         'garage_id'        => 'garage',
+        'employee_id'             => 'employee',
+        'details'                 => 'details',
+        'details.*.code'          => 'part code',
+        'details.*.used_quantity' => 'used quantity',
+        'details.*.employee_id'   => 'employee',
+        'details.*.notes'         => 'notes',
+        'service_template_id'     => 'service template',
+        'service_km'              => 'service KM',
+        'reported_date'           => 'reported date',
+        'reported_time'           => 'reported time',
+        'complaints'              => 'complaints',
+        'complaints.*'            => 'complaint',
     ],
 
 ];
