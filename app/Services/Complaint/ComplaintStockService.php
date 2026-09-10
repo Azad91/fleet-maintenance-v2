@@ -37,7 +37,7 @@ class ComplaintStockService
                 'shikayet_index' => $detal['shikayet_index'] ?? 0,
                 'code' => $code,
                 'name' => $warehouse->name,
-                'stock_quantity' => $warehouse->quantity,
+                'stock_quantity' => $warehouse->quantity,  // ❌ BEFORE
                 'used_quantity' => $usedQuantity,
                 'employee_id' => $detal['employee_id'] ?? null,
                 'notes' => $detal['notes'] ?? $detal['qeyd'] ?? null,
