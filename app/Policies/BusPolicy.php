@@ -27,7 +27,7 @@ class BusPolicy
             return true;
         }
 
-        // Əgər bus obyekti varsa, ownership yoxla
+        // If a bus instance is given, verify ownership
         if ($bus && $bus->garage_id !== GarageContext::getGarageId()) {
             return false;
         }
@@ -47,7 +47,7 @@ class BusPolicy
         return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-        public function update(User $user, ?Bus $bus = null): bool
+    public function update(User $user, ?Bus $bus = null): bool
     {
         if ($user->isSuperAdmin()) {
             return true;

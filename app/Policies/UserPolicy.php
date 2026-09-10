@@ -49,12 +49,12 @@ class UserPolicy
             return false;
         }
 
-        // Target user yoxdursa, yalnız admin yoxlaması kifayət edir (create halı)
+        // Target not specified — this is a create context, admin check is enough
         if ($targetUser === null) {
             return true;
         }
 
-        // ✅ KRİTİK: target user cari qaraja aid olmalıdır
+        // Target user must belong to the current garage
         return $this->targetSharesCurrentGarage($targetUser);
     }
 
@@ -72,7 +72,7 @@ class UserPolicy
     }
 
     /**
-     * İstifadəçinin cari qaraja üzv olub-olmadığını yoxlayır.
+     * Verify that the target user belongs to the current garage.
      */
     private function targetSharesCurrentGarage(User $targetUser): bool
     {

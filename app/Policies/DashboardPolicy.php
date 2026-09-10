@@ -20,6 +20,8 @@ class DashboardPolicy
             RoleEnum::DAILY_KM->value,
             RoleEnum::DAILY_STATUS->value,
             RoleEnum::DIRECTORATE->value,
+            RoleEnum::MANAGER->value,
+            RoleEnum::VIEWER->value,
         ]);
     }
 }
