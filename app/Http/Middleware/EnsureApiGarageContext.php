@@ -15,28 +15,26 @@ class EnsureApiGarageContext
 
         if (! $garageId) {
             return response()->json([
-                'error' => 'X-Garage-Id header tələb olunur.',
+                'error' => __('messages.api.garage_header_required'),
             ], 400);
         }
 
         $user = $request->user();
         if (! $user) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
+            return response()->json(['error' => __('messages.api.unauthenticated')], 401);
         }
 
-        // Super-admin üçün qarajın mövcudluğunu yoxla
         if ($user->isSuperAdmin()) {
             $garage = Garage::find($garageId);
             if (! $garage) {
                 return response()->json([
-                    'error' => 'Qaraj tapılmadı.',
+                    'error' => __('messages.flash.garage_not_found'),
                 ], 404);
             }
             GarageContext::set((int) $garageId, $garage->company_id);
             return $next($request);
         }
 
-        // Normal istifadəçi üçün membership yoxla
         $hasAccess = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
@@ -44,13 +42,13 @@ class EnsureApiGarageContext
 
         if (! $hasAccess) {
             return response()->json([
-                'error' => 'Bu qaraja daxil olmaq üçün icazəniz yoxdur.',
+                'error' => __('messages.flash.garage_access_denied'),
             ], 403);
         }
 
         $garage = Garage::find($garageId);
         if (! $garage) {
-            return response()->json(['error' => 'Qaraj tapılmadı'], 404);
+            return response()->json(['error' => __('messages.flash.garage_not_found')], 404);
         }
 
         GarageContext::set((int) $garageId, $garage->company_id);

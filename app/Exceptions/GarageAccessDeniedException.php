@@ -7,10 +7,14 @@ use Exception;
 class GarageAccessDeniedException extends Exception
 {
     public function __construct(
-        string $message = 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.',
+        string $message = '',
         int $code = 403,
         ?\Throwable $previous = null
     ) {
-        parent::__construct($message, $code, $previous);
+        parent::__construct(
+            $message ?: __('messages.flash.garage_access_denied'),
+            $code,
+            $previous
+        );
     }
 }

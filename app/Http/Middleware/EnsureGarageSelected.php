@@ -23,18 +23,22 @@ class EnsureGarageSelected
             return redirect()->route('login');
         }
 
-        // SUPER_ADMIN – qarajı yoxla, context-i təyin et
+        // Super admin — verify garage exists, set context
         if ($user->isSuperAdmin()) {
             $garage = Garage::find($garageId);
             if (! $garage) {
-                $request->session()->forget(['current_garage_id', 'current_garage_name', 'current_company_id', 'current_company_name']);
-                return redirect()->route('garage.selection')->with('error', 'Seçilmiş qaraj tapılmadı.');
+                $request->session()->forget([
+                    'current_garage_id', 'current_garage_name',
+                    'current_company_id', 'current_company_name',
+                ]);
+                return redirect()->route('garage.selection')
+                    ->with('error', __('messages.flash.garage_not_found'));
             }
             GarageContext::set($garage->id, $garage->company_id);
             return $next($request);
         }
 
-        // Normal user – membership yoxla
+        // Regular user — verify membership
         $membership = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
@@ -49,10 +53,10 @@ class EnsureGarageSelected
             ]);
             GarageContext::clear();
             return redirect()->route('garage.selection')
-                ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
+                ->with('error', __('messages.flash.garage_access_denied'));
         }
 
-        // Context-i təyin et (company_id-ni garage-dan götür)
+        // Set context (company_id from garage)
         GarageContext::set((int) $membership->id, $membership->company_id);
 
         return $next($request);

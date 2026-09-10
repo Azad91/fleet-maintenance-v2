@@ -116,9 +116,9 @@ trait HasGarageScope
         }
 
         $message = sprintf(
-            'Qaraj konteksti təyin edilməyib. Model: %s. '
-            . 'GarageContext::set(), session("current_garage_id") '
-            . 'və ya auth()->user()->current_garage_id təyin edilməlidir.',
+            'Garage context is not set. Model: %s. '
+            . 'Set it via GarageContext::set(), session("current_garage_id") '
+            . 'or auth()->user()->current_garage_id.',
             get_class($model)
         );
 

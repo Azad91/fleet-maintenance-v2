@@ -12,7 +12,7 @@ return [
     'version' => '1.0.0',
     'pagination' => env('APP_PAGINATION', 25),
     'timezone' => env('APP_TIMEZONE', 'Asia/Baku'),
-    'locale' => env('APP_LOCALE', 'az'),
+    'locale' => env('APP_LOCALE', 'en'),
 
     /*
     |--------------------------------------------------------------------------
@@ -27,12 +27,13 @@ return [
     |--------------------------------------------------------------------------
     */
     'status_colors' => [
-        'gözləmədə' => 'warning',
-        'işdə' => 'primary',
-        'həll olundu' => 'success',
-        'aktiv' => 'success',
-        'passiv' => 'danger',
-        'temir' => 'warning',
+        'pending'     => 'warning',
+        'in_progress' => 'primary',
+        'completed'   => 'success',
+        'cancelled'   => 'secondary',
+        'active'      => 'success',
+        'inactive'    => 'danger',
+        'repair'      => 'warning',
     ],
 
     /*
@@ -41,23 +42,23 @@ return [
     |--------------------------------------------------------------------------
     */
     'complaint_types' => [
-        'qezali' => '🚗 Qəzalı',
-        'nasazliq' => '⚠️ Nasazlıq',
-        'texniki_xidmet' => '🔧 Texniki Xidmət',
+        'accident'    => '🚗 Accident',
+        'breakdown'   => '⚠️ Breakdown',
+        'maintenance' => '🔧 Maintenance',
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Employee Positions (İşçi Vəzifələri)
+    | Employee Positions
     |--------------------------------------------------------------------------
     */
     'employee_positions' => [
-        'usta' => '🔧 Usta',
-        'mexanik' => '🔩 Mexanik',
-        'sürücü' => '🚌 Sürücü',
-        'elektrik' => '⚡ Elektrik',
-        'qaynaqci' => '🔥 Qaynaqçı',
-        'boyakar' => '🎨 Boyakar',
-        'digər' => '📌 Digər',
+        'master'      => '🔧 Master',
+        'mechanic'    => '🔩 Mechanic',
+        'driver'      => '🚌 Driver',
+        'electrician' => '⚡ Electrician',
+        'welder'      => '🔥 Welder',
+        'painter'     => '🎨 Painter',
+        'other'       => '📌 Other',
     ],
 ];

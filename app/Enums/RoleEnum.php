@@ -4,11 +4,14 @@ namespace App\Enums;
 
 enum RoleEnum: string
 {
-    // Global user rolları
+    // Global user roles
     case SUPER_ADMIN = 'super_admin';
     case USER = 'user';
 
-    // Garage-level rollar
+    // Company-level roles
+    case DIRECTOR = 'director';
+
+    // Garage-level roles
     case ADMIN = 'admin';
     case COMPLAINT = 'complaint';
     case WAREHOUSE = 'warehouse';
@@ -22,15 +25,16 @@ enum RoleEnum: string
     {
         return match ($this) {
             self::SUPER_ADMIN => 'Super Admin',
-            self::USER => 'İstifadəçi',
-            self::ADMIN => 'Admin',
-            self::COMPLAINT => 'Kartlar / Şikayətlər',
-            self::WAREHOUSE => 'Anbar',
-            self::DAILY_KM => 'Günlük KM',
-            self::DAILY_STATUS => 'Günlük statuslar',
-            self::DIRECTORATE => 'Müdiriyyət (yalnız baxış)',
-            self::MANAGER => 'Menecer',
-            self::VIEWER => 'Baxış',
+            self::USER => 'User',
+            self::DIRECTOR => 'Company Director',
+            self::ADMIN => 'Garage Admin',
+            self::COMPLAINT => 'Complaint Manager',
+            self::WAREHOUSE => 'Warehouse Manager',
+            self::DAILY_KM => 'Daily KM Manager',
+            self::DAILY_STATUS => 'Daily Status Manager',
+            self::DIRECTORATE => 'Directorate (Read Only)',
+            self::MANAGER => 'Manager',
+            self::VIEWER => 'Viewer',
         };
     }
 
@@ -65,9 +69,10 @@ enum RoleEnum: string
     public static function garageRoleLabels(): array
     {
         $garageRoles = self::garageRoles();
+
         return array_filter(
             self::labels(),
-            fn($key) => in_array($key, $garageRoles),
+            fn ($key) => in_array($key, $garageRoles),
             ARRAY_FILTER_USE_KEY
         );
     }

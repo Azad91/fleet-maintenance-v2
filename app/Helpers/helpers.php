@@ -1,19 +1,20 @@
 <?php
 
+use App\Enums\RoleEnum;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 if (! function_exists('format_km')) {
     function format_km($km)
     {
-        return $km ? number_format($km, 0, ',', '.').' km' : '-';
+        return $km ? number_format($km, 0, ',', '.') . ' km' : '-';
     }
 }
 
 if (! function_exists('format_price')) {
     function format_price($price)
     {
-        return $price ? number_format($price, 2).' ₼' : '-';
+        return $price ? number_format($price, 2) . ' ₼' : '-';
     }
 }
 
@@ -35,13 +36,14 @@ if (! function_exists('status_badge_class')) {
     function status_badge_class($status)
     {
         return match ($status) {
-            'gözləmədə' => 'gözləmədə',
-            'işdə' => 'işdə',
-            'həll olundu' => 'həll-olundu',
-            'aktiv' => 'aktiv',
-            'passiv' => 'passiv',
-            'temir' => 'temir',
-            default => '',
+            'pending'     => 'pending',
+            'in_progress' => 'in-progress',
+            'completed'   => 'completed',
+            'cancelled'   => 'cancelled',
+            'active'      => 'active',
+            'inactive'    => 'inactive',
+            'repair'      => 'repair',
+            default       => '',
         };
     }
 }
@@ -49,14 +51,7 @@ if (! function_exists('status_badge_class')) {
 if (! function_exists('role_label')) {
     function role_label($role)
     {
-        return match ($role) {
-            'admin' => '👑 Admin',
-            'bus' => '🚌 Avtobus İşçisi',
-            'complaint' => '📋 Şikayət İşçisi',
-            'warehouse' => '📦 Anbar İşçisi',
-            'directorate' => '👁️ Müdiriyyət',
-            default => $role,
-        };
+        return RoleEnum::labels()[$role] ?? $role;
     }
 }
 

@@ -7,10 +7,14 @@ use Exception;
 class StockInsufficientException extends Exception
 {
     public function __construct(
-        string $message = 'Anbarda kifayət qədər detal yoxdur.',
+        string $message = '',
         int $code = 422,
         ?\Throwable $previous = null
     ) {
-        parent::__construct($message, $code, $previous);
+        parent::__construct(
+            $message ?: __('messages.flash.stock_insufficient_generic'),
+            $code,
+            $previous
+        );
     }
 }

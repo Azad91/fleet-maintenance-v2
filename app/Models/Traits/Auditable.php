@@ -7,10 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 trait Auditable
 {
-    /**
-     * Bu sahələr heç vaxt audit loglarına yazılmır.
-     * Alt-modellər öz `$auditExcluded` property-si ilə genişləndirə bilər.
-     */
+
     protected static array $auditBaseExcludedFields = [
         'password',
         'remember_token',
@@ -21,7 +18,7 @@ trait Auditable
 
     protected static function bootAuditable(): void
     {
-        // ✅ YARADILMA
+        // Create event
         static::created(function (Model $model) {
             $newValues = static::filterAuditValues($model->getAttributes());
 
@@ -32,15 +29,14 @@ trait Auditable
             $model->writeAudit('created', null, $newValues);
         });
 
-        // ✅ YENİLƏNMƏ — yalnız save müvəffəqiyyətli olduqdan sonra
+        // Update event — only after successful save
         static::updated(function (Model $model) {
             $newValues = static::filterAuditValues($model->getChanges());
 
             if (empty($newValues)) {
-                return; // Heç nə dəyişməyibsə, log yazma
+                return; 
             }
 
-            // `updated` event-i əsnasında getOriginal() hələ köhnə dəyərləri saxlayır
             $oldValues = array_intersect_key(
                 static::filterAuditValues($model->getOriginal()),
                 $newValues
@@ -49,7 +45,7 @@ trait Auditable
             $model->writeAudit('updated', $oldValues, $newValues);
         });
 
-        // ✅ SİLİNMƏ — soft / force ayırd edilir
+        // Delete event — soft delete or force delete
         static::deleted(function (Model $model) {
             $isForceDelete = method_exists($model, 'isForceDeleting')
                 && $model->isForceDeleting();
@@ -61,7 +57,7 @@ trait Auditable
             );
         });
 
-        // ✅ BƏRPA (yalnız SoftDeletes olan modellər üçün)
+        // Restore event (only for models with SoftDeletes)
         static::restored(function (Model $model) {
             $model->writeAudit(
                 'restored',
@@ -71,9 +67,6 @@ trait Auditable
         });
     }
 
-    /**
-     * Həssas və mənasız sahələri audit payload-indən çıxarır.
-     */
     protected static function filterAuditValues(array $values): array
     {
         $excluded = static::$auditBaseExcludedFields;
@@ -86,9 +79,6 @@ trait Auditable
         return array_diff_key($values, array_flip($excluded));
     }
 
-    /**
-     * Audit logu yazır.
-     */
     protected function writeAudit(string $event, ?array $oldValues, ?array $newValues): void
     {
         AuditLog::create([
@@ -103,9 +93,7 @@ trait Auditable
         ]);
     }
 
-    /**
-     * Toplu yeniləmə əməliyyatını audit edir.
-     */
+   
     public static function auditBulkUpdate(
         array $ids,
         array $newValues,
@@ -150,9 +138,7 @@ trait Auditable
         }
     }
 
-    /**
-     * Toplu silmə əməliyyatını audit edir.
-     */
+
     public static function auditBulkDelete(
         array $ids,
         string $event = 'bulk_deleted'
@@ -177,9 +163,7 @@ trait Auditable
         }
     }
 
-    /**
-     * Model üçün audit logları.
-     */
+
     public function auditLogs()
     {
         return $this->morphMany(AuditLog::class, 'auditable');

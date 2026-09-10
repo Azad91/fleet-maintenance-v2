@@ -17,9 +17,8 @@ class RoleMiddleware
 
         $user = Auth::user();
 
-        // ✅ SUPER_ADMIN hər şeyə girə bilər
+        // Super admin bypasses all role checks
         if ($user->isSuperAdmin()) {
-            // Qaraj kontekstini təyin et (əgər varsa)
             $garageId = $request->session()->get('current_garage_id');
             $companyId = $request->session()->get('current_company_id');
             if ($garageId) {
@@ -28,13 +27,13 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // Qaraj seçilib?
+        // Garage selected?
         $garageId = $request->session()->get('current_garage_id');
         if (! $garageId) {
             return redirect()->route('garage.selection');
         }
 
-        // İstifadəçi bu qaraja aid deyilsə...
+        // User must belong to the current garage
         $membership = $user->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
@@ -49,12 +48,16 @@ class RoleMiddleware
             ]);
             GarageContext::clear();
             return redirect()->route('garage.selection')
-                ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
+                ->with('error', __('messages.flash.garage_access_denied'));
         }
 
-        GarageContext::set((int) $garageId, $request->session()->get('current_company_id') ? (int) $request->session()->get('current_company_id') : null);
+        GarageContext::set(
+            (int) $garageId,
+            $request->session()->get('current_company_id')
+                ? (int) $request->session()->get('current_company_id')
+                : null
+        );
 
-        // Əgər rol tələb olunmursa, keç
         if (empty($roles)) {
             return $next($request);
         }
@@ -63,6 +66,6 @@ class RoleMiddleware
             return $next($request);
         }
 
-        abort(403, 'Bu əməliyyat üçün icazəniz yoxdur.');
+        abort(403, __('messages.flash.permission_denied'));
     }
 }
