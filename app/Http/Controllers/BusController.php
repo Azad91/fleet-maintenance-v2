@@ -8,7 +8,6 @@ use App\Imports\BusesImport;
 use App\Models\Bus;
 use App\Services\BusService;
 use App\Services\GarageContext;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,12 +34,10 @@ class BusController extends Controller
     {
         $this->authorize('viewAny', Bus::class);
 
-        // ✅ DÜZƏLİŞ: yalnız filter sahələrini götür
         $filters = $request->only([
             'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
         ]);
 
-        // Boş dəyərləri təmizlə
         $filters = array_filter($filters, fn ($v) => filled($v));
 
         $buses = $this->busService->advancedSearch(
@@ -51,7 +48,6 @@ class BusController extends Controller
         $isEmpty = $buses->isEmpty();
         $hasActiveFilters = ! empty($filters);
 
-        // ✅ DÜZƏLİŞ: $request->ajax() əvəzinə explicit header yoxlaması
         if ($this->isAjaxRequest($request)) {
             return view('buses.partials.table', compact('buses', 'isEmpty', 'hasActiveFilters'))->render();
         }
@@ -59,12 +55,6 @@ class BusController extends Controller
         return view('buses.index', compact('buses', 'isEmpty', 'hasActiveFilters'));
     }
 
-    /**
-     * Sorğunun AJAX olub-olmadığını yoxlayır.
-     *
-     * fetch() ilə göndərilən sorğular X-Requested-With header-ini manual set etməlidir.
-     * jQuery default olaraq set edir.
-     */
     private function isAjaxRequest(Request $request): bool
     {
         return $request->header('X-Requested-With') === 'XMLHttpRequest'
@@ -92,7 +82,8 @@ class BusController extends Controller
 
         $this->busService->createBus($request->validated());
 
-        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla əlavə edildi!');
+        return redirect()->route('buses.index')
+            ->with('success', __('messages.flash.created', ['Item' => 'Bus']));
     }
 
     public function edit(int $id): View
@@ -110,7 +101,8 @@ class BusController extends Controller
 
         $this->busService->updateBus($bus, $request->validated());
 
-        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla yeniləndi!');
+        return redirect()->route('buses.index')
+            ->with('success', __('messages.flash.updated', ['Item' => 'Bus']));
     }
 
     public function destroy(int $id): RedirectResponse
@@ -120,7 +112,8 @@ class BusController extends Controller
 
         $this->busService->deleteBus($bus);
 
-        return redirect()->route('buses.index')->with('success', 'Avtobus uğurla silindi!');
+        return redirect()->route('buses.index')
+            ->with('success', __('messages.flash.deleted', ['Item' => 'Bus']));
     }
 
     public function importForm(): View
@@ -143,48 +136,57 @@ class BusController extends Controller
 
             Excel::import($import, $request->file('file'));
 
-            $skipped = $import->skipped;
+            $skipped  = $import->skipped;
             $imported = $import->importedCount;
 
             if (empty($skipped)) {
                 return redirect()->route('buses.index')
-                    ->with('success', "✅ {$imported} avtobus uğurla idxal edildi.");
+                    ->with('success', __('messages.flash.import_success', [
+                        'count' => $imported,
+                        'items' => 'buses',
+                    ]));
             }
 
             return redirect()->route('buses.index')
-                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('warning', __('messages.flash.import_partial'))
                 ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
 
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('buses.index')
-                ->with('error', 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.');
+                ->with('error', __('messages.flash.import_error'));
         }
     }
 
     public function bulkDeactivate(Request $request): RedirectResponse
     {
-        return $this->bulkUpdateStatus($request, false, 'passiv edildi');
+        return $this->bulkUpdateStatus($request, false);
     }
 
     public function bulkActivate(Request $request): RedirectResponse
     {
-        return $this->bulkUpdateStatus($request, true, 'aktiv edildi');
+        return $this->bulkUpdateStatus($request, true);
     }
 
-    private function bulkUpdateStatus(Request $request, bool $isActive, string $label): RedirectResponse
+    private function bulkUpdateStatus(Request $request, bool $isActive): RedirectResponse
     {
         $this->authorize('update', Bus::class);
 
         $ids = $this->normalizeIds($request->input('ids', []));
 
         if (empty($ids)) {
-            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+            return back()->with('error', __('messages.flash.none_selected'));
         }
 
         $this->busService->bulkUpdateStatus($ids, $isActive);
 
-        return redirect()->route('buses.index')->with('success', count($ids) . " avtobus {$label}.");
+        $key = $isActive ? 'bulk_activated' : 'bulk_deactivated';
+
+        return redirect()->route('buses.index')
+            ->with('success', __('messages.flash.' . $key, [
+                'count' => count($ids),
+                'items' => 'buses',
+            ]));
     }
 
     public function bulkDelete(Request $request): RedirectResponse
@@ -194,16 +196,20 @@ class BusController extends Controller
         $ids = $this->normalizeIds($request->input('ids', []));
 
         if (empty($ids)) {
-            return back()->with('error', 'Heç bir avtobus seçilməyib.');
+            return back()->with('error', __('messages.flash.none_selected'));
         }
 
         $this->busService->bulkDelete($ids);
 
-        return redirect()->route('buses.index')->with('success', count($ids) . ' avtobus silindi.');
+        return redirect()->route('buses.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => count($ids),
+                'items' => 'buses',
+            ]));
     }
 
     /**
-     * ID massivini təmizləyir (JSON string və ya array).
+     * Normalize an array of IDs (handles JSON string input from forms).
      *
      * @return array<int>
      */

@@ -38,6 +38,7 @@ return [
     ],
 
     'nav' => [
+        'super_admin'       => 'Süper Admin Paneli',
         'dashboard'         => 'Kontrol paneli',
         'buses'             => 'Otobüsler',
         'complaints'        => 'Kartlar / Şikayetler',
@@ -302,5 +303,29 @@ return [
         'report_dqn'        => 'DQN',
         'report_reason'     => 'Sebep',
         'report_error'      => 'Hata',
+    ],
+        // ==================== FLASH MESSAGES ====================
+    'flash' => [
+        'created'         => ':Item başarıyla oluşturuldu.',
+        'updated'         => ':Item başarıyla güncellendi.',
+        'deleted'         => ':Item başarıyla silindi.',
+        'none_selected'   => 'Hiçbir öğe seçilmedi.',
+        'import_success'  => ':count :items başarıyla içe aktarıldı.',
+        'import_partial'  => 'İçe aktarma tamamlandı, ancak bazı satırlar atlandı.',
+        'import_error'    => 'İçe aktarma sırasında beklenmeyen bir hata oluştu. Lütfen dosya formatını kontrol edin.',
+        'bulk_activated'  => ':count :items aktifleştirildi.',
+        'bulk_deactivated'=> ':count :items pasifleştirildi.',
+        'bulk_deleted'    => ':count :items silindi.',
+        'no_garage'       => 'Lütfen önce bir garaj seçin.',
+        'garage_selected' => 'Garaj seçildi: :name',
+        'no_garage_assigned' => 'Hiçbir garaja atanmadınız. Lütfen sistem yöneticisiyle iletişime geçin.',
+        'garage_access_denied' => 'Seçilen garaja erişim izniniz yok.',
+        'garage_not_found' => 'Seçilen garaj bulunamadı.',
+        'already_closed'  => 'Bu kart zaten kapatılmış.',
+        'closed_success'  => 'Kart kapatıldı! PDF oluşturuldu.',
+        'pdf_not_found'   => 'PDF dosyası bulunamadı.',
+        'duplicate_date'      => 'Bu otobüs için :date tarihinde zaten bir kayıt var.',
+        'km_must_be_greater'  => 'KM değeri önceki kayıttan (:km) büyük olmalıdır.',
+        'km_must_be_less'     => 'KM değeri sonraki kayıttan (:km) küçük olmalıdır.',
     ],
 ];

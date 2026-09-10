@@ -40,6 +40,7 @@ return [
 
     // ==================== NAVIGATION ====================
     'nav' => [
+        'super_admin'       => 'Super Admin Paneli',
         'dashboard'         => 'İdarə paneli',
         'buses'             => 'Avtobuslar',
         'complaints'        => 'Kartlar / Şikayətlər',
@@ -318,5 +319,29 @@ return [
         'report_dqn'        => 'DQN',
         'report_reason'     => 'Səbəb',
         'report_error'      => 'Xəta',
+    ],
+        // ==================== FLASH MESSAGES ====================
+    'flash' => [
+        'created'         => ':Item uğurla yaradıldı.',
+        'updated'         => ':Item uğurla yeniləndi.',
+        'deleted'         => ':Item uğurla silindi.',
+        'none_selected'   => 'Heç bir element seçilməyib.',
+        'import_success'  => ':count :items uğurla idxal edildi.',
+        'import_partial'  => 'İdxal tamamlandı, lakin bəzi sətirlər atlandı.',
+        'import_error'    => 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.',
+        'bulk_activated'  => ':count :items aktiv edildi.',
+        'bulk_deactivated'=> ':count :items passiv edildi.',
+        'bulk_deleted'    => ':count :items silindi.',
+        'no_garage'       => 'Zəhmət olmasa əvvəlcə qaraj seçin.',
+        'garage_selected' => 'Qaraj seçildi: :name',
+        'no_garage_assigned' => 'Heç bir qaraja təyin olunmamısınız. Sistem administratoru ilə əlaqə saxlayın.',
+        'garage_access_denied' => 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.',
+        'garage_not_found' => 'Seçilmiş qaraj tapılmadı.',
+        'already_closed'  => 'Bu kart artıq bağlanıb.',
+        'closed_success'  => 'Şikayət bağlandı! Akt PDF olaraq yaradıldı.',
+        'pdf_not_found'   => 'PDF faylı tapılmadı.',
+        'duplicate_date'      => 'Bu avtobus üçün :date tarixində artıq qeyd mövcuddur.',
+        'km_must_be_greater'  => 'KM dəyəri əvvəlki qeyddən (:km) böyük olmalıdır.',
+        'km_must_be_less'     => 'KM dəyəri sonrakı qeyddən (:km) kiçik olmalıdır.',
     ],
 ];

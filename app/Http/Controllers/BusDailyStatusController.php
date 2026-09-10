@@ -7,16 +7,15 @@ use App\Http\Requests\BusDailyStatusUpdateRequest;
 use App\Imports\BusDailyStatusesImport;
 use App\Models\Bus;
 use App\Models\BusDailyStatus;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BusDailyStatusController extends Controller
 {
     public function index()
     {
-        $this->authorize('viewAny', BusDailyStatus::class);  // ✅ ƏLAVƏ
+        $this->authorize('viewAny', BusDailyStatus::class);
 
         $statuses = BusDailyStatus::with('bus')
             ->orderBy('date', 'desc')
@@ -27,7 +26,7 @@ class BusDailyStatusController extends Controller
 
     public function create()
     {
-        $this->authorize('create', BusDailyStatus::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', BusDailyStatus::class);
 
         $buses = Bus::orderBy('dqn')->get();
 
@@ -42,25 +41,26 @@ class BusDailyStatusController extends Controller
 
         $exists = BusDailyStatus::where('bus_id', $request->bus_id)
             ->whereDate('date', $request->date)
-            ->whereNull('deleted_at') // ✅ Silinmiş qeydlərlə toqquşmanın qarşısı alındı
+            ->whereNull('deleted_at')
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!",
+                'date' => __('messages.flash.duplicate_date', ['date' => $request->date]),
             ])->withInput();
         }
 
         BusDailyStatus::create($validated);
 
-        return redirect()->route('bus-daily-statuses.index')->with('success', 'Status uğurla əlavə edildi!');
+        return redirect()->route('bus-daily-statuses.index')
+            ->with('success', __('messages.flash.created', ['Item' => 'Status']));
     }
 
     public function show($id)
     {
         $status = BusDailyStatus::with('bus')->findOrFail($id);
 
-        $this->authorize('view', $status);  // ✅ ƏLAVƏ
+        $this->authorize('view', $status);
 
         return view('bus-daily-statuses.show', compact('status'));
     }
@@ -69,7 +69,7 @@ class BusDailyStatusController extends Controller
     {
         $status = BusDailyStatus::findOrFail($id);
 
-        $this->authorize('update', $status);  // ✅ ƏLAVƏ
+        $this->authorize('update', $status);
 
         $buses = Bus::orderBy('dqn')->get();
 
@@ -86,34 +86,36 @@ class BusDailyStatusController extends Controller
         $exists = BusDailyStatus::where('bus_id', $request->bus_id)
             ->where('id', '!=', $id)
             ->whereDate('date', $request->date)
-            ->whereNull('deleted_at') // ✅ Silinmiş qeydlərlə toqquşmanın qarşısı alındı
+            ->whereNull('deleted_at')
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'date' => "Bu avtobus üçün {$request->date} tarixində artıq status qeydi var!",
+                'date' => __('messages.flash.duplicate_date', ['date' => $request->date]),
             ])->withInput();
         }
 
         $status->update($validated);
 
-        return redirect()->route('bus-daily-statuses.index')->with('success', 'Status yeniləndi!');
+        return redirect()->route('bus-daily-statuses.index')
+            ->with('success', __('messages.flash.updated', ['Item' => 'Status']));
     }
 
     public function destroy($id)
     {
         $status = BusDailyStatus::findOrFail($id);
 
-        $this->authorize('delete', $status);  // ✅ ƏLAVƏ
+        $this->authorize('delete', $status);
 
         $status->delete();
 
-        return redirect()->route('bus-daily-statuses.index')->with('success', 'Status silindi!');
+        return redirect()->route('bus-daily-statuses.index')
+            ->with('success', __('messages.flash.deleted', ['Item' => 'Status']));
     }
 
     public function importForm()
     {
-        $this->authorize('import', BusDailyStatus::class);  // ✅ ƏLAVƏ
+        $this->authorize('import', BusDailyStatus::class);
 
         return view('bus-daily-statuses.import');
     }
@@ -136,17 +138,20 @@ class BusDailyStatusController extends Controller
 
             if (empty($skipped)) {
                 return redirect()->route('bus-daily-statuses.index')
-                    ->with('success', "✅ {$imported} status uğurla idxal edildi.");
+                    ->with('success', __('messages.flash.import_success', [
+                        'count' => $imported,
+                        'items' => 'statuses',
+                    ]));
             }
 
             return redirect()->route('bus-daily-statuses.index')
-                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
+                ->with('warning', __('messages.flash.import_partial'))
                 ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
 
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('bus-daily-statuses.index')
-                ->with('error', 'İdxal zamanı xəta baş verdi.');
+                ->with('error', __('messages.flash.import_error'));
         }
     }
 }

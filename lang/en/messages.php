@@ -40,6 +40,7 @@ return [
 
     // ==================== NAVIGATION ====================
     'nav' => [
+        'super_admin'       => 'Super Admin Panel',
         'dashboard'         => 'Dashboard',
         'buses'             => 'Buses',
         'complaints'        => 'Cards / Complaints',
@@ -318,5 +319,29 @@ return [
         'report_dqn'        => 'DQN',
         'report_reason'     => 'Reason',
         'report_error'      => 'Error',
+    ],
+        // ==================== FLASH MESSAGES ====================
+    'flash' => [
+        'created'         => ':Item created successfully.',
+        'updated'         => ':Item updated successfully.',
+        'deleted'         => ':Item deleted successfully.',
+        'none_selected'   => 'No items selected.',
+        'import_success'  => ':count :items imported successfully.',
+        'import_partial'  => 'Import completed, but some rows were skipped.',
+        'import_error'    => 'An unexpected error occurred during import. Please check the file format.',
+        'bulk_activated'  => ':count :items activated.',
+        'bulk_deactivated'=> ':count :items deactivated.',
+        'bulk_deleted'    => ':count :items deleted.',
+        'no_garage'       => 'Please select a garage first.',
+        'garage_selected' => 'Garage selected: :name',
+        'no_garage_assigned' => 'You are not assigned to any garage. Please contact the administrator.',
+        'garage_access_denied' => 'You do not have permission to access the selected garage.',
+        'garage_not_found' => 'The selected garage was not found.',
+        'already_closed'  => 'This card is already closed.',
+        'closed_success'  => 'Card closed successfully. PDF has been generated.',
+        'pdf_not_found'   => 'PDF file not found.',
+        'duplicate_date'      => 'An entry already exists for this bus on :date.',
+        'km_must_be_greater'  => 'KM value must be greater than the previous entry (:km).',
+        'km_must_be_less'     => 'KM value must be less than the next entry (:km).',
     ],
 ];
