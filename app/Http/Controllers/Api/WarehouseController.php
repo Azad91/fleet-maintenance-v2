@@ -31,10 +31,10 @@ class WarehouseController extends Controller
         return response()->json([
             'data' => $warehouses->items(),
             'meta' => [
-                'total' => $warehouses->total(),
-                'per_page' => $warehouses->perPage(),
+                'total'        => $warehouses->total(),
+                'per_page'     => $warehouses->perPage(),
                 'current_page' => $warehouses->currentPage(),
-                'last_page' => $warehouses->lastPage(),
+                'last_page'    => $warehouses->lastPage(),
             ],
         ]);
     }
@@ -43,14 +43,13 @@ class WarehouseController extends Controller
     {
         Gate::authorize('create', Warehouse::class);
 
-        $data = $request->validated();
-        $data = $this->addGarageContext($data);
+        $data = $this->addGarageContext($request->validated());
 
         $warehouse = Warehouse::create($data);
 
         return response()->json([
-            'message' => 'Anbar məlumatı uğurla əlavə edildi!',
-            'data' => $warehouse,
+            'message' => __('messages.flash.created', ['Item' => 'Warehouse item']),
+            'data'    => $warehouse,
         ], 201);
     }
 
@@ -68,8 +67,8 @@ class WarehouseController extends Controller
         $warehouse->update($request->validated());
 
         return response()->json([
-            'message' => 'Anbar məlumatı uğurla yeniləndi!',
-            'data' => $warehouse->fresh(),
+            'message' => __('messages.flash.updated', ['Item' => 'Warehouse item']),
+            'data'    => $warehouse->fresh(),
         ]);
     }
 
@@ -80,7 +79,7 @@ class WarehouseController extends Controller
         $warehouse->delete();
 
         return response()->json([
-            'message' => 'Anbar məlumatı uğurla silindi!',
+            'message' => __('messages.flash.deleted', ['Item' => 'Warehouse item']),
         ]);
     }
 
@@ -102,10 +101,10 @@ class WarehouseController extends Controller
         return response()->json([
             'data' => $warehouses->items(),
             'meta' => [
-                'total' => $warehouses->total(),
-                'per_page' => $warehouses->perPage(),
+                'total'        => $warehouses->total(),
+                'per_page'     => $warehouses->perPage(),
                 'current_page' => $warehouses->currentPage(),
-                'last_page' => $warehouses->lastPage(),
+                'last_page'    => $warehouses->lastPage(),
             ],
         ]);
     }

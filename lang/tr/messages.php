@@ -350,5 +350,11 @@ return [
 
         // Auth
         'user_not_assigned'=> 'Henüz hiçbir garaja atanmadınız.',
+        'auth_logged_out'         => 'Çıkış yaptınız.',
+        'auth_password_confirmed' => 'Şifre başarıyla onaylandı.',
+        'auth_verification_sent'  => 'E-posta adresinize yeni bir doğrulama bağlantısı gönderildi.',
+        'profile_updated'         => 'Profil başarıyla güncellendi.',
+        'profile_password_updated'=> 'Şifre başarıyla güncellendi.',
+        'profile_deleted'         => 'Hesabınız silindi.',
     ],
 ];

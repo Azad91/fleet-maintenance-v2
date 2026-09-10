@@ -19,7 +19,6 @@ class BusController extends Controller
     {
         Gate::authorize('viewAny', Bus::class);
 
-        // ✅ Maksimum 100 element
         $perPage = min((int) $request->input('per_page', 15), 100);
 
         $buses = $this->busService->getPaginatedBuses($request->search, $perPage);
@@ -27,10 +26,10 @@ class BusController extends Controller
         return response()->json([
             'data' => $buses->items(),
             'meta' => [
-                'total' => $buses->total(),
-                'per_page' => $buses->perPage(),
+                'total'        => $buses->total(),
+                'per_page'     => $buses->perPage(),
                 'current_page' => $buses->currentPage(),
-                'last_page' => $buses->lastPage(),
+                'last_page'    => $buses->lastPage(),
             ],
         ]);
     }
@@ -42,8 +41,8 @@ class BusController extends Controller
         $bus = $this->busService->createBus($request->validated());
 
         return response()->json([
-            'message' => 'Avtobus uğurla əlavə edildi!',
-            'data' => $bus,
+            'message' => __('messages.flash.created', ['Item' => 'Bus']),
+            'data'    => $bus,
         ], 201);
     }
 
@@ -65,8 +64,8 @@ class BusController extends Controller
         $updatedBus = $this->busService->updateBus($bus, $request->validated());
 
         return response()->json([
-            'message' => 'Avtobus uğurla yeniləndi!',
-            'data' => $updatedBus,
+            'message' => __('messages.flash.updated', ['Item' => 'Bus']),
+            'data'    => $updatedBus,
         ]);
     }
 
@@ -77,7 +76,7 @@ class BusController extends Controller
         $this->busService->deleteBus($bus);
 
         return response()->json([
-            'message' => 'Avtobus uğurla silindi!',
+            'message' => __('messages.flash.deleted', ['Item' => 'Bus']),
         ]);
     }
 
@@ -87,13 +86,14 @@ class BusController extends Controller
 
         $perPage = min((int) $request->input('per_page', 15), 100);
         $buses = $this->busService->advancedSearch($request->all(), $perPage);
+
         return response()->json([
             'data' => $buses->items(),
             'meta' => [
-                'total' => $buses->total(),
-                'per_page' => $buses->perPage(),
+                'total'        => $buses->total(),
+                'per_page'     => $buses->perPage(),
                 'current_page' => $buses->currentPage(),
-                'last_page' => $buses->lastPage(),
+                'last_page'    => $buses->lastPage(),
             ],
         ]);
     }

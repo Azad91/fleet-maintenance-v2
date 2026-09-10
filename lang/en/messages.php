@@ -366,5 +366,11 @@ return [
 
         // Auth
         'user_not_assigned'=> 'You are not assigned to any garage yet.',
+        'auth_logged_out'         => 'You have been logged out.',
+        'auth_password_confirmed' => 'Password confirmed successfully.',
+        'auth_verification_sent'  => 'A new verification link has been sent to your email.',
+        'profile_updated'         => 'Profile updated successfully.',
+        'profile_password_updated'=> 'Password updated successfully.',
+        'profile_deleted'         => 'Your account has been deleted.',
     ],
 ];

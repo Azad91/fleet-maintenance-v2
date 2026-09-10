@@ -366,5 +366,11 @@ return [
 
         // Auth
         'user_not_assigned'=> 'Hələ heç bir qaraja təyin olunmamısınız.',
+        'auth_logged_out'         => 'Sistemdən çıxdınız.',
+        'auth_password_confirmed' => 'Şifrə uğurla təsdiqləndi.',
+        'auth_verification_sent'  => 'Email ünvanınıza yeni təsdiq linki göndərildi.',
+        'profile_updated'         => 'Profil uğurla yeniləndi.',
+        'profile_password_updated'=> 'Şifrə uğurla yeniləndi.',
+        'profile_deleted'         => 'Hesabınız silindi.',
     ],
 ];

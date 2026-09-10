@@ -350,5 +350,11 @@ return [
 
         // Auth
         'user_not_assigned'=> 'Вы еще не назначены ни на один гараж.',
+        'auth_logged_out'         => 'Вы вышли из системы.',
+        'auth_password_confirmed' => 'Пароль успешно подтвержден.',
+        'auth_verification_sent'  => 'На ваш адрес эл. почты отправлена новая ссылка для подтверждения.',
+        'profile_updated'         => 'Профиль успешно обновлен.',
+        'profile_password_updated'=> 'Пароль успешно обновлен.',
+        'profile_deleted'         => 'Ваша учетная запись удалена.',
     ],
 ];

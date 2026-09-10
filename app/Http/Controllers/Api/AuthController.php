@@ -13,8 +13,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            'email'       => 'required|email',
+            'password'    => 'required',
             'device_name' => 'nullable|string|max:255',
         ]);
 
@@ -22,7 +22,7 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => [__('auth.failed')],
             ]);
         }
 
@@ -31,8 +31,8 @@ class AuthController extends Controller
 
         return response()->json([
             'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user->only(['id', 'name', 'email', 'role']),
+            'token_type'   => 'Bearer',
+            'user'         => $user->only(['id', 'name', 'email', 'role']),
         ]);
     }
 
@@ -46,29 +46,5 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         return response()->json($request->user()->load('currentGarage'));
-    }
-
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'user',
-        ]);
-
-        $token = $user->createToken($request->userAgent() ?? 'register')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user->only(['id', 'name', 'email', 'role']),
-        ], 201);
     }
 }

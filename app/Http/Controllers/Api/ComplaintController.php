@@ -38,10 +38,10 @@ class ComplaintController extends Controller
         return response()->json([
             'data' => $complaints->items(),
             'meta' => [
-                'total' => $complaints->total(),
-                'per_page' => $complaints->perPage(),
+                'total'        => $complaints->total(),
+                'per_page'     => $complaints->perPage(),
                 'current_page' => $complaints->currentPage(),
-                'last_page' => $complaints->lastPage(),
+                'last_page'    => $complaints->lastPage(),
             ],
         ]);
     }
@@ -53,13 +53,13 @@ class ComplaintController extends Controller
         $data = $request->validated();
         $complaint = $this->complaintService->create(
             $data,
-            $request->input('detallar', []),
-            $request->input('shikayet', [])
+            $request->input('details', []),
+            $request->input('complaints', [])
         );
 
         return response()->json([
-            'message' => 'Kart uğurla açıldı.',
-            'data' => $complaint->load(['bus', 'items', 'details']),
+            'message' => __('messages.flash.created', ['Item' => 'Card']),
+            'data'    => $complaint->load(['bus', 'items', 'details']),
         ], 201);
     }
 
@@ -80,13 +80,13 @@ class ComplaintController extends Controller
         $this->complaintService->update(
             $complaint,
             $data,
-            $request->input('detallar', []),
-            $request->input('shikayet', [])
+            $request->input('details', []),
+            $request->input('complaints', [])
         );
 
         return response()->json([
-            'message' => 'Kart uğurla yeniləndi.',
-            'data' => $complaint->fresh()->load(['bus', 'items', 'details']),
+            'message' => __('messages.flash.updated', ['Item' => 'Card']),
+            'data'    => $complaint->fresh()->load(['bus', 'items', 'details']),
         ]);
     }
 
@@ -97,7 +97,7 @@ class ComplaintController extends Controller
         $this->complaintService->delete($complaint);
 
         return response()->json([
-            'message' => 'Kart uğurla silindi.',
+            'message' => __('messages.flash.deleted', ['Item' => 'Card']),
         ]);
     }
 
@@ -105,15 +105,15 @@ class ComplaintController extends Controller
     {
         Gate::authorize('close', $complaint);
 
-        if ($complaint->status === 'həll olundu') {
+        if ($complaint->status === 'completed') {
             return response()->json([
-                'message' => 'Bu şikayət artıq bağlanıb.',
+                'message' => __('messages.flash.already_closed'),
             ], 422);
         }
 
         $request->validate([
-            'end_date' => 'required|date',
-            'end_time' => 'required|date_format:H:i',
+            'end_date'  => 'required|date',
+            'end_time'  => 'required|date_format:H:i',
             'work_done' => 'required|string|min:5',
         ]);
 
@@ -122,12 +122,12 @@ class ComplaintController extends Controller
         try {
             $this->pdfService->save($complaint);
         } catch (\Exception $e) {
-            \Log::error('PDF yaradılmadı: '.$e->getMessage());
+            \Log::error('PDF generation failed: '.$e->getMessage());
         }
 
         return response()->json([
-            'message' => 'Şikayət bağlandı! PDF yaradıldı.',
-            'data' => $complaint->fresh(),
+            'message' => __('messages.flash.closed_success'),
+            'data'    => $complaint->fresh(),
         ]);
     }
 
@@ -142,12 +142,12 @@ class ComplaintController extends Controller
         $filePath = $this->pdfService->getFilePath($complaint);
 
         if (! file_exists($filePath)) {
-            abort(404, 'PDF faylı tapılmadı.');
+            abort(404, __('messages.flash.pdf_not_found'));
         }
 
-        return response()->download($filePath, "is-karti-{$complaint->id}.pdf", [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="is-karti-'.$complaint->id.'.pdf"',
+        return response()->download($filePath, "work-card-{$complaint->id}.pdf", [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="work-card-'.$complaint->id.'.pdf"',
         ]);
     }
 }

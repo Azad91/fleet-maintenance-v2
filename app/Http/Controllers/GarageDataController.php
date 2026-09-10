@@ -14,19 +14,17 @@ class GarageDataController extends Controller
 {
     public function busByLine(string $identifier)
     {
-        // Ağıllı axtarış: Sistemə həm Xətt Nömrəsi, həm DQN, həm də ID göndərilə bilər
         $bus = Bus::where(function ($query) use ($identifier) {
             $query->where('route_number', $identifier)
-                  ->orWhere('dqn', $identifier);
+                ->orWhere('dqn', $identifier);
 
-            // Əgər göndərilən dəyər rəqəmdirsə, İD kimi də axtar (PostgreSQL tip xətalarından qorunmaq üçün)
             if (is_numeric($identifier)) {
                 $query->orWhere('id', (int) $identifier);
             }
         })->first();
 
         return response()->json([
-            'dqn' => $bus?->dqn,
+            'dqn'    => $bus?->dqn,
             'bus_id' => $bus?->id,
         ]);
     }
@@ -36,8 +34,8 @@ class GarageDataController extends Controller
         $detail = Warehouse::where('code', $code)->first();
 
         return response()->json([
-            'detal_adi' => $detail?->name,
-            'depo_miqdari' => $detail?->quantity,
+            'detallar_name' => $detail?->name,
+            'stock_quantity' => $detail?->quantity,
         ]);
     }
 
@@ -52,6 +50,7 @@ class GarageDataController extends Controller
     public function serviceTemplates(int $busId)
     {
         $bus = Bus::findOrFail($busId);
+
         $templates = Cache::remember('service_templates', 3600, function () {
             return ServiceTemplate::orderBy('default_km_interval')->get();
         });
@@ -62,10 +61,10 @@ class GarageDataController extends Controller
             ->keyBy('service_template_id');
 
         return response()->json($templates->map(fn (ServiceTemplate $template) => [
-            'id' => $template->id,
-            'name' => $template->name,
+            'id'          => $template->id,
+            'name'        => $template->name,
             'km_interval' => $intervals->get($template->id)?->custom_km_interval ?? $template->default_km_interval,
-            'details' => $template->details,
+            'details'     => $template->details,
         ])->values());
     }
 
@@ -82,13 +81,13 @@ class GarageDataController extends Controller
             $motorOils->where('km', '>', $latestKm)
                 ->groupBy('km')
                 ->map(fn ($details, $km) => [
-                    'km' => (int) $km,
+                    'km'      => (int) $km,
                     'details' => $details->map(fn (MotorOilDetail $detail) => [
-                        'kodu' => $detail->part_code,
-                        'adi' => $detail->part_name,
-                        'miqdar' => $detail->quantity,
-                        'say' => $detail->count,
-                        'olcu_vahidi' => $detail->unit,
+                        'part_code' => $detail->part_code,
+                        'part_name' => $detail->part_name,
+                        'quantity'  => $detail->quantity,
+                        'count'     => $detail->count,
+                        'unit'      => $detail->unit,
                     ])->values(),
                 ])->values()
         );
@@ -101,9 +100,9 @@ class GarageDataController extends Controller
             ->first();
 
         return response()->json([
-            'driver_ad' => $driver?->full_name,
-            'driver_id' => $driver?->id,
-            'found' => (bool) $driver,
+            'driver_name' => $driver?->full_name,
+            'driver_id'   => $driver?->id,
+            'found'       => (bool) $driver,
         ]);
     }
 }
