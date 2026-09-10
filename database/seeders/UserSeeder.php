@@ -18,15 +18,15 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@fleet.com'],
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('password'),
-                'role' => 'super_admin',
+                'name'      => 'Super Admin',
+                'password'  => Hash::make('password'),
+                'role'      => 'super_admin',
                 'is_active' => true,
             ]
         );
 
         // ============================================================
-        // 2. TEST QARAJ ADMIN
+        // 2. TEST GARAGE ADMIN
         // ============================================================
         $company = Company::where('slug', 'bakubus')->first();
 
@@ -39,20 +39,19 @@ class UserSeeder extends Seeder
                 $admin = User::updateOrCreate(
                     ['employee_code' => 'QAR-001'],
                     [
-                        'name' => 'Garage Admin',
-                        'email' => 'garage.admin@example.com',
-                        'password' => Hash::make('password'),
-                        'pin' => Hash::make('1234'),
-                        'pin_is_default' => true,
-                        'role' => 'user',
-                        'is_active' => true,
+                        'name'            => 'Garage Admin',
+                        'email'           => 'garage.admin@example.com',
+                        'password'        => Hash::make('password'),
+                        'pin'             => Hash::make('1234'),
+                        'pin_is_default'  => true,
+                        'role'            => 'user',
+                        'is_active'       => true,
                     ]
                 );
 
-                // Əvvəlki əlaqələri təmizlə
                 $admin->garages()->sync([
                     $garage->id => [
-                        'role' => 'admin',
+                        'role'      => 'admin',
                         'is_active' => true,
                     ],
                 ]);

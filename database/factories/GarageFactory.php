@@ -14,11 +14,11 @@ class GarageFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'name' => $this->faker->city().' Qarajı',
-            'code' => 'G-'.$this->faker->unique()->numberBetween(100, 999),
-            'address' => $this->faker->address(),
-            'phone' => $this->faker->phoneNumber(),
-            'is_active' => true,
+            'name'       => $this->faker->city() . ' Garage',
+            'code'       => 'G-' . $this->faker->unique()->numberBetween(100, 999),
+            'address'    => $this->faker->address(),
+            'phone'      => $this->faker->phoneNumber(),
+            'is_active'  => true,
         ];
     }
 }

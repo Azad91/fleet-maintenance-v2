@@ -15,11 +15,11 @@ class CompanyFactory extends Factory
         $name = $this->faker->company();
 
         return [
-            'name' => $name,
-            'slug' => Str::slug($name),
-            'email' => $this->faker->unique()->safeEmail(),
-            'phone' => $this->faker->phoneNumber(),
-            'address' => $this->faker->address(),
+            'name'      => $name,
+            'slug'      => Str::slug($name),
+            'email'     => $this->faker->unique()->safeEmail(),
+            'phone'     => $this->faker->phoneNumber(),
+            'address'   => $this->faker->address(),
             'is_active' => true,
         ];
     }

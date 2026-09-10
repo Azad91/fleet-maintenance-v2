@@ -1,7 +1,5 @@
 <?php
 
-// database/seeders/ComplaintTypeSeeder.php
-
 namespace Database\Seeders;
 
 use App\Models\ComplaintType;
@@ -9,19 +7,19 @@ use Illuminate\Database\Seeder;
 
 class ComplaintTypeSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         $types = [
-            'Mühərrik səsi',
-            'Şin partlaması',
-            'Əyləc problemi',
-            'İşıqlandırma nasazlığı',
-            'Transmissiya problemi',
-            'Süspansiyon problemi',
-            'Elektrik problemi',
-            'Kondisioner nasazlığı',
-            'Yağ sızması',
-            'Digər',
+            'Engine noise',
+            'Tire puncture',
+            'Brake problem',
+            'Lighting failure',
+            'Transmission problem',
+            'Suspension problem',
+            'Electrical problem',
+            'Air conditioning failure',
+            'Oil leak',
+            'Other',
         ];
 
         foreach ($types as $type) {

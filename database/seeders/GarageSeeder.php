@@ -11,14 +11,14 @@ class GarageSeeder extends Seeder
 {
     public function run(): void
     {
-        // === ŞİRKƏT 1: BakuBus ===
+        // === COMPANY 1: BakuBus ===
         $company1 = Company::updateOrCreate(
             ['slug' => 'bakubus'],
             [
-                'name' => 'BakuBus',
-                'email' => 'info@bakubus.az',
-                'phone' => '+994 12 123 45 67',
-                'address' => 'Bakı, Nəsimi rayonu',
+                'name'      => 'BakuBus',
+                'email'     => 'info@bakubus.az',
+                'phone'     => '+994 12 123 45 67',
+                'address'   => 'Baku, Nasimi district',
                 'is_active' => true,
             ]
         );
@@ -27,10 +27,10 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-001'],
             [
                 'company_id' => $company1->id,
-                'name' => 'Mərkəzi Qaraj',
-                'address' => 'Bakı, Yasamal rayonu',
-                'phone' => '+994 12 111 11 11',
-                'is_active' => true,
+                'name'       => 'Central Garage',
+                'address'    => 'Baku, Yasamal district',
+                'phone'      => '+994 12 111 11 11',
+                'is_active'  => true,
             ]
         );
 
@@ -38,21 +38,21 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-002'],
             [
                 'company_id' => $company1->id,
-                'name' => 'Sumqayıt Qaraj',
-                'address' => 'Sumqayıt, Sənaye zonası',
-                'phone' => '+994 12 222 22 22',
-                'is_active' => true,
+                'name'       => 'Sumgayit Garage',
+                'address'    => 'Sumgayit, Industrial zone',
+                'phone'      => '+994 12 222 22 22',
+                'is_active'  => true,
             ]
         );
 
-        // === ŞİRKƏT 2: Azərbaycan Avtomobil ===
+        // === COMPANY 2: Azerbaijan Automobile ===
         $company2 = Company::updateOrCreate(
             ['slug' => 'azavto'],
             [
-                'name' => 'Azərbaycan Avtomobil',
-                'email' => 'info@azavto.az',
-                'phone' => '+994 12 987 65 43',
-                'address' => 'Bakı, Xətai rayonu',
+                'name'      => 'Azerbaijan Automobile',
+                'email'     => 'info@azavto.az',
+                'phone'     => '+994 12 987 65 43',
+                'address'   => 'Baku, Khatai district',
                 'is_active' => true,
             ]
         );
@@ -61,10 +61,10 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-003'],
             [
                 'company_id' => $company2->id,
-                'name' => 'Xətai Qaraj',
-                'address' => 'Bakı, Xətai rayonu',
-                'phone' => '+994 12 333 33 33',
-                'is_active' => true,
+                'name'       => 'Khatai Garage',
+                'address'    => 'Baku, Khatai district',
+                'phone'      => '+994 12 333 33 33',
+                'is_active'  => true,
             ]
         );
 
@@ -72,21 +72,19 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-004'],
             [
                 'company_id' => $company2->id,
-                'name' => 'Nəsimi Qaraj',
-                'address' => 'Bakı, Nəsimi rayonu',
-                'phone' => '+994 12 444 44 44',
-                'is_active' => true,
+                'name'       => 'Nasimi Garage',
+                'address'    => 'Baku, Nasimi district',
+                'phone'      => '+994 12 444 44 44',
+                'is_active'  => true,
             ]
         );
 
-        // === İSTİFADƏÇİLƏR ===
+        // === USERS ===
 
-        // 1. Admin - bütün qarajlara icazə
+        // 1. Admin — access to all garages
         $admin = User::where('email', 'admin@fleet.com')->first();
         if ($admin) {
-            // Əvvəlki əlaqələri təmizlə
             $admin->garages()->detach();
-            // Yeni əlaqələr
             $admin->garages()->attach([
                 $garage1->id => ['role' => 'admin', 'is_active' => true],
                 $garage2->id => ['role' => 'admin', 'is_active' => true],
@@ -96,7 +94,7 @@ class GarageSeeder extends Seeder
             $admin->setCurrentGarage($garage1);
         }
 
-        // 2. Müdiriyyət - bütün qarajlara baxış
+        // 2. Directorate — read-only access to all garages
         $directorate = User::where('email', 'directorate@fleet.com')->first();
         if ($directorate) {
             $directorate->garages()->detach();
@@ -109,7 +107,7 @@ class GarageSeeder extends Seeder
             $directorate->setCurrentGarage($garage1);
         }
 
-        // 3. Şikayət işçisi - BakuBus qarajlarına
+        // 3. Complaint manager — BakuBus garages
         $complaint = User::where('email', 'complaint@fleet.com')->first();
         if ($complaint) {
             $complaint->garages()->detach();
@@ -120,7 +118,7 @@ class GarageSeeder extends Seeder
             $complaint->setCurrentGarage($garage1);
         }
 
-        // 4. Anbar işçisi - BakuBus qarajlarına
+        // 4. Warehouse manager — BakuBus garages
         $warehouse = User::where('email', 'warehouse@fleet.com')->first();
         if ($warehouse) {
             $warehouse->garages()->detach();
@@ -131,6 +129,7 @@ class GarageSeeder extends Seeder
             $warehouse->setCurrentGarage($garage1);
         }
 
+        // 5. Daily KM manager
         $dailyKm = User::where('email', 'daily-km@fleet.com')->first();
         if ($dailyKm) {
             $dailyKm->garages()->sync([
@@ -140,6 +139,7 @@ class GarageSeeder extends Seeder
             $dailyKm->setCurrentGarage($garage1);
         }
 
+        // 6. Daily status manager
         $dailyStatus = User::where('email', 'daily-status@fleet.com')->first();
         if ($dailyStatus) {
             $dailyStatus->garages()->sync([

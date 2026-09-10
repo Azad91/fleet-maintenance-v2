@@ -10,25 +10,25 @@ class ServiceTemplateSeeder extends Seeder
 {
     public function run(): void
     {
-        // MotorOilDetail cədvəlindəki bütün unikal km-ləri götür
+        // Get all unique KM values from MotorOilDetail
         $uniqueKms = MotorOilDetail::select('km')->distinct()->orderBy('km')->pluck('km');
 
         foreach ($uniqueKms as $km) {
-            // Hər bir km-ə aid detalları çək
+            // Fetch all details for this KM
             $details = MotorOilDetail::where('km', $km)->get()->map(function ($item) {
                 return [
-                    'kodu' => $item->detal_kodu,
-                    'adi' => $item->detal_adi,
-                    'miqdar' => $item->miqdar,
-                    'say' => $item->say,
+                    'kodu'   => $item->part_code,
+                    'adi'    => $item->part_name,
+                    'miqdar' => $item->quantity,
+                    'say'    => $item->count,
                 ];
             })->toArray();
 
-            // ServiceTemplate yarat
+            // Create ServiceTemplate
             ServiceTemplate::create([
-                'name' => "Motor Yağ Dəyişməsi ({$km} km)",
+                'name'                => "Motor Oil Change ({$km} km)",
                 'default_km_interval' => $km,
-                'details' => $details,
+                'details'             => $details,
             ]);
         }
     }
