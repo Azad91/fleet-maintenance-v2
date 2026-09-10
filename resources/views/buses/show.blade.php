@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bus Details')
+@section('title', __('messages.buses.details_title'))
 
 @section('content')
 <div class="container">
@@ -8,21 +8,22 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3>Bus Details - #{{ $bus->id }}</h3>
+                    <h3>{{ __('messages.buses.details_title') }} - #{{ $bus->id }}</h3>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <table class="table table-bordered">
-                                <tr><th>Project</th><td>{{ $bus->bus_project }}</td></tr>
-                                <tr><th>VIN</th><td>{{ $bus->vin }}</td></tr>
-                                <tr><th>Length</th><td>{{ $bus->uzunluq }}</td></tr>
-                                <tr><th>Route No</th><td>{{ $bus->route_number }}</td></tr>
-                                <tr><th>DQN</th><td>{{ $bus->dqn }}</td></tr>
-                                <tr><th>Engine No</th><td>{{ $bus->engine_number }}</td></tr>
-                                <tr><th>KM</th><td>{{ $bus->km }}</td></tr>
-                                <tr><th>Date</th><td>{{ $bus->date ? $bus->date->format('d.m.Y') : '' }}</td></tr>
-                                <tr><th>Status</th><td>{{ $bus->is_active ? 'Active' : 'Inactive' }}</td></tr>
+                                <tr><th>{{ __('messages.buses.bus_project') }}</th><td>{{ $bus->bus_project }}</td></tr>
+                                <tr><th>{{ __('messages.buses.vin') }}</th><td>{{ $bus->vin }}</td></tr>
+                                <tr><th>{{ __('messages.buses.length') }}</th><td>{{ $bus->uzunluq }}</td></tr>
+                                <tr><th>{{ __('messages.buses.route_number') }}</th><td>{{ $bus->route_number }}</td></tr>
+                                <tr><th>{{ __('messages.buses.dqn') }}</th><td>{{ $bus->dqn }}</td></tr>
+                                <tr><th>{{ __('messages.buses.engine_number') }}</th><td>{{ $bus->engine_number }}</td></tr>
+                                <tr><th>{{ __('messages.buses.km') }}</th><td>{{ $bus->km }}</td></tr>
+                                <tr><th>{{ __('messages.buses.status') }}</th>
+                                    <td>{{ $bus->is_active ? __('messages.buses.status_active') : __('messages.buses.status_inactive') }}</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -31,12 +32,11 @@
         </div>
     </div>
 
-    <!-- Daily KM Records -->
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h4>Daily KM Records</h4>
+                    <h4>{{ __('messages.buses.km_history') }}</h4>
                 </div>
                 <div class="card-body">
                     @php
@@ -45,13 +45,13 @@
 
                     @if($dailyKms->count() > 0)
                         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                            <table class="table table-hover table-striped" id="kmTable">
+                            <table class="table table-hover table-striped">
                                 <thead class="sticky-top bg-white">
                                     <tr>
                                         <th>#</th>
-                                        <th>Date</th>
-                                        <th>KM</th>
-                                        <th>Notes</th>
+                                        <th>{{ __('messages.daily_km.date') }}</th>
+                                        <th>{{ __('messages.daily_km.km') }}</th>
+                                        <th>{{ __('messages.daily_km.notes') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -67,55 +67,11 @@
                             </table>
                         </div>
                     @else
-                        <p class="text-muted">No KM records found for this bus.</p>
+                        <p class="text-muted">{{ __('messages.buses.no_km_records') }}</p>
                     @endif
                 </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
-
-@section('scripts')
-<script>
-    function filterKm() {
-        const date = document.getElementById('tarixFilter').value;
-        const kmMin = document.getElementById('kmMin').value;
-        const kmMax = document.getElementById('kmMax').value;
-
-        const rows = document.querySelectorAll('#kmTable tbody tr');
-
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length < 3) return;
-
-            const rowDateText = cells[1]?.textContent?.trim() || '';
-            const inputDate = date ? date.split('-').reverse().join('.') : '';
-
-            const rowKmText = cells[2]?.textContent?.trim() || '';
-            const rowKm = parseInt(rowKmText.replace(/[^0-9]/g, '')) || 0;
-
-            let show = true;
-
-            if (date && rowDateText !== inputDate) {
-                show = false;
-            }
-            if (kmMin && rowKm < parseInt(kmMin)) {
-                show = false;
-            }
-            if (kmMax && rowKm > parseInt(kmMax)) {
-                show = false;
-            }
-
-            row.style.display = show ? '' : 'none';
-        });
-    }
-
-    function resetFilters() {
-        document.getElementById('tarixFilter').value = '';
-        document.getElementById('kmMin').value = '';
-        document.getElementById('kmMax').value = '';
-        filterKm();
-    }
-</script>
 @endsection

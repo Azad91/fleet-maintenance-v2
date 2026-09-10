@@ -1,38 +1,46 @@
 @extends('layouts.app')
 
-@section('title', 'Buses')
+@section('title', __('messages.buses.title'))
 
 @section('content')
+<div class="page-header">
+    <h1>🚌 {{ __('messages.buses.title') }}</h1>
+    <p class="text-muted">{{ __('messages.buses.subtitle') }}</p>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
+    <div class="d-flex gap-2 flex-wrap">
         @can('import', App\Models\Bus::class)
             <a href="{{ route('buses.import') }}" class="btn btn-success">
-                <i class="bi bi-upload"></i> Import from Excel
+                <i class="bi bi-upload"></i> {{ __('messages.buses.import') }}
             </a>
         @endcan
         @can('update', App\Models\Bus::class)
             <button type="button" class="btn btn-warning" id="bulkDeactivateBtn" disabled>
-                <i class="bi bi-x-circle"></i> Deactivate Selected
+                <i class="bi bi-x-circle"></i> {{ __('messages.buses.bulk_deactivate') }}
             </button>
             <button type="button" class="btn btn-info" id="bulkActivateBtn" disabled>
-                <i class="bi bi-check-circle"></i> Activate Selected
+                <i class="bi bi-check-circle"></i> {{ __('messages.buses.bulk_activate') }}
             </button>
         @endcan
         @can('delete', App\Models\Bus::class)
             <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
-                <i class="bi bi-trash"></i> Delete Selected
+                <i class="bi bi-trash"></i> {{ __('messages.buses.bulk_delete') }}
             </button>
+        @endcan
+        @can('create', App\Models\Bus::class)
+            <a href="{{ route('buses.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> {{ __('messages.buses.new') }}
+            </a>
         @endcan
     </div>
 </div>
 
-{{-- Bulk operations form --}}
 <form id="bulkForm" method="POST">
     @csrf
     <input type="hidden" name="ids" id="selectedIds" value="">
 </form>
 
-{{-- Results --}}
 <div id="searchResults">
     @include('buses.partials.table', [
         'buses' => $buses,
@@ -47,7 +55,6 @@
 (function () {
     'use strict';
 
-    // ==================== BULK ACTIONS ====================
     const selectedIds = new Set();
     const bulkDeactivateBtn = document.getElementById('bulkDeactivateBtn');
     const bulkActivateBtn = document.getElementById('bulkActivateBtn');
@@ -55,23 +62,31 @@
     const bulkForm = document.getElementById('bulkForm');
     const selectedIdsInput = document.getElementById('selectedIds');
 
+    const translations = {
+        bulk_deactivate: @json(__('messages.buses.bulk_deactivate')),
+        bulk_activate: @json(__('messages.buses.bulk_activate')),
+        bulk_delete: @json(__('messages.buses.bulk_delete')),
+        bulk_deactivate_confirm: @json(__('messages.buses.bulk_deactivate_confirm')),
+        bulk_activate_confirm: @json(__('messages.buses.bulk_activate_confirm')),
+        bulk_delete_confirm: @json(__('messages.buses.bulk_delete_confirm')),
+    };
+
     function updateBulkButtons() {
         const count = selectedIds.size;
         if (bulkDeactivateBtn) {
             bulkDeactivateBtn.disabled = count === 0;
-            bulkDeactivateBtn.innerHTML = `<i class="bi bi-x-circle"></i> Deactivate Selected (${count})`;
+            bulkDeactivateBtn.innerHTML = `<i class="bi bi-x-circle"></i> ${translations.bulk_deactivate} (${count})`;
         }
         if (bulkActivateBtn) {
             bulkActivateBtn.disabled = count === 0;
-            bulkActivateBtn.innerHTML = `<i class="bi bi-check-circle"></i> Activate Selected (${count})`;
+            bulkActivateBtn.innerHTML = `<i class="bi bi-check-circle"></i> ${translations.bulk_activate} (${count})`;
         }
         if (bulkDeleteBtn) {
             bulkDeleteBtn.disabled = count === 0;
-            bulkDeleteBtn.innerHTML = `<i class="bi bi-trash"></i> Delete Selected (${count})`;
+            bulkDeleteBtn.innerHTML = `<i class="bi bi-trash"></i> ${translations.bulk_delete} (${count})`;
         }
     }
 
-    // Event delegation — dynamically replaced content üçün
     document.addEventListener('change', function (e) {
         if (e.target.matches('.bus-checkbox')) {
             const id = parseInt(e.target.value, 10);
@@ -100,12 +115,11 @@
 
     function submitBulk(action, method, confirmMessage) {
         if (selectedIds.size === 0) return;
-        if (!confirm(confirmMessage)) return;
+        if (!confirm(confirmMessage.replace(':count', selectedIds.size))) return;
 
         bulkForm.action = action;
         bulkForm.method = 'POST';
 
-        // Köhnə _method inputunu təmizlə
         bulkForm.querySelectorAll('input[name="_method"]').forEach(el => el.remove());
 
         if (method !== 'POST') {
@@ -124,7 +138,7 @@
         submitBulk(
             "{{ route('buses.bulk.deactivate') }}",
             'POST',
-            `Are you sure you want to deactivate ${selectedIds.size} bus(es)?`
+            translations.bulk_deactivate_confirm
         );
     });
 
@@ -132,7 +146,7 @@
         submitBulk(
             "{{ route('buses.bulk.activate') }}",
             'POST',
-            `Are you sure you want to activate ${selectedIds.size} bus(es)?`
+            translations.bulk_activate_confirm
         );
     });
 
@@ -140,11 +154,10 @@
         submitBulk(
             "{{ route('buses.bulk.delete') }}",
             'DELETE',
-            `Are you sure you want to DELETE ${selectedIds.size} bus(es)? THIS CANNOT BE UNDONE!`
+            translations.bulk_delete_confirm
         );
     });
 
-    // ==================== LIVE SEARCH ====================
     let searchTimeout = null;
 
     function collectFilters() {
@@ -165,10 +178,8 @@
         const params = new URLSearchParams(filters);
         const queryString = params.toString();
 
-        // AJAX həmişə /buses/search-ə gedir
         const fetchUrl = "{{ route('buses.search') }}" + (queryString ? '?' + queryString : '');
 
-        // URL çubuğunda göstərilən URL — filter yoxdursa, /buses
         const browserUrl = (hasFilters
             ? "{{ route('buses.search') }}"
             : "{{ route('buses.index') }}"
@@ -190,10 +201,8 @@
         .then(html => {
             document.getElementById('searchResults').innerHTML = html;
 
-            // URL-i yenilə (reload etmədən)
             history.replaceState(null, '', browserUrl);
 
-            // Bulk action seçimini sıfırla (yeni nəticələr gəldi)
             selectedIds.clear();
             updateBulkButtons();
         })
@@ -207,14 +216,12 @@
         searchTimeout = setTimeout(performSearch, 300);
     }
 
-    // Filter input-larına listener qoş (event delegation)
     document.addEventListener('input', function (e) {
         if (e.target.matches('#busTableFilter input[name]')) {
             scheduleSearch();
         }
     });
 
-    // Enter basıldıqda dərhal axtar
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && e.target.matches('#busTableFilter input[name]')) {
             e.preventDefault();

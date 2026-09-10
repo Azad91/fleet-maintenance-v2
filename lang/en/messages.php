@@ -158,29 +158,83 @@ return [
     ],
 
     // ==================== BUSES ====================
-    'buses' => [
-        'title'             => 'Buses',
-        'new'               => 'Add New Bus',
-        'edit'              => 'Edit Bus',
-        'details'           => 'Bus Details',
-        'import'            => 'Import Buses from Excel',
-        'bus_project'       => 'Bus Project',
-        'vin'               => 'VIN (Chassis No)',
-        'length'            => 'Length (m)',
-        'route_number'      => 'Route No',
-        'dqn'               => 'DQN',
-        'engine_number'     => 'Engine No',
-        'km'                => 'KM (Mileage)',
-        'latest_km'         => 'Latest KM',
-        'date'              => 'Date',
-        'import_success'    => ':count buses imported successfully.',
-        'import_partial'    => 'Import completed, some rows were skipped.',
-        'bulk_deactivate'   => 'Deactivate Selected',
-        'bulk_activate'     => 'Activate Selected',
-        'bulk_delete'       => 'Delete Selected',
-        'km_history'        => 'KM History',
-    ],
+        'buses' => [
+        'title'                => 'Buses',
+        'subtitle'             => 'Fleet vehicle list and maintenance overview',
+        'new'                  => 'Add New Bus',
+        'new_title'            => 'Add New Bus',
+        'edit_title'           => 'Edit Bus',
+        'details_title'        => 'Bus Details',
+        'import_title'         => 'Import Buses from Excel',
+        'import'               => 'Import from Excel',
 
+        // Form labels
+        'bus_project'          => 'BUS PROJECT',
+        'bus_project_placeholder' => 'e.g.: BakuBus',
+        'vin'                  => 'VIN (Chassis No)',
+        'vin_placeholder'      => '17 characters',
+        'length'               => 'LENGTH (meters)',
+        'length_placeholder'   => 'e.g.: 12.5',
+        'route_number'         => 'Route No',
+        'route_number_placeholder' => 'e.g.: 15405',
+        'dqn'                  => 'DQN',
+        'dqn_placeholder'      => 'e.g.: 90-AA-123',
+        'engine_number'        => 'ENGINE No',
+        'engine_number_placeholder' => 'e.g.: M-123456',
+        'km'                   => 'KM (Mileage)',
+        'km_placeholder'       => '0',
+        'status'               => 'Status',
+        'status_active'        => 'Active',
+        'status_inactive'      => 'Inactive',
+
+        // Table columns
+        'col_project'          => 'BUS PROJECT',
+        'col_vin'              => 'VIN',
+        'col_length'           => 'UZUNLUQ',
+        'col_route'            => 'Route No',
+        'col_dqn'              => 'DQN',
+        'col_engine'           => 'ENGINE No',
+        'col_latest_km'        => 'Latest KM',
+
+        // Filters
+        'filter_project'       => 'Project...',
+        'filter_vin'           => 'Chassis...',
+        'filter_length'        => 'Length...',
+        'filter_route'         => 'Route...',
+        'filter_dqn'           => 'DQN...',
+        'filter_engine'        => 'Engine...',
+
+        // Actions
+        'bulk_deactivate'      => 'Deactivate Selected',
+        'bulk_activate'        => 'Activate Selected',
+        'bulk_delete'          => 'Delete Selected',
+        'bulk_deactivate_confirm' => 'Are you sure you want to deactivate :count bus(es)?',
+        'bulk_activate_confirm' => 'Are you sure you want to activate :count bus(es)?',
+        'bulk_delete_confirm'  => 'Are you sure you want to DELETE :count bus(es)? This cannot be undone!',
+
+        // Empty states
+        'no_buses'             => 'No buses yet.',
+        'no_buses_hint'        => 'Import from Excel!',
+        'no_results'           => 'No results found for the given filters.',
+        'clear_filters'        => 'Clear filters',
+        'showing_range'        => 'Showing :from–:to of :total buses',
+
+        // Details
+        'km_history'           => 'Daily KM Records',
+        'no_km_records'        => 'No KM records found for this bus.',
+
+        // Import page
+        'import_format_title'  => 'Excel Format (Full compatible)',
+        'import_col_project'   => 'Project name (e.g.: 300 ARAÇ PROJESİ)',
+        'import_col_vin'       => 'Chassis number (17 characters)',
+        'import_col_length'    => 'Bus length (e.g.: 12 MT.)',
+        'import_col_route'     => 'Route number',
+        'import_col_dqn'       => 'State registration number',
+        'import_col_engine'    => 'Engine number',
+        'import_note_auto'     => 'column is auto-generated, no need to write in Excel.',
+        'import_select_file'   => 'Select Excel File (.xlsx, .xls, .csv)',
+        'import_button'        => 'Import',
+    ],
     // ==================== COMPLAINTS ====================
     'complaints' => [
         'title'             => 'Cards / Complaints',
