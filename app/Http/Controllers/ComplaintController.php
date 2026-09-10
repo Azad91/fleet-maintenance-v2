@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ComplaintCloseRequest;
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
-use App\Http\Requests\ComplaintCloseRequest;
 use App\Imports\ComplaintsImport;
 use App\Models\Bus;
 use App\Models\Complaint;
@@ -13,10 +13,12 @@ use App\Models\Driver;
 use App\Models\Employee;
 use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ComplaintController extends Controller
 {
@@ -25,9 +27,9 @@ class ComplaintController extends Controller
         protected ComplaintPdfService $pdfService
     ) {}
 
-    public function index()
+    public function index(): View
     {
-        $this->authorize('viewAny', Complaint::class);  // ✅ ƏLAVƏ
+        $this->authorize('viewAny', Complaint::class);
 
         $complaints = Complaint::with(['bus', 'items'])
             ->orderBy('id', 'desc')
@@ -36,9 +38,9 @@ class ComplaintController extends Controller
         return view('complaints.index', compact('complaints'));
     }
 
-    public function create()
+    public function create(): View
     {
-        $this->authorize('create', Complaint::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', Complaint::class);
 
         $buses = Bus::orderBy('route_number')->get();
         $complaintTypes = ComplaintType::orderBy('name')->get();
@@ -48,9 +50,9 @@ class ComplaintController extends Controller
         return view('complaints.create', compact('buses', 'complaintTypes', 'employees', 'drivers'));
     }
 
-    public function store(ComplaintStoreRequest $request)
+    public function store(ComplaintStoreRequest $request): RedirectResponse
     {
-        $this->authorize('create', Complaint::class);  // ✅ ƏLAVƏ
+        $this->authorize('create', Complaint::class);
 
         $data = $request->validated();
 
@@ -60,15 +62,16 @@ class ComplaintController extends Controller
             $request->input('shikayet', [])
         );
 
-        return redirect()->route('complaints.show', $complaint)
+        return redirect()
+            ->route('complaints.show', $complaint)
             ->with('success', 'Kart uğurla açıldı. PDF formatında çap edə bilərsiniz.');
     }
 
-    public function show($id)
+    public function show(int $id): View
     {
         $complaint = Complaint::with(['bus', 'items', 'details.employee'])->findOrFail($id);
 
-        $this->authorize('view', $complaint);  // ✅ ƏLAVƏ
+        $this->authorize('view', $complaint);
 
         $employeesById = Employee::whereIn(
             'id',
@@ -78,7 +81,7 @@ class ComplaintController extends Controller
         return view('complaints.show', compact('complaint', 'employeesById'));
     }
 
-    public function edit($id)
+    public function edit(int $id): View
     {
         $complaint = Complaint::with(['items', 'details'])->findOrFail($id);
 
@@ -92,28 +95,33 @@ class ComplaintController extends Controller
         $detallar = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,
-                'code' => $detail->code,
-                'name' => $detail->name,
+                'code'           => $detail->code,
+                'name'           => $detail->name,
                 'stock_quantity' => $detail->stock_quantity,
-                'used_quantity' => $detail->used_quantity,
-                'employee_id' => $detail->employee_id,
-                'notes' => $detail->notes,
+                'used_quantity'  => $detail->used_quantity,
+                'employee_id'    => $detail->employee_id,
+                'notes'          => $detail->notes,
             ];
         })->toArray();
 
-        // ✅ Burada düzgün istifadə olunur
         $shikayetler = $complaint->items->pluck('description')->toArray();
 
         return view('complaints.edit', compact(
-            'complaint', 'buses', 'complaintTypes', 'detallar', 'employees', 'drivers', 'shikayetler'
+            'complaint',
+            'buses',
+            'complaintTypes',
+            'detallar',
+            'employees',
+            'drivers',
+            'shikayetler'
         ));
     }
 
-    public function update(ComplaintUpdateRequest $request, $id)
+    public function update(ComplaintUpdateRequest $request, int $id): RedirectResponse
     {
         $complaint = Complaint::findOrFail($id);
 
-        $this->authorize('update', $complaint);  // ✅ ƏLAVƏ
+        $this->authorize('update', $complaint);
 
         $data = $request->validated();
 
@@ -124,24 +132,29 @@ class ComplaintController extends Controller
             $request->input('shikayet', [])
         );
 
-        return redirect('/complaints')->with('success', 'Şikayət uğurla yeniləndi!');
+        // ✅ DÜZƏLİŞ: hardcoded '/complaints' → named route
+        return redirect()
+            ->route('complaints.index')
+            ->with('success', 'Şikayət uğurla yeniləndi!');
     }
 
-    public function destroy($id)
+    public function destroy(int $id): RedirectResponse
     {
         $complaint = Complaint::findOrFail($id);
 
-        $this->authorize('delete', $complaint);  // ✅ ƏLAVƏ
+        $this->authorize('delete', $complaint);
 
         $this->complaintService->delete($complaint);
 
-        return redirect()->route('complaints.index')
+        return redirect()
+            ->route('complaints.index')
             ->with('success', 'Şikayət uğurla silindi! Anbar yeniləndi.');
     }
 
-    public function close(ComplaintCloseRequest $request, $id)
+    public function close(ComplaintCloseRequest $request, int $id): RedirectResponse
     {
         $complaint = Complaint::findOrFail($id);
+
         $this->authorize('close', $complaint);
 
         if ($complaint->status === 'həll olundu') {
@@ -152,19 +165,24 @@ class ComplaintController extends Controller
 
         try {
             $this->pdfService->save($complaint);
-        } catch (\Exception $e) {
-            \Log::error('PDF yaradılmadı: '.$e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('PDF yaradılmadı', [
+                'complaint_id' => $complaint->id,
+                'error'        => $e->getMessage(),
+                'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
         }
 
-        return redirect()->route('complaints.index')
+        return redirect()
+            ->route('complaints.index')
             ->with('success', '✅ Şikayət bağlandı! Akt PDF olaraq yaradıldı.');
     }
 
-    public function downloadPdf($id)
+    public function downloadPdf(int $id): BinaryFileResponse
     {
         $complaint = Complaint::with(['bus', 'details.employee'])->findOrFail($id);
 
-        $this->authorize('view', $complaint);  // ✅ ƏLAVƏ
+        $this->authorize('view', $complaint);
 
         if (! $this->pdfService->exists($complaint)) {
             $this->pdfService->save($complaint);
@@ -177,14 +195,14 @@ class ComplaintController extends Controller
         }
 
         return response()->download($filePath, "is-karti-{$complaint->id}.pdf", [
-            'Content-Type' => 'application/pdf',
+            'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="is-karti-'.$complaint->id.'.pdf"',
         ]);
     }
 
-    public function importForm()
+    public function importForm(): View
     {
-        $this->authorize('import', Complaint::class);  // ✅ ƏLAVƏ
+        $this->authorize('import', Complaint::class);
 
         return view('complaints.import');
     }
@@ -209,27 +227,31 @@ class ComplaintController extends Controller
             $failures = $import->failures();
             $imported = $import->importedCount;
 
-            // Uğurlu idxal, heç bir problem yoxdur
             if (empty($skipped) && $failures->isEmpty()) {
-                return redirect()->route('complaints.index')
+                return redirect()
+                    ->route('complaints.index')
                     ->with('success', "✅ {$imported} şikayət uğurla idxal edildi.");
             }
 
-            // Bəzi sətirlər atlandı — istifadəçiyə göstər
             $report = $this->buildImportReport($imported, $skipped, $failures);
 
-            return redirect()->route('complaints.index')
-                ->with('warning', "⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.")
+            return redirect()
+                ->route('complaints.index')
+                ->with('warning', '⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.')
                 ->with('import_report', $report);
 
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect()->route('complaints.index')
+            return redirect()
+                ->route('complaints.index')
                 ->with('error', 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.');
         }
     }
 
+    /**
+     * İdxal nəticəsini strukturlaşdırılmış formada qurur.
+     */
     private function buildImportReport(int $imported, array $skipped, $failures): array
     {
         $report = [
@@ -247,11 +269,11 @@ class ComplaintController extends Controller
         }
 
         foreach ($failures as $failure) {
-            $errors = implode(', ', $failure->errors());
+            $values = $failure->values();
             $report['failed'][] = [
                 'row'    => $failure->row(),
-                'dqn'    => $failure->values()['bus_dqn'] ?? $failure->values()['dqn'] ?? '—',
-                'reason' => $errors,
+                'dqn'    => $values['bus_dqn'] ?? $values['dqn'] ?? '—',
+                'reason' => implode(', ', $failure->errors()),
             ];
         }
 
