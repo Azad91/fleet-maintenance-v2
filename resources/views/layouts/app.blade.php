@@ -162,9 +162,78 @@
                         <i class="fas fa-circle-check"></i>{{ session('success') }}
                     </div>
                 @endif
+
                 @if(session('error'))
                     <div class="fleet-alert fleet-alert--error">
                         <i class="fas fa-circle-exclamation"></i>{{ session('error') }}
+                    </div>
+                @endif
+
+                @if(session('warning'))
+                    <div class="fleet-alert fleet-alert--warning">
+                        <i class="fas fa-triangle-exclamation"></i>{{ session('warning') }}
+                    </div>
+                @endif
+
+                @if(session('import_report'))
+                    @php $report = session('import_report'); @endphp
+                    <div class="fleet-import-report">
+                        <div class="fleet-import-report__summary">
+                            <strong>📊 İdxal Hesabatı:</strong>
+                            <span class="fleet-import-report__badge fleet-import-report__badge--success">
+                                ✅ {{ $report['imported'] }} uğurlu
+                            </span>
+                            @if(count($report['skipped']) > 0)
+                                <span class="fleet-import-report__badge fleet-import-report__badge--warning">
+                                    ⏭️ {{ count($report['skipped']) }} atlanan
+                                </span>
+                            @endif
+                            @if(count($report['failed']) > 0)
+                                <span class="fleet-import-report__badge fleet-import-report__badge--danger">
+                                    ❌ {{ count($report['failed']) }} uğursuz
+                                </span>
+                            @endif
+                        </div>
+
+                        @if(count($report['skipped']) > 0)
+                            <details class="fleet-import-report__details">
+                                <summary>⏭️ Atlanan sətirlər ({{ count($report['skipped']) }})</summary>
+                                <table class="fleet-import-report__table">
+                                    <thead>
+                                        <tr><th>Sətir</th><th>DQN</th><th>Səbəb</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($report['skipped'] as $item)
+                                            <tr>
+                                                <td>{{ $item['row'] }}</td>
+                                                <td><code>{{ $item['dqn'] }}</code></td>
+                                                <td>{{ $item['reason'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </details>
+                        @endif
+
+                        @if(count($report['failed']) > 0)
+                            <details class="fleet-import-report__details" open>
+                                <summary>❌ Uğursuz sətirlər ({{ count($report['failed']) }})</summary>
+                                <table class="fleet-import-report__table">
+                                    <thead>
+                                        <tr><th>Sətir</th><th>DQN</th><th>Xəta</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($report['failed'] as $item)
+                                            <tr>
+                                                <td>{{ $item['row'] }}</td>
+                                                <td><code>{{ $item['dqn'] }}</code></td>
+                                                <td>{{ $item['reason'] }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </details>
+                        @endif
                     </div>
                 @endif
                 @yield('content')

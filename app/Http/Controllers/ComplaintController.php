@@ -16,6 +16,7 @@ use App\Services\Complaint\ComplaintService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\RedirectResponse;
 
 class ComplaintController extends Controller
 {
@@ -188,30 +189,72 @@ class ComplaintController extends Controller
         return view('complaints.import');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', Complaint::class);  // ✅ ƏLAVƏ
+        $this->authorize('import', Complaint::class);
 
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
-            Excel::import(
-                new ComplaintsImport(
-                    (int) session('current_garage_id'),
-                    session('current_company_id') ? (int) session('current_company_id') : null
-                ),
-                $request->file('file')
+            $import = new ComplaintsImport(
+                (int) session('current_garage_id'),
+                session('current_company_id') ? (int) session('current_company_id') : null
             );
 
+            Excel::import($import, $request->file('file'));
+
+            $skipped = $import->skipped;
+            $failures = $import->failures();
+            $imported = $import->importedCount;
+
+            // Uğurlu idxal, heç bir problem yoxdur
+            if (empty($skipped) && $failures->isEmpty()) {
+                return redirect()->route('complaints.index')
+                    ->with('success', "✅ {$imported} şikayət uğurla idxal edildi.");
+            }
+
+            // Bəzi sətirlər atlandı — istifadəçiyə göstər
+            $report = $this->buildImportReport($imported, $skipped, $failures);
+
             return redirect()->route('complaints.index')
-                ->with('success', 'Şikayətlər uğurla idxal edildi!');
-        } catch (\Exception $e) {
+                ->with('warning', "⚠️ İdxal tamamlandı, lakin bəzi sətirlər atlandı.")
+                ->with('import_report', $report);
+
+        } catch (\Throwable $e) {
             report($e);
 
             return redirect()->route('complaints.index')
-                ->with('error', 'Şikayət idxalı zamanı xəta baş verdi. Faylı yoxlayıb yenidən cəhd edin.');
+                ->with('error', 'İdxal zamanı gözlənilməz xəta baş verdi. Faylın formatını yoxlayın.');
         }
+    }
+
+    private function buildImportReport(int $imported, array $skipped, $failures): array
+    {
+        $report = [
+            'imported' => $imported,
+            'skipped'  => [],
+            'failed'   => [],
+        ];
+
+        foreach ($skipped as $row) {
+            $report['skipped'][] = [
+                'row'    => $row['row'],
+                'dqn'    => $row['dqn'],
+                'reason' => $row['reason'],
+            ];
+        }
+
+        foreach ($failures as $failure) {
+            $errors = implode(', ', $failure->errors());
+            $report['failed'][] = [
+                'row'    => $failure->row(),
+                'dqn'    => $failure->values()['bus_dqn'] ?? $failure->values()['dqn'] ?? '—',
+                'reason' => $errors,
+            ];
+        }
+
+        return $report;
     }
 }
