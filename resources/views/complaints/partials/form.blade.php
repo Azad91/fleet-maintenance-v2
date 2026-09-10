@@ -27,15 +27,16 @@
         <div class="row">
             <div class="col-md-6">
                 <label>Route No (və ya DQN)</label>
-                <!-- Yeni kart açanda axtarış edə bilmək üçün readonly şərti qoyuldu -->
+                <!-- ✅ DÜZƏLİŞ: $complaint->bus?->route_number (null-safe) -->
                 <input type="text" class="form-control" id="route_number" placeholder="Xətt nömrəsi və ya DQN yazın..."
-                       value="{{ $complaint->bus->route_number ?? '' }}"
+                       value="{{ $complaint->bus?->route_number ?? '' }}"
                        oninput="getBusByRoute(this.value)"
                        {{ isset($complaint->id) ? 'readonly style=background:#e9ecef;' : '' }}>
             </div>
             <div class="col-md-6">
                 <label>DQN</label>
-                <input type="text" class="form-control" id="dqn" value="{{ $complaint->bus->dqn ?? '' }}" readonly style="background:#e9ecef;">
+                <!-- ✅ DÜZƏLİŞ: $complaint->bus?->dqn (null-safe) -->
+                <input type="text" class="form-control" id="dqn" value="{{ $complaint->bus?->dqn ?? '' }}" readonly style="background:#e9ecef;">
             </div>
         </div>
         <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id ?? '' }}">

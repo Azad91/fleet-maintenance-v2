@@ -47,7 +47,17 @@ class ComplaintController extends Controller
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
 
-        return view('complaints.create', compact('buses', 'complaintTypes', 'employees', 'drivers'));
+        // ✅ YENİ: Boş Complaint instance — blade-də $complaint undefined olmasın
+        // Yeni model heç bir DB sətri deyil, sadəcə null-safe container-dir.
+        $complaint = new Complaint();
+
+        return view('complaints.create', compact(
+            'buses',
+            'complaintTypes',
+            'employees',
+            'drivers',
+            'complaint'
+        ));
     }
 
     public function store(ComplaintStoreRequest $request): RedirectResponse

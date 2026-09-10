@@ -71,9 +71,12 @@
         if (!source) return;
 
         const item = source.cloneNode(true);
-        if(item.querySelector('select')) item.querySelector('select').value = '';
-        if(item.querySelector('input:not([readonly])')) item.querySelector('input:not([readonly])').value = '';
 
+        const select = item.querySelector('select');
+        if (select) select.value = '';
+
+        const editableInput = item.querySelector('input:not([readonly])');
+        if (editableInput) editableInput.value = '';
         container.append(item);
 
         // Nömrələri yenilə
