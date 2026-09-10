@@ -3,63 +3,107 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Garage;
 use App\Services\GarageContext;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class GarageSelectionController extends Controller
 {
-    public function index()
+    public function index(): View|RedirectResponse
     {
         $user = auth()->user();
 
-        // 🔥 YALNIZ İSTİFADƏÇİNİN QARAJLARI
-        $companies = Company::whereHas('garages', function ($query) use ($user) {
-            $query->whereHas('users', function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->where('is_active', true);
-            });
-        })->with(['garages' => function ($query) use ($user) {
-            $query->whereHas('users', function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->where('is_active', true);
-            });
-        }])->get();
+        // ✅ SUPER ADMIN: BÜTÜN qarajları görür (membership lazım deyil)
+        if ($user->isSuperAdmin()) {
+            $companies = Company::query()
+                ->whereHas('garages', fn ($q) => $q->where('is_active', true))
+                ->with(['garages' => function ($query) {
+                    $query->where('is_active', true)->orderBy('name');
+                }])
+                ->orderBy('name')
+                ->get();
+        } else {
+            // ✅ ADİ İSTİFADƏÇİ: yalnız təyin olunduğu qarajlar
+            $companies = Company::query()
+                ->whereHas('garages', function ($query) use ($user) {
+                    $query->where('is_active', true)
+                        ->whereHas('users', function ($q) use ($user) {
+                            $q->where('user_id', $user->id)
+                                ->where('garage_user.is_active', true);
+                        });
+                })
+                ->with(['garages' => function ($query) use ($user) {
+                    $query->where('is_active', true)
+                        ->whereHas('users', function ($q) use ($user) {
+                            $q->where('user_id', $user->id)
+                                ->where('garage_user.is_active', true);
+                        })
+                        ->orderBy('name');
+                }])
+                ->orderBy('name')
+                ->get();
+        }
+
+        // Boş qalıbsa, istifadəçini məlumatlandır
+        if ($companies->isEmpty() || $companies->every(fn ($c) => $c->garages->isEmpty())) {
+            if (! $user->isSuperAdmin()) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'Heç bir qaraja təyin olunmamısınız. Sistem administratoru ilə əlaqə saxlayın.');
+            }
+        }
 
         return view('garage-selection', compact('companies'));
     }
 
-    public function selectGarage(Request $request)
+    public function selectGarage(Request $request): RedirectResponse
     {
         $request->validate([
-            'garage_id' => 'required|integer|exists:garages,id'
+            'garage_id' => 'required|integer|exists:garages,id',
         ]);
 
-        $garage = auth()->user()
-            ->garages()
-            ->whereKey($request->garage_id)
-            ->wherePivot('is_active', true)
-            ->with('company')
-            ->firstOrFail();
+        $user = auth()->user();
+
+        // ✅ SUPER ADMIN: istənilən qarajı seçə bilər (membership lazım deyil)
+        if ($user->isSuperAdmin()) {
+            $garage = Garage::with('company')
+                ->whereKey($request->garage_id)
+                ->where('is_active', true)
+                ->firstOrFail();
+        } else {
+            // ✅ ADİ İSTİFADƏÇİ: yalnız təyin olunduğu qarajlar
+            $garage = $user->garages()
+                ->whereKey($request->garage_id)
+                ->wherePivot('is_active', true)
+                ->with('company')
+                ->first();
+
+            if (! $garage) {
+                return redirect()->route('garage.selection')
+                    ->with('error', 'Seçilmiş qaraja daxil olmaq üçün icazəniz yoxdur.');
+            }
+        }
 
         // Session-a yaz
         session([
-            'current_garage_id' => $garage->id,
-            'current_garage_name' => $garage->name,
-            'current_company_id' => $garage->company_id,
-            'current_company_name' => $garage->company->name,
+            'current_garage_id'    => $garage->id,
+            'current_garage_name'  => $garage->name,
+            'current_company_id'   => $garage->company_id,
+            'current_company_name' => $garage->company?->name,
         ]);
 
-        // ✅ Context-ə də yaz
+        // Context-ə də yaz
         GarageContext::set($garage->id, $garage->company_id);
 
-        // İstifadəçini yenilə
-        $user = auth()->user();
+        // İstifadəçinin cari qarajını yenilə
         $user->update([
-            'current_garage_id' => $garage->id,
-            'current_company_id' => $garage->company_id,
-            'last_selected_garage_at' => now(),
+            'current_garage_id'         => $garage->id,
+            'current_company_id'        => $garage->company_id,
+            'last_selected_garage_at'   => now(),
         ]);
 
-        return redirect()->route('dashboard')->with('success', "Qaraj seçildi: {$garage->name}");
+        return redirect()->route('dashboard')
+            ->with('success', "Qaraj seçildi: {$garage->name}");
     }
 }
