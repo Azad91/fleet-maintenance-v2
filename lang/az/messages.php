@@ -30,6 +30,58 @@ return [
         'submit'           => 'Qaraja Daxil Ol',
     ],
 
+        'dashboard' => [
+        'title'                => 'İdarə paneli',
+        'eyebrow'              => 'ƏMƏLİYYAT İCMALI',
+        'welcome'              => 'Xoş gəldiniz, :name!',
+        'subtitle'             => 'Avtoparkınızı, texniki tapşırıqları və anbar qalığını bir yerdə izləyin.',
+        'btn_view_cards'       => 'Kartlara bax',
+        'kpi_label'            => 'Əsas göstəricilər',
+
+        'total_buses'          => 'Ümumi avtobuslar',
+        'active_vehicles'      => ':count aktiv avtobus',
+        'open_cards'           => 'Açıq kartlar',
+        'open_cards_desc'      => 'Həll olunmayı işlər',
+        'stock_quantity'       => 'Anbar miqdarı',
+        'stock_quantity_desc'  => 'Anbarda olan ümumi məhsul',
+        'no_km_today'          => 'Bu gün KM yoxdur',
+        'no_km_today_desc'     => 'Yoxlanılmalı avtobuslar',
+
+        'eyebrow_recent'       => 'SON ƏLAVƏ OLUNANLAR',
+        'recent_buses'         => 'Avtobuslar',
+        'view_all'             => 'Hamısına bax',
+        'model_not_specified'  => 'Model göstərilməyib',
+        'dqn_not_specified'    => 'DQN göstərilməyib',
+        'route_label'          => 'Xətt :number',
+        'status_active'        => 'Aktiv',
+        'status_inactive'      => 'Passiv',
+        'no_buses'             => 'Hələ avtobus əlavə edilməyib.',
+
+        'eyebrow_monitoring'   => 'İZLƏMƏ',
+        'attention'            => 'Diqqət tələb edir',
+        'low_stock_alert'      => 'Az qalan ehtiyat',
+        'low_stock_desc'       => ':count məhsul kritik səviyyədə',
+        'km_records'           => 'KM qeydləri',
+        'km_records_desc'      => ':count avtobus gözləyir',
+        'recurring_issues'     => 'Təkrarlanan problemlər',
+        'recurring_desc'       => ':count problem izlənilir',
+
+        'eyebrow_tasks'        => 'TEXNİKİ TAPŞIRIQLAR',
+        'recent_cards'         => 'Son açıq kartlar',
+        'link_cards'           => 'Kartlar',
+        'table_bus'            => 'Avtobus',
+        'table_complaint'      => 'Şikayət',
+        'table_status'         => 'Status',
+        'table_date'           => 'Tarix',
+        'no_complaint'         => 'Şikayət yoxdur',
+        'no_open_cards'        => 'Açıq kart yoxdur.',
+
+        'eyebrow_stock'        => 'ANBAR XƏBƏRDARLIĞI',
+        'critical_stock'       => 'Kritik ehtiyat',
+        'no_code'              => 'Kod yoxdur',
+        'no_critical_stock'    => 'Kritik ehtiyat yoxdur.',
+    ],
+
     // ==================== COMMON ====================
     'common' => [
         'save'          => 'Yadda saxla',

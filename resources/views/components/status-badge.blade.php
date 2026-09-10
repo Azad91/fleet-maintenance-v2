@@ -1,15 +1,24 @@
+@props(['status' => null])
+
 @php
+    // Map enum value → CSS class
     $class = match($status) {
-        'gözləmədə' => 'gözləmədə',
-        'işdə' => 'işdə',
-        'həll olundu' => 'həll-olundu',
-        'aktiv' => 'aktiv',
-        'passiv' => 'passiv',
-        'temir' => 'temir',
-        default => '',
+        'pending'     => 'pending',
+        'in_progress' => 'in-progress',
+        'completed'   => 'completed',
+        'cancelled'   => 'cancelled',
+        'active'      => 'active',
+        'inactive'    => 'inactive',
+        default       => '',
     };
+
+    // Translate if it's a known complaint_status enum
+    $knownStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+    $label = in_array($status, $knownStatuses, true)
+        ? __('messages.enums.complaint_status.' . $status)
+        : $status;
 @endphp
 
-<span class="badge-status {{ $class }}">
-    {{ $status }}
+<span {{ $attributes->merge(['class' => 'badge-status ' . $class]) }}>
+    {{ $label }}
 </span>

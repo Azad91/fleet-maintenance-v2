@@ -2,6 +2,63 @@
 
 return [
 
+    'dashboard' => [
+        'title'                => 'Dashboard',
+        'eyebrow'              => 'OPERATIONAL OVERVIEW',
+        'welcome'              => 'Welcome, :name!',
+        'subtitle'             => 'Monitor your fleet, technical tasks, and warehouse stock at a glance.',
+        'btn_view_cards'       => 'View Cards',
+        'kpi_label'            => 'Key metrics',
+
+        // KPI cards
+        'total_buses'          => 'Total Buses',
+        'active_vehicles'      => ':count active vehicles',
+        'open_cards'           => 'Open Cards',
+        'open_cards_desc'      => 'Jobs waiting to be resolved',
+        'stock_quantity'       => 'Stock Quantity',
+        'stock_quantity_desc'  => 'Total items in stock',
+        'no_km_today'          => 'No KM Today',
+        'no_km_today_desc'     => 'Buses to check',
+
+        // Recent buses panel
+        'eyebrow_recent'       => 'RECENTLY ADDED',
+        'recent_buses'         => 'Buses',
+        'view_all'             => 'View All',
+        'model_not_specified'  => 'Model not specified',
+        'dqn_not_specified'    => 'DQN not specified',
+        'route_label'          => 'Route :number',
+        'status_active'        => 'Active',
+        'status_inactive'      => 'Inactive',
+        'no_buses'             => 'No buses added yet.',
+
+        // Attention panel
+        'eyebrow_monitoring'   => 'MONITORING',
+        'attention'            => 'Requires Attention',
+        'low_stock_alert'      => 'Low Stock',
+        'low_stock_desc'       => ':count items at critical level',
+        'km_records'           => 'KM Records',
+        'km_records_desc'      => ':count buses awaiting data',
+        'recurring_issues'     => 'Recurring Issues',
+        'recurring_desc'       => ':count issues to monitor',
+
+        // Recent cards panel
+        'eyebrow_tasks'        => 'TECHNICAL TASKS',
+        'recent_cards'         => 'Recent Open Cards',
+        'link_cards'           => 'Cards',
+        'table_bus'            => 'Bus',
+        'table_complaint'      => 'Complaint',
+        'table_status'         => 'Status',
+        'table_date'           => 'Date',
+        'no_complaint'         => 'No complaint',
+        'no_open_cards'        => 'No open cards.',
+
+        // Critical stock panel
+        'eyebrow_stock'        => 'STOCK ALERT',
+        'critical_stock'       => 'Critical Stock',
+        'no_code'              => 'No code',
+        'no_critical_stock'    => 'No critical stock items.',
+    ],
+
     // ==================== COMMON ====================
     'common' => [
         'save'          => 'Save',
