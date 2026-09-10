@@ -1,28 +1,29 @@
 @extends('layouts.app')
 
-@section('title', 'Daily KM Records')
+@section('title', __('messages.daily_km.title'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📊 Daily KM Records</h1>
+    <h1>📊 {{ __('messages.daily_km.title') }}</h1>
     @if(auth()->user()?->hasGarageRole(['admin', 'daily_km']))
     <div>
         <a href="{{ route('daily-km-records.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Import from Excel
+            <i class="bi bi-upload"></i> {{ __('messages.daily_km.import') }}
         </a>
         <a href="{{ route('daily-km-records.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> New KM Record
+            <i class="bi bi-plus-lg"></i> {{ __('messages.daily_km.new') }}
         </a>
     </div>
     @endif
 </div>
 
-<!-- Search -->
 <form method="GET" class="mb-4">
     <div class="input-group">
-        <input type="text" class="form-control" name="search" placeholder="Search by DQN, Route No or Date..." value="{{ request('search') }}">
-        <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
-        <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary">Reset</a>
+        <input type="text" class="form-control" name="search"
+               placeholder="{{ __('messages.daily_km.search_placeholder') }}"
+               value="{{ request('search') }}">
+        <button class="btn btn-primary"><i class="bi bi-search"></i> {{ __('messages.common.search') }}</button>
+        <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary">{{ __('messages.common.reset') }}</a>
     </div>
 </form>
 
@@ -33,12 +34,12 @@
                 <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Bus (DQN)</th>
-                        <th>Route No</th>
-                        <th>Date</th>
-                        <th>KM</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
+                        <th>{{ __('messages.daily_km.bus') }}</th>
+                        <th>{{ __('messages.buses.route_number') }}</th>
+                        <th>{{ __('messages.daily_km.date') }}</th>
+                        <th>{{ __('messages.daily_km.km') }}</th>
+                        <th>{{ __('messages.daily_km.notes') }}</th>
+                        <th>{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,7 +60,7 @@
                                     <a href="{{ route('daily-km-records.edit', $record) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('Are you sure?')">
+                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('{{ __('messages.common.confirm') }}')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -74,7 +75,7 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-graph-up" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            No KM records yet.
+                            {{ __('messages.daily_km.no_records') }}
                         </td>
                     </tr>
                     @endforelse

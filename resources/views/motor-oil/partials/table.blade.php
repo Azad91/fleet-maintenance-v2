@@ -1,7 +1,7 @@
 @if(isset($search) && $search && $grouped->count() == 0)
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle"></i>
-        No results found for KM "<strong>{{ $search }}</strong>".
+        {{ __('messages.motor_oil.no_results', ['search' => $search]) }}
     </div>
 @endif
 
@@ -13,17 +13,17 @@
         <div class="card-body">
             <h4 class="fw-bold text-primary">
                 📍 {{ number_format($km, 0, ',', '.') }} KM
-                <span class="badge bg-secondary">{{ $items->count() }} parts</span>
+                <span class="badge bg-secondary">{{ __('messages.motor_oil.parts_count', ['count' => $items->count()]) }}</span>
             </h4>
             <div class="table-responsive">
                 <table class="table table-hover table-bordered table-striped">
                     <thead class="table-dark">
                         <tr>
                             <th style="width: 60px; text-align: center;">#</th>
-                            <th style="width: 150px;">Part Code</th>
-                            <th>Part Name</th>
-                            <th style="width: 100px; text-align: center;">Unit</th>
-                            <th style="width: 100px; text-align: center;">Quantity</th>
+                            <th style="width: 150px;">{{ __('messages.motor_oil.part_code') }}</th>
+                            <th>{{ __('messages.motor_oil.part_name') }}</th>
+                            <th style="width: 100px; text-align: center;">{{ __('messages.motor_oil.unit') }}</th>
+                            <th style="width: 100px; text-align: center;">{{ __('messages.motor_oil.quantity') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -44,7 +44,7 @@
 @empty
     <div class="text-center text-muted py-4">
         <i class="bi bi-inbox" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-        No motor oil details added yet.
+        {{ __('messages.motor_oil.no_details') }}
     </div>
 @endforelse
 

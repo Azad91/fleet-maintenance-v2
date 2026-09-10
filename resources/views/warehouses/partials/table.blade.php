@@ -5,13 +5,13 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Quantity</th>
-                        <th>Unit</th>
-                        <th>Unit Price</th>
-                        <th>Total Price</th>
-                        <th>Actions</th>
+                        <th>{{ __('messages.warehouse.code') }}</th>
+                        <th>{{ __('messages.warehouse.name') }}</th>
+                        <th>{{ __('messages.warehouse.quantity') }}</th>
+                        <th>{{ __('messages.warehouse.unit') }}</th>
+                        <th>{{ __('messages.warehouse.price') }}</th>
+                        <th>{{ __('messages.warehouse.total_price') }}</th>
+                        <th>{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,9 +23,9 @@
                         <td>
                             {{ $item->quantity }}
                             @if($item->quantity <= 0)
-                                <span class="badge bg-danger">⚠️ Out of Stock</span>
+                                <span class="badge bg-danger">⚠️ {{ __('messages.warehouse.out_of_stock') }}</span>
                             @elseif($item->quantity <= $item->minimum_quantity)
-                                <span class="badge bg-warning">⚠️ Low Stock</span>
+                                <span class="badge bg-warning">⚠️ {{ __('messages.warehouse.low_stock') }}</span>
                             @endif
                         </td>
                         <td>{{ $item->unit ?? '-' }}</td>
@@ -49,7 +49,7 @@
                                     <form action="{{ route('warehouses.destroy', $item) }}" method="POST" style="display:inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.common.confirm') }}')">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -62,9 +62,10 @@
                         <td colspan="8" class="text-center text-muted py-4">
                             <i class="bi bi-box-seam" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                             @if(isset($search) && $search)
-                                No results found for "<strong>{{ $search }}</strong>"
+                                {{ __('messages.warehouse.no_results', ['search' => $search]) }}
                             @else
-                                No items in warehouse yet. <a href="{{ route('warehouses.create') }}">Add a new one!</a>
+                                {{ __('messages.warehouse.no_items') }}
+                                <a href="{{ route('warehouses.create') }}">{{ __('messages.warehouse.new') }}</a>
                             @endif
                         </td>
                     </tr>

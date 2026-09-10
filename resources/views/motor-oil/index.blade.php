@@ -1,44 +1,39 @@
 @extends('layouts.app')
 
-@section('title', 'Motor Oil')
+@section('title', __('messages.motor_oil.title'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>🛢️ Motor Oil</h1>
+    <h1>🛢️ {{ __('messages.motor_oil.title') }}</h1>
     <div>
         <a href="{{ route('motor-oil.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Import from Excel
+            <i class="bi bi-upload"></i> {{ __('messages.motor_oil.import') }}
         </a>
     </div>
 </div>
 
 <div class="card">
     <div class="card-body">
-        {{-- Search --}}
         <div class="mb-3">
             <div class="row g-2 align-items-end">
                 <div class="col-md-8">
-                    <label for="motorOilSearchInput" class="form-label fw-bold">Search by KM</label>
+                    <label for="motorOilSearchInput" class="form-label fw-bold">{{ __('messages.motor_oil.search_label') }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text"
-                               id="motorOilSearchInput"
-                               class="form-control"
-                               placeholder="🔍 Enter KM (e.g. 36000)..."
+                        <input type="text" id="motorOilSearchInput" class="form-control"
+                               placeholder="{{ __('messages.motor_oil.search_placeholder') }}"
                                value="{{ request('search') }}"
                                autocomplete="off"
                                oninput="liveSearch(this.value)">
                         <button type="button" class="btn btn-secondary" onclick="clearSearch()">
-                            <i class="bi bi-x-circle"></i> Clear
+                            <i class="bi bi-x-circle"></i> {{ __('messages.common.clear') }}
                         </button>
                     </div>
-                    <small class="text-muted mt-2 d-block">
-                        Only KM value is searched. Letters and symbols are ignored.
-                    </small>
+                    <small class="text-muted mt-2 d-block">{{ __('messages.motor_oil.search_hint') }}</small>
                 </div>
                 <div class="col-md-4 text-md-end">
                     <small class="text-muted">
-                        Total: <span id="totalCount">0</span> parts
+                        {{ __('messages.common.total') }}: <span id="totalCount">0</span> {{ __('messages.motor_oil.parts') }}
                     </small>
                 </div>
             </div>
@@ -55,9 +50,6 @@
 <script>
     let motorOilSearchTimeout = null;
 
-    /**
-     * Debounced live search — user stops typing for 300ms before request fires.
-     */
     function liveSearch(query) {
         clearTimeout(motorOilSearchTimeout);
         motorOilSearchTimeout = setTimeout(() => {
@@ -65,9 +57,6 @@
         }, 300);
     }
 
-    /**
-     * Clear input and reset results.
-     */
     function clearSearch() {
         const input = document.getElementById('motorOilSearchInput');
         if (input) {
@@ -77,9 +66,6 @@
         performMotorOilSearch('');
     }
 
-    /**
-     * Actual AJAX search against the motor-oil.search route.
-     */
     function performMotorOilSearch(query) {
         const params = new URLSearchParams();
         const normalized = String(query ?? '').replace(/[.,\s]/g, '');
@@ -121,7 +107,6 @@
         });
     }
 
-    // Update counter on initial page load.
     document.addEventListener('DOMContentLoaded', function () {
         const counter = document.querySelector('#motorOilResults .total-count');
         const totalEl = document.getElementById('totalCount');

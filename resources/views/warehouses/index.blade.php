@@ -1,42 +1,52 @@
 @extends('layouts.app')
 
-@section('title', 'Warehouse')
+@section('title', __('messages.warehouse.title'))
 
 @section('content')
+<div class="page-header">
+    <h1>📦 {{ __('messages.warehouse.title') }}</h1>
+    <p class="text-muted">{{ __('messages.warehouse.subtitle') }}</p>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📦 Warehouse</h1>
-    <div>
-        <a href="{{ route('warehouses.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Import from Excel
-        </a>
-        <a href="{{ route('warehouses.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> New Item
-        </a>
+    <div class="d-flex gap-2 flex-wrap">
+        @can('import', App\Models\Warehouse::class)
+            <a href="{{ route('warehouses.import') }}" class="btn btn-success">
+                <i class="bi bi-upload"></i> {{ __('messages.warehouse.import') }}
+            </a>
+        @endcan
+        @can('create', App\Models\Warehouse::class)
+            <a href="{{ route('warehouses.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> {{ __('messages.warehouse.new') }}
+            </a>
+        @endcan
     </div>
 </div>
 
-<!-- Live Search -->
 <div class="card mb-4">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-8">
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Search by Code or Name..." oninput="liveSearch(this.value)">
+                    <input type="text" class="form-control" id="searchInput"
+                           placeholder="{{ __('messages.warehouse.search_placeholder') }}"
+                           oninput="liveSearch(this.value)">
                     <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; liveSearch('');">
-                        <i class="bi bi-x-circle"></i> Clear
+                        <i class="bi bi-x-circle"></i> {{ __('messages.common.clear') }}
                     </button>
                 </div>
-                <small class="text-muted mt-2 d-block">Search by Code (D-001) or Name (Filter)</small>
+                <small class="text-muted mt-2 d-block">{{ __('messages.warehouse.search_hint') }}</small>
             </div>
             <div class="col-md-4 text-end">
-                <small class="text-muted">Total: <span id="totalCount">{{ $warehouses->count() }}</span> items</small>
+                <small class="text-muted">
+                    {{ __('messages.common.total') }}: <span id="totalCount">{{ $warehouses->count() }}</span>
+                </small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Results -->
 <div id="searchResults">
     @include('warehouses.partials.table', ['warehouses' => $warehouses])
 </div>

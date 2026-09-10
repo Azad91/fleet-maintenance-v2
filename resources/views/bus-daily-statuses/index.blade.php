@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Daily Bus Statuses')
+@section('title', __('messages.daily_status.title'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📋 Daily Bus Statuses</h1>
+    <h1>📋 {{ __('messages.daily_status.title') }}</h1>
     @if(auth()->user()?->hasGarageRole(['admin', 'daily_status']))
     <div>
         <a href="{{ route('bus-daily-statuses.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Import from Excel
+            <i class="bi bi-upload"></i> {{ __('messages.daily_status.import') }}
         </a>
         <a href="{{ route('bus-daily-statuses.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> New Status
+            <i class="bi bi-plus-lg"></i> {{ __('messages.daily_status.new') }}
         </a>
     </div>
     @endif
@@ -24,11 +24,11 @@
                 <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Bus (DQN)</th>
-                        <th>Route No</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>{{ __('messages.daily_status.bus') }} (DQN)</th>
+                        <th>{{ __('messages.buses.route_number') }}</th>
+                        <th>{{ __('messages.daily_status.date') }}</th>
+                        <th>{{ __('messages.daily_status.status') }}</th>
+                        <th>{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,16 +39,7 @@
                         <td>{{ $status->bus->route_number ?? '-' }}</td>
                         <td>{{ $status->date ? \Carbon\Carbon::parse($status->date)->format('d.m.Y') : '-' }}</td>
                         <td>
-                            @php
-                                $bgClass = match(trim($status->status)) {
-                                    'XƏTTƏ ÇIXMAĞA UYĞUN' => 'bg-success text-white',
-                                    'İSTİSMARA YARARSIZ(EHTİYYAT HİSSƏ)' => 'bg-danger text-white',
-                                    'İSTİSMARA YARARSIZ(NASAZLIQ)' => 'bg-danger text-white',
-                                    'QƏZALI' => 'bg-warning text-dark',
-                                    default => 'bg-secondary text-white'
-                                };
-                            @endphp
-                            <span class="badge {{ $bgClass }}" style="font-size: 14px; padding: 8px 14px; border-radius: 6px;">
+                            <span class="badge bg-secondary text-white" style="font-size: 14px; padding: 8px 14px; border-radius: 6px;">
                                 {{ $status->status }}
                             </span>
                         </td>
@@ -69,7 +60,7 @@
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
                             <i class="bi bi-calendar2-week" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            No status data yet.
+                            {{ __('messages.daily_status.no_records') }}
                         </td>
                     </tr>
                     @endforelse

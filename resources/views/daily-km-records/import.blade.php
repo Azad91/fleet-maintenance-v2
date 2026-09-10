@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Import KM from Excel')
+@section('title', __('messages.daily_km.import'))
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>📂 Import Daily KM from Excel</h4>
+        <h4>📂 {{ __('messages.daily_km.import') }}</h4>
     </div>
     <div class="card-body">
         <form action="{{ route('daily-km-records.import.store') }}" method="POST" enctype="multipart/form-data">
@@ -13,29 +13,29 @@
 
             <div class="alert alert-info">
                 <i class="bi bi-info-circle"></i>
-                <strong>Excel Format:</strong>
+                <strong>{{ __('messages.complaints.import_format_title') }}:</strong>
                 <ul class="mt-2 mb-0">
-                    <li><strong>PLAKA NO (DQN)</strong> – Bus DQN <span class="text-danger">*</span></li>
-                    <li><strong>KM</strong> – Mileage (number)</li>
-                    <li><strong>Date</strong> – Date written in the column header (auto-read)</li>
+                    <li><strong>DQN</strong> – {{ __('messages.daily_km.bus') }} <span class="text-danger">*</span></li>
+                    <li><strong>KM</strong> – {{ __('messages.daily_km.km') }}</li>
+                    <li><strong>Date</strong> – {{ __('messages.daily_km.date') }} ({{ __('messages.daily_km.auto_read') }})</li>
                 </ul>
                 <p class="mt-2 mb-0 text-warning">
                     <i class="bi bi-exclamation-triangle"></i>
-                    Other columns (ROUTE, FUEL, etc.) are ignored.
+                    {{ __('messages.daily_km.ignored_columns') }}
                 </p>
             </div>
 
             <div class="mb-3">
-                <label for="file" class="form-label fw-bold">Select Excel File (.xlsx, .xls, .csv)</label>
+                <label for="file" class="form-label fw-bold">{{ __('messages.buses.import_select_file') }}</label>
                 <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls,.csv" required>
             </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success">
-                    <i class="bi bi-upload"></i> Import
+                    <i class="bi bi-upload"></i> {{ __('messages.buses.import_button') }}
                 </button>
                 <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Back
+                    <i class="bi bi-arrow-left"></i> {{ __('messages.common.back') }}
                 </a>
             </div>
         </form>

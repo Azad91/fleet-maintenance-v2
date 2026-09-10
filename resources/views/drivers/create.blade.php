@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'New Driver')
+@section('title', __('messages.drivers.new'))
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>➕ Add New Driver</h4>
+        <h4>➕ {{ __('messages.drivers.new') }}</h4>
     </div>
     <div class="card-body">
         @if ($errors->any())
             <div class="alert alert-danger">
-                <strong>Driver not added.</strong>
+                <strong>{{ __('messages.drivers.not_added') }}</strong>
                 <ul class="mb-0 mt-2">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Driver')
+@section('title', __('messages.drivers.edit'))
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>✏️ Edit Driver</h4>
+        <h4>✏️ {{ __('messages.drivers.edit') }}</h4>
     </div>
     <div class="card-body">
         @if ($errors->any())
             <div class="alert alert-danger">
-                <strong>Changes not saved.</strong>
+                <strong>{{ __('messages.drivers.not_saved') }}</strong>
                 <ul class="mb-0 mt-2">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

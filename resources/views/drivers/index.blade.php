@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Drivers')
+@section('title', __('messages.drivers.title'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>🧑‍✈️ Drivers</h1>
+    <h1>🧑‍✈️ {{ __('messages.drivers.title') }}</h1>
     <div>
         <a href="{{ route('drivers.export') }}" class="btn btn-info">
-            <i class="bi bi-download"></i> Export to Excel
+            <i class="bi bi-download"></i> {{ __('messages.drivers.export_excel') }}
         </a>
         <a href="{{ route('drivers.import') }}" class="btn btn-success">
-            <i class="bi bi-upload"></i> Import from Excel
+            <i class="bi bi-upload"></i> {{ __('messages.drivers.import_excel') }}
         </a>
         <a href="{{ route('drivers.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> New Driver
+            <i class="bi bi-plus-lg"></i> {{ __('messages.drivers.new') }}
         </a>
     </div>
 </div>
@@ -24,13 +24,13 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Phone</th>
-                        <th>Position</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>{{ __('messages.drivers.code') }}</th>
+                        <th>{{ __('messages.drivers.first_name') }}</th>
+                        <th>{{ __('messages.drivers.last_name') }}</th>
+                        <th>{{ __('messages.drivers.phone') }}</th>
+                        <th>{{ __('messages.drivers.position') }}</th>
+                        <th>{{ __('messages.common.status') }}</th>
+                        <th>{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,7 +43,7 @@
                         <td>{{ $driver->position ?? '-' }}</td>
                         <td>
                             <span class="badge-status {{ $driver->is_active ? 'aktiv' : 'passiv' }}">
-                                {{ $driver->is_active ? '✅ Active' : '❌ Inactive' }}
+                                {{ $driver->is_active ? '✅ ' . __('messages.common.active') : '❌ ' . __('messages.common.inactive') }}
                             </span>
                         </td>
                         <td>
@@ -57,7 +57,7 @@
                                 <form action="{{ route('drivers.destroy', $driver) }}" method="POST" style="display:inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.common.confirm') }}')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -68,7 +68,7 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-person" style="font-size:40px;display:block;margin-bottom:10px;"></i>
-                            No drivers yet.
+                            {{ __('messages.drivers.no_drivers') }}
                         </td>
                     </tr>
                     @endforelse

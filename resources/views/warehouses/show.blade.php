@@ -1,87 +1,91 @@
 @extends('layouts.app')
 
-@section('title', 'Warehouse Item Details')
+@section('title', __('messages.warehouse.details'))
 
 @section('content')
 <div class="container">
-    <h1>📦 Warehouse Item Details</h1>
+    <h1>📦 {{ __('messages.warehouse.details') }}</h1>
 
-    <div class="section-title">📋 Basic Information</div>
+    <div class="section-title">📋 {{ __('messages.warehouse.basic_info') }}</div>
     <div class="field">
         <span class="label">ID:</span>
         <span class="value">{{ $warehouse->id }}</span>
     </div>
     <div class="field">
-        <span class="label">Code:</span>
+        <span class="label">{{ __('messages.warehouse.code') }}:</span>
         <span class="value"><strong>{{ $warehouse->code }}</strong></span>
     </div>
     <div class="field">
-        <span class="label">Name:</span>
+        <span class="label">{{ __('messages.warehouse.name') }}:</span>
         <span class="value">{{ $warehouse->name }}</span>
     </div>
     <div class="field">
-        <span class="label">Category:</span>
+        <span class="label">{{ __('messages.warehouse.category') }}:</span>
         <span class="value">{{ $warehouse->category ?? '-' }}</span>
     </div>
     <div class="field">
-        <span class="label">Unit:</span>
+        <span class="label">{{ __('messages.warehouse.unit') }}:</span>
         <span class="value">{{ $warehouse->unit ?? '-' }}</span>
     </div>
 
-    <div class="section-title">📊 Stock Information</div>
+    <div class="section-title">📊 {{ __('messages.warehouse.stock_info') }}</div>
     <div class="field">
-        <span class="label">Quantity:</span>
+        <span class="label">{{ __('messages.warehouse.quantity') }}:</span>
         <span class="value">
             <strong>{{ $warehouse->quantity }}</strong>
             @if($warehouse->quantity <= 0)
-                <span class="status-empty">🔴 Out of Stock</span>
+                <span class="status-empty">🔴 {{ __('messages.warehouse.out_of_stock') }}</span>
             @elseif($warehouse->quantity <= $warehouse->minimum_quantity)
-                <span class="status-low">🟡 Low Stock</span>
+                <span class="status-low">🟡 {{ __('messages.warehouse.low_stock') }}</span>
             @else
-                <span class="status-good">🟢 Normal</span>
+                <span class="status-good">🟢 {{ __('messages.warehouse.normal') }}</span>
             @endif
         </span>
     </div>
     <div class="field">
-        <span class="label">Minimum Quantity:</span>
+        <span class="label">{{ __('messages.warehouse.minimum_quantity') }}:</span>
         <span class="value">{{ $warehouse->minimum_quantity }}</span>
     </div>
     <div class="field">
-        <span class="label">Unit Price:</span>
+        <span class="label">{{ __('messages.warehouse.price') }}:</span>
         <span class="value">{{ $warehouse->price ? number_format($warehouse->price, 2) . ' ₼' : '-' }}</span>
     </div>
     <div class="field">
-        <span class="label">Total Price:</span>
+        <span class="label">{{ __('messages.warehouse.total_price') }}:</span>
         <span class="value">
             <strong>{{ $warehouse->price ? number_format($warehouse->quantity * $warehouse->price, 2) . ' ₼' : '-' }}</strong>
         </span>
     </div>
 
-    <div class="section-title">🏢 Supplier</div>
+    <div class="section-title">🏢 {{ __('messages.warehouse.supplier_section') }}</div>
     <div class="field">
-        <span class="label">Supplier:</span>
+        <span class="label">{{ __('messages.warehouse.supplier') }}:</span>
         <span class="value">{{ $warehouse->supplier ?? '-' }}</span>
     </div>
 
-    <div class="section-title">📝 Notes</div>
+    <div class="section-title">📝 {{ __('messages.warehouse.notes_section') }}</div>
     <div class="field">
-        <span class="label">Notes:</span>
+        <span class="label">{{ __('messages.common.notes') }}:</span>
         <span class="value">{{ $warehouse->notes ?? '-' }}</span>
     </div>
 
     <div class="field">
-        <span class="label">Created:</span>
+        <span class="label">{{ __('messages.complaints.created') }}:</span>
         <span class="value">{{ $warehouse->created_at }}</span>
     </div>
     <div class="field">
-        <span class="label">Updated:</span>
+        <span class="label">{{ __('messages.complaints.last_updated') }}:</span>
         <span class="value">{{ $warehouse->updated_at }}</span>
     </div>
 
     <br>
     @if(Auth::user()->hasGarageRole(['admin', 'warehouse']))
-        <a href="{{ route('warehouses.edit', $warehouse) }}" class="btn btn-warning">✏️ Edit</a>
+        <a href="{{ route('warehouses.edit', $warehouse) }}" class="btn btn-warning">
+            ✏️ {{ __('messages.common.edit') }}
+        </a>
     @endif
-    <a href="{{ route('warehouses.index') }}" class="btn btn-secondary">⬅ Back</a>
+    <a href="{{ route('warehouses.index') }}" class="btn btn-secondary">
+        ⬅ {{ __('messages.common.back') }}
+    </a>
 </div>
 @endsection

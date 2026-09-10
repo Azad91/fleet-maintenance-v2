@@ -1,50 +1,61 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Status')
+@section('title', __('messages.daily_status.edit'))
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>✏️ Edit Status</h4>
+        <h4>✏️ {{ __('messages.daily_status.edit') }}</h4>
     </div>
     <div class="card-body">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{ route('bus-daily-statuses.update', $status) }}" method="POST">
             @csrf
             @method('PUT')
 
             <div class="mb-3">
-                <label for="bus_id" class="form-label fw-bold">🚌 Bus <span class="text-danger">*</span></label>
+                <label for="bus_id" class="form-label fw-bold">🚌 {{ __('messages.daily_status.bus') }} <span class="text-danger">*</span></label>
                 <select class="form-select" id="bus_id" name="bus_id" required>
-                    <option value="">Select Bus...</option>
+                    <option value="">{{ __('messages.common.select') }}</option>
                     @foreach($buses as $bus)
                         <option value="{{ $bus->id }}" {{ $status->bus_id == $bus->id ? 'selected' : '' }}>
-                            {{ $bus->dqn }} - Route: {{ $bus->route_number ?? '-' }}
+                            {{ $bus->dqn }} - {{ __('messages.daily_km.route_label', ['route' => $bus->route_number ?? '-']) }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
             <div class="mb-3">
-                <label for="date" class="form-label fw-bold">📅 Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" id="date" name="date" required value="{{ \Carbon\Carbon::parse($status->date)->format('Y-m-d') }}">
+                <label for="date" class="form-label fw-bold">📅 {{ __('messages.daily_status.date') }} <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="date" name="date" required
+                       value="{{ \Carbon\Carbon::parse($status->date)->format('Y-m-d') }}">
             </div>
 
             <div class="mb-3">
-                <label for="status" class="form-label fw-bold">📌 Status <span class="text-danger">*</span></label>
+                <label for="status" class="form-label fw-bold">📌 {{ __('messages.daily_status.status') }} <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="status" name="status" required value="{{ $status->status }}">
             </div>
 
             <div class="mb-3">
-                <label for="notes" class="form-label fw-bold">📝 Notes</label>
+                <label for="notes" class="form-label fw-bold">📝 {{ __('messages.daily_status.notes') }}</label>
                 <textarea class="form-control" id="notes" name="notes" rows="3">{{ $status->notes }}</textarea>
             </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Update
+                    <i class="bi bi-save"></i> {{ __('messages.common.update') }}
                 </button>
                 <a href="{{ route('bus-daily-statuses.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Back
+                    <i class="bi bi-arrow-left"></i> {{ __('messages.common.back') }}
                 </a>
             </div>
         </form>
