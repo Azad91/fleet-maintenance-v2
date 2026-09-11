@@ -15,11 +15,10 @@ class BusDailyStatusPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_STATUS->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyStatusRoles()
+        ));
     }
 
     public function view(User $user, ?BusDailyStatus $status = null): bool
@@ -32,11 +31,10 @@ class BusDailyStatusPolicy
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_STATUS->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyStatusRoles()
+        ));
     }
 
     public function create(User $user): bool
@@ -45,10 +43,10 @@ class BusDailyStatusPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_STATUS->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyStatusRoles()
+        ));
     }
 
     public function update(User $user, ?BusDailyStatus $status = null): bool
@@ -61,10 +59,10 @@ class BusDailyStatusPolicy
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_STATUS->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyStatusRoles()
+        ));
     }
 
     public function delete(User $user, ?BusDailyStatus $status = null): bool
@@ -77,10 +75,11 @@ class BusDailyStatusPolicy
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_STATUS->value,
-        ]);
+        // Yalnız admin + manager silə bilər
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            [RoleEnum::DAILY_STATUS_MANAGER->value]
+        ));
     }
 
     public function import(User $user): bool
@@ -89,9 +88,10 @@ class BusDailyStatusPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_STATUS->value,
-        ]);
+        // Yalnız admin + manager import edə bilər
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            [RoleEnum::DAILY_STATUS_MANAGER->value]
+        ));
     }
 }

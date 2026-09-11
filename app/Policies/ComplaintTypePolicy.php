@@ -14,59 +14,35 @@ class ComplaintTypePolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::COMPLAINT->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::complaintRoles()
+        ));
     }
 
     public function view(User $user, ComplaintType $type): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::COMPLAINT->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $this->viewAny($user);
     }
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $user->isSuperAdmin()
+            || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function update(User $user, ComplaintType $type): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->create($user);
     }
 
     public function delete(User $user, ComplaintType $type): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->create($user);
     }
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->create($user);
     }
 }

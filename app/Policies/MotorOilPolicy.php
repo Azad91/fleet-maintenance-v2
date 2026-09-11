@@ -10,62 +10,32 @@ class MotorOilPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DIRECTORATE->value,
-            RoleEnum::WAREHOUSE->value,
-        ]);
+        return $user->isSuperAdmin()
+            || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function view(User $user, MotorOilDetail $detail): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $this->viewAny($user);
     }
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->viewAny($user);
     }
 
     public function update(User $user, MotorOilDetail $detail): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->viewAny($user);
     }
 
     public function delete(User $user, MotorOilDetail $detail): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->viewAny($user);
     }
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->viewAny($user);
     }
 }

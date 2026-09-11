@@ -15,11 +15,10 @@ class DailyKmRecordPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_KM->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyKmRoles()
+        ));
     }
 
     public function view(User $user, ?DailyKmRecord $record = null): bool
@@ -32,11 +31,10 @@ class DailyKmRecordPolicy
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_KM->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyKmRoles()
+        ));
     }
 
     public function create(User $user): bool
@@ -45,10 +43,10 @@ class DailyKmRecordPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_KM->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyKmRoles()
+        ));
     }
 
     public function update(User $user, ?DailyKmRecord $record = null): bool
@@ -61,10 +59,10 @@ class DailyKmRecordPolicy
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_KM->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            RoleEnum::dailyKmRoles()
+        ));
     }
 
     public function delete(User $user, ?DailyKmRecord $record = null): bool
@@ -77,10 +75,10 @@ class DailyKmRecordPolicy
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_KM->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            [RoleEnum::DAILY_KM_MANAGER->value]
+        ));
     }
 
     public function import(User $user): bool
@@ -89,9 +87,9 @@ class DailyKmRecordPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DAILY_KM->value,
-        ]);
+        return $user->hasGarageRole(array_merge(
+            [RoleEnum::ADMIN->value],
+            [RoleEnum::DAILY_KM_MANAGER->value]
+        ));
     }
 }

@@ -11,11 +11,8 @@ class DriverPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $user->isSuperAdmin()
+            || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function view(User $user, ?Driver $driver = null): bool
@@ -33,54 +30,27 @@ class DriverPolicy
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $user->isSuperAdmin()
+            || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function update(User $user, ?Driver $driver = null): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        if ($driver && $driver->garage_id !== GarageContext::getGarageId()) {
-            return false;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->view($user, $driver);
     }
 
     public function delete(User $user, ?Driver $driver = null): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        if ($driver && $driver->garage_id !== GarageContext::getGarageId()) {
-            return false;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->view($user, $driver);
     }
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->create($user);
     }
 
     public function export(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $this->create($user);
     }
 }

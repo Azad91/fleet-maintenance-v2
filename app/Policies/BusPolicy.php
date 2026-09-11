@@ -15,10 +15,7 @@ class BusPolicy
             return true;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function view(User $user, ?Bus $bus = null): bool
@@ -27,24 +24,17 @@ class BusPolicy
             return true;
         }
 
-        // If a bus instance is given, verify ownership
         if ($bus && $bus->garage_id !== GarageContext::getGarageId()) {
             return false;
         }
 
-        return $user->hasGarageRole([
-            RoleEnum::ADMIN->value,
-            RoleEnum::DIRECTORATE->value,
-        ]);
+        return $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function create(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $user->isSuperAdmin()
+            || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
     public function update(User $user, ?Bus $bus = null): bool
@@ -75,10 +65,7 @@ class BusPolicy
 
     public function import(User $user): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return $user->hasGarageRole(RoleEnum::ADMIN->value);
+        return $user->isSuperAdmin()
+            || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 }
