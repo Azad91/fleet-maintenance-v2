@@ -15,7 +15,7 @@ class BusFactory extends Factory
             'garage_id'    => 1,
             'company_id'   => 1,
             'dqn'          => $this->faker->unique()->numerify('##-[A-Z]{2}-###'),
-            'route_number' => $this->faker->numerify('###'),
+            'route_number' => $this->faker->unique()->numerify('###'),
             'is_active'    => true,
         ];
     }
