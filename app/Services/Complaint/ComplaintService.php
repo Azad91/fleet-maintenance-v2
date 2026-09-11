@@ -16,13 +16,7 @@ class ComplaintService
 
     public function create(array $data, ?array $detallar = null, array $shikayet = []): Complaint
     {
-        if (($data['yer'] ?? null) === 'yol' && ! empty($data['driver_id'])) {
-            $driver = Driver::active()->findOrFail($data['driver_id']);
-            $data['driver_name'] = $driver->full_name;
-        } else {
-            $data['driver_id'] = null;
-            $data['driver_name'] = null;
-        }
+        $this->applyDriverContext($data);
 
         $data['created_by'] = auth()->id();
 
@@ -50,34 +44,26 @@ class ComplaintService
             $this->transitionService->validateTransition($complaint, $data['status']);
         }
 
-        if (($data['yer'] ?? null) === 'yol' && ! empty($data['driver_id'])) {
-            $driver = Driver::active()->findOrFail($data['driver_id']);
-            $data['driver_name'] = $driver->full_name;
-        } else {
-            $data['driver_id'] = null;
-            $data['driver_name'] = null;
-        }
+        $this->applyDriverContext($data);
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-            // Köhnə detalları snapshot kimi götür (stock diff üçün)
+            // Snapshot old details for stock diff calculation
             $oldDetails = $complaint->details()->orderBy('id')->get()->toArray();
 
             $processedDetails = null;
 
             if ($detallar !== null && is_array($detallar)) {
-                // ✅ syncStockDiff anbarı düzəldir (restore + deduct)
+                // syncStockDiff restores old stock and deducts new stock atomically
                 $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar);
             }
 
-            // Complaint-i yenilə
             $complaint->update($data);
 
-            // ✅ YENİ: Detalları in-place sinxronlaşdır
             if ($processedDetails !== null) {
                 $this->syncDetails($complaint, $processedDetails);
             }
 
-            // Şikayətləri sinxronlaşdır (item-lər — bunlar onsuz da in-place sync-dir)
+            // Sync complaints (items) — always in-place
             $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
             return $complaint->fresh(['details', 'items']);
@@ -103,41 +89,60 @@ class ComplaintService
     public function delete(Complaint $complaint): void
     {
         DB::transaction(function () use ($complaint) {
-            // Detalları restore et (stok geri qaytar)
+            // Restore stock for all details
             if ($complaint->details->isNotEmpty()) {
                 $this->stockService->restoreStock($complaint->details->toArray());
             }
 
-            // Detalları soft-delete et
+            // Soft-delete details
             $complaint->details()->delete();
 
-            // Complaint-i soft-delete et
+            // Soft-delete complaint
             $complaint->delete();
         });
     }
 
     /**
-     * Detalları in-place sinxronlaşdırır.
+     * Resolve the driver_name from driver_id when the complaint origin is 'road'.
      *
-     * Mövcud sətirlər `code`-a görə match olunur və yenilənir (ID saxlanılır).
-     * Yeni kod-lar əlavə olunur, yox olan kod-lar soft-delete edilir.
+     * The database stores 'road' (English), not 'yol' (legacy Azerbaijani).
+     * When the origin is 'garage' or the driver_id is missing, the driver
+     * fields are explicitly cleared to prevent stale data.
+     */
+    private function applyDriverContext(array &$data): void
+    {
+        if (($data['yer'] ?? null) === 'road' && ! empty($data['driver_id'])) {
+            $driver = Driver::active()->findOrFail($data['driver_id']);
+            $data['driver_name'] = $driver->full_name;
+        } else {
+            $data['driver_id']   = null;
+            $data['driver_name'] = null;
+        }
+    }
+
+    /**
+     * In-place sync of complaint details.
      *
-     * `code`-based matching-in üstünlüyü: mövqe dəyişsə belə, eyni kodlu
-     * detal həmişə eyni DB sətrinə bağlı qalır → ID-lər stabil, audit
-     * tarixçəsi təmiz olur.
+     * Rows are matched by their `code` value and updated in place (IDs preserved).
+     * New codes are inserted, removed codes are soft-deleted.
+     *
+     * Benefits of code-based matching:
+     *   - Position changes do not create/delete rows
+     *   - Audit history stays clean (only real changes are logged)
+     *   - IDs are stable for external references
      *
      * @param  array<int, array<string, mixed>>  $processedDetails
      */
     private function syncDetails(Complaint $complaint, array $processedDetails): void
     {
-        // ==================== 0. HAZIRLIQ ====================
-        // Mövcud aktiv detalları `code` ilə indekslə
+        // ==================== 0. PREPARE ====================
+        // Index existing details by `code`
         $existingByCode = $complaint->details()
             ->orderBy('id')
             ->get()
             ->keyBy('code');
 
-        // Yeni detalları `code` ilə indekslə
+        // Index new details by `code`
         $newByCode = [];
         foreach ($processedDetails as $detail) {
             $code = $detail['code'] ?? null;
@@ -147,23 +152,21 @@ class ComplaintService
         }
 
         $existingCodes = $existingByCode->keys()->all();
-        $newCodes = array_keys($newByCode);
+        $newCodes      = array_keys($newByCode);
 
-        // ==================== 1. MÖVCUD VƏ YENİDƏ OLANLAR: UPDATE ====================
-        // Həm mövcud, həm yeni siyahıda olan kod-lar → update
+        // ==================== 1. UPDATE EXISTING ====================
         $codesToUpdate = array_intersect($existingCodes, $newCodes);
         foreach ($codesToUpdate as $code) {
-            /** @var ComplaintDetail $detail */
-            $detail = $existingByCode[$code];
+            /** @var \App\Models\ComplaintDetail $detail */
+            $detail  = $existingByCode[$code];
             $payload = $newByCode[$code];
 
-            // Laravel `update()` yalnız dəyişən sahələri save edir;
-            // heç nə dəyişməyibsə `updated` event fire olunmur.
+            // Laravel's update() only saves changed fields.
             $detail->update($payload);
         }
 
-        // ==================== 2. YENİ KOD-LAR: CREATE ====================
-        $codesToCreate = array_diff($newCodes, $existingCodes);
+        // ==================== 2. CREATE NEW ====================
+        $codesToCreate    = array_diff($newCodes, $existingCodes);
         $payloadsToCreate = [];
         foreach ($codesToCreate as $code) {
             $payloadsToCreate[] = $newByCode[$code];
@@ -172,12 +175,12 @@ class ComplaintService
             $complaint->details()->createMany($payloadsToCreate);
         }
 
-        // ==================== 3. YOX OLAN KOD-LAR: SOFT-DELETE ====================
+        // ==================== 3. SOFT-DELETE REMOVED ====================
         $codesToDelete = array_diff($existingCodes, $newCodes);
         foreach ($codesToDelete as $code) {
-            /** @var ComplaintDetail $detail */
+            /** @var \App\Models\ComplaintDetail $detail */
             $detail = $existingByCode[$code];
-            $detail->delete();  // Auditable trait → 'deleted' event
+            $detail->delete();  // Triggers Auditable 'deleted' event
         }
     }
 }

@@ -133,18 +133,23 @@ class UserController extends Controller
         ]);
 
         $updateData = [
-            'name'          => $validated['name'],
-            'email'         => $validated['email'],
-            'employee_code' => $validated['employee_code'] ?? null,
-            'is_active'     => $request->boolean('is_active', true),
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'is_active' => $request->boolean('is_active', true),
         ];
 
-        // Only update password if provided
+        // employee_code: only replace if a new value is provided.
+        // An empty submission keeps the existing code (prevents accidental lockout).
+        if (! empty($validated['employee_code'])) {
+            $updateData['employee_code'] = $validated['employee_code'];
+        }
+
+        // Password: only update if provided.
         if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
 
-        // Only update PIN if provided
+        // PIN: only update if provided.
         if (! empty($validated['pin'])) {
             $updateData['pin'] = Hash::make($validated['pin']);
             $updateData['pin_is_default'] = false;

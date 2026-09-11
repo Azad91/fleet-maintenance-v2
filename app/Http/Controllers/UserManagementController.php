@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Illuminate\Validation\Rules\Password;
 
 class UserManagementController extends Controller
 {
@@ -139,9 +140,11 @@ class UserManagementController extends Controller
 
     private function validateUser(Request $request, ?User $user = null, bool $creating = true): array
     {
+        // Password rules: use Laravel's default strength (min 8, letters + numbers).
+        // On update, the password is optional — leave blank to keep the current one.
         $passwordRules = $creating
-            ? ['required', 'string', 'min:8', 'confirmed']
-            : ['nullable', 'string', 'min:8', 'confirmed'];
+            ? ['required', 'confirmed', Password::defaults()]
+            : ['nullable', 'confirmed', Password::defaults()];
 
         return $request->validate([
             'name'      => ['required', 'string', 'max:255'],

@@ -14,14 +14,15 @@ class DashboardController extends Controller
     {
         Gate::authorize('viewAny', DashboardController::class);
 
-        $totalBuses = Bus::count();
-        $activeBuses = Bus::where('is_active', true)->count();
-        $activeComplaints = Complaint::where('status', '!=', 'completed')->count();
+        $totalBuses          = Bus::count();
+        $activeBuses         = Bus::where('is_active', true)->count();
+        $activeComplaints    = Complaint::where('status', '!=', 'completed')->count();
         $totalWarehouseItems = Warehouse::sum('quantity');
 
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();
 
-        $lowStockItems = Warehouse::where('quantity', '<', 5)
+        // Use each item's own minimum_quantity threshold instead of a hardcoded value.
+        $lowStockItems = Warehouse::whereColumn('quantity', '<=', 'minimum_quantity')
             ->orderBy('quantity', 'asc')
             ->limit(10)
             ->get();
@@ -35,13 +36,14 @@ class DashboardController extends Controller
         $recurringIssues = ComplaintItem::recurring(30)->get();
 
         $today = now()->toDateString();
-        $busesWithoutKmTodayCount = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
-            $query->whereDate('date', $today);
-        })->count();
 
-        $busesWithoutKmToday = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
+        $busesWithoutKmTodayQuery = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
             $query->whereDate('date', $today);
-        })->limit(10)->get();
+        });
+
+        $busesWithoutKmTodayCount = $busesWithoutKmTodayQuery->count();
+
+        $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();
 
         return view('dashboard', compact(
             'totalBuses',
