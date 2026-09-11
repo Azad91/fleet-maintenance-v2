@@ -12,12 +12,16 @@ use Illuminate\Support\Facades\DB;
 class DailyKmReportService
 {
     /**
-     * Buses with no KM record on the most recent day of the period.
-     * Uses the period's "to" date as the target day.
+     * Buses with no KM record for TODAY.
+     *
+     * This report is intentionally a current-state snapshot:
+     * a bus either has today's KM entry or it does not.
+     * The `$period` argument is accepted for interface consistency
+     * but is not used to compute the target date.
      */
     public function missing(ReportPeriod $period, ReportScope $scope): Collection
     {
-        $targetDate = $period->to->toDateString();
+        $targetDate = now()->toDateString();
 
         return Bus::withoutGlobalScope('garage')
             ->whereIn('buses.garage_id', $scope->garageIds)
