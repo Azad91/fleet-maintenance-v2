@@ -64,20 +64,20 @@
                                 <a href="{{ route('daily-km-records.show', $record) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if($canManageDailyKm)
+                                @can('update', $record)
                                     <a href="{{ route('daily-km-records.edit', $record) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasGarageRole(array_merge([RoleEnum::ADMIN->value], [RoleEnum::DAILY_KM_MANAGER->value])))
-                                        <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('{{ __('messages.common.confirm') }}')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                @endif
+                                @endcan
+                                @can('delete', $record)
+                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('{{ __('messages.common.confirm') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>

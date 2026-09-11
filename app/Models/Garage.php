@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasCreatedBy;
 use App\Services\GarageContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Garage extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasCreatedBy, HasFactory, SoftDeletes;
 
-    protected $fillable = ['company_id', 'name', 'code', 'address', 'phone', 'is_active'];
+    protected $fillable = [
+        'company_id',
+        'name',
+        'code',
+        'address',
+        'phone',
+        'is_active',
+        'created_by',
+    ];
 
     public function company()
     {
@@ -20,7 +29,9 @@ class Garage extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'garage_user')->withPivot('role', 'is_active')->withTimestamps();
+        return $this->belongsToMany(User::class, 'garage_user')
+            ->withPivot('role', 'is_active')
+            ->withTimestamps();
     }
 
     public function buses()
@@ -58,9 +69,8 @@ class Garage extends Model
         return $this->hasMany(BusDailyStatus::class);
     }
 
-        public static function getCurrentId()
+    public static function getCurrentId()
     {
-        // ✅ DÜZƏLİŞ: İLK ÖNCƏ GARAGECONTEXT-DƏN OXUYUR
         return GarageContext::getGarageId()
             ?? session('current_garage_id')
             ?? auth()->user()?->current_garage_id;

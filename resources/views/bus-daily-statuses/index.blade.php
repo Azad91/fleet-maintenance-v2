@@ -56,11 +56,11 @@
                                 <a href="{{ route('bus-daily-statuses.show', $status) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if($canManageDailyStatus)
+                                @can('update', $status)
                                     <a href="{{ route('bus-daily-statuses.edit', $status) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>

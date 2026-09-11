@@ -59,10 +59,20 @@ class DailyKmRecordPolicy
             return false;
         }
 
-        return $user->hasGarageRole(array_merge(
+        // Admin + Manager: any record
+        if ($user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
-            RoleEnum::dailyKmRoles()
-        ));
+            [RoleEnum::DAILY_KM_MANAGER->value]
+        ))) {
+            return true;
+        }
+
+        // Worker: only own records
+        if ($user->hasGarageRole(RoleEnum::DAILY_KM_WORKER->value)) {
+            return $record && $record->created_by === $user->id;
+        }
+
+        return false;
     }
 
     public function delete(User $user, ?DailyKmRecord $record = null): bool

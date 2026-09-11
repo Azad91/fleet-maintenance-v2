@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasCreatedBy;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,11 +10,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DailyKmRecord extends Model
 {
-    use HasFactory, SoftDeletes;
-    use HasGarageScope;
+    use HasCreatedBy, HasFactory, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
-        'bus_id', 'date', 'km', 'notes', 'garage_id', 'company_id',
+        'bus_id',
+        'date',
+        'km',
+        'notes',
+        'garage_id',
+        'company_id',
+        'created_by',
     ];
 
     protected $casts = [

@@ -59,10 +59,20 @@ class WarehousePolicy
             return false;
         }
 
-        return $user->hasGarageRole(array_merge(
+        // Admin + Manager: any record
+        if ($user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
-            RoleEnum::warehouseRoles()
-        ));
+            [RoleEnum::WAREHOUSE_MANAGER->value]
+        ))) {
+            return true;
+        }
+
+        // Worker: only own records
+        if ($user->hasGarageRole(RoleEnum::WAREHOUSE_WORKER->value)) {
+            return $warehouse && $warehouse->created_by === $user->id;
+        }
+
+        return false;
     }
 
     public function delete(User $user, ?Warehouse $warehouse = null): bool
@@ -75,7 +85,6 @@ class WarehousePolicy
             return false;
         }
 
-        // Yalnız admin + manager silə bilər
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::WAREHOUSE_MANAGER->value]
@@ -88,7 +97,6 @@ class WarehousePolicy
             return true;
         }
 
-        // Yalnız admin + manager import edə bilər
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::WAREHOUSE_MANAGER->value]

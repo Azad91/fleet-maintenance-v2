@@ -1,11 +1,10 @@
 @php
     use App\Enums\RoleEnum;
 
-    $canManageWarehouse = auth()->user()?->isSuperAdmin()
-        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], RoleEnum::warehouseRoles()));
+    $currentUser = auth()->user();
 
-    $canDeleteWarehouse = auth()->user()?->isSuperAdmin()
-        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], [RoleEnum::WAREHOUSE_MANAGER->value]));
+    $canDeleteWarehouse = $currentUser?->isSuperAdmin()
+        || $currentUser?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], [RoleEnum::WAREHOUSE_MANAGER->value]));
 @endphp
 
 <div class="card">
@@ -52,11 +51,11 @@
                                 <a href="{{ route('warehouses.show', $item) }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if($canManageWarehouse)
+                                @can('update', $item)
                                     <a href="{{ route('warehouses.edit', $item) }}" class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                @endif
+                                @endcan
                                 @if($canDeleteWarehouse)
                                     <form action="{{ route('warehouses.destroy', $item) }}" method="POST" style="display:inline">
                                         @csrf

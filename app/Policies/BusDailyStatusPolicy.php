@@ -59,10 +59,20 @@ class BusDailyStatusPolicy
             return false;
         }
 
-        return $user->hasGarageRole(array_merge(
+        // Admin + Manager: any record
+        if ($user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
-            RoleEnum::dailyStatusRoles()
-        ));
+            [RoleEnum::DAILY_STATUS_MANAGER->value]
+        ))) {
+            return true;
+        }
+
+        // Worker: only own records
+        if ($user->hasGarageRole(RoleEnum::DAILY_STATUS_WORKER->value)) {
+            return $status && $status->created_by === $user->id;
+        }
+
+        return false;
     }
 
     public function delete(User $user, ?BusDailyStatus $status = null): bool
@@ -75,7 +85,6 @@ class BusDailyStatusPolicy
             return false;
         }
 
-        // Yalnız admin + manager silə bilər
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::DAILY_STATUS_MANAGER->value]
@@ -88,7 +97,6 @@ class BusDailyStatusPolicy
             return true;
         }
 
-        // Yalnız admin + manager import edə bilər
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::DAILY_STATUS_MANAGER->value]
