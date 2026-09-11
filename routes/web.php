@@ -237,6 +237,62 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
         Route::delete('/{driver}', [DriverController::class, 'destroy'])->name('destroy');
     });
 
+    // ==================== REPORTS ====================
+    Route::prefix('reports')->name('reports.')->group(function () {
+
+        // Warehouse reports
+        Route::prefix('warehouse')->name('warehouse.')
+            ->middleware(['role:' . implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::warehouseRoles()
+            ))])
+            ->group(function () {
+                Route::get('/receipt', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'receipt'])->name('receipt');
+                Route::get('/usage', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'usage'])->name('usage');
+                Route::get('/worker-activity', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/low-stock', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'lowStock'])->name('low-stock');
+                Route::get('/movement', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'movement'])->name('movement');
+            });
+
+        // Complaint reports
+        Route::prefix('complaint')->name('complaint.')
+            ->middleware(['role:' . implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::complaintRoles()
+            ))])
+            ->group(function () {
+                Route::get('/summary', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'summary'])->name('summary');
+                Route::get('/top-types', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'topTypes'])->name('top-types');
+                Route::get('/worker-activity', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/by-bus', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'byBus'])->name('by-bus');
+                Route::get('/avg-close-time', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'avgCloseTime'])->name('avg-close-time');
+            });
+
+        // Daily KM reports
+        Route::prefix('daily-km')->name('daily-km.')
+            ->middleware(['role:' . implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::dailyKmRoles()
+            ))])
+            ->group(function () {
+                Route::get('/missing', [\App\Http\Controllers\Reports\DailyKmReportController::class, 'missing'])->name('missing');
+                Route::get('/top-buses', [\App\Http\Controllers\Reports\DailyKmReportController::class, 'topBuses'])->name('top-buses');
+                Route::get('/worker-activity', [\App\Http\Controllers\Reports\DailyKmReportController::class, 'workerActivity'])->name('worker-activity');
+            });
+
+        // Daily Status reports
+        Route::prefix('daily-status')->name('daily-status.')
+            ->middleware(['role:' . implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::dailyStatusRoles()
+            ))])
+            ->group(function () {
+                Route::get('/distribution', [\App\Http\Controllers\Reports\DailyStatusReportController::class, 'distribution'])->name('distribution');
+                Route::get('/changes', [\App\Http\Controllers\Reports\DailyStatusReportController::class, 'changes'])->name('changes');
+                Route::get('/worker-activity', [\App\Http\Controllers\Reports\DailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
+            });
+    });
+
     // ==================== SUPER ADMIN ====================
     Route::prefix('super-admin')->name('super-admin.')->group(function () {
         // Dashboard + Settings

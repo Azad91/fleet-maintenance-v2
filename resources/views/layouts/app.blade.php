@@ -74,18 +74,40 @@
 
             <nav class="fleet-nav" aria-label="{{ __('messages.nav.main_navigation') }}">
                 @php
-                    // Operations
+                    // ---- Operations ----
                     $canViewBuses      = $isSuperAdmin || $isAdmin;
                     $canViewComplaints = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::complaintRoles()) ?? false);
                     $canViewWarehouse  = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::warehouseRoles()) ?? false);
                     $canViewMotorOil   = $isSuperAdmin || $isAdmin;
 
-                    // Daily records
+                    // ---- Daily records ----
                     $canViewDailyStatus = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyStatusRoles()) ?? false);
                     $canViewDailyKm     = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyKmRoles()) ?? false);
 
-                    // Admin-only sections
+                    // ---- Admin-only sections ----
                     $canManage = $isAdmin;
+
+                    // ---- Reports ----
+                    $canViewWarehouseReports = $isSuperAdmin || $isAdmin
+                        || ($currentUser?->hasGarageRole(array_merge(
+                            [RoleEnum::WAREHOUSE_MANAGER->value],
+                            [RoleEnum::WAREHOUSE_WORKER->value]
+                        )) ?? false);
+                    $canViewComplaintReports = $isSuperAdmin || $isAdmin
+                        || ($currentUser?->hasGarageRole(array_merge(
+                            [RoleEnum::COMPLAINT_MANAGER->value],
+                            [RoleEnum::COMPLAINT_WORKER->value]
+                        )) ?? false);
+                    $canViewDailyKmReports = $isSuperAdmin || $isAdmin
+                        || ($currentUser?->hasGarageRole(array_merge(
+                            [RoleEnum::DAILY_KM_MANAGER->value],
+                            [RoleEnum::DAILY_KM_WORKER->value]
+                        )) ?? false);
+                    $canViewDailyStatusReports = $isSuperAdmin || $isAdmin
+                        || ($currentUser?->hasGarageRole(array_merge(
+                            [RoleEnum::DAILY_STATUS_MANAGER->value],
+                            [RoleEnum::DAILY_STATUS_WORKER->value]
+                        )) ?? false);
                 @endphp
 
                 {{-- ==================== SUPER ADMIN MENU ==================== --}}
@@ -172,6 +194,31 @@
                     <a href="{{ route('users.index') }}" class="fleet-nav__link {{ request()->routeIs('users.*') ? 'is-active' : '' }}">
                         <i class="fas fa-user-shield"></i><span>{{ __('messages.nav.users') }}</span>
                     </a>
+                @endif
+
+                {{-- ==================== REPORTS ==================== --}}
+                @if(! $isDirector && ($canViewWarehouseReports || $canViewComplaintReports || $canViewDailyKmReports || $canViewDailyStatusReports))
+                    <p class="fleet-nav__label">{{ __('messages.reports.menu_label') }}</p>
+                    @if($canViewWarehouseReports)
+                        <a href="{{ route('reports.warehouse.receipt') }}" class="fleet-nav__link {{ request()->routeIs('reports.warehouse.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.reports.warehouse.title') }}</span>
+                        </a>
+                    @endif
+                    @if($canViewComplaintReports)
+                        <a href="{{ route('reports.complaint.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.complaint.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-screwdriver-wrench"></i><span>{{ __('messages.reports.complaint.title') }}</span>
+                        </a>
+                    @endif
+                    @if($canViewDailyKmReports)
+                        <a href="{{ route('reports.daily-km.missing') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-km.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-gauge-high"></i><span>{{ __('messages.reports.daily_km.title') }}</span>
+                        </a>
+                    @endif
+                    @if($canViewDailyStatusReports)
+                        <a href="{{ route('reports.daily-status.distribution') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-status.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-clipboard-check"></i><span>{{ __('messages.reports.daily_status.title') }}</span>
+                        </a>
+                    @endif
                 @endif
             </nav>
 
