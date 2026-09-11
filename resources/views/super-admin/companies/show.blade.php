@@ -58,7 +58,7 @@
 
 <div class="row g-4">
     {{-- Garages --}}
-    <div class="col-md-7">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">{{ __('messages.super_admin.companies.garages_title') }} ({{ $company->garages->count() }})</h5>
@@ -106,32 +106,6 @@
                     </div>
                 @else
                     <div class="text-center text-muted py-5">{{ __('messages.super_admin.companies.no_garages') }}</div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- Directors --}}
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">{{ __('messages.super_admin.companies.directors_title') }} ({{ $company->users->count() }})</h5>
-            </div>
-            <div class="card-body p-0">
-                @if($company->users->isNotEmpty())
-                    <ul class="list-group list-group-flush">
-                        @foreach($company->users as $director)
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ $director->name }}</strong>
-                                    <small class="d-block text-muted">{{ $director->email }}</small>
-                                </div>
-                                <span class="badge bg-info">{{ $director->pivot->role }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @else
-                    <div class="text-center text-muted py-5">{{ __('messages.super_admin.companies.no_directors') }}</div>
                 @endif
             </div>
         </div>

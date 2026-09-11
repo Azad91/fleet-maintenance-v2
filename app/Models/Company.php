@@ -16,9 +16,4 @@ class Company extends Model
     {
         return $this->hasMany(Garage::class);
     }
-
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
 }

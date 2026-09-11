@@ -72,6 +72,9 @@
                     <a href="{{ route('super-admin.garages.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.garages.*') ? 'is-active' : '' }}">
                         <i class="fas fa-warehouse"></i><span>{{ __('messages.nav.garages') }}</span>
                     </a>
+                    <a href="{{ route('super-admin.users.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.users.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-user-shield"></i><span>{{ __('messages.nav.users') }}</span>
+                    </a>
                 @endif
 
 

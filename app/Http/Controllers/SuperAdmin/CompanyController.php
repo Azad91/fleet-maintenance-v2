@@ -20,7 +20,7 @@ class CompanyController extends Controller
     {
         $this->ensureSuperAdmin();
 
-        $companies = Company::withCount(['garages', 'users'])
+        $companies = Company::withCount(['garages'])
             ->orderBy('name')
             ->paginate(20);
 

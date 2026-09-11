@@ -15,7 +15,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',              // yalnız 'super_admin' | 'user'
+        'employee_code',
+        'pin',
+        'pin_is_default',
+        'role',              // 'super_admin' | 'user'
+        'is_active',
         'current_garage_id',
         'current_company_id',
         'last_selected_garage_at',

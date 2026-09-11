@@ -231,7 +231,8 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
         ->group(function () {
             Route::resource('companies', \App\Http\Controllers\SuperAdmin\CompanyController::class);
             Route::resource('garages', \App\Http\Controllers\SuperAdmin\GarageController::class);
-    });
+            Route::resource('users', \App\Http\Controllers\SuperAdmin\UserController::class)->except(['show']);
+        });
 
     // ==================== API ROUTES (JSON) ====================
     Route::middleware(['role:'.implode(',', [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT->value, RoleEnum::DIRECTORATE->value])])->group(function () {
