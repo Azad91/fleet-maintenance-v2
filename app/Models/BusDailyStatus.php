@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\HasCreatedBy;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusDailyStatus extends Model
 {
-    use HasCreatedBy, HasFactory, HasGarageScope, SoftDeletes;
+    use Auditable, HasCreatedBy, HasFactory, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
         'bus_id',
