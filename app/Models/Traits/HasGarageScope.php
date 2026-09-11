@@ -15,7 +15,7 @@ trait HasGarageScope
         static::addGlobalScope('garage', function (Builder $builder) {
             $garageId = GarageContext::getGarageId();
 
-            // Console-da context yoxdursa filter tətbiq etmə
+            // In console (without context), do not filter
             if (app()->runningInConsole() && ! $garageId) {
                 return;
             }
@@ -30,19 +30,19 @@ trait HasGarageScope
 
         // ==================== CREATING EVENT ====================
         static::creating(function ($model) {
-            // 1. Artıq garage_id təyin olunubsa, toxunma (manual override)
+            // 1. If garage_id is already set, don't touch it (manual override)
             if ($model->garage_id !== null) {
                 return;
             }
 
-            // 2. GarageContext-dən (ən etibarlı yol)
+            // 2. From GarageContext (most reliable)
             if (GarageContext::has()) {
                 $model->garage_id  = GarageContext::getGarageId();
                 $model->company_id = GarageContext::getCompanyId();
                 return;
             }
 
-            // 3. Session-dan (web request)
+            // 3. From session (web request)
             $sessionGarageId = self::resolveGarageFromSession();
             if ($sessionGarageId) {
                 $model->garage_id  = $sessionGarageId;
@@ -50,7 +50,7 @@ trait HasGarageScope
                 return;
             }
 
-            // 4. Auth user-dən (fallback)
+            // 4. From auth user (fallback)
             $userGarageId = self::resolveGarageFromAuth();
             if ($userGarageId) {
                 $model->garage_id  = $userGarageId;
@@ -58,16 +58,37 @@ trait HasGarageScope
                 return;
             }
 
-            // 5. Heç biri yoxdursa — kontekst yox
+            // 5. Neither — context missing
             self::handleMissingGarageContext($model);
+        });
+
+        // ==================== COMPANY_ID CONSISTENCY GUARD ====================
+        // company_id must always match the garage's company. If a caller
+        // provided a mismatched company_id, silently correct it to prevent
+        // data corruption.
+        static::creating(function ($model) {
+            if ($model->garage_id && $model->company_id) {
+                $garageCompanyId = \App\Models\Garage::withoutGlobalScopes()
+                    ->whereKey($model->garage_id)
+                    ->value('company_id');
+
+                if ($garageCompanyId && (int) $model->company_id !== (int) $garageCompanyId) {
+                    $attempted = $model->company_id;
+                    $model->company_id = $garageCompanyId;
+
+                    Log::warning('HasGarageScope: corrected mismatched company_id', [
+                        'model'     => get_class($model),
+                        'garage_id' => $model->garage_id,
+                        'attempted' => $attempted,
+                        'corrected' => $garageCompanyId,
+                    ]);
+                }
+            }
         });
     }
 
     /**
-     * Session-dan garage_id oxuyur.
-     *
-     * `session()` helper istifadə edirik — bu, Laravel-in
-     * cari request üçün düzgün session store-u qaytarır.
+     * Read garage_id from session.
      */
     protected static function resolveGarageFromSession(): ?int
     {
@@ -81,7 +102,7 @@ trait HasGarageScope
     }
 
     /**
-     * Auth user-dən garage_id oxuyur.
+     * Read garage_id from auth user.
      */
     protected static function resolveGarageFromAuth(): ?int
     {
@@ -101,16 +122,16 @@ trait HasGarageScope
     }
 
     /**
-     * Kontekst tamamilə yoxdursa nə et.
+     * No garage context found — decide what to do.
      *
-     * - Real console (migration/seeder/tinker): sükutla davam et
-     * - Test mühiti: log/exception davranışı yoxlanılsın deyə davam et
-     * - Debug rejimi: exception at — developer dərhal görsün
-     * - Production rejimi: log yaz, davam et (server stability)
+     * - Real console (migration/seeder/tinker): continue silently
+     * - Test environment: continue so tests can control behavior
+     * - Debug mode: throw exception — developer sees immediately
+     * - Production: log warning, continue (server stability)
      */
     protected static function handleMissingGarageContext($model): void
     {
-        // Real console-da (test OLMAYAN) sükutla davam et
+        // Real console (NOT tests): continue silently
         if (app()->runningInConsole() && ! app()->runningUnitTests()) {
             return;
         }
@@ -122,12 +143,12 @@ trait HasGarageScope
             get_class($model)
         );
 
-        // Debug rejimində exception at — developer dərhal görsün
+        // In debug mode: throw exception — developer sees immediately
         if (config('app.debug')) {
             throw new \RuntimeException($message);
         }
 
-        // Production-da log yaz, davam et
+        // Production: log warning, continue
         Log::warning($message, [
             'model'      => get_class($model),
             'attributes' => collect($model->getAttributes())

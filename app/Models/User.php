@@ -59,14 +59,14 @@ class User extends Authenticatable
     /**
      * Garage-level role check – this is the CORE authorization mechanism.
      * All business roles are checked against the garage_user pivot table.
+     *
+     * NOTE: Super Admins bypass policies at the Gate level (see AuthServiceProvider).
+     * This method checks ACTUAL membership — it does not auto-approve for super admins.
+     * If you need a "does this user have access to this garage?" check that also
+     * respects super admin, use `hasGarageAccess()` instead.
      */
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
-        // Super Admin bypasses all checks
-        if ($this->isSuperAdmin()) {
-            return true;
-        }
-
         $roles = (array) $roles;
         $garageId ??= Garage::getCurrentId();
 
@@ -79,6 +79,50 @@ class User extends Authenticatable
             ->wherePivot('is_active', true)
             ->wherePivotIn('role', $roles)
             ->exists();
+    }
+
+    /**
+     * True if the user has ADMIN role in the given (or current) garage.
+     */
+    public function isGarageAdmin(?int $garageId = null): bool
+    {
+        return $this->hasGarageRole(RoleEnum::ADMIN->value, $garageId);
+    }
+
+    /**
+     * True if the user is a MANAGER in any domain of the current garage.
+     */
+    public function isAnyManager(?int $garageId = null): bool
+    {
+        return $this->hasGarageRole(RoleEnum::managerRoles(), $garageId);
+    }
+
+    /**
+     * True if the user is a WORKER in any domain of the current garage.
+     */
+    public function isAnyWorker(?int $garageId = null): bool
+    {
+        return $this->hasGarageRole(RoleEnum::workerRoles(), $garageId);
+    }
+
+    /**
+     * True if the user has ANY role (manager or worker) in the given domain.
+     */
+    public function hasDomainRole(string $domain, ?int $garageId = null): bool
+    {
+        $domainRoles = match ($domain) {
+            'complaint'    => RoleEnum::complaintRoles(),
+            'warehouse'    => RoleEnum::warehouseRoles(),
+            'daily_km'     => RoleEnum::dailyKmRoles(),
+            'daily_status' => RoleEnum::dailyStatusRoles(),
+            default        => [],
+        };
+
+        if (empty($domainRoles)) {
+            return false;
+        }
+
+        return $this->hasGarageRole($domainRoles, $garageId);
     }
 
     // ==================== COMPANY-LEVEL ROLE CHECKS ====================
@@ -116,54 +160,6 @@ class User extends Authenticatable
             ->wherePivot('role', 'director')
             ->wherePivot('is_active', true)
             ->first();
-    }
-
-    /**
-     * True if the user has ADMIN role in the given (or current) garage.
-     */
-    public function isGarageAdmin(?int $garageId = null): bool
-    {
-        return $this->hasGarageRole(RoleEnum::ADMIN->value, $garageId);
-    }
-
-    /**
-     * True if the user is a MANAGER in any domain of the current garage.
-     * Domains: complaint, warehouse, daily_km, daily_status.
-     */
-    public function isAnyManager(?int $garageId = null): bool
-    {
-        return $this->hasGarageRole(RoleEnum::managerRoles(), $garageId);
-    }
-
-    /**
-     * True if the user is a WORKER in any domain of the current garage.
-     */
-    public function isAnyWorker(?int $garageId = null): bool
-    {
-        return $this->hasGarageRole(RoleEnum::workerRoles(), $garageId);
-    }
-
-    /**
-     * True if the user has ANY role (manager or worker) in the given domain
-     * of the current garage.
-     *
-     * Supported domains: 'complaint', 'warehouse', 'daily_km', 'daily_status'.
-     */
-    public function hasDomainRole(string $domain, ?int $garageId = null): bool
-    {
-        $domainRoles = match ($domain) {
-            'complaint'    => RoleEnum::complaintRoles(),
-            'warehouse'    => RoleEnum::warehouseRoles(),
-            'daily_km'     => RoleEnum::dailyKmRoles(),
-            'daily_status' => RoleEnum::dailyStatusRoles(),
-            default        => [],
-        };
-
-        if (empty($domainRoles)) {
-            return false;
-        }
-
-        return $this->hasGarageRole($domainRoles, $garageId);
     }
 
     // ==================== GARAGE MEMBERSHIP ====================
@@ -204,10 +200,15 @@ class User extends Authenticatable
     // ==================== HELPERS ====================
 
     /**
-     * True if the user is a member of the given garage (any active role).
+     * True if the user has ANY access to the given garage —
+     * either as a member OR as a super admin.
      */
     public function hasGarageAccess(int $garageId): bool
     {
+        if ($this->isSuperAdmin()) {
+            return Garage::whereKey($garageId)->exists();
+        }
+
         return $this->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)

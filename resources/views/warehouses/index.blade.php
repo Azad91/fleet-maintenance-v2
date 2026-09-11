@@ -23,6 +23,7 @@
     </div>
 </div>
 
+{{-- Search --}}
 <div class="card mb-4">
     <div class="card-body">
         <div class="row g-3">
@@ -31,8 +32,10 @@
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                     <input type="text" class="form-control" id="searchInput"
                            placeholder="{{ __('messages.warehouse.search_placeholder') }}"
+                           value="{{ $search ?? '' }}"
                            oninput="liveSearch(this.value)">
-                    <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; liveSearch('');">
+                    <button class="btn btn-secondary" type="button"
+                            onclick="document.getElementById('searchInput').value=''; liveSearch('');">
                         <i class="bi bi-x-circle"></i> {{ __('messages.common.clear') }}
                     </button>
                 </div>
@@ -56,22 +59,33 @@
 <script>
     function liveSearch(query) {
         const params = new URLSearchParams();
-        const search = query.trim();
+        const search = (query ?? '').trim();
 
         if (search) {
             params.set('search', search);
         }
 
-        fetch('{{ url('/warehouses/search') }}?' + params.toString())
-            .then(response => response.text())
+        fetch('{{ url('/warehouses/search') }}?' + params.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html',
+            },
+            credentials: 'same-origin',
+        })
+            .then(response => {
+                if (! response.ok) {
+                    throw new Error('Search failed: HTTP ' + response.status);
+                }
+                return response.text();
+            })
             .then(html => {
                 document.getElementById('searchResults').innerHTML = html;
                 const count = document.querySelector('#searchResults .total-count');
                 if (count) {
-                    document.getElementById('totalCount').textContent = count.dataset.count;
+                    document.getElementById('totalCount').textContent = count.dataset.count || '0';
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Warehouse search error:', error));
     }
 </script>
 @endsection

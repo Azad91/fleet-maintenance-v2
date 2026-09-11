@@ -27,13 +27,38 @@ class ComplaintController extends Controller
         protected ComplaintPdfService $pdfService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Complaint::class);
 
-        $complaints = Complaint::with(['bus', 'items'])
-            ->orderBy('id', 'desc')
-            ->paginate(config('settings.pagination', 15));
+        $query = Complaint::with(['bus', 'items', 'details']);
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by complaint type
+        if ($request->filled('complaint_type')) {
+            $query->where('complaint_type', $request->complaint_type);
+        }
+
+        // Search by bus DQN, route number, or description
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('bus', function ($bq) use ($search) {
+                    $bq->where('dqn', 'ILIKE', "%{$search}%")
+                        ->orWhere('route_number', 'ILIKE', "%{$search}%");
+                })->orWhereHas('items', function ($iq) use ($search) {
+                    $iq->where('description', 'ILIKE', "%{$search}%");
+                });
+            });
+        }
+
+        $complaints = $query->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15))
+            ->withQueryString();
 
         return view('complaints.index', compact('complaints'));
     }
