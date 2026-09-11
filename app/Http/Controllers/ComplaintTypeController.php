@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Imports\ComplaintTypesImport;
 use App\Models\ComplaintType;
+use App\Models\Garage;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ComplaintTypeController extends Controller
@@ -29,8 +31,14 @@ class ComplaintTypeController extends Controller
     {
         $this->authorize('create', ComplaintType::class);
 
+        $garageId = Garage::getCurrentId();
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('complaint_types', 'name')
+                    ->where('garage_id', $garageId),
+            ],
         ]);
 
         ComplaintType::create($validated);
@@ -54,8 +62,15 @@ class ComplaintTypeController extends Controller
 
         $this->authorize('update', $type);
 
+        $garageId = Garage::getCurrentId();
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('complaint_types', 'name')
+                    ->where('garage_id', $garageId)
+                    ->ignore($type->id),
+            ],
         ]);
 
         $type->update($validated);
@@ -92,7 +107,13 @@ class ComplaintTypeController extends Controller
         ]);
 
         try {
-            Excel::import(new ComplaintTypesImport, $request->file('file'));
+            Excel::import(
+                new ComplaintTypesImport(
+                    (int) Garage::getCurrentId(),
+                    Garage::getCurrentCompanyId() ? (int) Garage::getCurrentCompanyId() : null
+                ),
+                $request->file('file')
+            );
 
             return redirect()->route('complaint-types.index')
                 ->with('success', __('messages.flash.import_success', [

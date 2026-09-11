@@ -36,7 +36,10 @@ class ComplaintStoreRequest extends FormRequest
             'complaints.*'    => 'required|string',
             'km'             => 'nullable|integer|min:0',
             'status'         => 'required|in:pending,in_progress',
-            'complaint_type' => 'nullable|exists:complaint_types,name',
+            'complaint_type' => [
+                'nullable',
+                Rule::exists('complaint_types', 'name')->where('garage_id', $garageId),
+            ],
             'details'                     => 'nullable|array',
             'details.*.code'              => 'nullable|string',
             'details.*.used_quantity'     => 'nullable|integer|min:1',

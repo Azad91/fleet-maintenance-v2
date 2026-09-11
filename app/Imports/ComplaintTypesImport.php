@@ -19,6 +19,11 @@ class ComplaintTypesImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
     public array $skipped = [];
     public int $importedCount = 0;
 
+    public function __construct(
+        public int $garageId,
+        public ?int $companyId = null
+    ) {}
+
     public function chunkSize(): int
     {
         return 100;
@@ -38,7 +43,15 @@ class ComplaintTypesImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
             return;
         }
 
-        ComplaintType::updateOrCreate(['name' => $name]);
+        ComplaintType::withoutGlobalScopes()->updateOrCreate(
+            [
+                'name'      => $name,
+                'garage_id' => $this->garageId,
+            ],
+            [
+                'company_id' => $this->companyId,
+            ]
+        );
 
         $this->importedCount++;
     }

@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ComplaintType extends Model
 {
-    use HasFactory;
+    use HasFactory, HasGarageScope;
 
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'garage_id',
+        'company_id',
+    ];
 
     public function scopeSearch($query, $search)
     {

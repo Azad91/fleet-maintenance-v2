@@ -17,6 +17,10 @@
                 <ul class="mt-2 mb-0">
                     <li><strong>name</strong> — {{ __('messages.complaint_types.name') }} <span class="text-danger">*</span></li>
                 </ul>
+                <p class="mt-2 mb-0 text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    {{ __('messages.complaint_types.import_scope_hint') }}
+                </p>
             </div>
 
             <div class="mb-3">
