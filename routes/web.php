@@ -229,9 +229,12 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     Route::prefix('super-admin')
         ->name('super-admin.')
         ->group(function () {
-            Route::resource('companies', \App\Http\Controllers\SuperAdmin\CompanyController::class);
-            Route::resource('garages', \App\Http\Controllers\SuperAdmin\GarageController::class);
             Route::resource('users', \App\Http\Controllers\SuperAdmin\UserController::class)->except(['show']);
+            // Assignments
+            Route::post('companies/{company}/director', [\App\Http\Controllers\SuperAdmin\AssignmentController::class, 'assignDirector'])
+                ->name('companies.assign-director');
+            Route::delete('companies/{company}/director/{user}', [\App\Http\Controllers\SuperAdmin\AssignmentController::class, 'removeDirector'])
+                ->name('companies.remove-director');
         });
 
     // ==================== API ROUTES (JSON) ====================

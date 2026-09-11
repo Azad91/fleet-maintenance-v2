@@ -16,4 +16,24 @@ class Company extends Model
     {
         return $this->hasMany(Garage::class);
     }
+
+    /**
+     * Company Directors (via company_user pivot).
+     */
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'company_user')
+            ->withPivot('role', 'is_active')
+            ->withTimestamps();
+    }
+
+    /**
+     * Active directors only.
+     */
+    public function directors()
+    {
+        return $this->users()
+            ->wherePivot('role', 'director')
+            ->wherePivot('is_active', true);
+    }
 }

@@ -58,7 +58,7 @@
 
 <div class="row g-4">
     {{-- Garages --}}
-    <div class="col-md-12">
+    <div class="col-md-7">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">{{ __('messages.super_admin.companies.garages_title') }} ({{ $company->garages->count() }})</h5>
@@ -110,5 +110,87 @@
             </div>
         </div>
     </div>
+
+    {{-- Directors --}}
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ __('messages.super_admin.companies.directors_title') }} ({{ $company->directors->count() }})</h5>
+                @if($availableUsers->isNotEmpty())
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addDirectorModal">
+                        <i class="fas fa-plus"></i> {{ __('messages.super_admin.assignments.add_director') }}
+                    </button>
+                @endif
+            </div>
+            <div class="card-body p-0">
+                @if($company->directors->isNotEmpty())
+                    <ul class="list-group list-group-flush">
+                        @foreach($company->directors as $director)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ $director->name }}</strong>
+                                    <small class="d-block text-muted">{{ $director->email }}</small>
+                                    @if($director->employee_code)
+                                        <small class="text-muted"><code>{{ $director->employee_code }}</code></small>
+                                    @endif
+                                </div>
+                                <form action="{{ route('super-admin.companies.remove-director', [$company, $director]) }}"
+                                      method="POST" onsubmit="return confirm('{{ __('messages.super_admin.assignments.remove_confirm') }}')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ __('messages.common.remove') }}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="text-center text-muted py-5">{{ __('messages.super_admin.companies.no_directors') }}</div>
+                @endif
+            </div>
+        </div>
+    </div>
 </div>
+
+{{-- Add Director Modal --}}
+@if($availableUsers->isNotEmpty())
+    <div class="modal fade" id="addDirectorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('super-admin.companies.assign-director', $company) }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-tie"></i> {{ __('messages.super_admin.assignments.add_director') }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            {{ __('messages.super_admin.assignments.add_director_hint', ['company' => $company->name]) }}
+                        </div>
+
+                        <label for="user_id" class="form-label fw-bold">{{ __('messages.super_admin.assignments.select_user') }}</label>
+                        <select name="user_id" id="user_id" class="form-select" required>
+                            <option value="">{{ __('messages.common.select') }}</option>
+                            @foreach($availableUsers as $user)
+                                <option value="{{ $user->id }}">
+                                    {{ $user->name }} — {{ $user->email }}
+                                    @if($user->employee_code) ({{ $user->employee_code }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.common.cancel') }}</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> {{ __('messages.super_admin.assignments.assign_button') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 @endsection

@@ -76,10 +76,18 @@ class CompanyController extends Controller
 
         $company->load([
             'garages' => fn ($q) => $q->orderBy('name'),
-            'users'   => fn ($q) => $q->orderBy('name'),
+            'directors',
         ]);
 
-        return view('super-admin.companies.show', compact('company'));
+        // Users not already directors of this company
+        $directorIds = $company->directors->pluck('id')->toArray();
+
+        $availableUsers = User::where('role', 'user')
+            ->whereNotIn('id', $directorIds)
+            ->orderBy('name')
+            ->get();
+
+        return view('super-admin.companies.show', compact('company', 'availableUsers'));
     }
 
     /**
