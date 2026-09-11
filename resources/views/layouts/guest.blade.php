@@ -41,6 +41,7 @@
     <footer class="fleet-guest__footer">
         &copy; {{ date('Y') }} Fleet Control · {{ __('messages.welcome.footer') }}
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>
 </html>

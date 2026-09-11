@@ -103,6 +103,9 @@ return [
         'select_garage_hint'    => 'Which garage will you work in?',
         'select_garage_desc'    => 'Based on your selection, data will be filtered accordingly.',
         'enter_garage'          => 'Enter Garage',
+        'tab_email'             => 'Email',
+        'tab_pin'               => 'Code + PIN',
+        'employee_code_placeholder' => 'e.g.: ANB-001',
     ],
 
     // ==================== WELCOME ====================
@@ -729,6 +732,20 @@ return [
         'profile_updated'         => 'Profile updated successfully.',
         'profile_password_updated'=> 'Password updated successfully.',
         'profile_deleted'         => 'Your account has been deleted.',
+    ],
+
+    // ==================== PIN CHANGE ====================
+    'pin_change' => [
+        'title'             => 'Change PIN',
+        'subtitle'          => 'For security reasons, you must set a new PIN before continuing.',
+        'hint'              => 'The PIN is a 4-6 digit number. Choose something only you know.',
+        'current_pin'       => 'Current PIN',
+        'new_pin'           => 'New PIN',
+        'confirm_pin'       => 'Confirm New PIN',
+        'submit'            => 'Update PIN',
+        'success'           => 'Your PIN has been updated successfully.',
+        'same_as_current'   => 'The new PIN must be different from the current one.',
+        'incorrect_current' => 'The current PIN is incorrect.',
     ],
 
     // ==================== API ====================
