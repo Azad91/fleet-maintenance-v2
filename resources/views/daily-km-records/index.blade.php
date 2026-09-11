@@ -2,10 +2,18 @@
 
 @section('title', __('messages.daily_km.title'))
 
+@php
+    use App\Enums\RoleEnum;
+
+    // Admin + Daily KM Manager/Worker can manage records
+    $canManageDailyKm = auth()->user()?->isSuperAdmin()
+        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], RoleEnum::dailyKmRoles()));
+@endphp
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📊 {{ __('messages.daily_km.title') }}</h1>
-    @if(auth()->user()?->hasGarageRole(['admin', 'daily_km']))
+    @if($canManageDailyKm)
     <div>
         <a href="{{ route('daily-km-records.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> {{ __('messages.daily_km.import') }}
@@ -56,17 +64,19 @@
                                 <a href="{{ route('daily-km-records.show', $record) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if(auth()->user()?->hasGarageRole(['admin', 'daily_km']))
+                                @if($canManageDailyKm)
                                     <a href="{{ route('daily-km-records.edit', $record) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('{{ __('messages.common.confirm') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->hasGarageRole(array_merge([RoleEnum::ADMIN->value], [RoleEnum::DAILY_KM_MANAGER->value])))
+                                        <form action="{{ route('daily-km-records.destroy', $record) }}" method="POST" style="display:inline" onsubmit="return confirm('{{ __('messages.common.confirm') }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </td>

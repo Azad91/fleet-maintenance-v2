@@ -2,10 +2,18 @@
 
 @section('title', __('messages.daily_status.title'))
 
+@php
+    use App\Enums\RoleEnum;
+
+    // Admin + Daily Status Manager/Worker can manage records
+    $canManageDailyStatus = auth()->user()?->isSuperAdmin()
+        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], RoleEnum::dailyStatusRoles()));
+@endphp
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📋 {{ __('messages.daily_status.title') }}</h1>
-    @if(auth()->user()?->hasGarageRole(['admin', 'daily_status']))
+    @if($canManageDailyStatus)
     <div>
         <a href="{{ route('bus-daily-statuses.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> {{ __('messages.daily_status.import') }}
@@ -48,7 +56,7 @@
                                 <a href="{{ route('bus-daily-statuses.show', $status) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if(auth()->user()?->hasGarageRole(['admin', 'daily_status']))
+                                @if($canManageDailyStatus)
                                     <a href="{{ route('bus-daily-statuses.edit', $status) }}" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>

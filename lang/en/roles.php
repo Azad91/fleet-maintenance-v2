@@ -17,5 +17,4 @@ return [
     'daily_km_worker'       => 'Daily KM Worker',
     'daily_status_manager'  => 'Daily Status Manager',
     'daily_status_worker'   => 'Daily Status Worker',
-    'viewer'                => 'Viewer',
 ];

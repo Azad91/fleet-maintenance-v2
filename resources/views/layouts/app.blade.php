@@ -1,3 +1,6 @@
+@php
+    use App\Enums\RoleEnum;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -53,15 +56,23 @@
 
             <nav class="fleet-nav" aria-label="{{ __('messages.nav.main_navigation') }}">
                 @php
-                    $currentUser = auth()->user();
-                    $canManage = $currentUser?->hasGarageRole('admin');
-                    $canViewBuses = $currentUser?->hasGarageRole(['admin', 'bus', 'directorate']);
-                    $canViewComplaints = $currentUser?->hasGarageRole(['admin', 'complaint', 'directorate']);
-                    $canViewWarehouse = $currentUser?->hasGarageRole(['admin', 'warehouse', 'directorate']);
-                    $canManageMotorOil = $currentUser?->hasGarageRole('admin');
-                    $canViewDailyStatus = $currentUser?->hasGarageRole(['admin', 'daily_status', 'directorate']);
-                    $canViewDailyKm = $currentUser?->hasGarageRole(['admin', 'daily_km', 'directorate']);
+                    // ---- Resolve permission flags once per request ----
+                    $currentUser  = auth()->user();
                     $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
+                    $isAdmin      = $currentUser?->hasGarageRole(RoleEnum::ADMIN->value) ?? false;
+
+                    // Operations
+                    $canViewBuses      = $isSuperAdmin || $isAdmin;
+                    $canViewComplaints = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::complaintRoles()) ?? false);
+                    $canViewWarehouse  = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::warehouseRoles()) ?? false);
+                    $canViewMotorOil   = $isSuperAdmin || $isAdmin;
+
+                    // Daily records
+                    $canViewDailyStatus = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyStatusRoles()) ?? false);
+                    $canViewDailyKm     = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyKmRoles()) ?? false);
+
+                    // Admin-only sections
+                    $canManage = $isAdmin;
                 @endphp
 
                 @if($isSuperAdmin)
@@ -77,8 +88,7 @@
                     </a>
                 @endif
 
-
-                @if($canViewBuses || $canViewComplaints || $canViewWarehouse || $canManageMotorOil)
+                @if($canViewBuses || $canViewComplaints || $canViewWarehouse || $canViewMotorOil)
                     <p class="fleet-nav__label">{{ __('messages.nav.operations') }}</p>
                     @if($canViewBuses)
                         <a href="{{ route('buses.index') }}" class="fleet-nav__link {{ request()->routeIs('buses.*') ? 'is-active' : '' }}">
@@ -95,7 +105,7 @@
                             <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.nav.warehouses') }}</span>
                         </a>
                     @endif
-                    @if($canManageMotorOil)
+                    @if($canViewMotorOil)
                         <a href="{{ route('motor-oil.index') }}" class="fleet-nav__link {{ request()->routeIs('motor-oil.*') ? 'is-active' : '' }}">
                             <i class="fas fa-oil-can"></i><span>{{ __('messages.nav.motor_oil') }}</span>
                         </a>

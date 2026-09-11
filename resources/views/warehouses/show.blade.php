@@ -2,6 +2,13 @@
 
 @section('title', __('messages.warehouse.details'))
 
+@php
+    use App\Enums\RoleEnum;
+
+    $canEditWarehouse = auth()->user()?->isSuperAdmin()
+        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], RoleEnum::warehouseRoles()));
+@endphp
+
 @section('content')
 <div class="container">
     <h1>📦 {{ __('messages.warehouse.details') }}</h1>
@@ -79,7 +86,7 @@
     </div>
 
     <br>
-    @if(Auth::user()->hasGarageRole(['admin', 'warehouse']))
+    @if($canEditWarehouse)
         <a href="{{ route('warehouses.edit', $warehouse) }}" class="btn btn-warning">
             ✏️ {{ __('messages.common.edit') }}
         </a>

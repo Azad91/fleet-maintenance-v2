@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoleEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -38,7 +39,7 @@ class User extends Authenticatable
     // ==================== GLOBAL ROLE CHECKS ====================
 
     /**
-     * Super Admin yoxlanışı – yalnız users.role ilə
+     * Super Admin check – based only on users.role column.
      */
     public function isSuperAdmin(): bool
     {
@@ -46,7 +47,7 @@ class User extends Authenticatable
     }
 
     /**
-     * İstifadəçinin əsas rolu 'user'-dursa true
+     * Returns true if the user's primary role is 'user'.
      */
     public function isRegularUser(): bool
     {
@@ -56,12 +57,12 @@ class User extends Authenticatable
     // ==================== GARAGE-LEVEL ROLE CHECKS ====================
 
     /**
-     * Qaraj səviyyəsində rol yoxlanışı – BURASI ƏSAS ROL MEXANİZMİDİR
-     * Bütün business rollar buradan yoxlanılır
+     * Garage-level role check – this is the CORE authorization mechanism.
+     * All business roles are checked against the garage_user pivot table.
      */
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
-        // Super Admin hər zaman true qaytarır
+        // Super Admin bypasses all checks
         if ($this->isSuperAdmin()) {
             return true;
         }
@@ -81,27 +82,51 @@ class User extends Authenticatable
     }
 
     /**
-     * İstifadəçinin cari qarajda ADMIN roluna sahib olub-olmaması
+     * True if the user has ADMIN role in the given (or current) garage.
      */
     public function isGarageAdmin(?int $garageId = null): bool
     {
-        return $this->hasGarageRole('admin', $garageId);
+        return $this->hasGarageRole(RoleEnum::ADMIN->value, $garageId);
     }
 
     /**
-     * İstifadəçinin cari qarajda MANAGER roluna sahib olub-olmaması
+     * True if the user is a MANAGER in any domain of the current garage.
+     * Domains: complaint, warehouse, daily_km, daily_status.
      */
-    public function isGarageManager(?int $garageId = null): bool
+    public function isAnyManager(?int $garageId = null): bool
     {
-        return $this->hasGarageRole('manager', $garageId);
+        return $this->hasGarageRole(RoleEnum::managerRoles(), $garageId);
     }
 
     /**
-     * İstifadəçinin cari qarajda yalnız baxış (viewer) roluna sahib olub-olmaması
+     * True if the user is a WORKER in any domain of the current garage.
      */
-    public function isViewer(?int $garageId = null): bool
+    public function isAnyWorker(?int $garageId = null): bool
     {
-        return $this->hasGarageRole('viewer', $garageId);
+        return $this->hasGarageRole(RoleEnum::workerRoles(), $garageId);
+    }
+
+    /**
+     * True if the user has ANY role (manager or worker) in the given domain
+     * of the current garage.
+     *
+     * Supported domains: 'complaint', 'warehouse', 'daily_km', 'daily_status'.
+     */
+    public function hasDomainRole(string $domain, ?int $garageId = null): bool
+    {
+        $domainRoles = match ($domain) {
+            'complaint'    => RoleEnum::complaintRoles(),
+            'warehouse'    => RoleEnum::warehouseRoles(),
+            'daily_km'     => RoleEnum::dailyKmRoles(),
+            'daily_status' => RoleEnum::dailyStatusRoles(),
+            default        => [],
+        };
+
+        if (empty($domainRoles)) {
+            return false;
+        }
+
+        return $this->hasGarageRole($domainRoles, $garageId);
     }
 
     // ==================== GARAGE MEMBERSHIP ====================
@@ -126,23 +151,23 @@ class User extends Authenticatable
     public function setCurrentGarage(Garage $garage): void
     {
         $this->update([
-            'current_garage_id' => $garage->id,
-            'current_company_id' => $garage->company_id,
+            'current_garage_id'       => $garage->id,
+            'current_company_id'      => $garage->company_id,
             'last_selected_garage_at' => now(),
         ]);
 
         session([
-            'current_garage_id' => $garage->id,
-            'current_garage_name' => $garage->name,
-            'current_company_id' => $garage->company_id,
+            'current_garage_id'    => $garage->id,
+            'current_garage_name'  => $garage->name,
+            'current_company_id'   => $garage->company_id,
             'current_company_name' => $garage->company->name,
         ]);
     }
 
-    // ==================== HELPER ====================
+    // ==================== HELPERS ====================
 
     /**
-     * İstifadəçinin müəyyən bir qaraja üzv olub-olmaması
+     * True if the user is a member of the given garage (any active role).
      */
     public function hasGarageAccess(int $garageId): bool
     {
@@ -153,7 +178,7 @@ class User extends Authenticatable
     }
 
     /**
-     * İstifadəçinin cari qarajdakı rolunu qaytarır
+     * Return the user's role in the current garage, or null if not a member.
      */
     public function getCurrentGarageRole(): ?string
     {
@@ -170,7 +195,8 @@ class User extends Authenticatable
     }
 
     /**
-     * İstifadəçinin bütün qaraj rollarını array olaraq qaytarır
+     * Return all active garage roles as an array of
+     * ['garage_id' => int, 'garage_name' => string, 'role' => string].
      */
     public function getAllGarageRoles(): array
     {
@@ -178,9 +204,9 @@ class User extends Authenticatable
             ->wherePivot('is_active', true)
             ->get()
             ->map(fn ($garage) => [
-                'garage_id' => $garage->id,
+                'garage_id'   => $garage->id,
                 'garage_name' => $garage->name,
-                'role' => $garage->pivot->role,
+                'role'        => $garage->pivot->role,
             ])
             ->toArray();
     }

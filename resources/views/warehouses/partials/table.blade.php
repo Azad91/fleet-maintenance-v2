@@ -1,3 +1,13 @@
+@php
+    use App\Enums\RoleEnum;
+
+    $canManageWarehouse = auth()->user()?->isSuperAdmin()
+        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], RoleEnum::warehouseRoles()));
+
+    $canDeleteWarehouse = auth()->user()?->isSuperAdmin()
+        || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], [RoleEnum::WAREHOUSE_MANAGER->value]));
+@endphp
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -42,10 +52,12 @@
                                 <a href="{{ route('warehouses.show', $item) }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if(Auth::user()->hasGarageRole(['admin', 'warehouse']))
+                                @if($canManageWarehouse)
                                     <a href="{{ route('warehouses.edit', $item) }}" class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                @endif
+                                @if($canDeleteWarehouse)
                                     <form action="{{ route('warehouses.destroy', $item) }}" method="POST" style="display:inline">
                                         @csrf
                                         @method('DELETE')
