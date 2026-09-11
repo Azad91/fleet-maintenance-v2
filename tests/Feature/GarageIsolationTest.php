@@ -27,7 +27,7 @@ class GarageIsolationTest extends TestCase
         $user->garages()->attach($garageA->id, ['role' => 'admin', 'is_active' => true]);
 
         session([
-            'current_garage_id' => $garageA->id,
+            'current_garage_id'  => $garageA->id,
             'current_company_id' => $company->id,
         ]);
         GarageContext::set($garageA->id, $company->id);
@@ -46,11 +46,11 @@ class GarageIsolationTest extends TestCase
         $garageB = Garage::factory()->create(['company_id' => $company->id]);
 
         $user = User::factory()->create(['role' => 'user']);
-        $user->garages()->attach($garageA->id, ['role' => 'complaint', 'is_active' => true]);
+        $user->garages()->attach($garageA->id, ['role' => 'complaint_manager', 'is_active' => true]);
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id' => $garageB->id,
+                'current_garage_id'  => $garageB->id,
                 'current_company_id' => $company->id,
             ])
             ->get(route('buses.index'));
@@ -74,7 +74,7 @@ class GarageIsolationTest extends TestCase
         $user->garages()->attach($garageA->id, ['role' => 'admin', 'is_active' => true]);
 
         session([
-            'current_garage_id' => $garageA->id,
+            'current_garage_id'  => $garageA->id,
             'current_company_id' => $company->id,
         ]);
         GarageContext::set($garageA->id, $company->id);
@@ -92,7 +92,7 @@ class GarageIsolationTest extends TestCase
         $superAdmin = User::factory()->create(['role' => 'super_admin']);
 
         session([
-            'current_garage_id' => $garage->id,
+            'current_garage_id'  => $garage->id,
             'current_company_id' => $company->id,
         ]);
         GarageContext::set($garage->id, $company->id);

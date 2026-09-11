@@ -26,7 +26,7 @@ class AuthorizationIntegrationTest extends TestCase
         $this->company = Company::factory()->create();
         $this->garage = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'is_active' => true,
+            'is_active'  => true,
         ]);
     }
 
@@ -36,7 +36,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($superAdmin)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('dashboard'));
@@ -51,7 +51,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($adminUser)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.index'));
@@ -60,7 +60,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response2 = $this->actingAs($adminUser)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('warehouses.index'));
@@ -68,14 +68,14 @@ class AuthorizationIntegrationTest extends TestCase
         $response2->assertStatus(200);
     }
 
-    public function test_warehouse_role_cannot_create_complaint()
+    public function test_warehouse_manager_cannot_create_complaint()
     {
         $warehouseUser = User::factory()->create(['role' => 'user']);
-        $warehouseUser->garages()->attach($this->garage, ['role' => 'warehouse', 'is_active' => true]);
+        $warehouseUser->garages()->attach($this->garage, ['role' => 'warehouse_manager', 'is_active' => true]);
 
         $response = $this->actingAs($warehouseUser)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.create'));
@@ -83,14 +83,29 @@ class AuthorizationIntegrationTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_complaint_role_can_create_complaint()
+    public function test_complaint_manager_can_create_complaint()
     {
         $complaintUser = User::factory()->create(['role' => 'user']);
-        $complaintUser->garages()->attach($this->garage, ['role' => 'complaint', 'is_active' => true]);
+        $complaintUser->garages()->attach($this->garage, ['role' => 'complaint_manager', 'is_active' => true]);
 
         $response = $this->actingAs($complaintUser)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
+                'current_company_id' => $this->company->id,
+            ])
+            ->get(route('complaints.create'));
+
+        $response->assertStatus(200);
+    }
+
+    public function test_complaint_worker_can_create_complaint()
+    {
+        $workerUser = User::factory()->create(['role' => 'user']);
+        $workerUser->garages()->attach($this->garage, ['role' => 'complaint_worker', 'is_active' => true]);
+
+        $response = $this->actingAs($workerUser)
+            ->withSession([
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.create'));
@@ -110,7 +125,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id' => $garage->id,
+                'current_garage_id'  => $garage->id,
                 'current_company_id' => $company->id,
             ])
             ->get(route('dashboard'));

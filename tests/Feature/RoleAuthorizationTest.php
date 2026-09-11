@@ -21,16 +21,16 @@ class RoleAuthorizationTest extends TestCase
         parent::setUp();
 
         $this->company = Company::create([
-            'name' => 'Test Company',
-            'slug' => 'test-company',
+            'name'      => 'Test Company',
+            'slug'      => 'test-company',
             'is_active' => true,
         ]);
 
         $this->garage = Garage::create([
             'company_id' => $this->company->id,
-            'name' => 'Test Garage',
-            'code' => 'TG-001',
-            'is_active' => true,
+            'name'       => 'Test Garage',
+            'code'       => 'TG-001',
+            'is_active'  => true,
         ]);
     }
 
@@ -47,14 +47,17 @@ class RoleAuthorizationTest extends TestCase
         $response->assertRedirect(route('garage.selection'));
     }
 
-    public function test_user_without_permission_gets_403_forbidden()
+    public function test_warehouse_manager_cannot_create_complaint()
     {
         $user = User::factory()->create();
 
-        $user->garages()->attach($this->garage, ['role' => 'warehouse', 'is_active' => true]);
+        $user->garages()->attach($this->garage, [
+            'role'      => 'warehouse_manager',
+            'is_active' => true,
+        ]);
 
         session([
-            'current_garage_id' => $this->garage->id,
+            'current_garage_id'  => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -62,14 +65,35 @@ class RoleAuthorizationTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_user_with_permission_can_access()
+    public function test_complaint_manager_can_create_complaint()
     {
         $user = User::factory()->create();
 
-        $user->garages()->attach($this->garage, ['role' => 'complaint', 'is_active' => true]);
+        $user->garages()->attach($this->garage, [
+            'role'      => 'complaint_manager',
+            'is_active' => true,
+        ]);
 
         session([
-            'current_garage_id' => $this->garage->id,
+            'current_garage_id'  => $this->garage->id,
+            'current_company_id' => $this->company->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('complaints.create'));
+        $response->assertStatus(200);
+    }
+
+    public function test_complaint_worker_can_create_complaint()
+    {
+        $user = User::factory()->create();
+
+        $user->garages()->attach($this->garage, [
+            'role'      => 'complaint_worker',
+            'is_active' => true,
+        ]);
+
+        session([
+            'current_garage_id'  => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 

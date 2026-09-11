@@ -40,43 +40,27 @@ class GarageDataAccessTest extends TestCase
         return $user;
     }
 
-    public function test_directorate_can_access_bus_by_xett(): void
+    public function test_daily_status_worker_cannot_access_garage_data_endpoints(): void
     {
-        $user = $this->userWithRole('directorate');
+        $user = $this->userWithRole('daily_status_worker');
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
-                'current_company_id' => $this->company->id,
-            ])
-            ->get('/get-bus-id-by-xett/999');
-
-        // 404 (bus yoxdur) və ya 200 (bus var) — hər ikisi OK
-        $this->assertContains($response->status(), [200, 404]);
-    }
-
-    public function test_directorate_cannot_access_detal_by_kod(): void
-    {
-        $user = $this->userWithRole('directorate');
-
-        $response = $this->actingAs($user)
-            ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-detal-by-kod/D-001');
 
-        // Directorate bu API-yə çıxışı YOXDUR
         $response->assertStatus(403);
     }
 
-    public function test_directorate_cannot_access_driver_by_kod(): void
+    public function test_daily_km_worker_cannot_access_garage_data_endpoints(): void
     {
-        $user = $this->userWithRole('directorate');
+        $user = $this->userWithRole('daily_km_worker');
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-driver-by-kod/DRV-001');
@@ -84,13 +68,13 @@ class GarageDataAccessTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_warehouse_can_access_detal_by_kod(): void
+    public function test_warehouse_manager_can_access_detal_by_kod(): void
     {
-        $user = $this->userWithRole('warehouse');
+        $user = $this->userWithRole('warehouse_manager');
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id' => $this->garage->id,
+                'current_garage_id'  => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-detal-by-kod/D-001');
@@ -98,9 +82,23 @@ class GarageDataAccessTest extends TestCase
         $this->assertContains($response->status(), [200, 404]);
     }
 
-    public function test_complaint_role_can_access_all_garage_data_endpoints(): void
+    public function test_warehouse_worker_can_access_detal_by_kod(): void
     {
-        $user = $this->userWithRole('complaint');
+        $user = $this->userWithRole('warehouse_worker');
+
+        $response = $this->actingAs($user)
+            ->withSession([
+                'current_garage_id'  => $this->garage->id,
+                'current_company_id' => $this->company->id,
+            ])
+            ->get('/get-detal-by-kod/D-001');
+
+        $this->assertContains($response->status(), [200, 404]);
+    }
+
+    public function test_complaint_manager_can_access_all_garage_data_endpoints(): void
+    {
+        $user = $this->userWithRole('complaint_manager');
 
         foreach ([
             '/get-bus-id-by-xett/999',
@@ -111,7 +109,33 @@ class GarageDataAccessTest extends TestCase
         ] as $url) {
             $response = $this->actingAs($user)
                 ->withSession([
-                    'current_garage_id' => $this->garage->id,
+                    'current_garage_id'  => $this->garage->id,
+                    'current_company_id' => $this->company->id,
+                ])
+                ->get($url);
+
+            $this->assertContains(
+                $response->status(),
+                [200, 404],
+                "Failed for URL: {$url} (got status {$response->status()})"
+            );
+        }
+    }
+
+    public function test_complaint_worker_can_access_all_garage_data_endpoints(): void
+    {
+        $user = $this->userWithRole('complaint_worker');
+
+        foreach ([
+            '/get-bus-id-by-xett/999',
+            '/get-bus-km-by-id/1',
+            '/get-detal-by-kod/D-001',
+            '/get-driver-by-kod/DRV-001',
+            '/get-motor-oil-services/1',
+        ] as $url) {
+            $response = $this->actingAs($user)
+                ->withSession([
+                    'current_garage_id'  => $this->garage->id,
                     'current_company_id' => $this->company->id,
                 ])
                 ->get($url);

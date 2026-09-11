@@ -66,10 +66,10 @@ class UserManagementTest extends TestCase
         $admin = $this->adminOf($this->garageA);
 
         $userA = User::factory()->create(['role' => 'user', 'name' => 'User A']);
-        $userA->garages()->attach($this->garageA->id, ['role' => 'warehouse', 'is_active' => true]);
+        $userA->garages()->attach($this->garageA->id, ['role' => 'warehouse_manager', 'is_active' => true]);
 
         $userB = User::factory()->create(['role' => 'user', 'name' => 'User B']);
-        $userB->garages()->attach($this->garageB->id, ['role' => 'warehouse', 'is_active' => true]);
+        $userB->garages()->attach($this->garageB->id, ['role' => 'warehouse_manager', 'is_active' => true]);
 
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
@@ -93,7 +93,7 @@ class UserManagementTest extends TestCase
                 'email'                 => 'new@test.com',
                 'password'              => 'password123',
                 'password_confirmation' => 'password123',
-                'role'                  => 'warehouse',
+                'role'                  => 'warehouse_manager',
             ]);
 
         $response->assertRedirect(route('users.index'));
@@ -104,13 +104,12 @@ class UserManagementTest extends TestCase
 
         $pivot = $newUser->garages()->whereKey($this->garageA->id)->first();
         $this->assertNotNull($pivot);
-        $this->assertEquals('warehouse', $pivot->pivot->role);
+        $this->assertEquals('warehouse_manager', $pivot->pivot->role);
         $this->assertTrue((bool) $pivot->pivot->is_active);
     }
 
     public function test_create_fails_transactionally_if_attach_errors(): void
     {
-        // Bunu simulyasiya etmək üçün mövcud useri eyni email ilə yaratmağa çalışırıq
         $admin = $this->adminOf($this->garageA);
         User::factory()->create(['email' => 'dup@test.com']);
 
@@ -123,10 +122,9 @@ class UserManagementTest extends TestCase
                 'email'                 => 'dup@test.com',
                 'password'              => 'password123',
                 'password_confirmation' => 'password123',
-                'role'                  => 'warehouse',
+                'role'                  => 'warehouse_manager',
             ]);
 
-        // Validation xətası — email unique
         $response->assertSessionHasErrors('email');
         $this->assertEquals($beforeCount, User::count());
     }
@@ -138,14 +136,14 @@ class UserManagementTest extends TestCase
         $admin = $this->adminOf($this->garageA);
 
         $target = User::factory()->create(['role' => 'user', 'name' => 'Old Name']);
-        $target->garages()->attach($this->garageA->id, ['role' => 'warehouse', 'is_active' => true]);
+        $target->garages()->attach($this->garageA->id, ['role' => 'warehouse_manager', 'is_active' => true]);
 
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->put(route('users.update', $target), [
                 'name'      => 'New Name',
                 'email'     => $target->email,
-                'role'      => 'complaint',
+                'role'      => 'complaint_manager',
                 'is_active' => 1,
             ]);
 
@@ -155,7 +153,7 @@ class UserManagementTest extends TestCase
         $this->assertEquals('New Name', $target->name);
 
         $pivot = $target->garages()->whereKey($this->garageA->id)->first();
-        $this->assertEquals('complaint', $pivot->pivot->role);
+        $this->assertEquals('complaint_manager', $pivot->pivot->role);
     }
 
     public function test_admin_cannot_update_user_from_other_garage(): void
@@ -163,7 +161,7 @@ class UserManagementTest extends TestCase
         $admin = $this->adminOf($this->garageA);
 
         $otherUser = User::factory()->create(['role' => 'user']);
-        $otherUser->garages()->attach($this->garageB->id, ['role' => 'warehouse', 'is_active' => true]);
+        $otherUser->garages()->attach($this->garageB->id, ['role' => 'warehouse_manager', 'is_active' => true]);
 
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
@@ -174,14 +172,13 @@ class UserManagementTest extends TestCase
                 'is_active' => 1,
             ]);
 
-        // ✅ İndi 403 Forbidden qaytarır (əvvəl 404 idi)
         $response->assertForbidden();
 
         $otherUser->refresh();
         $this->assertNotEquals('Hacked', $otherUser->name);
     }
 
-    // ==================== SELF-LOCKOUT QORUMA ====================
+    // ==================== SELF-LOCKOUT PROTECTION ====================
 
     public function test_admin_cannot_demote_themselves(): void
     {
@@ -192,13 +189,12 @@ class UserManagementTest extends TestCase
             ->put(route('users.update', $admin), [
                 'name'      => $admin->name,
                 'email'     => $admin->email,
-                'role'      => 'viewer',
+                'role'      => 'complaint_worker',
                 'is_active' => 1,
             ]);
 
         $response->assertSessionHasErrors('role');
 
-        // Role dəyişməyib
         $pivot = $admin->garages()->whereKey($this->garageA->id)->first();
         $this->assertEquals('admin', $pivot->pivot->role);
     }
@@ -227,7 +223,6 @@ class UserManagementTest extends TestCase
     public function test_super_admin_can_edit_themselves_without_pivot(): void
     {
         $superAdmin = User::factory()->create(['role' => 'super_admin']);
-        // Heç bir garage_user qeydi yoxdur
 
         $response = $this->actingAs($superAdmin)
             ->withSession($this->garageSession())
@@ -246,7 +241,7 @@ class UserManagementTest extends TestCase
             'name'     => 'Service User',
             'email'    => 'service@test.com',
             'password' => 'secret123',
-            'role'     => 'complaint',
+            'role'     => 'complaint_manager',
         ], $this->garageA->id);
 
         $this->assertInstanceOf(User::class, $user);
@@ -254,27 +249,26 @@ class UserManagementTest extends TestCase
         $this->assertEquals('service@test.com', $user->email);
 
         $pivot = $user->garages()->whereKey($this->garageA->id)->first();
-        $this->assertEquals('complaint', $pivot->pivot->role);
+        $this->assertEquals('complaint_manager', $pivot->pivot->role);
     }
 
     public function test_user_service_updates_only_provided_fields(): void
     {
         $service = app(UserService::class);
         $user = User::factory()->create(['role' => 'user']);
-        $user->garages()->attach($this->garageA->id, ['role' => 'warehouse', 'is_active' => true]);
+        $user->garages()->attach($this->garageA->id, ['role' => 'warehouse_manager', 'is_active' => true]);
 
         $originalPassword = $user->password;
 
         $service->updateUserWithGarageRole($user, [
             'name'      => 'Updated Name',
             'email'     => $user->email,
-            // password yoxdur — dəyişməməlidir
-            'role'      => 'complaint',
+            'role'      => 'complaint_manager',
             'is_active' => true,
         ], $this->garageA->id);
 
         $user->refresh();
         $this->assertEquals('Updated Name', $user->name);
-        $this->assertEquals($originalPassword, $user->password); // şifrə dəyişməyib
+        $this->assertEquals($originalPassword, $user->password);
     }
 }
