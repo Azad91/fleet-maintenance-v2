@@ -239,6 +239,15 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     // ==================== SUPER ADMIN ====================
     Route::prefix('super-admin')->name('super-admin.')->group(function () {
+        // Dashboard + Settings
+        Route::get('/dashboard', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])
+            ->name('dashboard');
+        Route::get('/settings', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'index'])
+            ->name('settings.index');
+        Route::post('/settings/clear-cache', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'clearCache'])
+            ->name('settings.clear-cache');
+
+        // Resource routes
         Route::resource('companies', CompanyController::class);
         Route::resource('garages', GarageController::class);
         Route::resource('users', SuperAdminUserController::class)->except(['show']);

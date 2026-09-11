@@ -27,9 +27,15 @@
         $isDirector   = $currentUser?->isDirector() ?? false;
         $isAdmin      = $currentUser?->hasGarageRole(RoleEnum::ADMIN->value) ?? false;
 
-        // Brand link target — Directors have no garage context,
-        // so they go to their own dashboard instead of the main one.
-        $brandRoute = $isDirector ? route('director.dashboard') : route('dashboard');
+        // Brand link target:
+        //   - Super Admin → global dashboard
+        //   - Director    → company dashboard
+        //   - Others      → garage dashboard
+        $brandRoute = match (true) {
+            $isSuperAdmin => route('super-admin.dashboard'),
+            $isDirector   => route('director.dashboard'),
+            default       => route('dashboard'),
+        };
     @endphp
 
     <div class="fleet-shell">
@@ -85,6 +91,9 @@
                 {{-- ==================== SUPER ADMIN MENU ==================== --}}
                 @if($isSuperAdmin)
                     <p class="fleet-nav__label">{{ __('messages.nav.super_admin_menu') }}</p>
+                    <a href="{{ route('super-admin.dashboard') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.dashboard') ? 'is-active' : '' }}">
+                        <i class="fas fa-chart-line"></i><span>{{ __('messages.nav.dashboard') }}</span>
+                    </a>
                     <a href="{{ route('super-admin.companies.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.companies.*') ? 'is-active' : '' }}">
                         <i class="fas fa-building"></i><span>{{ __('messages.nav.companies') }}</span>
                     </a>
@@ -93,6 +102,9 @@
                     </a>
                     <a href="{{ route('super-admin.users.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.users.*') ? 'is-active' : '' }}">
                         <i class="fas fa-user-shield"></i><span>{{ __('messages.nav.users') }}</span>
+                    </a>
+                    <a href="{{ route('super-admin.settings.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.settings.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-gear"></i><span>{{ __('messages.super_admin.settings.title') }}</span>
                     </a>
                 @endif
 
