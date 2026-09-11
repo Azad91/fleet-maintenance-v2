@@ -108,6 +108,20 @@ return [
         'employee_code_placeholder' => 'e.g.: ANB-001',
     ],
 
+    // ==================== PIN CHANGE ====================
+    'pin_change' => [
+        'title'             => 'Change PIN',
+        'subtitle'          => 'For security reasons, you must set a new PIN before continuing.',
+        'hint'              => 'The PIN is a 4-6 digit number. Choose something only you know.',
+        'current_pin'       => 'Current PIN',
+        'new_pin'           => 'New PIN',
+        'confirm_pin'       => 'Confirm New PIN',
+        'submit'            => 'Update PIN',
+        'success'           => 'Your PIN has been updated successfully.',
+        'same_as_current'   => 'The new PIN must be different from the current one.',
+        'incorrect_current' => 'The current PIN is incorrect.',
+    ],
+
     // ==================== WELCOME ====================
     'welcome' => [
         'title'            => 'Fleet <span>Maintenance</span>',
@@ -167,7 +181,7 @@ return [
         'status_inactive'      => 'Inactive',
         'col_project'          => 'BUS PROJECT',
         'col_vin'              => 'VIN',
-        'col_length'           => 'UZUNLUQ',
+        'col_length'           => 'LENGTH',
         'col_route'            => 'Route No',
         'col_dqn'              => 'DQN',
         'col_engine'           => 'ENGINE No',
@@ -292,6 +306,7 @@ return [
         'name'              => 'Name',
         'name_placeholder'  => 'e.g.: Engine noise',
         'import'            => 'Import from Excel',
+        'import_scope_hint' => 'Imported types are added only to your current garage.',
     ],
 
     // ==================== WAREHOUSE ====================
@@ -536,6 +551,26 @@ return [
         'password_updated_status'=> 'Password updated successfully.',
     ],
 
+    // ==================== DIRECTOR ====================
+    'director' => [
+        'menu_label'         => 'DIRECTOR',
+        'eyebrow'            => 'COMPANY OVERVIEW',
+        'dashboard_title'    => 'Company Dashboard',
+        'subtitle'           => 'Overview of all garages in your company.',
+        'view_garages'       => 'View Garages',
+        'total_garages'      => 'Total Garages',
+        'active_count'       => ':count active',
+        'garages_eyebrow'    => 'YOUR GARAGES',
+        'garages_title'      => 'Garages',
+        'garages_subtitle'   => 'All garages in your company.',
+        'no_garages'         => 'No garages in your company yet.',
+        'complaints'         => 'Complaints',
+        'warehouses'         => 'Warehouses',
+        'employees_label'    => 'Total employees',
+        'drivers_label'      => 'Total drivers',
+        'garage_info'        => 'GARAGE INFO',
+    ],
+
     // ==================== IMPORTS ====================
     'imports' => [
         'excel_format'      => 'Excel Format',
@@ -688,6 +723,167 @@ return [
             'director_assigned'         => ':name has been assigned as Director of :company.',
             'director_removed'          => ':name has been removed from :company directors.',
         ],
+
+        'dashboard' => [
+            'title'                 => 'Platform Dashboard',
+            'subtitle'              => 'Overview of all companies, garages, and users on the platform.',
+            'companies'             => 'Companies',
+            'garages'               => 'Garages',
+            'users'                 => 'Users',
+            'total_buses'           => 'Total Buses',
+            'active_count'          => ':count active',
+            'open_cards_count'      => ':count open cards',
+            'eyebrow_recent'        => 'RECENTLY ADDED',
+            'eyebrow_stats'         => 'TOP GARAGES',
+            'eyebrow_system'        => 'SYSTEM STATUS',
+            'recent_companies'      => 'Recent Companies',
+            'recent_garages'        => 'Recent Garages',
+            'top_garages'           => 'Top Garages by Buses',
+            'system_info'           => 'System Info',
+            'environment'           => 'Environment',
+        ],
+
+        'settings' => [
+            'title'             => 'System Settings',
+            'subtitle'          => 'Platform configuration and runtime information.',
+            'application'       => 'Application',
+            'runtime'           => 'Runtime',
+            'maintenance'       => 'Maintenance',
+            'app_name'          => 'Application Name',
+            'app_url'           => 'Application URL',
+            'environment'       => 'Environment',
+            'timezone'          => 'Timezone',
+            'locale'            => 'Default Locale',
+            'supported_locales' => 'Supported Locales',
+            'db_driver'         => 'Database Driver',
+            'cache_driver'      => 'Cache Store',
+            'session_driver'    => 'Session Driver',
+            'queue_driver'      => 'Queue Driver',
+            'filesystem'        => 'Filesystem Disk',
+            'log_channel'       => 'Log Channel',
+            'cache_hint'        => 'Clears compiled views, application cache, config cache, and route cache. Use with care — the next request may be slower.',
+            'cache_confirm'     => 'Clear all caches now?',
+            'clear_cache'       => 'Clear All Caches',
+            'cache_cleared'     => 'All caches cleared successfully.',
+            'cache_clear_failed'=> 'Failed to clear caches. Check the log.',
+        ],
+    ],
+
+    // ==================== REPORTS ====================
+    'reports' => [
+        'menu_label'        => 'REPORTS',
+        'title'             => 'Reports',
+        'subtitle'          => 'Analytics and operational insights.',
+        'eyebrow'           => 'REPORTS',
+        'coming_soon'       => 'Coming soon',
+        'coming_soon_hint'  => 'This report is under development. Check back shortly.',
+        'no_scope'          => 'You do not have access to this report.',
+
+        'period' => [
+            'label'   => 'Period',
+            'daily'   => 'Today',
+            'weekly'  => 'This week',
+            'monthly' => 'This month',
+            'custom'  => 'Custom range',
+            'from'    => 'From',
+            'to'      => 'To',
+            'apply'   => 'Apply',
+        ],
+
+        'warehouse' => [
+            'title'           => 'Warehouse Reports',
+            'receipt'         => 'Receipts',
+            'usage'           => 'Usage',
+            'worker_activity' => 'Worker Activity',
+            'low_stock'       => 'Critical Stock',
+            'movement'        => 'Movement History',
+        ],
+
+        'complaint' => [
+            'title'           => 'Complaint Reports',
+            'summary'         => 'Summary',
+            'top_types'       => 'Top Types',
+            'worker_activity' => 'Worker Activity',
+            'by_bus'          => 'By Bus',
+            'avg_close_time'  => 'Avg. Close Time',
+        ],
+
+        'daily_km' => [
+            'title'           => 'Daily KM Reports',
+            'missing'         => 'Missing Entries',
+            'top_buses'       => 'Top Buses',
+            'worker_activity' => 'Worker Activity',
+        ],
+
+        'daily_status' => [
+            'title'           => 'Daily Status Reports',
+            'distribution'    => 'Status Distribution',
+            'changes'         => 'Status Changes',
+            'worker_activity' => 'Worker Activity',
+        ],
+
+        'content' => [
+            'date'              => 'Date',
+            'user'              => 'User',
+            'event'             => 'Event',
+            'changes'           => 'Changes',
+            'created'           => 'Created',
+            'updated'           => 'Updated',
+            'deleted'           => 'Deleted',
+            'total'             => 'Total',
+            'times_used'        => 'Times Used',
+            'total_used'        => 'Total Used',
+            'min_quantity'      => 'Min. Qty',
+            'deficit'           => 'Deficit',
+            'records_count'     => ':count records',
+            'no_data'           => 'No data for this period.',
+            'no_low_stock'      => 'All items are above their minimum threshold.',
+            'unknown_user'      => 'Unknown user',
+            'low_stock_hint'    => 'These items are at or below their minimum quantity threshold. Consider restocking.',
+            'event_created'       => 'Created',
+            'event_updated'       => 'Updated',
+            'event_deleted'       => 'Deleted',
+            'event_force_deleted' => 'Force Deleted',
+            'event_restored'      => 'Restored',
+
+            // Complaint report specific
+            'opened'              => 'Opened',
+            'closed'              => 'Closed',
+            'open_now'            => 'Open Now',
+            'in_period'           => 'In period',
+            'current_state'       => 'Current state',
+            'by_status'           => 'By Status',
+            'distribution'        => 'Distribution',
+            'unknown_type'        => 'Unknown type',
+            'completed'           => 'Completed',
+            'avg_close_hours'     => 'Avg. Close Time',
+            'hours'               => 'hours',
+            'sample_count'        => 'Sample',
+            'closed_cards'        => 'closed cards',
+            'by_type'             => 'By Complaint Type',
+            'count'               => 'Count',
+            'avg'                 => 'Avg',
+            'min'                 => 'Min',
+            'max'                 => 'Max',
+
+            // Daily KM specific
+            'missing_hint'         => 'Buses below have no KM record on :date.',
+            'missing_count'        => 'Missing Records',
+            'buses_awaiting'       => 'buses awaiting entry',
+            'all_buses_recorded'   => 'All active buses have KM records for this day.',
+            'start_km'             => 'Start KM',
+            'end_km'               => 'End KM',
+            'distance'             => 'Distance',
+            'entries'              => 'Entries',
+            'entries_count'        => ':count entries',
+
+            // Daily Status specific
+            'status'               => 'Status',
+            'total_statuses'       => 'Total Statuses',
+            'records_in_period'    => 'records in period',
+            'unique_statuses'      => 'Unique Statuses',
+            'distinct_types'       => 'distinct types',
+        ],
     ],
 
     // ==================== FLASH MESSAGES ====================
@@ -726,26 +922,13 @@ return [
         'stock_insufficient'   => "Not enough ':name' in stock (required: :requested, available: :available).",
         'stock_insufficient_generic' => 'Insufficient stock.',
         'permission_denied' => 'You do not have permission for this action.',
+        'director_no_company' => 'No active company assignment found.',
         'auth_logged_out'         => 'You have been logged out.',
         'auth_password_confirmed' => 'Password confirmed successfully.',
         'auth_verification_sent'  => 'A new verification link has been sent to your email.',
         'profile_updated'         => 'Profile updated successfully.',
         'profile_password_updated'=> 'Password updated successfully.',
         'profile_deleted'         => 'Your account has been deleted.',
-    ],
-
-    // ==================== PIN CHANGE ====================
-    'pin_change' => [
-        'title'             => 'Change PIN',
-        'subtitle'          => 'For security reasons, you must set a new PIN before continuing.',
-        'hint'              => 'The PIN is a 4-6 digit number. Choose something only you know.',
-        'current_pin'       => 'Current PIN',
-        'new_pin'           => 'New PIN',
-        'confirm_pin'       => 'Confirm New PIN',
-        'submit'            => 'Update PIN',
-        'success'           => 'Your PIN has been updated successfully.',
-        'same_as_current'   => 'The new PIN must be different from the current one.',
-        'incorrect_current' => 'The current PIN is incorrect.',
     ],
 
     // ==================== API ====================
