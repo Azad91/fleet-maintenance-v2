@@ -61,12 +61,19 @@
                     $canManageMotorOil = $currentUser?->hasGarageRole('admin');
                     $canViewDailyStatus = $currentUser?->hasGarageRole(['admin', 'daily_status', 'directorate']);
                     $canViewDailyKm = $currentUser?->hasGarageRole(['admin', 'daily_km', 'directorate']);
+                    $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
                 @endphp
 
-                <p class="fleet-nav__label">{{ __('messages.nav.main_menu') }}</p>
-                <a href="{{ route('dashboard') }}" class="fleet-nav__link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}">
-                    <i class="fas fa-chart-pie"></i><span>{{ __('messages.nav.dashboard') }}</span>
-                </a>
+                @if($isSuperAdmin)
+                    <p class="fleet-nav__label">{{ __('messages.nav.super_admin_menu') }}</p>
+                    <a href="{{ route('super-admin.companies.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.companies.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-building"></i><span>{{ __('messages.nav.companies') }}</span>
+                    </a>
+                    <a href="{{ route('super-admin.garages.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.garages.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-warehouse"></i><span>{{ __('messages.nav.garages') }}</span>
+                    </a>
+                @endif
+
 
                 @if($canViewBuses || $canViewComplaints || $canViewWarehouse || $canManageMotorOil)
                     <p class="fleet-nav__label">{{ __('messages.nav.operations') }}</p>

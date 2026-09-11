@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\RoleEnum;
+use App\Http\Controllers\SuperAdmin\CompanyController;
+use App\Http\Controllers\SuperAdmin\GarageController;
 use App\Http\Controllers\BusController;
 use App\Http\Controllers\BusDailyStatusController;
 use App\Http\Controllers\ComplaintController;
@@ -223,6 +225,14 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
         Route::delete('/{driver}', [DriverController::class, 'destroy'])->name('destroy');
     });
 
+    // Super Admin routes
+    Route::prefix('super-admin')
+        ->name('super-admin.')
+        ->group(function () {
+            Route::resource('companies', \App\Http\Controllers\SuperAdmin\CompanyController::class);
+            Route::resource('garages', \App\Http\Controllers\SuperAdmin\GarageController::class);
+    });
+
     // ==================== API ROUTES (JSON) ====================
     Route::middleware(['role:'.implode(',', [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT->value, RoleEnum::DIRECTORATE->value])])->group(function () {
         Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
@@ -240,3 +250,4 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
 });
+
