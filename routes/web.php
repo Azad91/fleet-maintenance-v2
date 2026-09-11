@@ -56,6 +56,25 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Director Routes (company-level, read-only)
+|--------------------------------------------------------------------------
+| Directors do NOT use the garage.selected middleware — they have no
+| garage context and operate at the company level.
+*/
+Route::middleware(['auth'])
+    ->prefix('director')
+    ->name('director.')
+    ->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Director\DirectorController::class, 'dashboard'])
+            ->name('dashboard');
+        Route::get('/garages', [\App\Http\Controllers\Director\DirectorController::class, 'garages'])
+            ->name('garages');
+        Route::get('/garages/{garage}', [\App\Http\Controllers\Director\DirectorController::class, 'showGarage'])
+            ->name('garages.show');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Authenticated Routes (Auth + Garage Selected + Idempotent)
 |--------------------------------------------------------------------------
 */

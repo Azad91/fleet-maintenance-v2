@@ -20,10 +20,22 @@
     @stack('styles')
 </head>
 <body class="fleet-app">
+    @php
+        // ---- Global permission flags (resolved once for the whole layout) ----
+        $currentUser  = auth()->user();
+        $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
+        $isDirector   = $currentUser?->isDirector() ?? false;
+        $isAdmin      = $currentUser?->hasGarageRole(RoleEnum::ADMIN->value) ?? false;
+
+        // Brand link target — Directors have no garage context,
+        // so they go to their own dashboard instead of the main one.
+        $brandRoute = $isDirector ? route('director.dashboard') : route('dashboard');
+    @endphp
+
     <div class="fleet-shell">
         <aside class="fleet-sidebar" id="fleetSidebar">
             <div class="fleet-sidebar__top">
-                <a href="{{ route('dashboard') }}" class="fleet-brand text-decoration-none">
+                <a href="{{ $brandRoute }}" class="fleet-brand text-decoration-none">
                     <span class="fleet-brand__mark"><i class="fas fa-bus"></i></span>
                     <span>
                         <strong>Fleet</strong><span class="fleet-brand__accent">Control</span>
@@ -56,11 +68,6 @@
 
             <nav class="fleet-nav" aria-label="{{ __('messages.nav.main_navigation') }}">
                 @php
-                    // ---- Resolve permission flags once per request ----
-                    $currentUser  = auth()->user();
-                    $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
-                    $isAdmin      = $currentUser?->hasGarageRole(RoleEnum::ADMIN->value) ?? false;
-
                     // Operations
                     $canViewBuses      = $isSuperAdmin || $isAdmin;
                     $canViewComplaints = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::complaintRoles()) ?? false);
@@ -75,6 +82,7 @@
                     $canManage = $isAdmin;
                 @endphp
 
+                {{-- ==================== SUPER ADMIN MENU ==================== --}}
                 @if($isSuperAdmin)
                     <p class="fleet-nav__label">{{ __('messages.nav.super_admin_menu') }}</p>
                     <a href="{{ route('super-admin.companies.index') }}" class="fleet-nav__link {{ request()->routeIs('super-admin.companies.*') ? 'is-active' : '' }}">
@@ -88,7 +96,19 @@
                     </a>
                 @endif
 
-                @if($canViewBuses || $canViewComplaints || $canViewWarehouse || $canViewMotorOil)
+                {{-- ==================== DIRECTOR MENU ==================== --}}
+                @if($isDirector)
+                    <p class="fleet-nav__label">{{ __('messages.director.menu_label') }}</p>
+                    <a href="{{ route('director.dashboard') }}" class="fleet-nav__link {{ request()->routeIs('director.dashboard') ? 'is-active' : '' }}">
+                        <i class="fas fa-chart-line"></i><span>{{ __('messages.nav.dashboard') }}</span>
+                    </a>
+                    <a href="{{ route('director.garages') }}" class="fleet-nav__link {{ request()->routeIs('director.garages.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-warehouse"></i><span>{{ __('messages.director.garages_title') }}</span>
+                    </a>
+                @endif
+
+                {{-- ==================== OPERATIONS (garage users only) ==================== --}}
+                @if(! $isDirector && ($canViewBuses || $canViewComplaints || $canViewWarehouse || $canViewMotorOil))
                     <p class="fleet-nav__label">{{ __('messages.nav.operations') }}</p>
                     @if($canViewBuses)
                         <a href="{{ route('buses.index') }}" class="fleet-nav__link {{ request()->routeIs('buses.*') ? 'is-active' : '' }}">
@@ -112,7 +132,8 @@
                     @endif
                 @endif
 
-                @if($canViewDailyStatus || $canViewDailyKm)
+                {{-- ==================== DAILY RECORDS (garage users only) ==================== --}}
+                @if(! $isDirector && ($canViewDailyStatus || $canViewDailyKm))
                     <p class="fleet-nav__label">{{ __('messages.nav.daily_records') }}</p>
                     @if($canViewDailyStatus)
                         <a href="{{ route('bus-daily-statuses.index') }}" class="fleet-nav__link {{ request()->routeIs('bus-daily-statuses.*') ? 'is-active' : '' }}">
@@ -126,7 +147,8 @@
                     @endif
                 @endif
 
-                @if($canManage)
+                {{-- ==================== ADMIN-ONLY (garage admin) ==================== --}}
+                @if(! $isDirector && $canManage)
                     <p class="fleet-nav__label">{{ __('messages.nav.data') }}</p>
                     <a href="{{ route('drivers.index') }}" class="fleet-nav__link {{ request()->routeIs('drivers.*') ? 'is-active' : '' }}">
                         <i class="fas fa-id-card"></i><span>{{ __('messages.nav.drivers') }}</span>
@@ -186,7 +208,7 @@
                         <i class="fas fa-moon"></i>
                     </button>
 
-                    @if(session('current_garage_name'))
+                    @if(session('current_garage_name') && ! $isDirector)
                         <a href="{{ route('garage.selection') }}" class="fleet-topbar__garage text-decoration-none">
                             <i class="fas fa-building"></i>
                             <span>{{ session('current_garage_name') }}</span>

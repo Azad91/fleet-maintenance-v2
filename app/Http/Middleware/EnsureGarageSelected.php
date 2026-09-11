@@ -11,16 +11,22 @@ class EnsureGarageSelected
 {
     public function handle(Request $request, Closure $next)
     {
-        $garageId = $request->session()->get('current_garage_id');
-        $companyId = $request->session()->get('current_company_id');
-
-        if (! $garageId) {
-            return redirect()->route('garage.selection');
-        }
-
         $user = $request->user();
         if (! $user) {
             return redirect()->route('login');
+        }
+
+        $garageId  = $request->session()->get('current_garage_id');
+        $companyId = $request->session()->get('current_company_id');
+
+        // Directors have no garage context. If they somehow reach a garage-scoped
+        // route without a selected garage, send them to their company dashboard.
+        if (! $garageId && $user->isDirector()) {
+            return redirect()->route('director.dashboard');
+        }
+
+        if (! $garageId) {
+            return redirect()->route('garage.selection');
         }
 
         // Super admin — verify garage exists, set context
@@ -52,11 +58,16 @@ class EnsureGarageSelected
                 'current_company_name',
             ]);
             GarageContext::clear();
+
+            // If they are a Director (also no membership), send to company dashboard.
+            if ($user->isDirector()) {
+                return redirect()->route('director.dashboard');
+            }
+
             return redirect()->route('garage.selection')
                 ->with('error', __('messages.flash.garage_access_denied'));
         }
 
-        // Set context (company_id from garage)
         GarageContext::set((int) $membership->id, $membership->company_id);
 
         return $next($request);

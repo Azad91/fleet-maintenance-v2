@@ -81,6 +81,43 @@ class User extends Authenticatable
             ->exists();
     }
 
+    // ==================== COMPANY-LEVEL ROLE CHECKS ====================
+
+    /**
+     * True if the user is an active Director of any company.
+     *
+     * Directors do not have garage memberships — they operate at the
+     * company level and get a dedicated read-only dashboard.
+     */
+    public function isDirector(): bool
+    {
+        return $this->companies()
+            ->wherePivot('role', 'director')
+            ->wherePivot('is_active', true)
+            ->exists();
+    }
+
+    /**
+     * Companies this user belongs to (via company_user pivot).
+     */
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user')
+            ->withPivot('role', 'is_active')
+            ->withTimestamps();
+    }
+
+    /**
+     * Return the first active Director company, or null.
+     */
+    public function activeDirectorCompany(): ?Company
+    {
+        return $this->companies()
+            ->wherePivot('role', 'director')
+            ->wherePivot('is_active', true)
+            ->first();
+    }
+
     /**
      * True if the user has ADMIN role in the given (or current) garage.
      */

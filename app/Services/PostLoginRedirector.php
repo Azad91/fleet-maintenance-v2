@@ -6,17 +6,23 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Handles post-login navigation logic.
+ * Handles post-login navigation.
  *
- * Garage selection rules:
- *   - 0 garages  → redirect to selection page (with error)
- *   - 1 garage   → auto-select and go to dashboard
- *   - 2+ garages → redirect to selection page
+ * Priority:
+ *   1. Director (company-level)     → director.dashboard
+ *   2. 0 active garages             → garage.selection (with error)
+ *   3. 1 active garage              → auto-select + dashboard
+ *   4. 2+ active garages            → garage.selection
  */
 class PostLoginRedirector
 {
     public static function redirect(User $user, string $routeName = 'dashboard'): RedirectResponse
     {
+        // Directors operate at the company level and have their own dashboard.
+        if ($user->isDirector()) {
+            return redirect()->route('director.dashboard');
+        }
+
         $activeGarages = $user->garages()
             ->wherePivot('is_active', true)
             ->with('company')
