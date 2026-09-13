@@ -2,6 +2,7 @@
 
 namespace App\Models\Traits;
 
+use App\Exceptions\MissingGarageContextException;
 use App\Services\GarageContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Context;
@@ -122,34 +123,34 @@ trait HasGarageScope
     }
 
     /**
-     * No garage context found — decide what to do.
+     * No garage context found — block the operation.
      *
-     * - Real console (migration/seeder/tinker): continue silently
-     * - Test environment: continue so tests can control behavior
-     * - Debug mode: throw exception — developer sees immediately
-     * - Production: log warning, continue (server stability)
+     * Behavior by environment:
+     *   - Real console (migration, seeder, tinker): continue silently.
+     *     Operators running those commands explicitly control the DB.
+     *   - Everywhere else — including unit tests and web requests —
+     *     throw MissingGarageContextException. The exception is caught
+     *     by bootstrap/app.php and either returns JSON or redirects
+     *     the user to garage selection.
+     *
+     * Reasoning: silently writing `garage_id = NULL` creates ghost
+     * rows invisible to all garages and all reports. It is always
+     * preferable to fail loudly.
      */
     protected static function handleMissingGarageContext($model): void
     {
-        // Real console (NOT tests): continue silently
+        // Real console (NOT tests): continue silently.
+        //
+        // Note: PHPUnit tests also run in console, so we must
+        // additionally check runningUnitTests() to distinguish the
+        // two. Without it, every test would skip this guard.
         if (app()->runningInConsole() && ! app()->runningUnitTests()) {
             return;
         }
 
-        $message = sprintf(
-            'Garage context is not set. Model: %s. '
-            . 'Set it via GarageContext::set(), session("current_garage_id") '
-            . 'or auth()->user()->current_garage_id.',
-            get_class($model)
-        );
-
-        // In debug mode: throw exception — developer sees immediately
-        if (config('app.debug')) {
-            throw new \RuntimeException($message);
-        }
-
-        // Production: log warning, continue
-        Log::warning($message, [
+        // Log before throwing — helps diagnosis even when the exception
+        // is caught and converted into a user-facing redirect.
+        Log::error('Garage context missing — blocking write', [
             'model'      => get_class($model),
             'attributes' => collect($model->getAttributes())
                 ->except(['password', 'remember_token'])
@@ -158,6 +159,8 @@ trait HasGarageScope
             'user_id'    => auth()->id(),
             'url'        => request()?->fullUrl(),
         ]);
+
+        throw new MissingGarageContextException(get_class($model));
     }
 
     // ==================== RELATIONS ====================
