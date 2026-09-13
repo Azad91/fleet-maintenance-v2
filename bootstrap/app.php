@@ -48,11 +48,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.garage'      => \App\Http\Middleware\EnsureApiGarageContext::class,
             'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class, // ← YENİ
         ]);
-
-        // API route-larında qaraj kontekstini məcburi edirik
-        $middleware->api(append: [
-            \App\Http\Middleware\EnsureApiGarageContext::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // ============================================================
