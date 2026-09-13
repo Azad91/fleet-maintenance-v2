@@ -5,6 +5,8 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
+use App\Http\Requests\SuperAdmin\CompanyStoreRequest;
+use App\Http\Requests\SuperAdmin\CompanyUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -40,20 +42,10 @@ class CompanyController extends Controller
     /**
      * Store a newly created company in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(CompanyStoreRequest $request): RedirectResponse
     {
-        $this->ensureSuperAdmin();
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'slug'      => ['nullable', 'string', 'max:255', 'unique:companies,slug', 'regex:/^[a-z0-9-]+$/'],
-            'email'     => ['nullable', 'email', 'max:255'],
-            'phone'     => ['nullable', 'string', 'max:50'],
-            'address'   => ['nullable', 'string', 'max:1000'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
-        // Auto-generate slug if not provided
         if (empty($validated['slug'])) {
             $validated['slug'] = $this->generateUniqueSlug($validated['name']);
         }
@@ -103,22 +95,9 @@ class CompanyController extends Controller
     /**
      * Update the specified company in storage.
      */
-    public function update(Request $request, Company $company): RedirectResponse
+    public function update(CompanyUpdateRequest $request, Company $company): RedirectResponse
     {
-        $this->ensureSuperAdmin();
-
-        $validated = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'slug'      => [
-                'required', 'string', 'max:255', 'regex:/^[a-z0-9-]+$/',
-                Rule::unique('companies', 'slug')->ignore($company->id),
-            ],
-            'email'     => ['nullable', 'email', 'max:255'],
-            'phone'     => ['nullable', 'string', 'max:50'],
-            'address'   => ['nullable', 'string', 'max:1000'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->boolean('is_active');
 
         $company->update($validated);

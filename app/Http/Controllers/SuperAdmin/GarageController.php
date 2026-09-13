@@ -5,6 +5,8 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Garage;
+use App\Http\Requests\SuperAdmin\GarageStoreRequest;
+use App\Http\Requests\SuperAdmin\GarageUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -57,19 +59,9 @@ class GarageController extends Controller
     /**
      * Store a newly created garage in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(GarageStoreRequest $request): RedirectResponse
     {
-        $this->ensureSuperAdmin();
-
-        $validated = $request->validate([
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-            'name'       => ['required', 'string', 'max:255'],
-            'code'       => ['required', 'string', 'max:50', 'unique:garages,code'],
-            'address'    => ['nullable', 'string', 'max:1000'],
-            'phone'      => ['nullable', 'string', 'max:50'],
-            'is_active'  => ['nullable', 'boolean'],
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->boolean('is_active', true);
 
         $garage = Garage::create($validated);
@@ -109,22 +101,9 @@ class GarageController extends Controller
     /**
      * Update the specified garage in storage.
      */
-    public function update(Request $request, Garage $garage): RedirectResponse
+        public function update(GarageUpdateRequest $request, Garage $garage): RedirectResponse
     {
-        $this->ensureSuperAdmin();
-
-        $validated = $request->validate([
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-            'name'       => ['required', 'string', 'max:255'],
-            'code'       => [
-                'required', 'string', 'max:50',
-                Rule::unique('garages', 'code')->ignore($garage->id),
-            ],
-            'address'    => ['nullable', 'string', 'max:1000'],
-            'phone'      => ['nullable', 'string', 'max:50'],
-            'is_active'  => ['nullable', 'boolean'],
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->boolean('is_active');
 
         $garage->update($validated);

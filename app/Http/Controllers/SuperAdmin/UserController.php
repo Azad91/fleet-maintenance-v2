@@ -4,6 +4,8 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Http\Requests\SuperAdmin\GarageStoreRequest;
+use App\Http\Requests\SuperAdmin\GarageUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -59,23 +61,11 @@ class UserController extends Controller
     /**
      * Store a newly created user.
      */
-    public function store(Request $request): RedirectResponse
+        public function store(UserStoreRequest $request): RedirectResponse
     {
-        $this->ensureSuperAdmin();
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'      => ['required', 'string', 'min:8', 'confirmed'],
-            'employee_code' => ['nullable', 'string', 'max:50', 'unique:users,employee_code'],
-            'pin'           => ['nullable', 'string', 'digits_between:4,6'],
-            'is_active'     => ['nullable', 'boolean'],
-        ]);
-
-        // Auto-generate employee code if empty
         $employeeCode = $validated['employee_code'] ?? $this->generateEmployeeCode();
-
-        // Auto-generate PIN if empty
         $pinWasGenerated = empty($validated['pin']);
         $pin = $validated['pin'] ?? $this->generatePin();
 
@@ -87,7 +77,6 @@ class UserController extends Controller
             'pin'            => Hash::make($pin),
             'pin_is_default' => $pinWasGenerated,
             'is_active'      => $request->boolean('is_active', true),
-            // Role defaults to 'user' via User::$attributes.
         ]);
 
         return redirect()
@@ -114,23 +103,15 @@ class UserController extends Controller
     /**
      * Update the specified user.
      */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
-        $this->ensureSuperAdmin();
-
-        // Prevent editing the only super_admin
+        // Domain rule that is not expressible as a validation rule:
+        // a super admin may not edit another super admin.
         if ($user->isSuperAdmin() && $user->isNot(auth()->user())) {
             return back()->with('error', __('messages.super_admin.users.cannot_edit_other_super_admin'));
         }
 
-        $validated = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password'      => ['nullable', 'string', 'min:8', 'confirmed'],
-            'employee_code' => ['nullable', 'string', 'max:50', 'unique:users,employee_code,' . $user->id],
-            'pin'           => ['nullable', 'string', 'digits_between:4,6'],
-            'is_active'     => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $updateData = [
             'name'      => $validated['name'],
@@ -138,18 +119,14 @@ class UserController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ];
 
-        // employee_code: only replace if a new value is provided.
-        // An empty submission keeps the existing code (prevents accidental lockout).
         if (! empty($validated['employee_code'])) {
             $updateData['employee_code'] = $validated['employee_code'];
         }
 
-        // Password: only update if provided.
         if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
 
-        // PIN: only update if provided.
         if (! empty($validated['pin'])) {
             $updateData['pin'] = Hash::make($validated['pin']);
             $updateData['pin_is_default'] = false;
