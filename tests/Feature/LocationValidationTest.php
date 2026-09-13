@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Location;
 use App\Models\Bus;
-use App\Models\Company;
 use App\Models\Complaint;
-use App\Models\ComplaintType;
+use App\Models\ComplaintType as ComplaintTypeModel;
+use App\Models\Company;
 use App\Models\Driver;
 use App\Models\Garage;
 use App\Models\User;
@@ -38,7 +39,7 @@ class LocationValidationTest extends TestCase
 
         GarageContext::set($this->garage->id, $this->company->id);
 
-        ComplaintType::withoutGlobalScopes()->create([
+        ComplaintTypeModel::withoutGlobalScopes()->create([
             'name'       => $this->validDescription,
             'garage_id'  => $this->garage->id,
             'company_id' => $this->company->id,
@@ -99,7 +100,7 @@ class LocationValidationTest extends TestCase
 
         $complaint = Complaint::first();
         $this->assertNotNull($complaint);
-        $this->assertSame('garage', $complaint->yer);
+        $this->assertSame(Location::Garage, $complaint->yer);
         $this->assertNull($complaint->driver_id);
         $this->assertNull($complaint->driver_name);
     }
@@ -127,7 +128,7 @@ class LocationValidationTest extends TestCase
 
         $complaint = Complaint::first();
         $this->assertNotNull($complaint);
-        $this->assertSame('road', $complaint->yer);
+        $this->assertSame(Location::Road, $complaint->yer);
         $this->assertSame($this->driver->id, $complaint->driver_id);
         $this->assertSame($this->driver->full_name, $complaint->driver_name);
     }
@@ -235,7 +236,7 @@ class LocationValidationTest extends TestCase
         $response->assertSessionHasNoErrors();
 
         $fresh = $complaint->fresh();
-        $this->assertSame('garage', $fresh->yer);
+        $this->assertSame(Location::Garage, $fresh->yer);
         $this->assertNull($fresh->driver_id);
         $this->assertNull($fresh->driver_name);
     }

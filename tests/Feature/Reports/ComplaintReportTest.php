@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Complaint;
 use App\Models\Garage;
 use App\Models\User;
+use App\Enums\ComplaintType;
 use App\Services\GarageContext;
 use App\Services\Reports\ComplaintReportService;
 use App\Services\Reports\ReportPeriod;
@@ -156,9 +157,11 @@ class ComplaintReportTest extends TestCase
         $rows = $this->service->topTypes($this->period(), $scope);
 
         $this->assertCount(2, $rows);
-        $this->assertSame('breakdown', $rows->first()->complaint_type);
+        $this->assertEquals(ComplaintType::Breakdown, $rows->first()->complaint_type);
         $this->assertSame(2, (int) $rows->first()->total);
-        $this->assertFalse($rows->contains('complaint_type', 'maintenance'));
+        $this->assertFalse(
+            $rows->contains(fn ($row) => $row->complaint_type === ComplaintType::Maintenance)
+        );
     }
 
     // ==================== BY BUS ====================

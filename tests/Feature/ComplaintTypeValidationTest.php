@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ComplaintType;
 use App\Models\Bus;
-use App\Models\Company;
 use App\Models\Complaint;
-use App\Models\ComplaintType;
+use App\Models\ComplaintType as ComplaintTypeModel;
+use App\Models\Company;
+use App\Models\Driver;
 use App\Models\Garage;
 use App\Models\User;
 use App\Services\GarageContext;
@@ -42,7 +44,7 @@ class ComplaintTypeValidationTest extends TestCase
 
         // Seed a complaint type for the current garage, so the
         // `complaints.*` validation rule (Rule::exists) passes.
-        ComplaintType::withoutGlobalScopes()->create([
+        ComplaintTypeModel::withoutGlobalScopes()->create([
             'name'       => $this->validDescription,
             'garage_id'  => $this->garage->id,
             'company_id' => $this->company->id,
@@ -157,7 +159,7 @@ class ComplaintTypeValidationTest extends TestCase
             ]);
 
         $response->assertSessionHasNoErrors();
-        $this->assertEquals('accident', $complaint->fresh()->complaint_type);
+        $this->assertEquals(ComplaintType::Accident, $complaint->fresh()->complaint_type);
     }
 
     public function test_update_rejects_invalid_complaint_type(): void
@@ -182,6 +184,6 @@ class ComplaintTypeValidationTest extends TestCase
             ]);
 
         $response->assertSessionHasErrors('complaint_type');
-        $this->assertEquals('breakdown', $complaint->fresh()->complaint_type);
+        $this->assertEquals(ComplaintType::Breakdown, $complaint->fresh()->complaint_type);
     }
 }
