@@ -69,17 +69,22 @@ class Garage extends Model
         return $this->hasMany(BusDailyStatus::class);
     }
 
-    public static function getCurrentId()
+    /**
+     * @deprecated Use GarageContext::resolveGarageId() directly.
+     *
+     * Kept for backward compatibility. Delegates to the centralized
+     * resolution chain in GarageContext.
+     */
+    public static function getCurrentId(): ?int
     {
-        return GarageContext::getGarageId()
-            ?? session('current_garage_id')
-            ?? auth()->user()?->current_garage_id;
+        return GarageContext::resolveGarageId();
     }
 
-    public static function getCurrentCompanyId()
+    /**
+     * @deprecated Use GarageContext::resolveCompanyId() directly.
+     */
+    public static function getCurrentCompanyId(): ?int
     {
-        return GarageContext::getCompanyId()
-            ?? session('current_company_id')
-            ?? auth()->user()?->current_company_id;
+        return GarageContext::resolveCompanyId();
     }
 }

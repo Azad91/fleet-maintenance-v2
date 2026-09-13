@@ -2,13 +2,32 @@
 
 namespace App\Services;
 
+use App\Models\Garage;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Context;
 
+/**
+ * Centralized accessor for the "current garage" and "current company"
+ * of the active request.
+ *
+ * Resolution order (first hit wins):
+ *   1. Laravel Context      — set by middleware, most reliable
+ *   2. Session              — set at login / garage selection
+ *   3. Authenticated user   — persisted preference; needed for queue
+ *                             jobs and console contexts
+ *   4. null                 — no context available
+ *
+ * Two read APIs:
+ *   - getGarageId() / getCompanyId(): raw Context only. Use when the
+ *     caller is guaranteed to run behind the garage.selected middleware.
+ *   - resolveGarageId() / resolveCompanyId(): full fallback chain. Use
+ *     in services, models, and background jobs.
+ */
 class GarageContext
 {
-    /**
-     * Cari qaraj və şirkət məlumatlarını kontekstə yazır
-     */
+    // ==================== WRITE ====================
+
     public static function set(int $garageId, ?int $companyId = null): void
     {
         Context::add('current_garage_id', $garageId);
@@ -16,35 +35,111 @@ class GarageContext
     }
 
     /**
-     * Cari qaraj ID-sini qaytarır
+     * Populate Context from a User's persisted current_garage_id.
+     *
+     * Returns true when the Context was set.
      */
-    public static function getGarageId(): ?int
+    public static function fromUser(User $user): bool
     {
-        return Context::get('current_garage_id');
+        if (! $user->current_garage_id) {
+            return false;
+        }
+
+        self::set(
+            (int) $user->current_garage_id,
+            $user->current_company_id ? (int) $user->current_company_id : null,
+        );
+
+        return true;
     }
 
-    /**
-     * Cari şirkət ID-sini qaytarır
-     */
-    public static function getCompanyId(): ?int
-    {
-        return Context::get('current_company_id');
-    }
-
-    /**
-     * Konteksti təmizləyir
-     */
     public static function clear(): void
     {
         Context::forget('current_garage_id');
         Context::forget('current_company_id');
     }
 
+    // ==================== READ (raw Context) ====================
+
     /**
-     * Kontekstdə qaraj məlumatı var?
+     * Raw Context value — no fallback. Use only when the caller is
+     * guaranteed to run behind `garage.selected`.
      */
+    public static function getGarageId(): ?int
+    {
+        return Context::get('current_garage_id');
+    }
+
+    public static function getCompanyId(): ?int
+    {
+        return Context::get('current_company_id');
+    }
+
     public static function has(): bool
     {
         return Context::has('current_garage_id');
+    }
+
+    // ==================== READ (resolved with fallback) ====================
+
+    /**
+     * Resolve the current garage id, walking the full fallback chain.
+     */
+    public static function resolveGarageId(): ?int
+    {
+        return self::getGarageId()
+            ?? self::fromSession('current_garage_id')
+            ?? self::fromAuth('current_garage_id');
+    }
+
+    /**
+     * Resolve the current company id, walking the full fallback chain.
+     */
+    public static function resolveCompanyId(): ?int
+    {
+        return self::getCompanyId()
+            ?? self::fromSession('current_company_id')
+            ?? self::fromAuth('current_company_id');
+    }
+
+    /**
+     * Resolve the full Garage model, if the resolved id points to an
+     * existing record.
+     */
+    public static function resolveGarage(): ?Garage
+    {
+        $id = self::resolveGarageId();
+
+        return $id ? Garage::withoutGlobalScopes()->find($id) : null;
+    }
+
+    // ==================== FALLBACK HELPERS ====================
+
+    private static function fromSession(string $key): ?int
+    {
+        try {
+            $value = session($key);
+
+            return $value !== null ? (int) $value : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private static function fromAuth(string $key): ?int
+    {
+        try {
+            $user = Auth::user();
+
+            if (! $user) {
+                return null;
+            }
+
+            $value = $user->{$key} ?? null;
+
+            return $value !== null ? (int) $value : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

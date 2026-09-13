@@ -29,37 +29,26 @@ trait HasGarageScope
             }
         });
 
-        // ==================== CREATING EVENT ====================
+                // ==================== CREATING EVENT ====================
         static::creating(function ($model) {
-            // 1. If garage_id is already set, don't touch it (manual override)
+            // If garage_id is already set, don't touch it (manual override).
             if ($model->garage_id !== null) {
                 return;
             }
 
-            // 2. From GarageContext (most reliable)
-            if (GarageContext::has()) {
-                $model->garage_id  = GarageContext::getGarageId();
-                $model->company_id = GarageContext::getCompanyId();
+            // Resolve via the centralized chain:
+            // Context → session → auth user → null.
+            $garageId  = GarageContext::resolveGarageId();
+            $companyId = GarageContext::resolveCompanyId();
+
+            if ($garageId !== null) {
+                $model->garage_id  = $garageId;
+                $model->company_id = $companyId;
+
                 return;
             }
 
-            // 3. From session (web request)
-            $sessionGarageId = self::resolveGarageFromSession();
-            if ($sessionGarageId) {
-                $model->garage_id  = $sessionGarageId;
-                $model->company_id = session('current_company_id');
-                return;
-            }
-
-            // 4. From auth user (fallback)
-            $userGarageId = self::resolveGarageFromAuth();
-            if ($userGarageId) {
-                $model->garage_id  = $userGarageId;
-                $model->company_id = auth()->user()?->current_company_id;
-                return;
-            }
-
-            // 5. Neither — context missing
+            // No context available — defer the decision to the handler.
             self::handleMissingGarageContext($model);
         });
 
@@ -86,40 +75,6 @@ trait HasGarageScope
                 }
             }
         });
-    }
-
-    /**
-     * Read garage_id from session.
-     */
-    protected static function resolveGarageFromSession(): ?int
-    {
-        try {
-            $garageId = session('current_garage_id');
-
-            return $garageId ? (int) $garageId : null;
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Read garage_id from auth user.
-     */
-    protected static function resolveGarageFromAuth(): ?int
-    {
-        try {
-            $user = auth()->user();
-
-            if (! $user) {
-                return null;
-            }
-
-            $garageId = $user->current_garage_id ?? null;
-
-            return $garageId ? (int) $garageId : null;
-        } catch (\Throwable $e) {
-            return null;
-        }
     }
 
     /**
