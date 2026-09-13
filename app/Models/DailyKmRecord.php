@@ -20,7 +20,6 @@ class DailyKmRecord extends Model
         'notes',
         'garage_id',
         'company_id',
-        'created_by',
     ];
 
     protected $casts = [

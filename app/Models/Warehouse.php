@@ -16,7 +16,6 @@ class Warehouse extends Model
     protected $fillable = [
         'garage_id',
         'company_id',
-        'created_by',
         'code',
         'name',
         'category',
