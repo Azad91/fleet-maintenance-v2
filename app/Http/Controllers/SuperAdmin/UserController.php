@@ -86,8 +86,8 @@ class UserController extends Controller
             'employee_code'  => $employeeCode,
             'pin'            => Hash::make($pin),
             'pin_is_default' => $pinWasGenerated,
-            'role'           => 'user',
             'is_active'      => $request->boolean('is_active', true),
+            // Role defaults to 'user' via User::$attributes.
         ]);
 
         return redirect()

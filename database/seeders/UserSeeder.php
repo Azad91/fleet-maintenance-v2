@@ -15,15 +15,17 @@ class UserSeeder extends Seeder
         // ============================================================
         // 1. SUPER ADMIN
         // ============================================================
-        User::updateOrCreate(
+        $superAdmin = User::updateOrCreate(
             ['email' => 'admin@fleet.com'],
             [
                 'name'      => 'Super Admin',
                 'password'  => Hash::make('password'),
-                'role'      => 'super_admin',
                 'is_active' => true,
             ]
         );
+
+        // Role is not mass-assignable — set explicitly.
+        $superAdmin->promoteToSuperAdmin()->save();
 
         // ============================================================
         // 2. TEST GARAGE ADMIN
@@ -44,10 +46,12 @@ class UserSeeder extends Seeder
                         'password'        => Hash::make('password'),
                         'pin'             => Hash::make('1234'),
                         'pin_is_default'  => true,
-                        'role'            => 'user',
                         'is_active'       => true,
                     ]
                 );
+
+                // Role defaults to 'user' — explicit call is a safety net.
+                $admin->demoteToRegularUser()->save();
 
                 $admin->garages()->sync([
                     $garage->id => [

@@ -113,31 +113,31 @@ class DemoDataSeeder extends Seeder
 
     private function createSuperAdmin(): void
     {
-        User::updateOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@fleet.com'],
             [
                 'name'      => 'Super Admin',
                 'password'  => Hash::make('password'),
-                'role'      => 'super_admin',
                 'is_active' => true,
             ]
         );
+        $admin->promoteToSuperAdmin()->save();
     }
 
     private function createDirector(Company $company): void
     {
         $director = User::updateOrCreate(
-            ['email' => 'director@demo.com'],
-            [
-                'name'            => 'Rəşad Direktor',
-                'password'        => Hash::make('password'),
-                'employee_code'   => 'DIR-001',
-                'pin'             => Hash::make('1234'),
-                'pin_is_default'  => true,
-                'role'            => 'user',
-                'is_active'       => true,
-            ]
-        );
+        ['email' => 'director@demo.com'],
+        [
+            'name'            => 'Rəşad Direktor',
+            'password'        => Hash::make('password'),
+            'employee_code'   => 'DIR-001',
+            'pin'             => Hash::make('1234'),
+            'pin_is_default'  => true,
+            'is_active'       => true,
+        ]
+    );
+    // Role defaults to 'user' — no explicit call needed.
 
         $company->users()->syncWithoutDetaching([
             $director->id => ['role' => 'director', 'is_active' => true],
@@ -191,13 +191,13 @@ class DemoDataSeeder extends Seeder
                 [
                     'name'            => $name,
                     'password'        => Hash::make('password'),
-                    'employee_code'   => strtoupper(substr($role, 0, 3)) . '-' . $suffix . '-' . str_pad($counter, 3, '0', STR_PAD_LEFT),
+                    'employee_code'   => ...,
                     'pin'             => Hash::make('1234'),
                     'pin_is_default'  => true,
-                    'role'            => 'user',
                     'is_active'       => true,
                 ]
             );
+            // Role defaults to 'user'.
 
             $user->garages()->syncWithoutDetaching([
                 $garage->id => ['role' => $role, 'is_active' => true],

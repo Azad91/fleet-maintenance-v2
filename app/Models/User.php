@@ -13,6 +13,16 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
+        /**
+     * Mass-assignable attributes.
+     *
+     * NOTE: 'role' is intentionally NOT fillable. It must be set explicitly
+     * via promoteToSuperAdmin() / demoteToRegularUser() helpers, or via
+     * forceFill(['role' => ...]) in trusted contexts (seeders, factories).
+     *
+     * This prevents privilege escalation through mass assignment payloads
+     * such as POST ['role' => 'super_admin'].
+     */
     protected $fillable = [
         'name',
         'email',
@@ -20,11 +30,18 @@ class User extends Authenticatable
         'employee_code',
         'pin',
         'pin_is_default',
-        'role',              // 'super_admin' | 'user'
         'is_active',
         'current_garage_id',
         'current_company_id',
         'last_selected_garage_at',
+    ];
+
+    /**
+     * Default attribute values for new model instances.
+     */
+    protected $attributes = [
+        'role'      => RoleEnum::USER->value,
+        'is_active' => true,
     ];
 
     protected $hidden = [
@@ -248,5 +265,32 @@ class User extends Authenticatable
                 'role'        => $garage->pivot->role,
             ])
             ->toArray();
+    }
+
+    // ==================== ROLE MANAGEMENT ====================
+
+    /**
+     * Promote this user to Super Admin.
+     *
+     * Only one active Super Admin is allowed system-wide — enforced by the
+     * `users_single_super_admin` PostgreSQL partial unique index. Attempting
+     * to promote a second user while another active Super Admin exists will
+     * raise a QueryException.
+     */
+    public function promoteToSuperAdmin(): static
+    {
+        $this->forceFill(['role' => RoleEnum::SUPER_ADMIN->value]);
+
+        return $this;
+    }
+
+    /**
+     * Demote this user to a regular user (default role).
+     */
+    public function demoteToRegularUser(): static
+    {
+        $this->forceFill(['role' => RoleEnum::USER->value]);
+
+        return $this;
     }
 }

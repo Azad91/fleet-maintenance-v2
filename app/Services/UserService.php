@@ -22,11 +22,11 @@ class UserService
     ): User {
         return DB::transaction(function () use ($data, $garageId, $isActive) {
             $user = User::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'password' => $data['password'],
-                'role'     => 'user', // users.role həmişə 'user' — qaraj rolu pivotdadır
-            ]);
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => $data['password'],
+            // Role defaults to 'user' via User::$attributes — garage role lives on the pivot.
+        ]);
 
             $user->garages()->attach($garageId, [
                 'role'      => $data['role'],
