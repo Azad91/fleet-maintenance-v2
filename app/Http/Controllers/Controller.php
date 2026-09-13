@@ -11,8 +11,21 @@ abstract class Controller
     use AuthorizesRequests;
 
     /**
-     * Add current garage and company IDs to the given data array.
+     * Ensure the authenticated user is a super admin.
+     *
+     * Note: Super-admin routes are already protected by the
+     * `super.admin` middleware. This method is a defense-in-depth
+     * guard for code paths that may not be behind that middleware.
      */
+    protected function ensureSuperAdmin(): void
+    {
+        abort_unless(
+            auth()->user()?->isSuperAdmin() === true,
+            403,
+            __('messages.flash.permission_denied')
+        );
+    }
+
     protected function addGarageContext(array $data): array
     {
         $data['garage_id']  = Garage::getCurrentId();
@@ -21,9 +34,6 @@ abstract class Controller
         return $data;
     }
 
-    /**
-     * Convert roles array to comma-separated string.
-     */
     protected function getRoleString(array|string $roles): string
     {
         if (is_string($roles)) {
