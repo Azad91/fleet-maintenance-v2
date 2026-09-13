@@ -4,6 +4,7 @@ namespace App\Services\Complaint;
 
 use App\Models\Complaint;
 use App\Models\Driver;
+use App\Enums\Location;
 use Illuminate\Support\Facades\DB;
 
 class ComplaintService
@@ -114,7 +115,7 @@ class ComplaintService
      */
     private function applyDriverContext(array &$data): void
     {
-        if (($data['yer'] ?? null) === 'road' && ! empty($data['driver_id'])) {
+        if (($data['yer'] ?? null) === Location::Road->value && ! empty($data['driver_id'])) {
             $driver = Driver::active()->findOrFail($data['driver_id']);
             $data['driver_name'] = $driver->full_name;
         } else {

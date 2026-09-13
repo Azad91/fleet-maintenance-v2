@@ -2,10 +2,14 @@
 
 namespace App\Imports;
 
+use App\Enums\ComplaintStatus;
+use App\Enums\ComplaintType;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\Warehouse;
+use App\Enums\Location;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
@@ -21,10 +25,23 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
     public array $skipped = [];
     public int $importedCount = 0;
 
+    /**
+     * @param  int  $garageId   Must be > 0. A zero or negative value
+     *                          would disable garage filtering and let
+     *                          the import touch other tenants' data.
+     */
     public function __construct(
         public int $garageId,
         public ?int $companyId = null
-    ) {}
+    ) {
+        if ($garageId <= 0) {
+            throw new \InvalidArgumentException(
+                'ComplaintsImport requires a valid garage id (> 0). '
+                . "Got [{$garageId}]. Make sure a garage is selected "
+                . 'before starting the import.'
+            );
+        }
+    }
 
     public function chunkSize(): int
     {
@@ -57,12 +74,21 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             return;
         }
 
+        // Defensive: the constructor already guarantees this, but keeping
+        // the check here means any future refactor that bypasses the
+        // constructor still cannot cause cross-tenant writes.
+        if ($this->garageId <= 0) {
+            throw new \RuntimeException(
+                'ComplaintsImport cannot run without a valid garage context.'
+            );
+        }
+
         $garageId  = $this->garageId;
         $companyId = $this->companyId;
 
         $bus = Bus::withoutGlobalScopes()
             ->where('dqn', $busDqn)
-            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
+            ->where('garage_id', $garageId) // ← explicit, no when() shortcut
             ->first();
 
         if (! $bus) {
@@ -89,8 +115,6 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             ?? null;
 
         // ---------- 3. ATOMIC BLOCK ----------
-        // Every mutation happens inside this transaction. If any step
-        // throws, PostgreSQL rolls back the whole row — no partial state.
 
         $skipReason = DB::transaction(function () use (
             $rowArray,
@@ -103,11 +127,11 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
         ) {
             $stockQuantity = 0;
 
-            // 3a. Stock deduction (with row lock held for the duration)
+            // 3a. Stock deduction
             if ($partCode !== '' && $usedQuantity > 0) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('code', $partCode)
-                    ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
+                    ->where('garage_id', $garageId) // ← explicit, no when()
                     ->lockForUpdate()
                     ->first();
 
@@ -130,7 +154,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
 
             // 3b. Complaint header
             $complaint = Complaint::create([
-                'garage_id'      => $garageId ?? $bus->garage_id,
+                'garage_id'      => $garageId,
                 'company_id'     => $companyId ?? $bus->company_id,
                 'bus_id'         => $bus->id,
                 'yer'            => $rowArray['yer'] ?? null,
@@ -168,7 +192,6 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
                 ]);
             }
 
-            // null = success
             return null;
         });
 
@@ -187,17 +210,13 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
         return [
             'bus_dqn'        => 'sometimes|nullable',
             'dqn'            => 'sometimes|nullable',
-            'status'         => 'nullable|in:pending,in_progress,completed',
-            'yer'            => 'nullable|in:road,garage',
-            'complaint_type' => 'nullable|string',
-            'km'             => 'nullable|integer|min:0',
+            'status'         => ['nullable', Rule::in(ComplaintStatus::values())],
+            'yer'            => ['nullable', Rule::in(Location::values())],
+            'complaint_type' => ['nullable', Rule::in(ComplaintType::values())],
+            'km'             => ['nullable|integer|min:0'],
         ];
     }
 
-    /**
-     * Record a skipped row. Centralized so future changes (e.g. logging,
-     * metrics) happen in one place.
-     */
     private function recordSkip(int $rowIndex, string $dqn, string $reason): void
     {
         $this->skipped[] = [

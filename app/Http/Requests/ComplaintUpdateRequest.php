@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Services\GarageContext;
+use App\Enums\ComplaintType;
+use App\Enums\Location;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,12 +31,13 @@ class ComplaintUpdateRequest extends FormRequest
 
         return [
             'bus_id'      => ['required', $busRule],
-            'yer'         => 'required|in:road,garage',
+            'yer'         => ['required', Rule::in(Location::values())],
             'driver_name' => 'nullable|string|max:255',
             'driver_id'   => ['nullable', 'required_if:yer,road', $driverRule],
 
-            // complaint_type is a CATEGORY enum
-            'complaint_type' => 'nullable|in:accident,breakdown,maintenance',
+            // complaint_type is a CATEGORY enum.
+            // The valid values are defined in App\Enums\ComplaintType.
+            'complaint_type' => ['nullable', Rule::in(ComplaintType::values())],
 
             // complaint items must exist in complaint_types for the current garage
             'complaints'      => 'required|array|min:1',
