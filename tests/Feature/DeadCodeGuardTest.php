@@ -42,7 +42,7 @@ class DeadCodeGuardTest extends TestCase
 
                 if (! str_starts_with($namespace, 'App\\Http\\Requests')) {
                     $relative = str_replace(
-                        base_path() . DIRECTORY_SEPARATOR,
+                        base_path().DIRECTORY_SEPARATOR,
                         '',
                         $file->getPathname()
                     );
@@ -53,9 +53,9 @@ class DeadCodeGuardTest extends TestCase
 
         $this->assertEmpty(
             $offenders,
-            "Files under app/Http/Requests must declare a namespace "
-            . "under App\\Http\\Requests. Misplaced files:\n - "
-            . implode("\n - ", $offenders)
+            'Files under app/Http/Requests must declare a namespace '
+            ."under App\\Http\\Requests. Misplaced files:\n - "
+            .implode("\n - ", $offenders)
         );
     }
 
@@ -88,10 +88,10 @@ class DeadCodeGuardTest extends TestCase
                 $classMatches
             )) {
                 foreach ($classMatches[1] as $shortName) {
-                    $fqcn = $namespace !== '' ? $namespace . '\\' . $shortName : $shortName;
+                    $fqcn = $namespace !== '' ? $namespace.'\\'.$shortName : $shortName;
 
                     $byFqcn[$fqcn][] = str_replace(
-                        base_path() . DIRECTORY_SEPARATOR,
+                        base_path().DIRECTORY_SEPARATOR,
                         '',
                         $file->getPathname()
                     );
@@ -107,16 +107,18 @@ class DeadCodeGuardTest extends TestCase
         $this->assertEmpty(
             $duplicates,
             "Duplicate fully-qualified class names detected in app/:\n"
-            . collect($duplicates)
-                ->map(fn ($paths, $fqcn) => "  {$fqcn}:\n    - " . implode("\n    - ", $paths))
+            .collect($duplicates)
+                ->map(fn ($paths, $fqcn) => "  {$fqcn}:\n    - ".implode("\n    - ", $paths))
                 ->implode("\n")
         );
     }
-        /**
+
+    /**
      * Guard against orphaned view files.
      *
      * A view is "orphaned" if no controller renders it via
      * view('reports.coming-soon') and no other view includes it via
+     *
      * @include or @extends. Orphaned views bloat the repo, cause
      * confusion, and can hide missing features (a placeholder that
      * was never replaced).
@@ -134,8 +136,8 @@ class DeadCodeGuardTest extends TestCase
         $this->assertFileDoesNotExist(
             $viewPath,
             'The reports/coming-soon.blade.php placeholder was created as a '
-            . 'stub before the real report views existed. All reports are '
-            . 'now implemented, so the placeholder must not be reintroduced.'
+            .'stub before the real report views existed. All reports are '
+            .'now implemented, so the placeholder must not be reintroduced.'
         );
     }
 }

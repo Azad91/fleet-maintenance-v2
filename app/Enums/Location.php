@@ -4,18 +4,18 @@ namespace App\Enums;
 
 enum Location: string
 {
-    case Road   = 'road';
+    case Road = 'road';
     case Garage = 'garage';
 
     public function label(): string
     {
-        return __('enums.location.' . $this->value);
+        return __('enums.location.'.$this->value);
     }
 
     public function icon(): string
     {
         return match ($this) {
-            self::Road   => '🛣️',
+            self::Road => '🛣️',
             self::Garage => '🏠',
         };
     }

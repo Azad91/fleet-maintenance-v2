@@ -27,11 +27,11 @@ class UserManagementTest extends TestCase
         $this->company = Company::factory()->create();
         $this->garageA = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'name'       => 'Alpha',
+            'name' => 'Alpha',
         ]);
         $this->garageB = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'name'       => 'Beta',
+            'name' => 'Beta',
         ]);
 
         GarageContext::set($this->garageA->id, $this->company->id);
@@ -46,7 +46,7 @@ class UserManagementTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -89,11 +89,11 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->post(route('users.store'), [
-                'name'                  => 'New User',
-                'email'                 => 'new@test.com',
-                'password'              => 'password123',
+                'name' => 'New User',
+                'email' => 'new@test.com',
+                'password' => 'password123',
                 'password_confirmation' => 'password123',
-                'role'                  => 'warehouse_manager',
+                'role' => 'warehouse_manager',
             ]);
 
         $response->assertRedirect(route('users.index'));
@@ -118,11 +118,11 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->post(route('users.store'), [
-                'name'                  => 'Duplicate',
-                'email'                 => 'dup@test.com',
-                'password'              => 'password123',
+                'name' => 'Duplicate',
+                'email' => 'dup@test.com',
+                'password' => 'password123',
                 'password_confirmation' => 'password123',
-                'role'                  => 'warehouse_manager',
+                'role' => 'warehouse_manager',
             ]);
 
         $response->assertSessionHasErrors('email');
@@ -141,9 +141,9 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->put(route('users.update', $target), [
-                'name'      => 'New Name',
-                'email'     => $target->email,
-                'role'      => 'complaint_manager',
+                'name' => 'New Name',
+                'email' => $target->email,
+                'role' => 'complaint_manager',
                 'is_active' => 1,
             ]);
 
@@ -166,9 +166,9 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->put(route('users.update', $otherUser), [
-                'name'      => 'Hacked',
-                'email'     => $otherUser->email,
-                'role'      => 'admin',
+                'name' => 'Hacked',
+                'email' => $otherUser->email,
+                'role' => 'admin',
                 'is_active' => 1,
             ]);
 
@@ -187,9 +187,9 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->put(route('users.update', $admin), [
-                'name'      => $admin->name,
-                'email'     => $admin->email,
-                'role'      => 'complaint_worker',
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'role' => 'complaint_worker',
                 'is_active' => 1,
             ]);
 
@@ -206,9 +206,9 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($admin)
             ->withSession($this->garageSession())
             ->put(route('users.update', $admin), [
-                'name'      => $admin->name,
-                'email'     => $admin->email,
-                'role'      => 'admin',
+                'name' => $admin->name,
+                'email' => $admin->email,
+                'role' => 'admin',
                 'is_active' => 0,
             ]);
 
@@ -238,10 +238,10 @@ class UserManagementTest extends TestCase
         $service = app(UserService::class);
 
         $user = $service->createUserWithGarageRole([
-            'name'     => 'Service User',
-            'email'    => 'service@test.com',
+            'name' => 'Service User',
+            'email' => 'service@test.com',
             'password' => 'secret123',
-            'role'     => 'complaint_manager',
+            'role' => 'complaint_manager',
         ], $this->garageA->id);
 
         $this->assertInstanceOf(User::class, $user);
@@ -261,9 +261,9 @@ class UserManagementTest extends TestCase
         $originalPassword = $user->password;
 
         $service->updateUserWithGarageRole($user, [
-            'name'      => 'Updated Name',
-            'email'     => $user->email,
-            'role'      => 'complaint_manager',
+            'name' => 'Updated Name',
+            'email' => $user->email,
+            'role' => 'complaint_manager',
             'is_active' => true,
         ], $this->garageA->id);
 

@@ -33,14 +33,14 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_login_succeeds_with_valid_credentials(): void
     {
         $user = User::factory()->create([
-            'email'     => 'api-test@example.com',
-            'password'  => Hash::make('secret123'),
-            'role'      => 'user',
+            'email' => 'api-test@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => 'api-test@example.com',
+            'email' => 'api-test@example.com',
             'password' => 'secret123',
         ]);
 
@@ -53,16 +53,16 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_login_is_rate_limited_after_five_failed_attempts(): void
     {
         User::factory()->create([
-            'email'     => 'api-test@example.com',
-            'password'  => Hash::make('correct-password'),
-            'role'      => 'user',
+            'email' => 'api-test@example.com',
+            'password' => Hash::make('correct-password'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         // 5 səhv cəhd
         for ($i = 0; $i < 5; $i++) {
             $response = $this->postJson('/api/login', [
-                'email'    => 'api-test@example.com',
+                'email' => 'api-test@example.com',
                 'password' => 'wrong-password',
             ]);
 
@@ -71,7 +71,7 @@ class ApiLoginRateLimitTest extends TestCase
 
         // 6-cı cəhd → rate limit mesajı
         $response = $this->postJson('/api/login', [
-            'email'    => 'api-test@example.com',
+            'email' => 'api-test@example.com',
             'password' => 'wrong-password',
         ]);
 
@@ -85,23 +85,23 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_rate_limit_blocks_correct_password_too(): void
     {
         User::factory()->create([
-            'email'     => 'api-test@example.com',
-            'password'  => Hash::make('correct-password'),
-            'role'      => 'user',
+            'email' => 'api-test@example.com',
+            'password' => Hash::make('correct-password'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         // 5 səhv cəhd → lockout
         for ($i = 0; $i < 5; $i++) {
             $this->postJson('/api/login', [
-                'email'    => 'api-test@example.com',
+                'email' => 'api-test@example.com',
                 'password' => 'wrong-password',
             ]);
         }
 
         // İndi düzgün şifrə ilə cəhd → hələ də bloklanır
         $response = $this->postJson('/api/login', [
-            'email'    => 'api-test@example.com',
+            'email' => 'api-test@example.com',
             'password' => 'correct-password',
         ]);
 
@@ -112,23 +112,23 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_successful_login_clears_rate_limit(): void
     {
         User::factory()->create([
-            'email'     => 'api-test@example.com',
-            'password'  => Hash::make('correct-password'),
-            'role'      => 'user',
+            'email' => 'api-test@example.com',
+            'password' => Hash::make('correct-password'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         // 3 səhv cəhd
         for ($i = 0; $i < 3; $i++) {
             $this->postJson('/api/login', [
-                'email'    => 'api-test@example.com',
+                'email' => 'api-test@example.com',
                 'password' => 'wrong-password',
             ]);
         }
 
         // Düzgün şifrə → uğurlu (rate limit sıfırlanır)
         $response = $this->postJson('/api/login', [
-            'email'    => 'api-test@example.com',
+            'email' => 'api-test@example.com',
             'password' => 'correct-password',
         ]);
 
@@ -138,7 +138,7 @@ class ApiLoginRateLimitTest extends TestCase
         // İlk 5 cəhd "credentials do not match" qaytarır — "Too many" DEYİL.
         for ($i = 0; $i < 5; $i++) {
             $response = $this->postJson('/api/login', [
-                'email'    => 'api-test@example.com',
+                'email' => 'api-test@example.com',
                 'password' => 'wrong-password',
             ]);
 
@@ -155,30 +155,30 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_different_emails_have_independent_rate_limits(): void
     {
         User::factory()->create([
-            'email'     => 'api-test@example.com',
-            'password'  => Hash::make('secret'),
-            'role'      => 'user',
+            'email' => 'api-test@example.com',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         User::factory()->create([
-            'email'     => 'other@example.com',
-            'password'  => Hash::make('secret'),
-            'role'      => 'user',
+            'email' => 'other@example.com',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         // First email — 5 failed attempts
         for ($i = 0; $i < 5; $i++) {
             $this->postJson('/api/login', [
-                'email'    => 'api-test@example.com',
+                'email' => 'api-test@example.com',
                 'password' => 'wrong',
             ]);
         }
 
         // Second email still works fine
         $response = $this->postJson('/api/login', [
-            'email'    => 'other@example.com',
+            'email' => 'other@example.com',
             'password' => 'secret',
         ]);
 
@@ -192,14 +192,14 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_inactive_user_cannot_login(): void
     {
         User::factory()->create([
-            'email'     => 'inactive@example.com',
-            'password'  => Hash::make('secret123'),
-            'role'      => 'user',
+            'email' => 'inactive@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'user',
             'is_active' => false,
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => 'inactive@example.com',
+            'email' => 'inactive@example.com',
             'password' => 'secret123',
         ]);
 
@@ -210,14 +210,14 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_inactive_user_login_returns_generic_error(): void
     {
         User::factory()->create([
-            'email'     => 'inactive@example.com',
-            'password'  => Hash::make('secret123'),
-            'role'      => 'user',
+            'email' => 'inactive@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'user',
             'is_active' => false,
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => 'inactive@example.com',
+            'email' => 'inactive@example.com',
             'password' => 'secret123',
         ]);
 
@@ -234,7 +234,7 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_nonexistent_email_returns_generic_error(): void
     {
         $response = $this->postJson('/api/login', [
-            'email'    => 'nobody@example.com',
+            'email' => 'nobody@example.com',
             'password' => 'anything',
         ]);
 
@@ -245,14 +245,14 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_wrong_password_returns_generic_error(): void
     {
         User::factory()->create([
-            'email'     => 'api-test@example.com',
-            'password'  => Hash::make('secret'),
-            'role'      => 'user',
+            'email' => 'api-test@example.com',
+            'password' => Hash::make('secret'),
+            'role' => 'user',
             'is_active' => true,
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => 'api-test@example.com',
+            'email' => 'api-test@example.com',
             'password' => 'wrong',
         ]);
 
@@ -277,7 +277,7 @@ class ApiLoginRateLimitTest extends TestCase
     public function test_invalid_email_format_is_rejected(): void
     {
         $response = $this->postJson('/api/login', [
-            'email'    => 'not-an-email',
+            'email' => 'not-an-email',
             'password' => 'anything',
         ]);
 

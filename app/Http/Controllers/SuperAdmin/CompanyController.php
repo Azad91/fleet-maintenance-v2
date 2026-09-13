@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Company;
-use App\Models\User;
 use App\Http\Requests\SuperAdmin\CompanyStoreRequest;
 use App\Http\Requests\SuperAdmin\CompanyUpdateRequest;
+use App\Models\Company;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CompanyController extends Controller
@@ -142,7 +140,7 @@ class CompanyController extends Controller
         $counter = 1;
 
         while (Company::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $counter;
+            $slug = $base.'-'.$counter;
             $counter++;
         }
 

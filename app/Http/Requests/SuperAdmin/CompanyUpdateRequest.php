@@ -17,17 +17,17 @@ class CompanyUpdateRequest extends FormRequest
         $companyId = $this->route('company')->id;
 
         return [
-            'name'      => ['required', 'string', 'max:255'],
-            'slug'      => [
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => [
                 'required',
                 'string',
                 'max:255',
                 'regex:/^[a-z0-9-]+$/',
                 Rule::unique('companies', 'slug')->ignore($companyId),
             ],
-            'email'     => ['nullable', 'email', 'max:255'],
-            'phone'     => ['nullable', 'string', 'max:50'],
-            'address'   => ['nullable', 'string', 'max:1000'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

@@ -33,8 +33,8 @@ class MissingGarageContextException extends Exception
         parent::__construct(
             $message ?: sprintf(
                 'Garage context is not set for model [%s]. '
-                . 'Set it via GarageContext::set(), session("current_garage_id") '
-                . 'or auth()->user()->current_garage_id.',
+                .'Set it via GarageContext::set(), session("current_garage_id") '
+                .'or auth()->user()->current_garage_id.',
                 $modelClass
             ),
             $code,

@@ -33,7 +33,7 @@ class ComplaintEnumCastTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
     }
@@ -47,11 +47,11 @@ class ComplaintEnumCastTest extends TestCase
     private function makeComplaint(array $overrides = []): Complaint
     {
         return Complaint::create(array_merge([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ], $overrides));
     }
@@ -103,7 +103,7 @@ class ComplaintEnumCastTest extends TestCase
 
         $this->assertSame(ComplaintStatus::InProgress, $complaint->fresh()->status);
         $this->assertDatabaseHas('complaints', [
-            'id'     => $complaint->id,
+            'id' => $complaint->id,
             'status' => 'in_progress',
         ]);
     }
@@ -172,9 +172,9 @@ class ComplaintEnumCastTest extends TestCase
 
     public function test_is_open_accessor_works_with_enum(): void
     {
-        $pending    = $this->makeComplaint(['status' => 'pending']);
-        $completed  = $this->makeComplaint(['status' => 'completed']);
-        $cancelled  = $this->makeComplaint(['status' => 'cancelled']);
+        $pending = $this->makeComplaint(['status' => 'pending']);
+        $completed = $this->makeComplaint(['status' => 'completed']);
+        $cancelled = $this->makeComplaint(['status' => 'cancelled']);
 
         $this->assertTrue($pending->is_open);
         $this->assertFalse($completed->is_open);

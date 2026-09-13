@@ -15,10 +15,10 @@ class EmployeeUpdateRequest extends FormRequest
     {
         return [
             'first_name' => 'required|string|max:255',
-            'last_name'  => 'required|string|max:255',
-            'position'   => 'required|string|max:255',
-            'notes'      => 'nullable|string|max:1000',
-            'is_active'  => 'nullable|boolean',
+            'last_name' => 'required|string|max:255',
+            'position' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
         ];
     }
 }

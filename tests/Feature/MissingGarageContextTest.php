@@ -32,7 +32,7 @@ class MissingGarageContextTest extends TestCase
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -80,8 +80,8 @@ class MissingGarageContextTest extends TestCase
         $this->expectException(MissingGarageContextException::class);
 
         Warehouse::create([
-            'code'     => 'NO-CTX-1',
-            'name'     => 'Test',
+            'code' => 'NO-CTX-1',
+            'name' => 'Test',
             'quantity' => 1,
         ]);
     }
@@ -92,24 +92,24 @@ class MissingGarageContextTest extends TestCase
 
         // Bus must exist somewhere for FK, but its own creation would
         // also throw. Use withoutGlobalScopes + forceFill to seed it.
-        $bus = new Bus();
+        $bus = new Bus;
         $bus->forceFill([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'SEED-1',
-            'is_active'  => true,
+            'dqn' => 'SEED-1',
+            'is_active' => true,
         ])->save();
 
         $this->expectException(MissingGarageContextException::class);
 
         DailyKmRecord::create([
             'bus_id' => $bus->id,
-            'date'   => now()->toDateString(),
-            'km'     => 1000,
+            'date' => now()->toDateString(),
+            'km' => 1000,
         ]);
     }
 
-        // ==================================================================
+    // ==================================================================
     // 3. HTTP LEVEL — MIDDLEWARE REDIRECT (FIRST LINE OF DEFENSE)
     // ==================================================================
 
@@ -126,7 +126,7 @@ class MissingGarageContextTest extends TestCase
     {
         $response = $this->actingAs($this->admin)
             ->post(route('buses.store'), [
-                'dqn'       => 'HTTP-MISSING',
+                'dqn' => 'HTTP-MISSING',
                 'is_active' => 1,
             ]);
 
@@ -139,7 +139,7 @@ class MissingGarageContextTest extends TestCase
         );
     }
 
-        /**
+    /**
      * API requests require an X-Garage-Id header, validated by the
      * EnsureApiGarageContext middleware. With a valid header the
      * request succeeds and the bus is created with the correct
@@ -152,7 +152,7 @@ class MissingGarageContextTest extends TestCase
         $response = $this->withToken($token)
             ->withHeaders(['X-Garage-Id' => $this->garage->id])
             ->postJson('/api/buses', [
-                'dqn'       => 'API-VALID',
+                'dqn' => 'API-VALID',
                 'is_active' => true,
             ]);
 
@@ -177,7 +177,7 @@ class MissingGarageContextTest extends TestCase
 
         $response = $this->withToken($token)
             ->postJson('/api/buses', [
-                'dqn'       => 'API-NO-HEADER',
+                'dqn' => 'API-NO-HEADER',
                 'is_active' => true,
             ]);
 
@@ -207,7 +207,7 @@ class MissingGarageContextTest extends TestCase
     public function test_bus_creation_succeeds_with_session_context(): void
     {
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -219,7 +219,7 @@ class MissingGarageContextTest extends TestCase
     public function test_bus_creation_succeeds_with_auth_user_context(): void
     {
         $this->admin->update([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
         $this->actingAs($this->admin);

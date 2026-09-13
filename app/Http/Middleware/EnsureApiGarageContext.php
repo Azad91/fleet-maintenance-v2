@@ -32,6 +32,7 @@ class EnsureApiGarageContext
                 ], 404);
             }
             GarageContext::set((int) $garageId, $garage->company_id);
+
             return $next($request);
         }
 

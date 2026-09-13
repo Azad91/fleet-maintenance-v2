@@ -31,7 +31,7 @@ class ComplaintTypeSeeder extends Seeder
             foreach ($types as $name) {
                 ComplaintType::withoutGlobalScopes()->updateOrCreate(
                     [
-                        'name'      => $name,
+                        'name' => $name,
                         'garage_id' => $garage->id,
                     ],
                     [

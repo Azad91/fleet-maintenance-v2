@@ -15,7 +15,7 @@ class WarehouseReportController extends ReportController
     public function receipt(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         return $this->render('receipt', $period, $scope, [
             'items' => $this->service->receipt($period, $scope),
@@ -25,7 +25,7 @@ class WarehouseReportController extends ReportController
     public function usage(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         return $this->render('usage', $period, $scope, [
             'items' => $this->service->usage($period, $scope),
@@ -35,7 +35,7 @@ class WarehouseReportController extends ReportController
     public function workerActivity(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         return $this->render('worker-activity', $period, $scope, [
             'rows' => $this->service->workerActivity($period, $scope),
@@ -45,7 +45,7 @@ class WarehouseReportController extends ReportController
     public function lowStock(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         return $this->render('low-stock', $period, $scope, [
             'items' => $this->service->lowStock($scope),
@@ -55,7 +55,7 @@ class WarehouseReportController extends ReportController
     public function movement(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         return $this->render('movement', $period, $scope, [
             'logs' => $this->service->movement($period, $scope),
@@ -65,10 +65,10 @@ class WarehouseReportController extends ReportController
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.warehouse.{$view}", array_merge($data, [
-            'domain'       => 'warehouse',
+            'domain' => 'warehouse',
             'activeReport' => $view,
-            'period'       => $period,
-            'scope'        => $scope,
+            'period' => $period,
+            'scope' => $scope,
         ]));
     }
 }

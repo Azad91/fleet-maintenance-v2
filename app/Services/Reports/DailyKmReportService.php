@@ -59,6 +59,7 @@ class DailyKmReportService
             ->get()
             ->map(function ($row) {
                 $row->distance = max(0, $row->end_km - $row->start_km);
+
                 return $row;
             })
             ->sortByDesc('distance')
@@ -92,7 +93,7 @@ class DailyKmReportService
             ->keyBy('id');
 
         return $rows->map(fn ($row) => (object) [
-            'user'          => $users->get($row->user_id),
+            'user' => $users->get($row->user_id),
             'total_actions' => (int) $row->total_actions,
             'created_count' => (int) $row->created_count,
             'updated_count' => (int) $row->updated_count,

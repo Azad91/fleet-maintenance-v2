@@ -22,8 +22,8 @@ class DailyKmStoreRequest extends FormRequest
                 'required',
                 Rule::exists('buses', 'id')->where('garage_id', $garageId),
             ],
-            'date'  => 'required|date',
-            'km'    => 'required|integer|min:0',
+            'date' => 'required|date',
+            'km' => 'required|integer|min:0',
             'notes' => 'nullable|string|max:1000',
         ];
     }

@@ -44,16 +44,16 @@ class RecurringComplaintsTest extends TestCase
     private function createComplaintWithItem(string $description, string $status = 'pending'): Complaint
     {
         $complaint = Complaint::create([
-            'bus_id'     => $this->bus->id,
-            'garage_id'  => $this->garage->id,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'yer'        => 'garage',
-            'status'     => $status,
+            'yer' => 'garage',
+            'status' => $status,
         ]);
 
         $complaint->items()->create([
             'description' => $description,
-            'type'        => 'breakdown',
+            'type' => 'breakdown',
         ]);
 
         return $complaint;
@@ -127,15 +127,15 @@ class RecurringComplaintsTest extends TestCase
 
         // One in another garage (same description)
         $otherComplaint = Complaint::create([
-            'bus_id'     => $otherBus->id,
-            'garage_id'  => $otherGarage->id,
+            'bus_id' => $otherBus->id,
+            'garage_id' => $otherGarage->id,
             'company_id' => $this->company->id,
-            'yer'        => 'garage',
-            'status'     => 'pending',
+            'yer' => 'garage',
+            'status' => 'pending',
         ]);
         $otherComplaint->items()->create([
             'description' => 'Same problem',
-            'type'        => 'breakdown',
+            'type' => 'breakdown',
         ]);
 
         $results = ComplaintItem::recurring(30)->get();

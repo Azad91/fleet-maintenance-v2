@@ -17,18 +17,18 @@ class ServiceTemplateSeeder extends Seeder
             // Fetch all details for this KM
             $details = MotorOilDetail::where('km', $km)->get()->map(function ($item) {
                 return [
-                    'kodu'   => $item->part_code,
-                    'adi'    => $item->part_name,
+                    'kodu' => $item->part_code,
+                    'adi' => $item->part_name,
                     'miqdar' => $item->quantity,
-                    'say'    => $item->count,
+                    'say' => $item->count,
                 ];
             })->toArray();
 
             // Create ServiceTemplate
             ServiceTemplate::create([
-                'name'                => "Motor Oil Change ({$km} km)",
+                'name' => "Motor Oil Change ({$km} km)",
                 'default_km_interval' => $km,
-                'details'             => $details,
+                'details' => $details,
             ]);
         }
     }

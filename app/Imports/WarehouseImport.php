@@ -48,19 +48,19 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
 
             if ($warehouse) {
                 $warehouse->update([
-                    'name'     => $name,
+                    'name' => $name,
                     'quantity' => $quantity,
-                    'unit'     => $unit,
-                    'price'    => $price,
+                    'unit' => $unit,
+                    'price' => $price,
                 ]);
             } else {
                 Warehouse::create([
-                    'code'       => $code,
-                    'name'       => $name,
-                    'quantity'   => $quantity,
-                    'unit'       => $unit,
-                    'price'      => $price,
-                    'garage_id'  => $this->garageId,
+                    'code' => $code,
+                    'name' => $name,
+                    'quantity' => $quantity,
+                    'unit' => $unit,
+                    'price' => $price,
+                    'garage_id' => $this->garageId,
                     'company_id' => $this->companyId,
                 ]);
             }

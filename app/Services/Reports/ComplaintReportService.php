@@ -40,8 +40,8 @@ class ComplaintReportService
             ->all();
 
         return [
-            'opened'   => $opened,
-            'closed'   => $closed,
+            'opened' => $opened,
+            'closed' => $closed,
             'open_now' => $openNow,
             'by_status' => $byStatus,
         ];
@@ -89,7 +89,7 @@ class ComplaintReportService
             ->keyBy('id');
 
         return $rows->map(fn ($row) => (object) [
-            'user'          => $users->get($row->user_id),
+            'user' => $users->get($row->user_id),
             'total_actions' => (int) $row->total_actions,
             'created_count' => (int) $row->created_count,
             'updated_count' => (int) $row->updated_count,
@@ -136,8 +136,8 @@ class ComplaintReportService
         if ($rows->isEmpty()) {
             return [
                 'overall_avg_hours' => null,
-                'sample_count'      => 0,
-                'by_type'           => collect(),
+                'sample_count' => 0,
+                'by_type' => collect(),
             ];
         }
 
@@ -148,19 +148,19 @@ class ComplaintReportService
                 $hours = $group->map(fn ($c) => $c->created_at->diffInHours($c->closed_at));
 
                 return (object) [
-                    'type'        => $type,
-                    'count'       => $group->count(),
-                    'avg_hours'   => round($hours->avg(), 1),
-                    'min_hours'   => $hours->min(),
-                    'max_hours'   => $hours->max(),
+                    'type' => $type,
+                    'count' => $group->count(),
+                    'avg_hours' => round($hours->avg(), 1),
+                    'min_hours' => $hours->min(),
+                    'max_hours' => $hours->max(),
                 ];
             })
             ->values();
 
         return [
             'overall_avg_hours' => round($durations->avg(), 1),
-            'sample_count'      => $rows->count(),
-            'by_type'           => $byType,
+            'sample_count' => $rows->count(),
+            'by_type' => $byType,
         ];
     }
 }

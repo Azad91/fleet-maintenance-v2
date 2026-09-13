@@ -14,7 +14,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-
     /**
      * Authenticate via email + password and issue a Sanctum token.
      *
@@ -23,8 +22,8 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'       => ['required', 'email'],
-            'password'    => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -41,8 +40,8 @@ class AuthController extends Controller
             );
 
             Log::warning('API login failed', [
-                'email'      => $request->email,
-                'ip'         => $request->ip(),
+                'email' => $request->email,
+                'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
             ]);
@@ -60,8 +59,8 @@ class AuthController extends Controller
             );
 
             Log::warning('API login blocked — inactive account', [
-                'user_id'    => $user->id,
-                'ip'         => $request->ip(),
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
                 'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
             ]);
 
@@ -79,16 +78,16 @@ class AuthController extends Controller
         $token = $user->createToken($deviceName)->plainTextToken;
 
         Log::info('API login successful', [
-            'user_id'    => $user->id,
-            'device'     => $deviceName,
-            'ip'         => $request->ip(),
+            'user_id' => $user->id,
+            'device' => $deviceName,
+            'ip' => $request->ip(),
             'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
         ]);
 
         return response()->json([
             'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => $user->only(['id', 'name', 'email', 'role']),
+            'token_type' => 'Bearer',
+            'user' => $user->only(['id', 'name', 'email', 'role']),
         ]);
     }
 
@@ -128,9 +127,9 @@ class AuthController extends Controller
         $seconds = RateLimiter::availableIn($this->throttleKey($request));
 
         Log::warning('API login rate limit hit', [
-            'email'      => $request->email,
-            'ip'         => $request->ip(),
-            'retry_in'   => $seconds,
+            'email' => $request->email,
+            'ip' => $request->ip(),
+            'retry_in' => $seconds,
             'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
         ]);
 
@@ -153,8 +152,8 @@ class AuthController extends Controller
      */
     private function throttleKey(Request $request): string
     {
-        return 'api_login:' . Str::transliterate(
-            Str::lower((string) $request->input('email')) . '|' . $request->ip()
+        return 'api_login:'.Str::transliterate(
+            Str::lower((string) $request->input('email')).'|'.$request->ip()
         );
     }
 }

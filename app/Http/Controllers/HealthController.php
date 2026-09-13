@@ -13,9 +13,9 @@ class HealthController extends Controller
     public function check(): JsonResponse
     {
         $status = [
-            'status'    => 'ok',
+            'status' => 'ok',
             'timestamp' => now()->toIso8601String(),
-            'services'  => [],
+            'services' => [],
         ];
 
         $isHealthy = true;

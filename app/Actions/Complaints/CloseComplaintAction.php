@@ -71,9 +71,9 @@ class CloseComplaintAction
         } catch (\Throwable $e) {
             Log::error('PDF generation failed', [
                 'complaint_id' => $complaint->id,
-                'error'        => $e->getMessage(),
-                'request_id'   => Context::get('request_id'),
-                'user_id'      => auth()->id(),
+                'error' => $e->getMessage(),
+                'request_id' => Context::get('request_id'),
+                'user_id' => auth()->id(),
             ]);
         }
     }

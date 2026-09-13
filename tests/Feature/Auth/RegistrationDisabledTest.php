@@ -30,7 +30,7 @@ class RegistrationDisabledTest extends TestCase
         $this->assertFalse(
             Route::has('register'),
             "The 'register' named route must not exist. "
-            . "Public registration is disabled by design."
+            .'Public registration is disabled by design.'
         );
     }
 
@@ -42,9 +42,9 @@ class RegistrationDisabledTest extends TestCase
     public function test_post_register_returns_404(): void
     {
         $this->post('/register', [
-            'name'                  => 'Attacker',
-            'email'                 => 'attacker@test.com',
-            'password'              => 'password123',
+            'name' => 'Attacker',
+            'email' => 'attacker@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
         ])->assertNotFound();
     }
@@ -56,9 +56,9 @@ class RegistrationDisabledTest extends TestCase
     public function test_register_attempt_does_not_create_a_user(): void
     {
         $this->post('/register', [
-            'name'                  => 'Attacker',
-            'email'                 => 'attacker@test.com',
-            'password'              => 'password123',
+            'name' => 'Attacker',
+            'email' => 'attacker@test.com',
+            'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
 
@@ -77,9 +77,9 @@ class RegistrationDisabledTest extends TestCase
         $this->assertFileDoesNotExist(
             $path,
             'The RegisteredUserController was a dead abort(403) stub with '
-            . 'no route attached. It must not be reintroduced — user '
-            . 'creation belongs to SuperAdmin\\UserController and '
-            . 'UserManagementController.'
+            .'no route attached. It must not be reintroduced — user '
+            .'creation belongs to SuperAdmin\\UserController and '
+            .'UserManagementController.'
         );
     }
 
@@ -102,7 +102,7 @@ class RegistrationDisabledTest extends TestCase
             if (preg_match("/route\(\s*['\"]register['\"]/", $contents)
                 || preg_match("/url\(\s*['\"]\/?register['\"]/", $contents)) {
                 $offenders[] = str_replace(
-                    base_path() . DIRECTORY_SEPARATOR,
+                    base_path().DIRECTORY_SEPARATOR,
                     '',
                     $file->getPathname()
                 );
@@ -112,7 +112,7 @@ class RegistrationDisabledTest extends TestCase
         $this->assertEmpty(
             $offenders,
             "These blade files link to the non-existent register route:\n - "
-            . implode("\n - ", $offenders)
+            .implode("\n - ", $offenders)
         );
     }
 
@@ -128,7 +128,7 @@ class RegistrationDisabledTest extends TestCase
         $response->assertDontSee('/register', false);
         $response->assertDontSee('register"', false);
     }
-        // ==================================================================
+    // ==================================================================
     // 6. REGISTER VIEW IS GONE
     // ==================================================================
 
@@ -139,8 +139,8 @@ class RegistrationDisabledTest extends TestCase
         $this->assertFileDoesNotExist(
             $path,
             'The register.blade.php view had no controller and no route, '
-            . 'yet still referenced route(\'register\'). It must not be '
-            . 'reintroduced — public registration is disabled by design.'
+            .'yet still referenced route(\'register\'). It must not be '
+            .'reintroduced — public registration is disabled by design.'
         );
     }
 }

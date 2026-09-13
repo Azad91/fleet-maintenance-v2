@@ -40,7 +40,7 @@ class BusService
 
         foreach ($searchableFields as $field) {
             if (! empty($filters[$field])) {
-                $query->where($field, 'ILIKE', '%' . $filters[$field] . '%');
+                $query->where($field, 'ILIKE', '%'.$filters[$field].'%');
             }
         }
 
@@ -50,12 +50,14 @@ class BusService
     public function createBus(array $data): Bus
     {
         $data['date'] = now()->format('Y-m-d');
+
         return Bus::create($data);
     }
 
     public function updateBus(Bus $bus, array $data): Bus
     {
         $bus->update($data);
+
         return $bus->fresh();
     }
 

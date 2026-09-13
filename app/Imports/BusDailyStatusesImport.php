@@ -16,7 +16,7 @@ class BusDailyStatusesImport extends AbstractImport implements ToModel, WithChun
     {
         $currentRow = $this->nextRowIndex();
 
-        $dqn    = trim((string) ($row['dqn'] ?? ''));
+        $dqn = trim((string) ($row['dqn'] ?? ''));
         $status = $row['status'] ?? null;
 
         if (empty($dqn)) {
@@ -42,13 +42,13 @@ class BusDailyStatusesImport extends AbstractImport implements ToModel, WithChun
         $record = BusDailyStatus::withoutGlobalScopes()->updateOrCreate(
             [
                 'bus_id' => $bus->id,
-                'date'   => $date,
+                'date' => $date,
             ],
             [
-                'garage_id'  => $bus->garage_id ?? $this->garageId,
+                'garage_id' => $bus->garage_id ?? $this->garageId,
                 'company_id' => $bus->company_id ?? $this->companyId,
-                'status'     => $status ?? 'NO DATA',
-                'notes'      => $row['notes'] ?? $row['qeyd'] ?? null,
+                'status' => $status ?? 'NO DATA',
+                'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
             ]
         );
 

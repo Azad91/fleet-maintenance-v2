@@ -46,7 +46,7 @@ class GarageDataAccessTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-detal-by-kod/D-001');
@@ -60,7 +60,7 @@ class GarageDataAccessTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-driver-by-kod/DRV-001');
@@ -74,7 +74,7 @@ class GarageDataAccessTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-detal-by-kod/D-001');
@@ -88,7 +88,7 @@ class GarageDataAccessTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get('/get-detal-by-kod/D-001');
@@ -109,7 +109,7 @@ class GarageDataAccessTest extends TestCase
         ] as $url) {
             $response = $this->actingAs($user)
                 ->withSession([
-                    'current_garage_id'  => $this->garage->id,
+                    'current_garage_id' => $this->garage->id,
                     'current_company_id' => $this->company->id,
                 ])
                 ->get($url);
@@ -135,7 +135,7 @@ class GarageDataAccessTest extends TestCase
         ] as $url) {
             $response = $this->actingAs($user)
                 ->withSession([
-                    'current_garage_id'  => $this->garage->id,
+                    'current_garage_id' => $this->garage->id,
                     'current_company_id' => $this->company->id,
                 ])
                 ->get($url);

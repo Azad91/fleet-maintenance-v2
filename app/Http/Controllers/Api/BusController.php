@@ -26,10 +26,10 @@ class BusController extends Controller
         return response()->json([
             'data' => $buses->items(),
             'meta' => [
-                'total'        => $buses->total(),
-                'per_page'     => $buses->perPage(),
+                'total' => $buses->total(),
+                'per_page' => $buses->perPage(),
                 'current_page' => $buses->currentPage(),
-                'last_page'    => $buses->lastPage(),
+                'last_page' => $buses->lastPage(),
             ],
         ]);
     }
@@ -42,7 +42,7 @@ class BusController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.created', ['Item' => 'Bus']),
-            'data'    => $bus,
+            'data' => $bus,
         ], 201);
     }
 
@@ -65,7 +65,7 @@ class BusController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.updated', ['Item' => 'Bus']),
-            'data'    => $updatedBus,
+            'data' => $updatedBus,
         ]);
     }
 
@@ -90,10 +90,10 @@ class BusController extends Controller
         return response()->json([
             'data' => $buses->items(),
             'meta' => [
-                'total'        => $buses->total(),
-                'per_page'     => $buses->perPage(),
+                'total' => $buses->total(),
+                'per_page' => $buses->perPage(),
                 'current_page' => $buses->currentPage(),
-                'last_page'    => $buses->lastPage(),
+                'last_page' => $buses->lastPage(),
             ],
         ]);
     }

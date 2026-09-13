@@ -17,18 +17,18 @@ class UserUpdateRequest extends FormRequest
         $userId = $this->route('user')->id;
 
         return [
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
                 'required', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($userId),
             ],
-            'password'      => ['nullable', 'string', 'min:8', 'confirmed'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'employee_code' => [
                 'nullable', 'string', 'max:50',
                 Rule::unique('users', 'employee_code')->ignore($userId),
             ],
-            'pin'           => ['nullable', 'string', 'digits_between:4,6'],
-            'is_active'     => ['nullable', 'boolean'],
+            'pin' => ['nullable', 'string', 'digits_between:4,6'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 }

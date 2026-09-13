@@ -15,8 +15,8 @@ class EmployeesImport extends AbstractImport implements SkipsEmptyRows, ToModel,
         $currentRow = $this->nextRowIndex();
 
         $firstName = trim((string) ($row['first_name'] ?? ''));
-        $lastName  = trim((string) ($row['last_name'] ?? ''));
-        $position  = trim((string) ($row['position'] ?? 'other'));
+        $lastName = trim((string) ($row['last_name'] ?? ''));
+        $position = trim((string) ($row['position'] ?? 'other'));
 
         if (empty($firstName) || empty($lastName)) {
             $this->recordSkip(
@@ -31,13 +31,13 @@ class EmployeesImport extends AbstractImport implements SkipsEmptyRows, ToModel,
         }
 
         $employee = new Employee([
-            'garage_id'  => $this->garageId,
+            'garage_id' => $this->garageId,
             'company_id' => $this->companyId,
             'first_name' => $firstName,
-            'last_name'  => $lastName,
-            'position'   => $position,
-            'is_active'  => true,
-            'notes'      => $row['notes'] ?? null,
+            'last_name' => $lastName,
+            'position' => $position,
+            'is_active' => true,
+            'notes' => $row['notes'] ?? null,
         ]);
 
         $this->incrementImported();

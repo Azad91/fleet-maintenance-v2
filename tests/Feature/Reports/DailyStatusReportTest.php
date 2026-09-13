@@ -41,17 +41,17 @@ class DailyStatusReportTest extends TestCase
         GarageContext::set($this->garageA->id, $this->company->id);
 
         $this->busA = Bus::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'AAA-001',
-            'is_active'  => true,
+            'dqn' => 'AAA-001',
+            'is_active' => true,
         ]);
 
         $this->busB = Bus::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'BBB-001',
-            'is_active'  => true,
+            'dqn' => 'BBB-001',
+            'is_active' => true,
         ]);
 
         $this->service = app(DailyStatusReportService::class);
@@ -73,34 +73,34 @@ class DailyStatusReportTest extends TestCase
     public function test_distribution_groups_statuses_correctly(): void
     {
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->toDateString(),
+            'status' => 'READY',
         ]);
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->subDay()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->subDay()->toDateString(),
+            'status' => 'READY',
         ]);
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->subDays(2)->toDateString(),
-            'status'     => 'REPAIR',
+            'date' => now()->subDays(2)->toDateString(),
+            'status' => 'REPAIR',
         ]);
 
         // Other garage
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busB->id,
-            'garage_id'  => $this->garageB->id,
+            'bus_id' => $this->busB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->toDateString(),
+            'status' => 'READY',
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);
@@ -125,19 +125,19 @@ class DailyStatusReportTest extends TestCase
         $this->actingAs($user);
 
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->toDateString(),
+            'status' => 'READY',
         ]);
 
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busB->id,
-            'garage_id'  => $this->garageB->id,
+            'bus_id' => $this->busB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->toDateString(),
+            'status' => 'READY',
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);
@@ -161,19 +161,19 @@ class DailyStatusReportTest extends TestCase
         $this->actingAs($user);
 
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->toDateString(),
+            'status' => 'READY',
         ]);
 
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busB->id,
-            'garage_id'  => $this->garageB->id,
+            'bus_id' => $this->busB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY',
+            'date' => now()->toDateString(),
+            'status' => 'READY',
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);

@@ -19,8 +19,8 @@ class ComplaintTypesImport extends AbstractImport implements OnEachRow, SkipsEmp
     public function onRow(Row $row): void
     {
         $currentRow = $this->nextRowIndex();
-        $rowArray   = $row->toArray();
-        $name       = trim((string) ($rowArray['name'] ?? ''));
+        $rowArray = $row->toArray();
+        $name = trim((string) ($rowArray['name'] ?? ''));
 
         if ($name === '') {
             $this->recordSkip($currentRow, '—', __('messages.imports.reasons.name_empty'));
@@ -30,7 +30,7 @@ class ComplaintTypesImport extends AbstractImport implements OnEachRow, SkipsEmp
 
         ComplaintType::withoutGlobalScopes()->updateOrCreate(
             [
-                'name'      => $name,
+                'name' => $name,
                 'garage_id' => $this->garageId,
             ],
             [

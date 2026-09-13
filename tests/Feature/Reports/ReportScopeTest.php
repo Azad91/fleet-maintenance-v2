@@ -67,7 +67,7 @@ class ReportScopeTest extends TestCase
     {
         $director = User::factory()->create(['role' => 'user']);
         $this->companyA->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
@@ -97,7 +97,7 @@ class ReportScopeTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'user']);
         $admin->garages()->attach($this->garageA1->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -116,7 +116,7 @@ class ReportScopeTest extends TestCase
     {
         $manager = User::factory()->create(['role' => 'user']);
         $manager->garages()->attach($this->garageA1->id, [
-            'role'      => 'warehouse_manager',
+            'role' => 'warehouse_manager',
             'is_active' => true,
         ]);
 
@@ -132,7 +132,7 @@ class ReportScopeTest extends TestCase
     {
         $worker = User::factory()->create(['role' => 'user']);
         $worker->garages()->attach($this->garageA1->id, [
-            'role'      => 'warehouse_worker',
+            'role' => 'warehouse_worker',
             'is_active' => true,
         ]);
 
@@ -150,7 +150,7 @@ class ReportScopeTest extends TestCase
         // (route middleware prevents it), but scope logic should still be consistent.
         $worker = User::factory()->create(['role' => 'user']);
         $worker->garages()->attach($this->garageA1->id, [
-            'role'      => 'complaint_worker',
+            'role' => 'complaint_worker',
             'is_active' => true,
         ]);
 
@@ -168,7 +168,7 @@ class ReportScopeTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'user']);
         $user->garages()->attach($this->garageA1->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 

@@ -50,13 +50,13 @@ class Complaint extends Model
      * normalizes both.
      */
     protected $casts = [
-        'status'         => ComplaintStatus::class,
+        'status' => ComplaintStatus::class,
         'complaint_type' => ComplaintType::class,
-        'yer'            => Location::class,
-        'reported_date'  => 'date',
-        'start_date'     => 'date',
-        'end_date'       => 'date',
-        'closed_at'      => 'datetime',
+        'yer' => Location::class,
+        'reported_date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'closed_at' => 'datetime',
     ];
 
     // ==================== RELATIONS ====================
@@ -138,7 +138,7 @@ class Complaint extends Model
     public function getDurationAttribute(): string
     {
         if ($this->start_date && $this->end_date) {
-            return $this->start_date->diffInDays($this->end_date) . ' gün';
+            return $this->start_date->diffInDays($this->end_date).' gün';
         }
 
         return '-';

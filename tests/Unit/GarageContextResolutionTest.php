@@ -46,13 +46,13 @@ class GarageContextResolutionTest extends TestCase
         GarageContext::set($this->garageA->id, $this->company->id);
 
         session([
-            'current_garage_id'  => $this->garageB->id,
+            'current_garage_id' => $this->garageB->id,
             'current_company_id' => $this->company->id,
         ]);
 
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => $this->garageB->id,
+            'role' => 'user',
+            'current_garage_id' => $this->garageB->id,
             'current_company_id' => $this->company->id,
         ]);
         Auth::login($user);
@@ -67,7 +67,7 @@ class GarageContextResolutionTest extends TestCase
     public function test_session_is_used_when_context_empty(): void
     {
         session([
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -78,13 +78,13 @@ class GarageContextResolutionTest extends TestCase
     public function test_session_takes_precedence_over_auth_user(): void
     {
         session([
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ]);
 
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => $this->garageB->id,
+            'role' => 'user',
+            'current_garage_id' => $this->garageB->id,
             'current_company_id' => $this->company->id,
         ]);
         Auth::login($user);
@@ -99,8 +99,8 @@ class GarageContextResolutionTest extends TestCase
     public function test_auth_user_is_used_when_context_and_session_empty(): void
     {
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => $this->garageB->id,
+            'role' => 'user',
+            'current_garage_id' => $this->garageB->id,
             'current_company_id' => $this->company->id,
         ]);
         Auth::login($user);
@@ -122,8 +122,8 @@ class GarageContextResolutionTest extends TestCase
     public function test_returns_null_when_user_has_no_current_garage(): void
     {
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => null,
+            'role' => 'user',
+            'current_garage_id' => null,
             'current_company_id' => null,
         ]);
         Auth::login($user);
@@ -138,8 +138,8 @@ class GarageContextResolutionTest extends TestCase
     public function test_from_user_populates_context(): void
     {
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => $this->garageA->id,
+            'role' => 'user',
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -153,8 +153,8 @@ class GarageContextResolutionTest extends TestCase
     public function test_from_user_returns_false_when_no_current_garage(): void
     {
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => null,
+            'role' => 'user',
+            'current_garage_id' => null,
             'current_company_id' => null,
         ]);
 

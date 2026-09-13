@@ -4,8 +4,8 @@ namespace Tests\Feature\Imports;
 
 use App\Imports\ComplaintsImport;
 use App\Models\Bus;
-use App\Models\Complaint;
 use App\Models\Company;
+use App\Models\Complaint;
 use App\Models\Garage;
 use App\Models\Warehouse;
 use App\Services\GarageContext;
@@ -27,14 +27,14 @@ class ComplaintsImportAtomicityTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'ATOMIC-001',
+            'dqn' => 'ATOMIC-001',
         ]);
     }
 
@@ -47,11 +47,11 @@ class ComplaintsImportAtomicityTest extends TestCase
     private function makeWarehouse(int $quantity): Warehouse
     {
         return Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => 'ATOM-W-1',
-            'name'       => 'Atomic Part',
-            'quantity'   => $quantity,
+            'code' => 'ATOM-W-1',
+            'name' => 'Atomic Part',
+            'quantity' => $quantity,
         ]);
     }
 
@@ -63,11 +63,11 @@ class ComplaintsImportAtomicityTest extends TestCase
     private function makeRow(array $overrides = []): array
     {
         return array_merge([
-            'dqn'            => 'ATOMIC-001',
-            'yer'            => 'garage',
+            'dqn' => 'ATOMIC-001',
+            'yer' => 'garage',
             'complaint_type' => 'breakdown',
-            'complaints'     => 'Test complaint',
-            'status'         => 'pending',
+            'complaints' => 'Test complaint',
+            'status' => 'pending',
         ], $overrides);
     }
 
@@ -81,7 +81,7 @@ class ComplaintsImportAtomicityTest extends TestCase
 
         $import = $this->makeImport();
         $import->processRow($this->makeRow([
-            'part_code'     => 'ATOM-W-1',
+            'part_code' => 'ATOM-W-1',
             'used_quantity' => 3,
         ]), 2);
 
@@ -109,7 +109,7 @@ class ComplaintsImportAtomicityTest extends TestCase
 
         try {
             $import->processRow($this->makeRow([
-                'part_code'     => 'ATOM-W-1',
+                'part_code' => 'ATOM-W-1',
                 'used_quantity' => 3,
             ]), 2);
             $this->fail('Expected RuntimeException was not thrown');
@@ -143,9 +143,9 @@ class ComplaintsImportAtomicityTest extends TestCase
 
         try {
             $import->processRow($this->makeRow([
-                'part_code'     => 'ATOM-W-1',
+                'part_code' => 'ATOM-W-1',
                 'used_quantity' => 4,
-                'complaints'    => 'Will fail here',
+                'complaints' => 'Will fail here',
             ]), 2);
         } catch (\RuntimeException $e) {
             // expected
@@ -165,7 +165,7 @@ class ComplaintsImportAtomicityTest extends TestCase
 
         $import = $this->makeImport();
         $import->processRow($this->makeRow([
-            'part_code'     => 'ATOM-W-1',
+            'part_code' => 'ATOM-W-1',
             'used_quantity' => 5, // more than available
         ]), 2);
 
@@ -179,7 +179,7 @@ class ComplaintsImportAtomicityTest extends TestCase
     {
         $import = $this->makeImport();
         $import->processRow($this->makeRow([
-            'part_code'     => 'NON-EXISTENT',
+            'part_code' => 'NON-EXISTENT',
             'used_quantity' => 1,
         ]), 2);
 
@@ -223,7 +223,7 @@ class ComplaintsImportAtomicityTest extends TestCase
 
         $import = $this->makeImport();
         $import->processRow($this->makeRow([
-            'part_code'     => 'ATOM-W-1',
+            'part_code' => 'ATOM-W-1',
             'used_quantity' => 5,
         ]), 2);
 
@@ -259,9 +259,9 @@ class ComplaintsImportAtomicityTest extends TestCase
 
         try {
             $import->processRow($this->makeRow([
-                'part_code'     => 'ATOM-W-1',
+                'part_code' => 'ATOM-W-1',
                 'used_quantity' => 3,
-                'complaints'    => 'Trigger rollback',
+                'complaints' => 'Trigger rollback',
             ]), 2);
         } catch (\RuntimeException $e) {
             // expected

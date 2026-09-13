@@ -136,7 +136,7 @@ class BusController extends Controller
 
             Excel::import($import, $request->file('file'));
 
-            $skipped  = $import->skipped;
+            $skipped = $import->skipped;
             $imported = $import->importedCount;
 
             if (empty($skipped)) {
@@ -153,6 +153,7 @@ class BusController extends Controller
 
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('buses.index')
                 ->with('error', __('messages.flash.import_error'));
         }
@@ -183,7 +184,7 @@ class BusController extends Controller
         $key = $isActive ? 'bulk_activated' : 'bulk_deactivated';
 
         return redirect()->route('buses.index')
-            ->with('success', __('messages.flash.' . $key, [
+            ->with('success', __('messages.flash.'.$key, [
                 'count' => count($ids),
                 'items' => 'buses',
             ]));

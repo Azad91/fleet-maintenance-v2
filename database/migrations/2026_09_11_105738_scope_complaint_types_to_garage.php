@@ -44,8 +44,8 @@ return new class extends Migration
             foreach ($garages as $garage) {
                 foreach ($globalTypes as $type) {
                     $rows[] = [
-                        'name'       => $type->name,
-                        'garage_id'  => $garage->id,
+                        'name' => $type->name,
+                        'garage_id' => $garage->id,
                         'company_id' => $garage->company_id,
                         'created_at' => $type->created_at ?? now(),
                         'updated_at' => now(),

@@ -25,8 +25,8 @@ class ChangePinController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'current_pin'      => ['required', 'string', 'digits_between:4,6'],
-            'pin'              => ['required', 'string', 'digits_between:4,6', 'confirmed', 'different:current_pin'],
+            'current_pin' => ['required', 'string', 'digits_between:4,6'],
+            'pin' => ['required', 'string', 'digits_between:4,6', 'confirmed', 'different:current_pin'],
             'pin_confirmation' => ['required', 'string', 'digits_between:4,6'],
         ], [
             'pin.different' => __('messages.pin_change.same_as_current'),
@@ -41,7 +41,7 @@ class ChangePinController extends Controller
         }
 
         $user->update([
-            'pin'            => Hash::make($validated['pin']),
+            'pin' => Hash::make($validated['pin']),
             'pin_is_default' => false,
         ]);
 

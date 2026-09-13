@@ -81,14 +81,14 @@ trait Auditable
     protected function writeAudit(string $event, ?array $oldValues, ?array $newValues): void
     {
         AuditLog::create([
-            'user_id'        => auth()->id(),
-            'garage_id'      => $this->garage_id ?? null,
-            'company_id'     => $this->company_id ?? null,
+            'user_id' => auth()->id(),
+            'garage_id' => $this->garage_id ?? null,
+            'company_id' => $this->company_id ?? null,
             'auditable_type' => get_class($this),
-            'auditable_id'   => $this->getKey(),
-            'event'          => $event,
-            'old_values'     => $oldValues,
-            'new_values'     => $newValues,
+            'auditable_id' => $this->getKey(),
+            'event' => $event,
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
         ]);
     }
 
@@ -131,14 +131,14 @@ trait Auditable
             }
 
             AuditLog::create([
-                'user_id'        => auth()->id(),
-                'garage_id'      => $oldRecord->garage_id ?? null,
-                'company_id'     => $oldRecord->company_id ?? null,
+                'user_id' => auth()->id(),
+                'garage_id' => $oldRecord->garage_id ?? null,
+                'company_id' => $oldRecord->company_id ?? null,
                 'auditable_type' => static::class,
-                'auditable_id'   => $id,
-                'event'          => $event,
-                'old_values'     => array_intersect_key($oldArray, $changed),
-                'new_values'     => $changed,
+                'auditable_id' => $id,
+                'event' => $event,
+                'old_values' => array_intersect_key($oldArray, $changed),
+                'new_values' => $changed,
             ]);
         }
     }
@@ -161,14 +161,14 @@ trait Auditable
 
         foreach ($oldRecords as $oldRecord) {
             AuditLog::create([
-                'user_id'        => auth()->id(),
-                'garage_id'      => $oldRecord->garage_id ?? null,
-                'company_id'     => $oldRecord->company_id ?? null,
+                'user_id' => auth()->id(),
+                'garage_id' => $oldRecord->garage_id ?? null,
+                'company_id' => $oldRecord->company_id ?? null,
                 'auditable_type' => static::class,
-                'auditable_id'   => $oldRecord->getKey(),
-                'event'          => $event,
-                'old_values'     => static::filterAuditValues($oldRecord->getOriginal()),
-                'new_values'     => null,
+                'auditable_id' => $oldRecord->getKey(),
+                'event' => $event,
+                'old_values' => static::filterAuditValues($oldRecord->getOriginal()),
+                'new_values' => null,
             ]);
         }
     }

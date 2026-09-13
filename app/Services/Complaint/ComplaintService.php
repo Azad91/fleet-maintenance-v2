@@ -3,6 +3,7 @@
 namespace App\Services\Complaint;
 
 use App\Enums\ComplaintStatus;
+use App\Enums\Location;
 use App\Models\Complaint;
 use App\Models\Driver;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +72,7 @@ class ComplaintService
         });
     }
 
-        public function close(Complaint $complaint, array $data): Complaint
+    public function close(Complaint $complaint, array $data): Complaint
     {
         $this->transitionService->validateTransition(
             $complaint,
@@ -79,12 +80,12 @@ class ComplaintService
         );
 
         $complaint->update([
-            'status'       => ComplaintStatus::Completed,
-            'end_date'     => $data['end_date'],
-            'end_time'     => $data['end_time'],
+            'status' => ComplaintStatus::Completed,
+            'end_date' => $data['end_date'],
+            'end_time' => $data['end_time'],
             'work_done_by' => $data['work_done'],
-            'closed_at'    => now(),
-            'closed_by'    => auth()->id(),
+            'closed_at' => now(),
+            'closed_by' => auth()->id(),
         ]);
 
         return $complaint;
@@ -119,7 +120,7 @@ class ComplaintService
             $driver = Driver::active()->findOrFail($data['driver_id']);
             $data['driver_name'] = $driver->full_name;
         } else {
-            $data['driver_id']   = null;
+            $data['driver_id'] = null;
             $data['driver_name'] = null;
         }
     }
@@ -156,13 +157,13 @@ class ComplaintService
         }
 
         $existingCodes = $existingByCode->keys()->all();
-        $newCodes      = array_keys($newByCode);
+        $newCodes = array_keys($newByCode);
 
         // ==================== 1. UPDATE EXISTING ====================
         $codesToUpdate = array_intersect($existingCodes, $newCodes);
         foreach ($codesToUpdate as $code) {
             /** @var \App\Models\ComplaintDetail $detail */
-            $detail  = $existingByCode[$code];
+            $detail = $existingByCode[$code];
             $payload = $newByCode[$code];
 
             // Laravel's update() only saves changed fields.
@@ -170,7 +171,7 @@ class ComplaintService
         }
 
         // ==================== 2. CREATE NEW ====================
-        $codesToCreate    = array_diff($newCodes, $existingCodes);
+        $codesToCreate = array_diff($newCodes, $existingCodes);
         $payloadsToCreate = [];
         foreach ($codesToCreate as $code) {
             $payloadsToCreate[] = $newByCode[$code];

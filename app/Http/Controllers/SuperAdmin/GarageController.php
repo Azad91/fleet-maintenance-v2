@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Company;
-use App\Models\Garage;
 use App\Http\Requests\SuperAdmin\GarageStoreRequest;
 use App\Http\Requests\SuperAdmin\GarageUpdateRequest;
+use App\Models\Company;
+use App\Models\Garage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class GarageController extends Controller
@@ -101,7 +100,7 @@ class GarageController extends Controller
     /**
      * Update the specified garage in storage.
      */
-        public function update(GarageUpdateRequest $request, Garage $garage): RedirectResponse
+    public function update(GarageUpdateRequest $request, Garage $garage): RedirectResponse
     {
         $validated = $request->validated();
         $validated['is_active'] = $request->boolean('is_active');

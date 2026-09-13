@@ -48,7 +48,7 @@ class WarehouseSearchIsolationTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -126,7 +126,7 @@ class WarehouseSearchIsolationTest extends TestCase
         $response = $this->actingAs($this->user)
             ->withSession($this->garageSession())
             ->get(route('warehouses.index', ['search' => 'Common Name']));
-            
+
         $content = $response->getContent();
         $this->assertStringContainsString('A-002', $content);
         $this->assertStringNotContainsString('B-002', $content,

@@ -22,9 +22,9 @@ class BusDailyStatusStoreRequest extends FormRequest
                 'required',
                 Rule::exists('buses', 'id')->where('garage_id', $garageId),
             ],
-            'date'   => 'required|date',
+            'date' => 'required|date',
             'status' => 'required|string|max:255',
-            'notes'  => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:1000',
         ];
     }
 }

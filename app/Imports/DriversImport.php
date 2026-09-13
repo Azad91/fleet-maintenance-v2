@@ -31,17 +31,17 @@ class DriversImport extends AbstractImport implements SkipsEmptyRows, ToModel, W
 
         $driver = Driver::withoutGlobalScopes()->updateOrCreate(
             [
-                'code'      => $code,
+                'code' => $code,
                 'garage_id' => $this->garageId,
             ],
             [
                 'company_id' => $this->companyId,
                 'first_name' => $firstName,
-                'last_name'  => $row['last_name'] ?? null,
-                'phone'      => $row['phone'] ?? null,
-                'position'   => $row['position'] ?? null,
-                'is_active'  => true,
-                'notes'      => $row['notes'] ?? null,
+                'last_name' => $row['last_name'] ?? null,
+                'phone' => $row['phone'] ?? null,
+                'position' => $row['position'] ?? null,
+                'is_active' => true,
+                'notes' => $row['notes'] ?? null,
             ]
         );
 

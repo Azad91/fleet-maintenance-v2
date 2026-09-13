@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Bus;
+use App\Models\Company;
 use App\Models\Complaint;
 use App\Models\ComplaintType;
-use App\Models\Company;
 use App\Models\DailyKmRecord;
 use App\Models\Driver;
 use App\Models\Employee;
@@ -13,7 +13,6 @@ use App\Models\Garage;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\GarageContext;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -37,6 +36,7 @@ class DemoDataSeeder extends Seeder
     {
         if (app()->environment('production')) {
             $this->command->error('DemoDataSeeder is blocked in production.');
+
             return;
         }
 
@@ -70,10 +70,10 @@ class DemoDataSeeder extends Seeder
         return Company::updateOrCreate(
             ['slug' => 'bakubus-demo'],
             [
-                'name'      => 'BakuBus Demo',
-                'email'     => 'info@bakubus.demo',
-                'phone'     => '+994 12 555 55 55',
-                'address'   => 'Baku, Azerbaijan',
+                'name' => 'BakuBus Demo',
+                'email' => 'info@bakubus.demo',
+                'phone' => '+994 12 555 55 55',
+                'address' => 'Baku, Azerbaijan',
                 'is_active' => true,
             ]
         );
@@ -88,10 +88,10 @@ class DemoDataSeeder extends Seeder
             ['code' => 'DEMO-GAR-001'],
             [
                 'company_id' => $company->id,
-                'name'       => 'Demo Central Garage',
-                'address'    => 'Baku, Yasamal',
-                'phone'      => '+994 12 111 11 11',
-                'is_active'  => true,
+                'name' => 'Demo Central Garage',
+                'address' => 'Baku, Yasamal',
+                'phone' => '+994 12 111 11 11',
+                'is_active' => true,
             ]
         );
 
@@ -99,10 +99,10 @@ class DemoDataSeeder extends Seeder
             ['code' => 'DEMO-GAR-002'],
             [
                 'company_id' => $company->id,
-                'name'       => 'Demo Sumgayit Garage',
-                'address'    => 'Sumgayit, Industrial',
-                'phone'      => '+994 12 222 22 22',
-                'is_active'  => true,
+                'name' => 'Demo Sumgayit Garage',
+                'address' => 'Sumgayit, Industrial',
+                'phone' => '+994 12 222 22 22',
+                'is_active' => true,
             ]
         );
 
@@ -116,8 +116,8 @@ class DemoDataSeeder extends Seeder
         $admin = User::updateOrCreate(
             ['email' => 'admin@fleet.com'],
             [
-                'name'      => 'Super Admin',
-                'password'  => Hash::make('password'),
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
                 'is_active' => true,
             ]
         );
@@ -127,17 +127,17 @@ class DemoDataSeeder extends Seeder
     private function createDirector(Company $company): void
     {
         $director = User::updateOrCreate(
-        ['email' => 'director@demo.com'],
-        [
-            'name'            => 'Rəşad Direktor',
-            'password'        => Hash::make('password'),
-            'employee_code'   => 'DIR-001',
-            'pin'             => Hash::make('1234'),
-            'pin_is_default'  => true,
-            'is_active'       => true,
-        ]
-    );
-    // Role defaults to 'user' — no explicit call needed.
+            ['email' => 'director@demo.com'],
+            [
+                'name' => 'Rəşad Direktor',
+                'password' => Hash::make('password'),
+                'employee_code' => 'DIR-001',
+                'pin' => Hash::make('1234'),
+                'pin_is_default' => true,
+                'is_active' => true,
+            ]
+        );
+        // Role defaults to 'user' — no explicit call needed.
 
         $company->users()->syncWithoutDetaching([
             $director->id => ['role' => 'director', 'is_active' => true],
@@ -165,48 +165,48 @@ class DemoDataSeeder extends Seeder
     }
 
     private function createGarageUsers(Garage $garage): void
-{
-    $suffix = $garage->code === 'DEMO-GAR-001' ? 'gar1' : 'gar2';
+    {
+        $suffix = $garage->code === 'DEMO-GAR-001' ? 'gar1' : 'gar2';
 
-    $roleMap = [
-        'admin'                  => "Garage Admin ({$suffix})",
-        'complaint_manager'      => "Complaint Manager ({$suffix})",
-        'complaint_worker'       => "Complaint Worker ({$suffix})",
-        'warehouse_manager'      => "Warehouse Manager ({$suffix})",
-        'warehouse_worker'       => "Warehouse Worker ({$suffix})",
-        'daily_km_manager'       => "Daily KM Manager ({$suffix})",
-        'daily_km_worker'        => "Daily KM Worker ({$suffix})",
-        'daily_status_manager'   => "Daily Status Manager ({$suffix})",
-        'daily_status_worker'    => "Daily Status Worker ({$suffix})",
-    ];
+        $roleMap = [
+            'admin' => "Garage Admin ({$suffix})",
+            'complaint_manager' => "Complaint Manager ({$suffix})",
+            'complaint_worker' => "Complaint Worker ({$suffix})",
+            'warehouse_manager' => "Warehouse Manager ({$suffix})",
+            'warehouse_worker' => "Warehouse Worker ({$suffix})",
+            'daily_km_manager' => "Daily KM Manager ({$suffix})",
+            'daily_km_worker' => "Daily KM Worker ({$suffix})",
+            'daily_status_manager' => "Daily Status Manager ({$suffix})",
+            'daily_status_worker' => "Daily Status Worker ({$suffix})",
+        ];
 
-    $counter = 1;
+        $counter = 1;
 
-    foreach ($roleMap as $role => $name) {
-        $slug  = $role === 'admin' ? 'admin' : str_replace('_', '.', $role);
-        $email = "{$slug}.{$suffix}@demo.com";
+        foreach ($roleMap as $role => $name) {
+            $slug = $role === 'admin' ? 'admin' : str_replace('_', '.', $role);
+            $email = "{$slug}.{$suffix}@demo.com";
 
-        $user = User::updateOrCreate(
-            ['email' => $email],
-            [
-                'name'            => $name,
-                'password'        => Hash::make('password'),
-                'employee_code'   => sprintf('EMP-%s-%03d', strtoupper($suffix), $counter),
-                'pin'             => Hash::make('1234'),
-                'pin_is_default'  => true,
-                'is_active'       => true,
-            ]
-        );
-        // Role defaults to 'user'.
+            $user = User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'password' => Hash::make('password'),
+                    'employee_code' => sprintf('EMP-%s-%03d', strtoupper($suffix), $counter),
+                    'pin' => Hash::make('1234'),
+                    'pin_is_default' => true,
+                    'is_active' => true,
+                ]
+            );
+            // Role defaults to 'user'.
 
-        $user->garages()->syncWithoutDetaching([
-            $garage->id => ['role' => $role, 'is_active' => true],
-        ]);
+            $user->garages()->syncWithoutDetaching([
+                $garage->id => ['role' => $role, 'is_active' => true],
+            ]);
 
-        $this->command->line("     • {$role} → {$email} (PIN: 1234)");
-        $counter++;
+            $this->command->line("     • {$role} → {$email} (PIN: 1234)");
+            $counter++;
+        }
     }
-}
 
     private function createComplaintTypes(Garage $garage): void
     {
@@ -255,12 +255,12 @@ class DemoDataSeeder extends Seeder
             Warehouse::withoutGlobalScopes()->updateOrCreate(
                 ['code' => $item['code'], 'garage_id' => $garage->id],
                 [
-                    'company_id'       => $garage->company_id,
-                    'name'             => $item['name'],
-                    'quantity'         => $item['qty'],
+                    'company_id' => $garage->company_id,
+                    'name' => $item['name'],
+                    'quantity' => $item['qty'],
                     'minimum_quantity' => $item['min'],
-                    'price'            => $item['price'],
-                    'unit'             => $item['unit'],
+                    'price' => $item['price'],
+                    'unit' => $item['unit'],
                 ]
             );
         }
@@ -278,14 +278,14 @@ class DemoDataSeeder extends Seeder
             Bus::withoutGlobalScopes()->updateOrCreate(
                 ['dqn' => $dqn, 'garage_id' => $garage->id],
                 [
-                    'company_id'    => $garage->company_id,
-                    'bus_project'   => $projects[$i % 2],
-                    'vin'           => strtoupper('VIN' . $garage->id . str_pad($i, 11, '0', STR_PAD_LEFT)),
-                    'uzunluq'       => 12.5,
-                    'route_number'  => $routes[$i % count($routes)],
-                    'engine_number' => 'ENG-' . str_pad($i, 6, '0', STR_PAD_LEFT),
-                    'km'            => 100000 + ($i * 15000),
-                    'is_active'     => $i <= 8,
+                    'company_id' => $garage->company_id,
+                    'bus_project' => $projects[$i % 2],
+                    'vin' => strtoupper('VIN'.$garage->id.str_pad($i, 11, '0', STR_PAD_LEFT)),
+                    'uzunluq' => 12.5,
+                    'route_number' => $routes[$i % count($routes)],
+                    'engine_number' => 'ENG-'.str_pad($i, 6, '0', STR_PAD_LEFT),
+                    'km' => 100000 + ($i * 15000),
+                    'is_active' => $i <= 8,
                 ]
             );
         }
@@ -309,8 +309,8 @@ class DemoDataSeeder extends Seeder
                 ['first_name' => $first, 'last_name' => $last, 'garage_id' => $garage->id],
                 [
                     'company_id' => $garage->company_id,
-                    'position'   => $pos,
-                    'is_active'  => true,
+                    'position' => $pos,
+                    'is_active' => true,
                 ]
             );
         }
@@ -338,10 +338,10 @@ class DemoDataSeeder extends Seeder
                 [
                     'company_id' => $garage->company_id,
                     'first_name' => $first,
-                    'last_name'  => $last,
-                    'phone'      => '+994 50 ' . rand(100, 999) . ' ' . rand(10, 99) . ' ' . rand(10, 99),
-                    'position'   => 'Baş Sürücü',
-                    'is_active'  => true,
+                    'last_name' => $last,
+                    'phone' => '+994 50 '.rand(100, 999).' '.rand(10, 99).' '.rand(10, 99),
+                    'position' => 'Baş Sürücü',
+                    'is_active' => true,
                 ]
             );
         }
@@ -375,13 +375,13 @@ class DemoDataSeeder extends Seeder
                 DailyKmRecord::withoutGlobalScopes()->updateOrCreate(
                     [
                         'bus_id' => $bus->id,
-                        'date'   => $date->toDateString(),
+                        'date' => $date->toDateString(),
                     ],
                     [
-                        'garage_id'  => $garage->id,
+                        'garage_id' => $garage->id,
                         'company_id' => $garage->company_id,
-                        'km'         => $km,
-                        'notes'      => null,
+                        'km' => $km,
+                        'notes' => null,
                     ]
                 );
             }
@@ -415,13 +415,13 @@ class DemoDataSeeder extends Seeder
                 \App\Models\BusDailyStatus::withoutGlobalScopes()->updateOrCreate(
                     [
                         'bus_id' => $bus->id,
-                        'date'   => $date->toDateString(),
+                        'date' => $date->toDateString(),
                     ],
                     [
-                        'garage_id'  => $garage->id,
+                        'garage_id' => $garage->id,
                         'company_id' => $garage->company_id,
-                        'status'     => $statuses[array_rand($statuses)],
-                        'notes'      => null,
+                        'status' => $statuses[array_rand($statuses)],
+                        'notes' => null,
                     ]
                 );
             }
@@ -458,20 +458,20 @@ class DemoDataSeeder extends Seeder
             $status = $statuses[array_rand($statuses)];
 
             $complaint = Complaint::withoutGlobalScopes()->create([
-                'bus_id'         => $buses->random()->id,
-                'garage_id'      => $garage->id,
-                'company_id'     => $garage->company_id,
-                'created_by'     => $worker?->id,
-                'yer'            => rand(0, 1) ? 'garage' : 'road',
-                'status'         => $status,
+                'bus_id' => $buses->random()->id,
+                'garage_id' => $garage->id,
+                'company_id' => $garage->company_id,
+                'created_by' => $worker?->id,
+                'yer' => rand(0, 1) ? 'garage' : 'road',
+                'status' => $status,
                 'complaint_type' => $types[array_rand($types)],
-                'km'             => rand(100000, 250000),
-                'start_date'     => $createdAt->toDateString(),
-                'start_time'     => $createdAt->format('H:i'),
-                'closed_at'      => $status === 'completed' ? $createdAt->copy()->addHours(rand(2, 72)) : null,
-                'end_date'       => $status === 'completed' ? $createdAt->copy()->addHours(rand(2, 72))->toDateString() : null,
-                'end_time'       => $status === 'completed' ? $createdAt->copy()->addHours(rand(2, 72))->format('H:i') : null,
-                'work_done_by'   => $status === 'completed' ? 'Standard repair completed.' : null,
+                'km' => rand(100000, 250000),
+                'start_date' => $createdAt->toDateString(),
+                'start_time' => $createdAt->format('H:i'),
+                'closed_at' => $status === 'completed' ? $createdAt->copy()->addHours(rand(2, 72)) : null,
+                'end_date' => $status === 'completed' ? $createdAt->copy()->addHours(rand(2, 72))->toDateString() : null,
+                'end_time' => $status === 'completed' ? $createdAt->copy()->addHours(rand(2, 72))->format('H:i') : null,
+                'work_done_by' => $status === 'completed' ? 'Standard repair completed.' : null,
             ]);
 
             // Force created_at to be realistic
@@ -484,7 +484,7 @@ class DemoDataSeeder extends Seeder
             for ($j = 0; $j < $itemCount; $j++) {
                 $complaint->items()->create([
                     'description' => $descriptions[array_rand($descriptions)],
-                    'type'        => $complaint->complaint_type,
+                    'type' => $complaint->complaint_type,
                 ]);
             }
         }

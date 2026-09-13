@@ -19,22 +19,22 @@ class SettingsController extends Controller
     public function index(): View
     {
         $system = [
-            'app_name'         => config('app.name'),
-            'app_env'          => config('app.env'),
-            'app_debug'        => config('app.debug'),
-            'app_url'          => config('app.url'),
-            'php_version'      => PHP_VERSION,
-            'laravel_version'  => app()->version(),
-            'timezone'         => config('app.timezone'),
-            'locale'           => config('app.locale'),
-            'fallback_locale'  => config('app.fallback_locale'),
-            'supported_locales'=> array_keys(config('app.supported_locales', [])),
-            'db_driver'        => DB::connection()->getDriverName(),
-            'cache_driver'     => config('cache.default'),
-            'session_driver'   => config('session.driver'),
-            'queue_driver'     => config('queue.default'),
-            'filesystem_disk'  => config('filesystems.default'),
-            'log_channel'      => config('logging.default'),
+            'app_name' => config('app.name'),
+            'app_env' => config('app.env'),
+            'app_debug' => config('app.debug'),
+            'app_url' => config('app.url'),
+            'php_version' => PHP_VERSION,
+            'laravel_version' => app()->version(),
+            'timezone' => config('app.timezone'),
+            'locale' => config('app.locale'),
+            'fallback_locale' => config('app.fallback_locale'),
+            'supported_locales' => array_keys(config('app.supported_locales', [])),
+            'db_driver' => DB::connection()->getDriverName(),
+            'cache_driver' => config('cache.default'),
+            'session_driver' => config('session.driver'),
+            'queue_driver' => config('queue.default'),
+            'filesystem_disk' => config('filesystems.default'),
+            'log_channel' => config('logging.default'),
         ];
 
         return view('super-admin.settings', compact('system'));

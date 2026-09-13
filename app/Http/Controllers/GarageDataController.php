@@ -24,7 +24,7 @@ class GarageDataController extends Controller
         })->first();
 
         return response()->json([
-            'dqn'    => $bus?->dqn,
+            'dqn' => $bus?->dqn,
             'bus_id' => $bus?->id,
         ]);
     }
@@ -61,10 +61,10 @@ class GarageDataController extends Controller
             ->keyBy('service_template_id');
 
         return response()->json($templates->map(fn (ServiceTemplate $template) => [
-            'id'          => $template->id,
-            'name'        => $template->name,
+            'id' => $template->id,
+            'name' => $template->name,
             'km_interval' => $intervals->get($template->id)?->custom_km_interval ?? $template->default_km_interval,
-            'details'     => $template->details,
+            'details' => $template->details,
         ])->values());
     }
 
@@ -81,13 +81,13 @@ class GarageDataController extends Controller
             $motorOils->where('km', '>', $latestKm)
                 ->groupBy('km')
                 ->map(fn ($details, $km) => [
-                    'km'      => (int) $km,
+                    'km' => (int) $km,
                     'details' => $details->map(fn (MotorOilDetail $detail) => [
                         'part_code' => $detail->part_code,
                         'part_name' => $detail->part_name,
-                        'quantity'  => $detail->quantity,
-                        'count'     => $detail->count,
-                        'unit'      => $detail->unit,
+                        'quantity' => $detail->quantity,
+                        'count' => $detail->count,
+                        'unit' => $detail->unit,
                     ])->values(),
                 ])->values()
         );
@@ -101,8 +101,8 @@ class GarageDataController extends Controller
 
         return response()->json([
             'driver_name' => $driver?->full_name,
-            'driver_id'   => $driver?->id,
-            'found'       => (bool) $driver,
+            'driver_id' => $driver?->id,
+            'found' => (bool) $driver,
         ]);
     }
 }

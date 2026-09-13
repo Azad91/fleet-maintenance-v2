@@ -28,8 +28,8 @@ class Warehouse extends Model
     ];
 
     protected $casts = [
-        'quantity'         => 'integer',
+        'quantity' => 'integer',
         'minimum_quantity' => 'integer',
-        'price'            => 'decimal:2',
+        'price' => 'decimal:2',
     ];
 }

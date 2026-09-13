@@ -36,12 +36,12 @@ class AssignmentController extends Controller
         }
 
         $company->users()->attach($user->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
         return back()->with('success', __('messages.super_admin.assignments.director_assigned', [
-            'name'    => $user->name,
+            'name' => $user->name,
             'company' => $company->name,
         ]));
     }
@@ -56,7 +56,7 @@ class AssignmentController extends Controller
         $company->users()->detach($user->id);
 
         return back()->with('success', __('messages.super_admin.assignments.director_removed', [
-            'name'    => $user->name,
+            'name' => $user->name,
             'company' => $company->name,
         ]));
     }

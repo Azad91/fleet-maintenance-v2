@@ -36,7 +36,7 @@ class DashboardAccessTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -60,7 +60,7 @@ class DashboardAccessTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'user']);
         $admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -74,7 +74,7 @@ class DashboardAccessTest extends TestCase
     {
         $worker = User::factory()->create(['role' => 'user']);
         $worker->garages()->attach($this->garage->id, [
-            'role'      => 'complaint_worker',
+            'role' => 'complaint_worker',
             'is_active' => true,
         ]);
 
@@ -109,8 +109,8 @@ class DashboardAccessTest extends TestCase
         $this->assertFileDoesNotExist(
             $path,
             'DashboardPolicy must not be reintroduced. Access to the '
-            . 'dashboard is enforced by the auth + garage.selected '
-            . 'route middleware, not by a (no-op) policy.'
+            .'dashboard is enforced by the auth + garage.selected '
+            .'route middleware, not by a (no-op) policy.'
         );
     }
 
@@ -125,8 +125,8 @@ class DashboardAccessTest extends TestCase
         $this->assertNull(
             $policies,
             'A policy was bound to a controller class. '
-            . 'Policies must be bound to models, not controllers. '
-            . 'Use route middleware for controller-level authorization.'
+            .'Policies must be bound to models, not controllers. '
+            .'Use route middleware for controller-level authorization.'
         );
     }
 }

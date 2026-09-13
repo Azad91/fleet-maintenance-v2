@@ -58,19 +58,19 @@ class WarehouseReportTest extends TestCase
     public function test_receipt_only_shows_current_garage_items(): void
     {
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'GA-001',
-            'name'       => 'Garage A Item',
-            'quantity'   => 10,
+            'code' => 'GA-001',
+            'name' => 'Garage A Item',
+            'quantity' => 10,
         ]);
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'code'       => 'GB-001',
-            'name'       => 'Garage B Item',
-            'quantity'   => 20,
+            'code' => 'GB-001',
+            'name' => 'Garage B Item',
+            'quantity' => 20,
         ]);
 
         $scope = new ReportScope(
@@ -88,26 +88,26 @@ class WarehouseReportTest extends TestCase
     public function test_receipt_worker_filter_only_returns_own_items(): void
     {
         $worker = User::factory()->create(['role' => 'user']);
-        $other  = User::factory()->create(['role' => 'user']);
+        $other = User::factory()->create(['role' => 'user']);
 
         // `created_by` is not fillable (see A6), so we use forceFill to
         // simulate rows authored by specific users (as if created at runtime
         // while those users were authenticated).
         $workerItem = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'W-001',
-            'name'       => 'Worker Item',
-            'quantity'   => 10,
+            'code' => 'W-001',
+            'name' => 'Worker Item',
+            'quantity' => 10,
         ]);
         $workerItem->forceFill(['created_by' => $worker->id])->save();
 
         $otherItem = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'O-001',
-            'name'       => 'Other Item',
-            'quantity'   => 20,
+            'code' => 'O-001',
+            'name' => 'Other Item',
+            'quantity' => 20,
         ]);
         $otherItem->forceFill(['created_by' => $other->id])->save();
 
@@ -128,29 +128,29 @@ class WarehouseReportTest extends TestCase
     public function test_low_stock_returns_only_items_at_or_below_threshold(): void
     {
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $this->garageA->id,
-            'company_id'       => $this->company->id,
-            'code'             => 'OK-1',
-            'name'             => 'Normal',
-            'quantity'         => 50,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'code' => 'OK-1',
+            'name' => 'Normal',
+            'quantity' => 50,
             'minimum_quantity' => 10,
         ]);
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $this->garageA->id,
-            'company_id'       => $this->company->id,
-            'code'             => 'LOW-1',
-            'name'             => 'Low',
-            'quantity'         => 5,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'code' => 'LOW-1',
+            'name' => 'Low',
+            'quantity' => 5,
             'minimum_quantity' => 10,
         ]);
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $this->garageA->id,
-            'company_id'       => $this->company->id,
-            'code'             => 'ZERO-1',
-            'name'             => 'Empty',
-            'quantity'         => 0,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'code' => 'ZERO-1',
+            'name' => 'Empty',
+            'quantity' => 0,
             'minimum_quantity' => 5,
         ]);
 
@@ -167,11 +167,11 @@ class WarehouseReportTest extends TestCase
     public function test_low_stock_does_not_leak_other_garage(): void
     {
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $this->garageB->id,
-            'company_id'       => $this->company->id,
-            'code'             => 'B-LOW',
-            'name'             => 'Other Garage Low',
-            'quantity'         => 1,
+            'garage_id' => $this->garageB->id,
+            'company_id' => $this->company->id,
+            'code' => 'B-LOW',
+            'name' => 'Other Garage Low',
+            'quantity' => 1,
             'minimum_quantity' => 10,
         ]);
 
@@ -192,20 +192,20 @@ class WarehouseReportTest extends TestCase
 
         // Create in garage A
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'ACT-A',
-            'name'       => 'Activity A',
-            'quantity'   => 1,
+            'code' => 'ACT-A',
+            'name' => 'Activity A',
+            'quantity' => 1,
         ]);
 
         // Create in garage B (should not appear)
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'code'       => 'ACT-B',
-            'name'       => 'Activity B',
-            'quantity'   => 1,
+            'code' => 'ACT-B',
+            'name' => 'Activity B',
+            'quantity' => 1,
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);
@@ -225,19 +225,19 @@ class WarehouseReportTest extends TestCase
         $this->actingAs($user);
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'M-A',
-            'name'       => 'Movement A',
-            'quantity'   => 1,
+            'code' => 'M-A',
+            'name' => 'Movement A',
+            'quantity' => 1,
         ]);
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'code'       => 'M-B',
-            'name'       => 'Movement B',
-            'quantity'   => 1,
+            'code' => 'M-B',
+            'name' => 'Movement B',
+            'quantity' => 1,
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);

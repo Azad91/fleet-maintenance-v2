@@ -32,7 +32,7 @@ class GarageSelectionTest extends TestCase
 
         $this->garageB = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'name' => 'Beta Garage',             
+            'name' => 'Beta Garage',
             'is_active' => true,
         ]);
     }
@@ -71,7 +71,8 @@ class GarageSelectionTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Alpha Garage');
-        $response->assertDontSee('Beta Garage');    }
+        $response->assertDontSee('Beta Garage');
+    }
 
     public function test_regular_user_cannot_select_unassigned_garage(): void
     {

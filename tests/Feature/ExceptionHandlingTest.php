@@ -132,7 +132,7 @@ class ExceptionHandlingTest extends TestCase
                 $needle,
                 $contents,
                 "Redundant exception renderer detected: '{$needle}'. "
-                . 'Laravel 11+ handles this exception correctly out of the box.'
+                .'Laravel 11+ handles this exception correctly out of the box.'
             );
         }
     }

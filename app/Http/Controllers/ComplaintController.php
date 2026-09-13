@@ -16,7 +16,6 @@ use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -74,7 +73,7 @@ class ComplaintController extends Controller
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
 
-        $complaint = new Complaint();
+        $complaint = new Complaint;
 
         return view('complaints.create', compact(
             'buses',
@@ -130,12 +129,12 @@ class ComplaintController extends Controller
         $details = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,
-                'code'           => $detail->code,
-                'name'           => $detail->name,
+                'code' => $detail->code,
+                'name' => $detail->name,
                 'stock_quantity' => $detail->stock_quantity,
-                'used_quantity'  => $detail->used_quantity,
-                'employee_id'    => $detail->employee_id,
-                'notes'          => $detail->notes,
+                'used_quantity' => $detail->used_quantity,
+                'employee_id' => $detail->employee_id,
+                'notes' => $detail->notes,
             ];
         })->toArray();
 
@@ -219,7 +218,7 @@ class ComplaintController extends Controller
         }
 
         return response()->download($filePath, "work-card-{$complaint->id}.pdf", [
-            'Content-Type'        => 'application/pdf',
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="work-card-'.$complaint->id.'.pdf"',
         ]);
     }
@@ -252,7 +251,7 @@ class ComplaintController extends Controller
 
             Excel::import($import, $request->file('file'));
 
-            $skipped  = $import->skipped;
+            $skipped = $import->skipped;
             $failures = method_exists($import, 'failures') ? $import->failures() : collect();
             $imported = $import->importedCount;
 
@@ -270,6 +269,7 @@ class ComplaintController extends Controller
 
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('complaints.index')
                 ->with('error', __('messages.flash.import_error'));
         }

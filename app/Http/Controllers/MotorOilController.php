@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Imports\MotorOilImport;
 use App\Models\MotorOilDetail;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class MotorOilController extends Controller
@@ -55,10 +55,10 @@ class MotorOilController extends Controller
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
-            $import = new MotorOilImport();
+            $import = new MotorOilImport;
             Excel::import($import, $request->file('file'));
 
-            $skipped  = $import->skipped;
+            $skipped = $import->skipped;
             $imported = $import->importedCount;
 
             if (empty($skipped)) {
@@ -75,6 +75,7 @@ class MotorOilController extends Controller
 
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('motor-oil.index')
                 ->with('error', __('messages.flash.import_error'));
         }

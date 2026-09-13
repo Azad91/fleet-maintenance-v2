@@ -15,7 +15,7 @@ class DailyKmReportController extends ReportController
     public function missing(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_km');
+        $scope = $this->scope('daily_km');
 
         return $this->render('missing', $period, $scope, [
             'buses' => $this->service->missing($period, $scope),
@@ -25,7 +25,7 @@ class DailyKmReportController extends ReportController
     public function topBuses(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_km');
+        $scope = $this->scope('daily_km');
 
         return $this->render('top-buses', $period, $scope, [
             'buses' => $this->service->topBuses($period, $scope),
@@ -35,7 +35,7 @@ class DailyKmReportController extends ReportController
     public function workerActivity(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_km');
+        $scope = $this->scope('daily_km');
 
         return $this->render('worker-activity', $period, $scope, [
             'rows' => $this->service->workerActivity($period, $scope),
@@ -45,10 +45,10 @@ class DailyKmReportController extends ReportController
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.daily-km.{$view}", array_merge($data, [
-            'domain'       => 'daily_km',
+            'domain' => 'daily_km',
             'activeReport' => $view,
-            'period'       => $period,
-            'scope'        => $scope,
+            'period' => $period,
+            'scope' => $scope,
         ]));
     }
 }

@@ -9,9 +9,9 @@ use App\Http\Requests\ComplaintUpdateRequest;
 use App\Models\Complaint;
 use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\JsonResponse;
 
 class ComplaintController extends Controller
 {
@@ -41,10 +41,10 @@ class ComplaintController extends Controller
         return response()->json([
             'data' => $complaints->items(),
             'meta' => [
-                'total'        => $complaints->total(),
-                'per_page'     => $complaints->perPage(),
+                'total' => $complaints->total(),
+                'per_page' => $complaints->perPage(),
                 'current_page' => $complaints->currentPage(),
-                'last_page'    => $complaints->lastPage(),
+                'last_page' => $complaints->lastPage(),
             ],
         ]);
     }
@@ -62,7 +62,7 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.created', ['Item' => 'Card']),
-            'data'    => $complaint->load(['bus', 'items', 'details']),
+            'data' => $complaint->load(['bus', 'items', 'details']),
         ], 201);
     }
 
@@ -89,7 +89,7 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.updated', ['Item' => 'Card']),
-            'data'    => $complaint->fresh()->load(['bus', 'items', 'details']),
+            'data' => $complaint->fresh()->load(['bus', 'items', 'details']),
         ]);
     }
 
@@ -109,8 +109,8 @@ class ComplaintController extends Controller
         Gate::authorize('close', $complaint);
 
         $validated = $request->validate([
-            'end_date'  => 'required|date',
-            'end_time'  => 'required|date_format:H:i',
+            'end_date' => 'required|date',
+            'end_time' => 'required|date_format:H:i',
             'work_done' => 'required|string|min:5',
         ]);
 
@@ -124,7 +124,7 @@ class ComplaintController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.closed_success'),
-            'data'    => $closed,
+            'data' => $closed,
         ]);
     }
 
@@ -143,7 +143,7 @@ class ComplaintController extends Controller
         }
 
         return response()->download($filePath, "work-card-{$complaint->id}.pdf", [
-            'Content-Type'        => 'application/pdf',
+            'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="work-card-'.$complaint->id.'.pdf"',
         ]);
     }

@@ -7,14 +7,14 @@ use Illuminate\Support\Str;
 if (! function_exists('format_km')) {
     function format_km($km)
     {
-        return $km ? number_format($km, 0, ',', '.') . ' km' : '-';
+        return $km ? number_format($km, 0, ',', '.').' km' : '-';
     }
 }
 
 if (! function_exists('format_price')) {
     function format_price($price)
     {
-        return $price ? number_format($price, 2) . ' ₼' : '-';
+        return $price ? number_format($price, 2).' ₼' : '-';
     }
 }
 
@@ -36,14 +36,14 @@ if (! function_exists('status_badge_class')) {
     function status_badge_class($status)
     {
         return match ($status) {
-            'pending'     => 'pending',
+            'pending' => 'pending',
             'in_progress' => 'in-progress',
-            'completed'   => 'completed',
-            'cancelled'   => 'cancelled',
-            'active'      => 'active',
-            'inactive'    => 'inactive',
-            'repair'      => 'repair',
-            default       => '',
+            'completed' => 'completed',
+            'cancelled' => 'cancelled',
+            'active' => 'active',
+            'inactive' => 'inactive',
+            'repair' => 'repair',
+            default => '',
         };
     }
 }

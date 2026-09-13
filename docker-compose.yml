@@ -1,10 +1,11 @@
-services:
+name: fleet-v2
 
+services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fleet-maintenance-app
+    container_name: fleet-v2-app
     ports:
       - "8000:80"
     environment:
@@ -20,18 +21,38 @@ services:
       DB_PASSWORD: fleet_password
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./public/storage:/var/www/html/public/storage
+
+    networks:
+      - fleet-v2
 
   postgres:
     image: postgres:17
-    container_name: fleet-maintenance-postgres
+    container_name: fleet-v2-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: fleet_maintenance_v2
       POSTGRES_USER: fleet
       POSTGRES_PASSWORD: fleet_password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_v2_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fleet -d fleet_maintenance_v2"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - fleet-v2
 
 volumes:
-  postgres_data:
+  postgres_v2_data:
+    name: fleet_v2_postgres_data
+
+networks:
+  fleet-v2:
+    name: fleet-v2-network

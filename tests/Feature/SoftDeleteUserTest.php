@@ -51,13 +51,13 @@ class SoftDeleteUserTest extends TestCase
     public function test_employee_code_can_be_reused_after_soft_delete(): void
     {
         $user = User::factory()->create([
-            'email'         => 'first@test.com',
+            'email' => 'first@test.com',
             'employee_code' => 'EMP-AAA-111',
         ]);
         $user->delete();
 
         $newUser = User::factory()->create([
-            'email'         => 'second@test.com',
+            'email' => 'second@test.com',
             'employee_code' => 'EMP-AAA-111',
         ]);
 
@@ -76,13 +76,13 @@ class SoftDeleteUserTest extends TestCase
     public function test_soft_deleted_user_cannot_login(): void
     {
         $user = User::factory()->create([
-            'email'    => 'deleted@test.com',
+            'email' => 'deleted@test.com',
             'password' => bcrypt('password'),
         ]);
         $user->delete();
 
         $this->post('/login', [
-            'email'    => 'deleted@test.com',
+            'email' => 'deleted@test.com',
             'password' => 'password',
         ]);
 
@@ -92,16 +92,16 @@ class SoftDeleteUserTest extends TestCase
     public function test_soft_deleted_user_cannot_login_with_pin(): void
     {
         $user = User::factory()->create([
-            'role'          => 'user',
+            'role' => 'user',
             'employee_code' => 'EMP-DEL-001',
-            'pin'           => bcrypt('1234'),
+            'pin' => bcrypt('1234'),
             'pin_is_default' => false,
         ]);
         $user->delete();
 
         $this->post('/login/pin', [
             'employee_code' => 'EMP-DEL-001',
-            'pin'           => '1234',
+            'pin' => '1234',
         ]);
 
         $this->assertGuest();

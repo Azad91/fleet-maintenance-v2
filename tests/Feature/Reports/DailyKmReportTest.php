@@ -6,11 +6,11 @@ use App\Models\Bus;
 use App\Models\Company;
 use App\Models\DailyKmRecord;
 use App\Models\Garage;
+use App\Models\User;
 use App\Services\GarageContext;
 use App\Services\Reports\DailyKmReportService;
 use App\Services\Reports\ReportPeriod;
 use App\Services\Reports\ReportScope;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -41,19 +41,19 @@ class DailyKmReportTest extends TestCase
         GarageContext::set($this->garageA->id, $this->company->id);
 
         $this->busA = Bus::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'AAA-001',
-            'is_active'  => true,
-            'km'         => 10000,
+            'dqn' => 'AAA-001',
+            'is_active' => true,
+            'km' => 10000,
         ]);
 
         $this->busB = Bus::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'BBB-001',
-            'is_active'  => true,
-            'km'         => 20000,
+            'dqn' => 'BBB-001',
+            'is_active' => true,
+            'km' => 20000,
         ]);
 
         $this->service = app(DailyKmReportService::class);
@@ -76,11 +76,11 @@ class DailyKmReportTest extends TestCase
     {
         // Bus A: has a KM entry today
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'km'         => 10500,
+            'date' => now()->toDateString(),
+            'km' => 10500,
         ]);
 
         // Bus B: no entry today — but is in another garage → shouldn't appear
@@ -108,18 +108,18 @@ class DailyKmReportTest extends TestCase
     {
         // Bus A: 1000 km driven (start 10000, end 11000)
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->startOfMonth()->toDateString(),
-            'km'         => 10000,
+            'date' => now()->startOfMonth()->toDateString(),
+            'km' => 10000,
         ]);
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'km'         => 11000,
+            'date' => now()->toDateString(),
+            'km' => 11000,
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);
@@ -134,11 +134,11 @@ class DailyKmReportTest extends TestCase
     public function test_top_buses_does_not_leak_across_garages(): void
     {
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busB->id,
-            'garage_id'  => $this->garageB->id,
+            'bus_id' => $this->busB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'km'         => 25000,
+            'date' => now()->toDateString(),
+            'km' => 25000,
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);
@@ -156,19 +156,19 @@ class DailyKmReportTest extends TestCase
         $this->actingAs($user);
 
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busA->id,
-            'garage_id'  => $this->garageA->id,
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'km'         => 15000,
+            'date' => now()->toDateString(),
+            'km' => 15000,
         ]);
 
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $this->busB->id,
-            'garage_id'  => $this->garageB->id,
+            'bus_id' => $this->busB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'km'         => 25000,
+            'date' => now()->toDateString(),
+            'km' => 25000,
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);

@@ -9,8 +9,8 @@ use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class UserManagementController extends Controller
 {
@@ -80,7 +80,7 @@ class UserManagementController extends Controller
 
         if ($garageRole === null && auth()->user()->isSuperAdmin()) {
             $garageRole = (object) [
-                'role'      => 'admin',
+                'role' => 'admin',
                 'is_active' => true,
             ];
         }
@@ -91,8 +91,8 @@ class UserManagementController extends Controller
         }
 
         return view('users.edit', [
-            'user'       => $user,
-            'roles'      => RoleEnum::garageRoleLabels(),
+            'user' => $user,
+            'roles' => RoleEnum::garageRoleLabels(),
             'garageRole' => $garageRole,
         ]);
     }
@@ -147,15 +147,15 @@ class UserManagementController extends Controller
             : ['nullable', 'confirmed', Password::defaults()];
 
         return $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
                 'required',
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user?->id),
             ],
-            'role'      => ['required', Rule::in(RoleEnum::garageRoles())],
-            'password'  => $passwordRules,
+            'role' => ['required', Rule::in(RoleEnum::garageRoles())],
+            'password' => $passwordRules,
             'is_active' => [$creating ? 'nullable' : 'required', 'boolean'],
         ]);
     }

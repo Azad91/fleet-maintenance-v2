@@ -13,7 +13,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
-        /**
+    /**
      * Mass-assignable attributes.
      *
      * NOTE: 'role' is intentionally NOT fillable. It must be set explicitly
@@ -40,7 +40,7 @@ class User extends Authenticatable
      * Default attribute values for new model instances.
      */
     protected $attributes = [
-        'role'      => RoleEnum::USER->value,
+        'role' => RoleEnum::USER->value,
         'is_active' => true,
     ];
 
@@ -129,11 +129,11 @@ class User extends Authenticatable
     public function hasDomainRole(string $domain, ?int $garageId = null): bool
     {
         $domainRoles = match ($domain) {
-            'complaint'    => RoleEnum::complaintRoles(),
-            'warehouse'    => RoleEnum::warehouseRoles(),
-            'daily_km'     => RoleEnum::dailyKmRoles(),
+            'complaint' => RoleEnum::complaintRoles(),
+            'warehouse' => RoleEnum::warehouseRoles(),
+            'daily_km' => RoleEnum::dailyKmRoles(),
             'daily_status' => RoleEnum::dailyStatusRoles(),
-            default        => [],
+            default => [],
         };
 
         if (empty($domainRoles)) {
@@ -202,15 +202,15 @@ class User extends Authenticatable
     public function setCurrentGarage(Garage $garage): void
     {
         $this->update([
-            'current_garage_id'       => $garage->id,
-            'current_company_id'      => $garage->company_id,
+            'current_garage_id' => $garage->id,
+            'current_company_id' => $garage->company_id,
             'last_selected_garage_at' => now(),
         ]);
 
         session([
-            'current_garage_id'    => $garage->id,
-            'current_garage_name'  => $garage->name,
-            'current_company_id'   => $garage->company_id,
+            'current_garage_id' => $garage->id,
+            'current_garage_name' => $garage->name,
+            'current_company_id' => $garage->company_id,
             'current_company_name' => $garage->company->name,
         ]);
     }
@@ -260,9 +260,9 @@ class User extends Authenticatable
             ->wherePivot('is_active', true)
             ->get()
             ->map(fn ($garage) => [
-                'garage_id'   => $garage->id,
+                'garage_id' => $garage->id,
                 'garage_name' => $garage->name,
-                'role'        => $garage->pivot->role,
+                'role' => $garage->pivot->role,
             ])
             ->toArray();
     }

@@ -93,19 +93,19 @@ class GarageIdGuardTest extends TestCase
     {
         // Bus exists ONLY in garage B. Import is for garage A.
         Bus::factory()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'CROSS-001',
+            'dqn' => 'CROSS-001',
         ]);
 
         $import = new ComplaintsImport($this->garageA->id, $this->company->id);
 
         $import->processRow([
-            'dqn'            => 'CROSS-001',
-            'yer'            => 'garage',
+            'dqn' => 'CROSS-001',
+            'yer' => 'garage',
             'complaint_type' => 'breakdown',
-            'complaints'     => 'Cross-tenant test',
-            'status'         => 'pending',
+            'complaints' => 'Cross-tenant test',
+            'status' => 'pending',
         ], 2);
 
         // Must skip — DQN exists but in another garage.
@@ -120,38 +120,38 @@ class GarageIdGuardTest extends TestCase
     {
         // Bus in garage A (the import's garage)
         Bus::factory()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'OWN-001',
+            'dqn' => 'OWN-001',
         ]);
 
         // Same part code exists in BOTH garages with different quantities
         $warehouseA = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'SHARED-CODE',
-            'name'       => 'Garage A Part',
-            'quantity'   => 10,
+            'code' => 'SHARED-CODE',
+            'name' => 'Garage A Part',
+            'quantity' => 10,
         ]);
 
         $warehouseB = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'code'       => 'SHARED-CODE',
-            'name'       => 'Garage B Part',
-            'quantity'   => 50,
+            'code' => 'SHARED-CODE',
+            'name' => 'Garage B Part',
+            'quantity' => 50,
         ]);
 
         $import = new ComplaintsImport($this->garageA->id, $this->company->id);
 
         $import->processRow([
-            'dqn'            => 'OWN-001',
-            'yer'            => 'garage',
+            'dqn' => 'OWN-001',
+            'yer' => 'garage',
             'complaint_type' => 'breakdown',
-            'complaints'     => 'Test',
-            'status'         => 'pending',
-            'part_code'      => 'SHARED-CODE',
-            'used_quantity'  => 3,
+            'complaints' => 'Test',
+            'status' => 'pending',
+            'part_code' => 'SHARED-CODE',
+            'used_quantity' => 3,
         ], 2);
 
         // Garage A's stock was decremented: 10 - 3 = 7
@@ -168,30 +168,30 @@ class GarageIdGuardTest extends TestCase
     public function test_complaints_import_does_not_find_part_from_other_garage(): void
     {
         Bus::factory()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'OWN-002',
+            'dqn' => 'OWN-002',
         ]);
 
         // Part exists ONLY in garage B
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'code'       => 'B-ONLY-001',
-            'name'       => 'Garage B Only',
-            'quantity'   => 100,
+            'code' => 'B-ONLY-001',
+            'name' => 'Garage B Only',
+            'quantity' => 100,
         ]);
 
         $import = new ComplaintsImport($this->garageA->id, $this->company->id);
 
         $import->processRow([
-            'dqn'            => 'OWN-002',
-            'yer'            => 'garage',
+            'dqn' => 'OWN-002',
+            'yer' => 'garage',
             'complaint_type' => 'breakdown',
-            'complaints'     => 'Test',
-            'status'         => 'pending',
-            'part_code'      => 'B-ONLY-001',
-            'used_quantity'  => 5,
+            'complaints' => 'Test',
+            'status' => 'pending',
+            'part_code' => 'B-ONLY-001',
+            'used_quantity' => 5,
         ], 2);
 
         // Must skip — part not in garage A
@@ -209,7 +209,7 @@ class GarageIdGuardTest extends TestCase
     // 4. HTTP LEVEL — CONTROLLER GUARD
     // ==================================================================
 
-        public function test_complaints_import_redirects_when_no_garage_in_session(): void
+    public function test_complaints_import_redirects_when_no_garage_in_session(): void
     {
         $admin = \App\Models\User::factory()->create(['role' => 'user']);
         $admin->garages()->attach($this->garageA->id, ['role' => 'admin', 'is_active' => true]);
@@ -263,27 +263,27 @@ class GarageIdGuardTest extends TestCase
     {
         // Same code in both garages, different quantities
         $warehouseA = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'code'       => 'SHARED-001',
-            'name'       => 'Garage A Item',
-            'quantity'   => 10,
+            'code' => 'SHARED-001',
+            'name' => 'Garage A Item',
+            'quantity' => 10,
         ]);
 
         $warehouseB = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'code'       => 'SHARED-001',
-            'name'       => 'Garage B Item',
-            'quantity'   => 50,
+            'code' => 'SHARED-001',
+            'name' => 'Garage B Item',
+            'quantity' => 50,
         ]);
 
         $import = new WarehouseImport($this->garageA->id, $this->company->id);
 
         $rows = collect([
             collect([
-                'code'     => 'SHARED-001',
-                'name'     => 'Updated Garage A',
+                'code' => 'SHARED-001',
+                'name' => 'Updated Garage A',
                 'quantity' => 99,
             ]),
         ]);

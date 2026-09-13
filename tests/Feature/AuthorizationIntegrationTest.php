@@ -26,7 +26,7 @@ class AuthorizationIntegrationTest extends TestCase
         $this->company = Company::factory()->create();
         $this->garage = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'is_active'  => true,
+            'is_active' => true,
         ]);
     }
 
@@ -36,7 +36,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($superAdmin)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('dashboard'));
@@ -51,7 +51,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($adminUser)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.index'));
@@ -60,7 +60,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response2 = $this->actingAs($adminUser)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('warehouses.index'));
@@ -75,7 +75,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($warehouseUser)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.create'));
@@ -90,7 +90,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($complaintUser)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.create'));
@@ -105,7 +105,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($workerUser)
             ->withSession([
-                'current_garage_id'  => $this->garage->id,
+                'current_garage_id' => $this->garage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('complaints.create'));
@@ -125,7 +125,7 @@ class AuthorizationIntegrationTest extends TestCase
 
         $response = $this->actingAs($user)
             ->withSession([
-                'current_garage_id'  => $garage->id,
+                'current_garage_id' => $garage->id,
                 'current_company_id' => $company->id,
             ])
             ->get(route('dashboard'));

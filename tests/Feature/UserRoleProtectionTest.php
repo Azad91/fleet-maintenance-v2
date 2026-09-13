@@ -20,14 +20,14 @@ class UserRoleProtectionTest extends TestCase
     {
         $this->assertNotContains(
             'role',
-            (new User())->getFillable(),
+            (new User)->getFillable(),
             'role must NOT be mass-assignable'
         );
     }
 
     public function test_default_role_is_user(): void
     {
-        $user = new User();
+        $user = new User;
 
         $this->assertEquals(
             RoleEnum::USER->value,
@@ -39,8 +39,8 @@ class UserRoleProtectionTest extends TestCase
     public function test_create_without_role_defaults_to_user(): void
     {
         $user = User::create([
-            'name'     => 'Test User',
-            'email'    => 'default@test.com',
+            'name' => 'Test User',
+            'email' => 'default@test.com',
             'password' => bcrypt('secret'),
         ]);
 
@@ -54,10 +54,10 @@ class UserRoleProtectionTest extends TestCase
     public function test_role_cannot_be_mass_assigned_to_super_admin(): void
     {
         $user = User::create([
-            'name'     => 'Attacker',
-            'email'    => 'attacker@test.com',
+            'name' => 'Attacker',
+            'email' => 'attacker@test.com',
             'password' => bcrypt('secret'),
-            'role'     => RoleEnum::SUPER_ADMIN->value, // ← spoofing attempt
+            'role' => RoleEnum::SUPER_ADMIN->value, // ← spoofing attempt
         ]);
 
         $this->assertEquals(
@@ -70,8 +70,8 @@ class UserRoleProtectionTest extends TestCase
     public function test_update_cannot_mass_assign_role_to_super_admin(): void
     {
         $user = User::create([
-            'name'     => 'Regular',
-            'email'    => 'regular@test.com',
+            'name' => 'Regular',
+            'email' => 'regular@test.com',
             'password' => bcrypt('secret'),
         ]);
 
@@ -86,7 +86,7 @@ class UserRoleProtectionTest extends TestCase
 
     public function test_fill_role_is_ignored(): void
     {
-        $user = new User();
+        $user = new User;
         $user->fill(['role' => RoleEnum::SUPER_ADMIN->value]);
 
         $this->assertEquals(
@@ -103,8 +103,8 @@ class UserRoleProtectionTest extends TestCase
     public function test_forcefill_can_set_role_explicitly(): void
     {
         $user = User::create([
-            'name'     => 'Forcefill',
-            'email'    => 'forcefill@test.com',
+            'name' => 'Forcefill',
+            'email' => 'forcefill@test.com',
             'password' => bcrypt('secret'),
         ]);
 
@@ -119,8 +119,8 @@ class UserRoleProtectionTest extends TestCase
     public function test_promote_to_super_admin_helper_works(): void
     {
         $user = User::create([
-            'name'     => 'Promote',
-            'email'    => 'promote@test.com',
+            'name' => 'Promote',
+            'email' => 'promote@test.com',
             'password' => bcrypt('secret'),
         ]);
 
@@ -136,8 +136,8 @@ class UserRoleProtectionTest extends TestCase
     public function test_demote_to_regular_user_helper_works(): void
     {
         $user = User::create([
-            'name'     => 'Demote',
-            'email'    => 'demote@test.com',
+            'name' => 'Demote',
+            'email' => 'demote@test.com',
             'password' => bcrypt('secret'),
         ]);
         $user->promoteToSuperAdmin()->save();
@@ -156,8 +156,8 @@ class UserRoleProtectionTest extends TestCase
     {
         // First super admin — OK
         User::create([
-            'name'     => 'First',
-            'email'    => 'first@test.com',
+            'name' => 'First',
+            'email' => 'first@test.com',
             'password' => bcrypt('secret'),
         ])->promoteToSuperAdmin()->save();
 
@@ -165,8 +165,8 @@ class UserRoleProtectionTest extends TestCase
         $this->expectException(QueryException::class);
 
         User::create([
-            'name'     => 'Second',
-            'email'    => 'second@test.com',
+            'name' => 'Second',
+            'email' => 'second@test.com',
             'password' => bcrypt('secret'),
         ])->promoteToSuperAdmin()->save();
     }

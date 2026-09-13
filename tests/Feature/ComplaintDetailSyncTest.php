@@ -52,11 +52,11 @@ class ComplaintDetailSyncTest extends TestCase
             'company_id' => $this->company->id,
         ]);
 
-        $this->stockService = new ComplaintStockService();
+        $this->stockService = new ComplaintStockService;
         $this->service = new ComplaintService(
             $this->stockService,
-            new ComplaintItemService(),
-            new ComplaintStatusTransitionService()
+            new ComplaintItemService,
+            new ComplaintStatusTransitionService
         );
     }
 
@@ -80,11 +80,11 @@ class ComplaintDetailSyncTest extends TestCase
     private function baseData(): array
     {
         return [
-            'bus_id'         => $this->bus->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
-            'km'             => 1000,
+            'km' => 1000,
         ];
     }
 

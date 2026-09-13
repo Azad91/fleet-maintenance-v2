@@ -27,7 +27,7 @@ class PinLoginRequest extends FormRequest
     {
         return [
             'employee_code' => ['required', 'string', 'max:50'],
-            'pin'           => ['required', 'string', 'digits_between:4,6'],
+            'pin' => ['required', 'string', 'digits_between:4,6'],
         ];
     }
 
@@ -41,7 +41,7 @@ class PinLoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $code = mb_strtoupper(trim((string) $this->input('employee_code')));
-        $pin  = (string) $this->input('pin');
+        $pin = (string) $this->input('pin');
 
         $user = User::where('employee_code', $code)->first();
 
@@ -117,6 +117,6 @@ class PinLoginRequest extends FormRequest
     {
         $code = Str::transliterate(Str::lower((string) $this->input('employee_code')));
 
-        return $code . '|' . $this->ip();
+        return $code.'|'.$this->ip();
     }
 }

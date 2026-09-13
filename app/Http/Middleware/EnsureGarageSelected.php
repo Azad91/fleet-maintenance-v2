@@ -17,7 +17,7 @@ class EnsureGarageSelected
             return redirect()->route('login');
         }
 
-        $garageId  = $request->session()->get('current_garage_id');
+        $garageId = $request->session()->get('current_garage_id');
         $companyId = $request->session()->get('current_company_id');
 
         // Directors have no garage context. If they somehow reach a

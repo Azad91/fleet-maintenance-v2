@@ -27,13 +27,13 @@ return [
     |--------------------------------------------------------------------------
     */
     'status_colors' => [
-        'pending'     => 'warning',
+        'pending' => 'warning',
         'in_progress' => 'primary',
-        'completed'   => 'success',
-        'cancelled'   => 'secondary',
-        'active'      => 'success',
-        'inactive'    => 'danger',
-        'repair'      => 'warning',
+        'completed' => 'success',
+        'cancelled' => 'secondary',
+        'active' => 'success',
+        'inactive' => 'danger',
+        'repair' => 'warning',
     ],
 
     /*
@@ -42,8 +42,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'complaint_types' => [
-        'accident'    => '🚗 Accident',
-        'breakdown'   => '⚠️ Breakdown',
+        'accident' => '🚗 Accident',
+        'breakdown' => '⚠️ Breakdown',
         'maintenance' => '🔧 Maintenance',
     ],
 
@@ -53,12 +53,12 @@ return [
     |--------------------------------------------------------------------------
     */
     'employee_positions' => [
-        'master'      => '🔧 Master',
-        'mechanic'    => '🔩 Mechanic',
-        'driver'      => '🚌 Driver',
+        'master' => '🔧 Master',
+        'mechanic' => '🔩 Mechanic',
+        'driver' => '🚌 Driver',
         'electrician' => '⚡ Electrician',
-        'welder'      => '🔥 Welder',
-        'painter'     => '🎨 Painter',
-        'other'       => '📌 Other',
+        'welder' => '🔥 Welder',
+        'painter' => '🎨 Painter',
+        'other' => '📌 Other',
     ],
 ];

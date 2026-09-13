@@ -198,7 +198,7 @@ class DailyKmRecordController extends Controller
 
             Excel::import($import, $request->file('file'));
 
-            $skipped  = $import->skipped;
+            $skipped = $import->skipped;
             $imported = $import->importedCount;
 
             if (empty($skipped)) {
@@ -215,6 +215,7 @@ class DailyKmRecordController extends Controller
 
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('daily-km-records.index')
                 ->with('error', __('messages.flash.import_error'));
         }

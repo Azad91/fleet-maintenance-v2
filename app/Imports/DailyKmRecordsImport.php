@@ -28,10 +28,10 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
             }
         }
 
-        $cacheKey = 'km_mapping_' . $this->garageId . '_' . ($this->companyId ?? 0);
+        $cacheKey = 'km_mapping_'.$this->garageId.'_'.($this->companyId ?? 0);
 
         if ($isFirstChunk) {
-            $dateRow   = $rows->get(0)->toArray();
+            $dateRow = $rows->get(0)->toArray();
             $headerRow = $rows->get(1)->toArray();
 
             $kmColumns = [];
@@ -62,7 +62,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
             $dataRows = $rows->slice(2);
         } else {
             $kmColumns = Cache::get($cacheKey, []);
-            $dataRows  = $rows;
+            $dataRows = $rows;
         }
 
         if (empty($kmColumns)) {
@@ -97,11 +97,11 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
                 DailyKmRecord::withoutGlobalScopes()->updateOrCreate(
                     [
                         'bus_id' => $bus->id,
-                        'date'   => $dateString,
+                        'date' => $dateString,
                     ],
                     [
-                        'km'         => (int) $km,
-                        'garage_id'  => $bus->garage_id ?? $this->garageId,
+                        'km' => (int) $km,
+                        'garage_id' => $bus->garage_id ?? $this->garageId,
                         'company_id' => $bus->company_id ?? $this->companyId,
                     ]
                 );

@@ -34,7 +34,7 @@ abstract class AbstractImport
     protected int $rowCounter = 0;
 
     /**
-     * @param  int       $garageId   Must be > 0.
+     * @param  int  $garageId  Must be > 0.
      * @param  int|null  $companyId  Optional, used for strict company scoping.
      *
      * @throws \InvalidArgumentException when $garageId is not positive.
@@ -46,7 +46,7 @@ abstract class AbstractImport
         if ($garageId <= 0) {
             throw new \InvalidArgumentException(sprintf(
                 '%s requires a valid garage id (> 0). Got [%d]. '
-                . 'Make sure a garage is selected before starting the import.',
+                .'Make sure a garage is selected before starting the import.',
                 static::class,
                 $garageId,
             ));
@@ -85,8 +85,8 @@ abstract class AbstractImport
     protected function recordSkip(int|string $row, string $identifier, string $reason): void
     {
         $this->skipped[] = [
-            'row'    => $row,
-            'dqn'    => $identifier !== '' ? $identifier : '—',
+            'row' => $row,
+            'dqn' => $identifier !== '' ? $identifier : '—',
             'reason' => $reason,
         ];
     }

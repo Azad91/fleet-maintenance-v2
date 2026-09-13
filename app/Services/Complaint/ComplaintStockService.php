@@ -17,7 +17,7 @@ class ComplaintStockService
      * simply "I did not use this part".
      *
      * @param  array<int, array<string, mixed>>  $details
-     * @return array<int, array<string, mixed>>  Only rows that actually affect stock
+     * @return array<int, array<string, mixed>> Only rows that actually affect stock
      */
     public function deductStock(array $details): array
     {
@@ -49,7 +49,7 @@ class ComplaintStockService
             if ($warehouse->quantity < $usedQuantity) {
                 throw ValidationException::withMessages([
                     'details' => __('messages.flash.stock_insufficient', [
-                        'name'      => $warehouse->name,
+                        'name' => $warehouse->name,
                         'requested' => $usedQuantity,
                         'available' => $warehouse->quantity,
                     ]),
@@ -58,12 +58,12 @@ class ComplaintStockService
 
             $processed[] = [
                 'shikayet_index' => $detail['shikayet_index'] ?? 0,
-                'code'           => $code,
-                'name'           => $warehouse->name,
+                'code' => $code,
+                'name' => $warehouse->name,
                 'stock_quantity' => $warehouse->quantity,
-                'used_quantity'  => $usedQuantity,
-                'employee_id'    => $detail['employee_id'] ?? null,
-                'notes'          => $detail['notes'] ?? null,
+                'used_quantity' => $usedQuantity,
+                'employee_id' => $detail['employee_id'] ?? null,
+                'notes' => $detail['notes'] ?? null,
             ];
 
             $warehouse->quantity -= $usedQuantity;
@@ -106,14 +106,14 @@ class ComplaintStockService
      *
      * @param  array<int, array<string, mixed>>  $oldDetails
      * @param  array<int, array<string, mixed>>  $newDetails
-     * @return array<int, array<string, mixed>>  The processed new details
+     * @return array<int, array<string, mixed>> The processed new details
      */
     public function syncStockDiff(array $oldDetails, array $newDetails): array
     {
         $oldUsage = [];
         foreach ($oldDetails as $detail) {
             $code = $detail['code'] ?? null;
-            $qty  = (int) ($detail['used_quantity'] ?? 0);
+            $qty = (int) ($detail['used_quantity'] ?? 0);
             if (! empty($code) && $qty > 0) {
                 $oldUsage[$code] = ($oldUsage[$code] ?? 0) + $qty;
             }
@@ -122,7 +122,7 @@ class ComplaintStockService
         $newUsage = [];
         foreach ($newDetails as $detail) {
             $code = $detail['code'] ?? null;
-            $qty  = (int) ($detail['used_quantity'] ?? 0);
+            $qty = (int) ($detail['used_quantity'] ?? 0);
             if (! empty($code) && $qty > 0) {
                 $newUsage[$code] = ($newUsage[$code] ?? 0) + $qty;
             }
@@ -138,7 +138,7 @@ class ComplaintStockService
         foreach ($allCodes as $code) {
             $oldQty = $oldUsage[$code] ?? 0;
             $newQty = $newUsage[$code] ?? 0;
-            $diff   = $newQty - $oldQty;
+            $diff = $newQty - $oldQty;
 
             $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
 
@@ -152,7 +152,7 @@ class ComplaintStockService
                 if ($diff > 0 && $warehouse->quantity < $diff) {
                     throw ValidationException::withMessages([
                         'details' => __('messages.flash.stock_insufficient', [
-                            'name'      => $warehouse->name,
+                            'name' => $warehouse->name,
                             'requested' => $diff,
                             'available' => $warehouse->quantity,
                         ]),
@@ -193,12 +193,12 @@ class ComplaintStockService
 
             $processed[] = [
                 'shikayet_index' => $detail['shikayet_index'] ?? 0,
-                'code'           => $code,
-                'name'           => $warehouse?->name ?? ($detail['name'] ?? $code),
+                'code' => $code,
+                'name' => $warehouse?->name ?? ($detail['name'] ?? $code),
                 'stock_quantity' => $warehouse?->quantity ?? 0,
-                'used_quantity'  => $usedQuantity,
-                'employee_id'    => $detail['employee_id'] ?? null,
-                'notes'          => $detail['notes'] ?? null,
+                'used_quantity' => $usedQuantity,
+                'employee_id' => $detail['employee_id'] ?? null,
+                'notes' => $detail['notes'] ?? null,
             ];
         }
 

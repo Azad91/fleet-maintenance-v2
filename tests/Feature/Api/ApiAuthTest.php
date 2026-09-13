@@ -14,14 +14,14 @@ class ApiAuthTest extends TestCase
     public function test_login_endpoint_is_reachable_without_garage_header(): void
     {
         $user = User::factory()->create([
-            'email'    => 'api@test.com',
+            'email' => 'api@test.com',
             'password' => Hash::make('secret123'),
-            'role'     => 'user',
+            'role' => 'user',
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'       => 'api@test.com',
-            'password'    => 'secret123',
+            'email' => 'api@test.com',
+            'password' => 'secret123',
             'device_name' => 'phpunit',
         ]);
 
@@ -35,13 +35,13 @@ class ApiAuthTest extends TestCase
     public function test_login_fails_with_wrong_password(): void
     {
         User::factory()->create([
-            'email'    => 'api@test.com',
+            'email' => 'api@test.com',
             'password' => Hash::make('secret123'),
-            'role'     => 'user',
+            'role' => 'user',
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'    => 'api@test.com',
+            'email' => 'api@test.com',
             'password' => 'wrong-password',
         ]);
 

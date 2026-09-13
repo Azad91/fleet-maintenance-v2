@@ -15,7 +15,7 @@ class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReadi
     public function onRow(Row $row): void
     {
         $currentRow = $this->nextRowIndex();
-        $rowArray   = $row->toArray();
+        $rowArray = $row->toArray();
 
         if (empty($this->kmColumns)) {
             foreach ($rowArray as $key => $value) {
@@ -27,7 +27,7 @@ class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReadi
 
         $partCode = $rowArray['part_code'] ?? null;
         $partName = $rowArray['part_name'] ?? null;
-        $unit     = $rowArray['unit'] ?? null;
+        $unit = $rowArray['unit'] ?? null;
         $quantity = (float) ($rowArray['quantity'] ?? 0);
 
         if (! $partCode) {
@@ -45,10 +45,10 @@ class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReadi
                 MotorOilDetail::create([
                     'part_code' => $partCode,
                     'part_name' => $partName,
-                    'unit'      => $unit,
-                    'quantity'  => $quantity,
-                    'km'        => $km,
-                    'count'     => $count,
+                    'unit' => $unit,
+                    'quantity' => $quantity,
+                    'km' => $km,
+                    'count' => $count,
                 ]);
 
                 $createdForThisRow++;

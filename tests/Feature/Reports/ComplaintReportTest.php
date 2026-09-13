@@ -2,12 +2,11 @@
 
 namespace Tests\Feature\Reports;
 
+use App\Enums\ComplaintType;
 use App\Models\Bus;
 use App\Models\Company;
 use App\Models\Complaint;
 use App\Models\Garage;
-use App\Models\User;
-use App\Enums\ComplaintType;
 use App\Services\GarageContext;
 use App\Services\Reports\ComplaintReportService;
 use App\Services\Reports\ReportPeriod;
@@ -43,19 +42,19 @@ class ComplaintReportTest extends TestCase
         GarageContext::set($this->garageA->id, $this->company->id);
 
         $this->busA = Bus::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageA->id,
-            'company_id'   => $this->company->id,
-            'dqn'          => 'AA-001',
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'dqn' => 'AA-001',
             'route_number' => '101',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $this->busB = Bus::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageB->id,
-            'company_id'   => $this->company->id,
-            'dqn'          => 'BB-001',
+            'garage_id' => $this->garageB->id,
+            'company_id' => $this->company->id,
+            'dqn' => 'BB-001',
             'route_number' => '202',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $this->service = app(ComplaintReportService::class);
@@ -78,29 +77,29 @@ class ComplaintReportTest extends TestCase
     {
         // Garage A: 2 open
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'in_progress',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'in_progress',
             'complaint_type' => 'breakdown',
         ]);
 
         // Garage B: 1 open
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busB->id,
-            'garage_id'      => $this->garageB->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->busB->id,
+            'garage_id' => $this->garageB->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
@@ -117,37 +116,37 @@ class ComplaintReportTest extends TestCase
     public function test_top_types_isolated_by_garage(): void
     {
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'accident',
         ]);
         // Garage B: 5 of maintenance (should NOT appear)
         for ($i = 0; $i < 5; $i++) {
             Complaint::withoutGlobalScopes()->create([
-                'bus_id'         => $this->busB->id,
-                'garage_id'      => $this->garageB->id,
-                'company_id'     => $this->company->id,
-                'yer'            => 'garage',
-                'status'         => 'pending',
+                'bus_id' => $this->busB->id,
+                'garage_id' => $this->garageB->id,
+                'company_id' => $this->company->id,
+                'yer' => 'garage',
+                'status' => 'pending',
                 'complaint_type' => 'maintenance',
             ]);
         }
@@ -169,19 +168,19 @@ class ComplaintReportTest extends TestCase
     public function test_by_bus_groups_correctly(): void
     {
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'completed',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'completed',
             'complaint_type' => 'breakdown',
         ]);
         Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
@@ -210,11 +209,11 @@ class ComplaintReportTest extends TestCase
     public function test_avg_close_time_computes_correctly(): void
     {
         $complaint = Complaint::withoutGlobalScopes()->create([
-            'bus_id'         => $this->busA->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'completed',
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'completed',
             'complaint_type' => 'breakdown',
         ]);
 
@@ -224,7 +223,7 @@ class ComplaintReportTest extends TestCase
         // overwritten by now().
         DB::table('complaints')->where('id', $complaint->id)->update([
             'created_at' => now()->subDays(3),
-            'closed_at'  => now()->subDay(),
+            'closed_at' => now()->subDay(),
         ]);
 
         $scope = new ReportScope([$this->garageA->id], null, false);

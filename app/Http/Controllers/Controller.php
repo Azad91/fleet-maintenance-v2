@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleEnum;
 use App\Models\Garage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -28,7 +27,7 @@ abstract class Controller
 
     protected function addGarageContext(array $data): array
     {
-        $data['garage_id']  = Garage::getCurrentId();
+        $data['garage_id'] = Garage::getCurrentId();
         $data['company_id'] = Garage::getCurrentCompanyId();
 
         return $data;
@@ -55,14 +54,14 @@ abstract class Controller
     {
         $report = [
             'imported' => $imported,
-            'skipped'  => [],
-            'failed'   => [],
+            'skipped' => [],
+            'failed' => [],
         ];
 
         foreach ($skipped as $row) {
             $report['skipped'][] = [
-                'row'    => $row['row'] ?? '—',
-                'dqn'    => $row['dqn'] ?? '—',
+                'row' => $row['row'] ?? '—',
+                'dqn' => $row['dqn'] ?? '—',
                 'reason' => $row['reason'] ?? 'Unknown reason',
             ];
         }
@@ -70,8 +69,8 @@ abstract class Controller
         foreach ($failures as $failure) {
             $values = $failure->values();
             $report['failed'][] = [
-                'row'    => $failure->row(),
-                'dqn'    => $values['bus_dqn']
+                'row' => $failure->row(),
+                'dqn' => $values['bus_dqn']
                     ?? $values['dqn']
                     ?? $values['kodu']
                     ?? $values['code']

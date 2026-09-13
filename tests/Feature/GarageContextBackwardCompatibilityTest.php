@@ -23,7 +23,7 @@ class GarageContextBackwardCompatibilityTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         GarageContext::clear();
     }
@@ -49,7 +49,7 @@ class GarageContextBackwardCompatibilityTest extends TestCase
     public function test_legacy_get_current_id_resolves_via_session(): void
     {
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -59,8 +59,8 @@ class GarageContextBackwardCompatibilityTest extends TestCase
     public function test_legacy_get_current_id_resolves_via_auth(): void
     {
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => $this->garage->id,
+            'role' => 'user',
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
         $this->actingAs($user);
@@ -91,7 +91,7 @@ class GarageContextBackwardCompatibilityTest extends TestCase
     public function test_bus_created_from_session_gets_garage_id(): void
     {
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -104,8 +104,8 @@ class GarageContextBackwardCompatibilityTest extends TestCase
     public function test_bus_created_from_auth_user_gets_garage_id(): void
     {
         $user = User::factory()->create([
-            'role'               => 'user',
-            'current_garage_id'  => $this->garage->id,
+            'role' => 'user',
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
         $this->actingAs($user);
@@ -123,10 +123,10 @@ class GarageContextBackwardCompatibilityTest extends TestCase
         $otherGarage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $bus = Bus::create([
-            'garage_id'  => $otherGarage->id,
+            'garage_id' => $otherGarage->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'MANUAL-001',
-            'is_active'  => true,
+            'dqn' => 'MANUAL-001',
+            'is_active' => true,
         ]);
 
         $this->assertSame($otherGarage->id, $bus->garage_id);

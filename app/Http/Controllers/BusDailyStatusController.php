@@ -133,7 +133,7 @@ class BusDailyStatusController extends Controller
 
             Excel::import($import, $request->file('file'));
 
-            $skipped  = $import->skipped;
+            $skipped = $import->skipped;
             $imported = $import->importedCount;
 
             if (empty($skipped)) {
@@ -150,6 +150,7 @@ class BusDailyStatusController extends Controller
 
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('bus-daily-statuses.index')
                 ->with('error', __('messages.flash.import_error'));
         }

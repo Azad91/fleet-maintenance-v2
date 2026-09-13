@@ -36,20 +36,20 @@ return Application::configure(basePath: dirname(__DIR__))
         }
 
         // Global middleware — hər request üçün
-        $middleware->append(\App\Http\Middleware\RequestIdMiddleware::class);
+        $middleware->append(App\Http\Middleware\RequestIdMiddleware::class);
 
         // Web middleware additions
         $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
-            \App\Http\Middleware\EnforcePinChange::class,
+            App\Http\Middleware\SetLocale::class,
+            App\Http\Middleware\EnforcePinChange::class,
         ]);
 
         $middleware->alias([
-            'role'            => \App\Http\Middleware\RoleMiddleware::class,
-            'garage.selected' => \App\Http\Middleware\EnsureGarageSelected::class,
-            'idempotent'      => \App\Http\Middleware\IdempotencyMiddleware::class,
-            'api.garage'      => \App\Http\Middleware\EnsureApiGarageContext::class,
-            'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'role' => App\Http\Middleware\RoleMiddleware::class,
+            'garage.selected' => App\Http\Middleware\EnsureGarageSelected::class,
+            'idempotent' => App\Http\Middleware\IdempotencyMiddleware::class,
+            'api.garage' => App\Http\Middleware\EnsureApiGarageContext::class,
+            'super.admin' => App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -97,7 +97,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => __('messages.flash.no_garage'),
-                    'error'   => 'garage_context_missing',
+                    'error' => 'garage_context_missing',
                 ], 500);
             }
 
@@ -114,16 +114,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            $status  = $e->getStatusCode();
+            $status = $e->getStatusCode();
             $message = match ($status) {
-                419     => 'Sessiyanın vaxtı bitdi. Zəhmət olmasa səhifəni yeniləyin.',
-                429     => 'Çox sayda sorğu göndərildi. Bir az gözləyin.',
+                419 => 'Sessiyanın vaxtı bitdi. Zəhmət olmasa səhifəni yeniləyin.',
+                429 => 'Çox sayda sorğu göndərildi. Bir az gözləyin.',
                 default => $e->getMessage() ?: 'HTTP xətası',
             };
 
             return response()->json([
                 'message' => $message,
-                'status'  => $status,
+                'status' => $status,
             ], $status);
         });
 
@@ -142,13 +142,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             // Real server xətalarını log edirik
-            \Log::error($e->getMessage(), [
-                'exception'  => get_class($e),
-                'file'       => $e->getFile(),
-                'line'       => $e->getLine(),
-                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
-                'user_id'    => auth()->id(),
-                'url'        => request()?->fullUrl(),
+            Log::error($e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'request_id' => Illuminate\Support\Facades\Context::get('request_id'),
+                'user_id' => auth()->id(),
+                'url' => request()?->fullUrl(),
             ]);
         });
     })->create();

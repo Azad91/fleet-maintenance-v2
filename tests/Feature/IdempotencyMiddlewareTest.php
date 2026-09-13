@@ -53,7 +53,7 @@ class IdempotencyMiddlewareTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -64,7 +64,7 @@ class IdempotencyMiddlewareTest extends TestCase
     private function sessionFor(Garage $garage): array
     {
         return [
-            'current_garage_id'  => $garage->id,
+            'current_garage_id' => $garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -176,19 +176,19 @@ class IdempotencyMiddlewareTest extends TestCase
 
     public function test_filter_headers_removes_dangerous_headers(): void
     {
-        $middleware = new \App\Http\Middleware\IdempotencyMiddleware();
+        $middleware = new \App\Http\Middleware\IdempotencyMiddleware;
 
         $reflection = new \ReflectionMethod($middleware, 'filterHeaders');
         $reflection->setAccessible(true);
 
         $input = [
-            'Content-Type'      => ['application/json'],
-            'Set-Cookie'        => ['session=secret; HttpOnly; Path=/'],
-            'Cookie'            => ['foo=bar'],
-            'Date'              => ['Thu, 10 Sep 2026 12:00:00 GMT'],
-            'Content-Length'    => ['1234'],
+            'Content-Type' => ['application/json'],
+            'Set-Cookie' => ['session=secret; HttpOnly; Path=/'],
+            'Cookie' => ['foo=bar'],
+            'Date' => ['Thu, 10 Sep 2026 12:00:00 GMT'],
+            'Content-Length' => ['1234'],
             'Transfer-Encoding' => ['chunked'],
-            'X-Custom-Header'   => ['keep-this'],
+            'X-Custom-Header' => ['keep-this'],
         ];
 
         $result = $reflection->invoke($middleware, $input);

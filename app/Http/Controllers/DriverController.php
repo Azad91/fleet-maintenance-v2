@@ -99,7 +99,7 @@ class DriverController extends Controller
 
             Excel::import($import, $request->file('file'));
 
-            $skipped  = $import->skipped;
+            $skipped = $import->skipped;
             $imported = $import->importedCount;
 
             if (empty($skipped)) {
@@ -116,6 +116,7 @@ class DriverController extends Controller
 
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('drivers.index')
                 ->with('error', __('messages.flash.import_error'));
         }

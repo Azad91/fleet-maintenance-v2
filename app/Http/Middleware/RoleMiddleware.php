@@ -24,6 +24,7 @@ class RoleMiddleware
             if ($garageId) {
                 GarageContext::set((int) $garageId, $companyId ? (int) $companyId : null);
             }
+
             return $next($request);
         }
 
@@ -47,6 +48,7 @@ class RoleMiddleware
                 'current_company_name',
             ]);
             GarageContext::clear();
+
             return redirect()->route('garage.selection')
                 ->with('error', __('messages.flash.garage_access_denied'));
         }

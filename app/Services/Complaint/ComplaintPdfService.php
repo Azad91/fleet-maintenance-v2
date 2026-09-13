@@ -41,7 +41,7 @@ class ComplaintPdfService
     public function save(Complaint $complaint): string
     {
         $pdf = $this->generate($complaint);
-        $relativePath = self::PDF_DIR . "/akt-{$complaint->id}.pdf";
+        $relativePath = self::PDF_DIR."/akt-{$complaint->id}.pdf";
 
         Storage::disk('local')->put($relativePath, $pdf->output());
 
@@ -51,21 +51,21 @@ class ComplaintPdfService
     public function getFilePath(Complaint $complaint): string
     {
         return Storage::disk('local')->path(
-            self::PDF_DIR . "/akt-{$complaint->id}.pdf"
+            self::PDF_DIR."/akt-{$complaint->id}.pdf"
         );
     }
 
     public function exists(Complaint $complaint): bool
     {
         return Storage::disk('local')->exists(
-            self::PDF_DIR . "/akt-{$complaint->id}.pdf"
+            self::PDF_DIR."/akt-{$complaint->id}.pdf"
         );
     }
 
     public function delete(Complaint $complaint): bool
     {
         return Storage::disk('local')->delete(
-            self::PDF_DIR . "/akt-{$complaint->id}.pdf"
+            self::PDF_DIR."/akt-{$complaint->id}.pdf"
         );
     }
 }

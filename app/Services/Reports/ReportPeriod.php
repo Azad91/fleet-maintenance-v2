@@ -33,10 +33,10 @@ class ReportPeriod
         }
 
         return match ($preset) {
-            'daily'   => new self(now()->startOfDay(), now()->endOfDay(), 'daily'),
-            'weekly'  => new self(now()->startOfWeek(), now()->endOfWeek(), 'weekly'),
-            'custom'  => self::fromCustom($request),
-            default   => new self(now()->startOfMonth(), now()->endOfMonth(), 'monthly'),
+            'daily' => new self(now()->startOfDay(), now()->endOfDay(), 'daily'),
+            'weekly' => new self(now()->startOfWeek(), now()->endOfWeek(), 'weekly'),
+            'custom' => self::fromCustom($request),
+            default => new self(now()->startOfMonth(), now()->endOfMonth(), 'monthly'),
         };
     }
 
@@ -47,7 +47,7 @@ class ReportPeriod
     {
         try {
             $from = Carbon::parse($request->input('from'))->startOfDay();
-            $to   = Carbon::parse($request->input('to'))->endOfDay();
+            $to = Carbon::parse($request->input('to'))->endOfDay();
 
             // Swap if reversed
             if ($from->greaterThan($to)) {
@@ -65,7 +65,7 @@ class ReportPeriod
      */
     public function label(): string
     {
-        return $this->from->format('d.m.Y') . ' — ' . $this->to->format('d.m.Y');
+        return $this->from->format('d.m.Y').' — '.$this->to->format('d.m.Y');
     }
 
     /**
@@ -95,7 +95,7 @@ class ReportPeriod
 
         if ($this->preset === 'custom') {
             $query['from'] = $this->from->format('Y-m-d');
-            $query['to']   = $this->to->format('Y-m-d');
+            $query['to'] = $this->to->format('Y-m-d');
         }
 
         return $query;

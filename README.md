@@ -146,6 +146,43 @@ php artisan test
 - Laravel Excel (`maatwebsite/excel`)
 - DomPDF (`barryvdh/laravel-dompdf`)
 
+
+## Production Deploy Checklist
+
+### 1. Təhlükəsizlik
+
+- `.env.production` faylı **yalnız serverdə** saxlanmalıdır — git-ə heç vaxt commit etmə.
+- `APP_DEBUG=false` **mütləqdir** — stack trace-lər istifadəçiyə göstərilməməlidir.
+- `APP_KEY` `php artisan key:generate --show` ilə yaradılmalı və `.env.production`-a yazılmalıdır.
+- `SUPER_ADMIN_PASSWORD` env dəyişəni ilə təyin et, yoxsa ilk seed təsadüfi güclü parol generasiya edəcək (BİR DƏFƏ konsola çap olunacaq).
+
+### 2. Reverse Proxy (Nginx / Cloudflare / ALB)
+
+Əksər production deployment-lər reverse proxy arxasında olur. `TRUSTED_PROXIES` düzgün təyin olunmasa:
+
+- **Rate limiting** səhv işləyir (hamı proxy-nin IP-si ilə eyni bucket-a düşür)
+- **Audit log-lar** yanlış IP-lər yazır
+- **Session secure cookie** HTTPS sxemini təyin edə bilmir → redirect loop
+
+`.env.production`-da ssenariyə uyğun dəyər qoy:
+
+| Arxitektura | Dəyər |
+|-------------|-------|
+| Nginx eyni serverdə | `127.0.0.1` |
+| Nginx ayrı Docker-də | `172.16.0.0/12,10.0.0.0/8` |
+| Cloudflare | [rəsmi IP siyahısı](https://www.cloudflare.com/ips/) |
+| AWS ALB | VPC CIDR (məs. `10.0.0.0/8`) |
+
+⚠️ **`TRUSTED_PROXIES=*` HEÇ VAXT istifadə etmə** — bu, IP spoofing-ə imkan verir.
+
+### 3. HTTPS və Cookie Təhlükəsizliyi
+
+`.env.production`-da:
+
+```dotenv
+SESSION_SECURE_COOKIE=true
+SESSION_HTTP_ONLY=true
+SESSION_SAME_SITE=lax
 ## Təhlükəsizlik qeydləri
 
 - `.env` faylını GitHub-a göndərməyin.

@@ -30,7 +30,7 @@ class ComplaintStatusTransitionService
             throw ValidationException::withMessages([
                 'status' => __('messages.flash.invalid_status_transition', [
                     'from' => $current->value,
-                    'to'   => (string) $newStatus,
+                    'to' => (string) $newStatus,
                 ]),
             ]);
         }
@@ -43,7 +43,7 @@ class ComplaintStatusTransitionService
             throw ValidationException::withMessages([
                 'status' => __('messages.flash.invalid_status_transition', [
                     'from' => $current->value,
-                    'to'   => $next->value,
+                    'to' => $next->value,
                 ]),
             ]);
         }

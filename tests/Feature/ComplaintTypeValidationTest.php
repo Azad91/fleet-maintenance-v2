@@ -4,10 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\ComplaintType;
 use App\Models\Bus;
+use App\Models\Company;
 use App\Models\Complaint;
 use App\Models\ComplaintType as ComplaintTypeModel;
-use App\Models\Company;
-use App\Models\Driver;
 use App\Models\Garage;
 use App\Models\User;
 use App\Services\GarageContext;
@@ -45,19 +44,19 @@ class ComplaintTypeValidationTest extends TestCase
         // Seed a complaint type for the current garage, so the
         // `complaints.*` validation rule (Rule::exists) passes.
         ComplaintTypeModel::withoutGlobalScopes()->create([
-            'name'       => $this->validDescription,
-            'garage_id'  => $this->garage->id,
+            'name' => $this->validDescription,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
     }
@@ -71,7 +70,7 @@ class ComplaintTypeValidationTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -79,11 +78,11 @@ class ComplaintTypeValidationTest extends TestCase
     private function basePayload(array $overrides = []): array
     {
         return array_merge([
-            'bus_id'         => $this->bus->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
-            'complaints'     => [$this->validDescription],
+            'complaints' => [$this->validDescription],
         ], $overrides);
     }
 
@@ -140,22 +139,22 @@ class ComplaintTypeValidationTest extends TestCase
     public function test_update_accepts_valid_complaint_type(): void
     {
         $complaint = Complaint::create([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('complaints.update', $complaint), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'garage',
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'garage',
+                'status' => 'pending',
                 'complaint_type' => 'accident',
-                'complaints'     => [$this->validDescription],
+                'complaints' => [$this->validDescription],
             ]);
 
         $response->assertSessionHasNoErrors();
@@ -165,22 +164,22 @@ class ComplaintTypeValidationTest extends TestCase
     public function test_update_rejects_invalid_complaint_type(): void
     {
         $complaint = Complaint::create([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('complaints.update', $complaint), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'garage',
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'garage',
+                'status' => 'pending',
                 'complaint_type' => 'not_a_real_type',
-                'complaints'     => [$this->validDescription],
+                'complaints' => [$this->validDescription],
             ]);
 
         $response->assertSessionHasErrors('complaint_type');

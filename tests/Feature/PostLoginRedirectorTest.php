@@ -27,12 +27,12 @@ class PostLoginRedirectorTest extends TestCase
 
         $this->garageA = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'is_active'  => true,
+            'is_active' => true,
         ]);
 
         $this->garageB = Garage::factory()->create([
             'company_id' => $this->company->id,
-            'is_active'  => true,
+            'is_active' => true,
         ]);
     }
 
@@ -43,21 +43,21 @@ class PostLoginRedirectorTest extends TestCase
     public function test_director_email_login_redirects_to_director_dashboard(): void
     {
         $director = User::factory()->create([
-            'email'          => 'director@test.com',
-            'password'       => Hash::make('password'),
-            'role'           => 'user',
-            'employee_code'  => 'DIR-TEST-1',
-            'is_active'      => true,
+            'email' => 'director@test.com',
+            'password' => Hash::make('password'),
+            'role' => 'user',
+            'employee_code' => 'DIR-TEST-1',
+            'is_active' => true,
         ]);
 
         // Attach Director role via company_user pivot — NOT users.role.
         $this->company->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
         $response = $this->post('/login', [
-            'email'    => 'director@test.com',
+            'email' => 'director@test.com',
             'password' => 'password',
         ]);
 
@@ -72,23 +72,23 @@ class PostLoginRedirectorTest extends TestCase
     public function test_director_pin_login_redirects_to_director_dashboard(): void
     {
         $director = User::factory()->create([
-            'email'          => 'director@test.com',
-            'password'       => Hash::make('password'),
-            'role'           => 'user',
-            'employee_code'  => 'DIR-TEST-2',
-            'pin'            => Hash::make('1234'),
+            'email' => 'director@test.com',
+            'password' => Hash::make('password'),
+            'role' => 'user',
+            'employee_code' => 'DIR-TEST-2',
+            'pin' => Hash::make('1234'),
             'pin_is_default' => false, // Skip force-change flow
-            'is_active'      => true,
+            'is_active' => true,
         ]);
 
         $this->company->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
         $response = $this->post('/login/pin', [
             'employee_code' => 'DIR-TEST-2',
-            'pin'           => '1234',
+            'pin' => '1234',
         ]);
 
         $response->assertRedirect(route('director.dashboard'));
@@ -102,19 +102,19 @@ class PostLoginRedirectorTest extends TestCase
     public function test_user_with_single_garage_is_auto_selected_and_redirected_to_dashboard(): void
     {
         $user = User::factory()->create([
-            'email'    => 'single@test.com',
+            'email' => 'single@test.com',
             'password' => Hash::make('password'),
-            'role'     => 'user',
-            'is_active'=> true,
+            'role' => 'user',
+            'is_active' => true,
         ]);
 
         $user->garages()->attach($this->garageA->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
         $response = $this->post('/login', [
-            'email'    => 'single@test.com',
+            'email' => 'single@test.com',
             'password' => 'password',
         ]);
 
@@ -132,17 +132,17 @@ class PostLoginRedirectorTest extends TestCase
     public function test_user_with_multiple_garages_is_redirected_to_selection(): void
     {
         $user = User::factory()->create([
-            'email'    => 'multi@test.com',
+            'email' => 'multi@test.com',
             'password' => Hash::make('password'),
-            'role'     => 'user',
-            'is_active'=> true,
+            'role' => 'user',
+            'is_active' => true,
         ]);
 
         $user->garages()->attach($this->garageA->id, ['role' => 'admin', 'is_active' => true]);
         $user->garages()->attach($this->garageB->id, ['role' => 'admin', 'is_active' => true]);
 
         $response = $this->post('/login', [
-            'email'    => 'multi@test.com',
+            'email' => 'multi@test.com',
             'password' => 'password',
         ]);
 
@@ -156,14 +156,14 @@ class PostLoginRedirectorTest extends TestCase
     public function test_user_without_any_garage_is_redirected_to_selection_with_error(): void
     {
         $user = User::factory()->create([
-            'email'    => 'none@test.com',
+            'email' => 'none@test.com',
             'password' => Hash::make('password'),
-            'role'     => 'user',
-            'is_active'=> true,
+            'role' => 'user',
+            'is_active' => true,
         ]);
 
         $response = $this->post('/login', [
-            'email'    => 'none@test.com',
+            'email' => 'none@test.com',
             'password' => 'password',
         ]);
 
@@ -178,14 +178,14 @@ class PostLoginRedirectorTest extends TestCase
     public function test_super_admin_login_redirects_to_garage_selection(): void
     {
         $superAdmin = User::factory()->create([
-            'email'    => 'sa@test.com',
+            'email' => 'sa@test.com',
             'password' => Hash::make('password'),
-            'role'     => 'super_admin',
-            'is_active'=> true,
+            'role' => 'super_admin',
+            'is_active' => true,
         ]);
 
         $response = $this->post('/login', [
-            'email'    => 'sa@test.com',
+            'email' => 'sa@test.com',
             'password' => 'password',
         ]);
 
@@ -201,19 +201,19 @@ class PostLoginRedirectorTest extends TestCase
     public function test_inactive_garage_membership_is_not_auto_selected(): void
     {
         $user = User::factory()->create([
-            'email'    => 'inactive@test.com',
+            'email' => 'inactive@test.com',
             'password' => Hash::make('password'),
-            'role'     => 'user',
-            'is_active'=> true,
+            'role' => 'user',
+            'is_active' => true,
         ]);
 
         $user->garages()->attach($this->garageA->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => false, // ← INACTIVE
         ]);
 
         $response = $this->post('/login', [
-            'email'    => 'inactive@test.com',
+            'email' => 'inactive@test.com',
             'password' => 'password',
         ]);
 
@@ -226,42 +226,42 @@ class PostLoginRedirectorTest extends TestCase
     // 8. PIN LOGIN AND EMAIL LOGIN PRODUCE IDENTICAL REDIRECTS
     // ==================================================================
 
-        public function test_pin_login_and_email_login_use_same_redirect_logic(): void
+    public function test_pin_login_and_email_login_use_same_redirect_logic(): void
     {
         // Two different users, two different garages — avoids violating
         // the "one active admin per garage" unique index.
         // The point of this test is to verify that both login flows
         // produce identical redirect targets for the same role setup.
         $emailUser = User::factory()->create([
-            'email'     => 'email-user@test.com',
-            'password'  => Hash::make('password'),
-            'role'      => 'user',
+            'email' => 'email-user@test.com',
+            'password' => Hash::make('password'),
+            'role' => 'user',
             'is_active' => true,
         ]);
         $emailUser->garages()->attach($this->garageA->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
         $pinUser = User::factory()->create([
-            'email'          => 'pin-user@test.com',
-            'password'       => Hash::make('password'),
-            'role'           => 'user',
-            'employee_code'  => 'PIN-TEST-1',
-            'pin'            => Hash::make('1234'),
+            'email' => 'pin-user@test.com',
+            'password' => Hash::make('password'),
+            'role' => 'user',
+            'employee_code' => 'PIN-TEST-1',
+            'pin' => Hash::make('1234'),
             'pin_is_default' => false,
-            'is_active'      => true,
+            'is_active' => true,
         ]);
         // Second user belongs to garage B — no conflict with the
         // single-admin-per-garage index because they hold a worker role.
         $pinUser->garages()->attach($this->garageB->id, [
-            'role'      => 'complaint_worker',
+            'role' => 'complaint_worker',
             'is_active' => true,
         ]);
 
         // Email login — user has 1 garage (A) → auto-select + dashboard
         $emailResponse = $this->post('/login', [
-            'email'    => 'email-user@test.com',
+            'email' => 'email-user@test.com',
             'password' => 'password',
         ]);
 
@@ -271,7 +271,7 @@ class PostLoginRedirectorTest extends TestCase
         // PIN login — user has 1 garage (B) → auto-select + dashboard
         $pinResponse = $this->post('/login/pin', [
             'employee_code' => 'PIN-TEST-1',
-            'pin'           => '1234',
+            'pin' => '1234',
         ]);
 
         // Both redirect to the same target (dashboard), even though

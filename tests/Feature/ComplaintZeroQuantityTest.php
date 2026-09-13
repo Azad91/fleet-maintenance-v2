@@ -43,20 +43,20 @@ class ComplaintZeroQuantityTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->employee = Employee::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
-        $this->stockService = new ComplaintStockService();
+        $this->stockService = new ComplaintStockService;
         $this->service = new ComplaintService(
             $this->stockService,
-            new ComplaintItemService(),
-            new ComplaintStatusTransitionService()
+            new ComplaintItemService,
+            new ComplaintStatusTransitionService
         );
     }
 
@@ -69,22 +69,22 @@ class ComplaintZeroQuantityTest extends TestCase
     private function makeWarehouse(string $code, int $quantity): Warehouse
     {
         return Warehouse::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $quantity,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $quantity,
         ]);
     }
 
     private function baseData(): array
     {
         return [
-            'bus_id'         => $this->bus->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
-            'km'             => 1000,
+            'km' => 1000,
         ];
     }
 
@@ -98,10 +98,10 @@ class ComplaintZeroQuantityTest extends TestCase
 
         $processed = $this->stockService->deductStock([
             [
-                'code'          => 'D-001',
+                'code' => 'D-001',
                 'used_quantity' => 0,  // ← Skip olmalı
-                'employee_id'   => $this->employee->id,
-                'notes'         => 'Test',
+                'employee_id' => $this->employee->id,
+                'notes' => 'Test',
             ],
         ]);
 
@@ -115,10 +115,10 @@ class ComplaintZeroQuantityTest extends TestCase
 
         $processed = $this->stockService->deductStock([
             [
-                'code'          => 'D-002',
+                'code' => 'D-002',
                 'used_quantity' => -5,  // ← Skip olmalı
-                'employee_id'   => $this->employee->id,
-                'notes'         => 'Test',
+                'employee_id' => $this->employee->id,
+                'notes' => 'Test',
             ],
         ]);
 
@@ -132,9 +132,9 @@ class ComplaintZeroQuantityTest extends TestCase
 
         $processed = $this->stockService->deductStock([
             [
-                'code'        => 'D-003',
+                'code' => 'D-003',
                 'employee_id' => $this->employee->id,
-                'notes'       => 'Missing used_quantity',
+                'notes' => 'Missing used_quantity',
                 // 'used_quantity' heç yoxdur
             ],
         ]);
@@ -150,16 +150,16 @@ class ComplaintZeroQuantityTest extends TestCase
 
         $processed = $this->stockService->deductStock([
             [
-                'code'          => 'D-A',
+                'code' => 'D-A',
                 'used_quantity' => 0,   // skip
-                'employee_id'   => $this->employee->id,
-                'notes'         => 'Zero',
+                'employee_id' => $this->employee->id,
+                'notes' => 'Zero',
             ],
             [
-                'code'          => 'D-B',
+                'code' => 'D-B',
                 'used_quantity' => 5,   // process
-                'employee_id'   => $this->employee->id,
-                'notes'         => 'Five',
+                'employee_id' => $this->employee->id,
+                'notes' => 'Five',
             ],
         ]);
 
@@ -184,16 +184,16 @@ class ComplaintZeroQuantityTest extends TestCase
             $this->baseData(),
             [
                 [
-                    'code'          => 'MIX-1',
+                    'code' => 'MIX-1',
                     'used_quantity' => 0,  // skip
-                    'employee_id'   => $this->employee->id,
-                    'notes'         => 'Not used',
+                    'employee_id' => $this->employee->id,
+                    'notes' => 'Not used',
                 ],
                 [
-                    'code'          => 'MIX-2',
+                    'code' => 'MIX-2',
                     'used_quantity' => 3,  // keep
-                    'employee_id'   => $this->employee->id,
-                    'notes'         => 'Used 3',
+                    'employee_id' => $this->employee->id,
+                    'notes' => 'Used 3',
                 ],
             ],
             ['Test complaint']
@@ -240,10 +240,10 @@ class ComplaintZeroQuantityTest extends TestCase
             $this->baseData(),
             [
                 [
-                    'code'          => 'UPD-1',
+                    'code' => 'UPD-1',
                     'used_quantity' => 3,
-                    'employee_id'   => $this->employee->id,
-                    'notes'         => 'Initial',
+                    'employee_id' => $this->employee->id,
+                    'notes' => 'Initial',
                 ],
             ],
             ['Test']
@@ -258,10 +258,10 @@ class ComplaintZeroQuantityTest extends TestCase
             $this->baseData(),
             [
                 [
-                    'code'          => 'UPD-1',
+                    'code' => 'UPD-1',
                     'used_quantity' => 0,
-                    'employee_id'   => $this->employee->id,
-                    'notes'         => 'Removing',
+                    'employee_id' => $this->employee->id,
+                    'notes' => 'Removing',
                 ],
             ],
             ['Test']
@@ -281,11 +281,11 @@ class ComplaintZeroQuantityTest extends TestCase
     public function test_direct_zero_quantity_insert_still_fails_at_db_level(): void
     {
         $complaint = Complaint::create([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
@@ -293,13 +293,13 @@ class ComplaintZeroQuantityTest extends TestCase
 
         // DB CHECK constraint (used_quantity > 0) pozulmalıdır
         ComplaintDetail::create([
-            'complaint_id'   => $complaint->id,
-            'code'           => 'TEST',
-            'name'           => 'Test',
+            'complaint_id' => $complaint->id,
+            'code' => 'TEST',
+            'name' => 'Test',
             'stock_quantity' => 10,
-            'used_quantity'  => 0,  // ← CHECK pozur
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
+            'used_quantity' => 0,  // ← CHECK pozur
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
         ]);
     }
 
@@ -317,19 +317,19 @@ class ComplaintZeroQuantityTest extends TestCase
         );
 
         $bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'IMPORT-ZERO',
+            'dqn' => 'IMPORT-ZERO',
         ]);
 
         $import->processRow([
-            'dqn'            => 'IMPORT-ZERO',
-            'yer'            => 'garage',
+            'dqn' => 'IMPORT-ZERO',
+            'yer' => 'garage',
             'complaint_type' => 'breakdown',
-            'complaints'     => 'Test',
-            'status'         => 'pending',
-            'part_code'      => 'IMP-1',
-            'used_quantity'  => 0,  // ← Problem yaratmamalı
+            'complaints' => 'Test',
+            'status' => 'pending',
+            'part_code' => 'IMP-1',
+            'used_quantity' => 0,  // ← Problem yaratmamalı
         ], 2);
 
         $this->assertEquals(1, $import->importedCount);

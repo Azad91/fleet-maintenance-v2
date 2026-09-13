@@ -4,20 +4,20 @@ namespace App\Enums;
 
 enum ComplaintType: string
 {
-    case Accident    = 'accident';
-    case Breakdown   = 'breakdown';
+    case Accident = 'accident';
+    case Breakdown = 'breakdown';
     case Maintenance = 'maintenance';
 
     public function label(): string
     {
-        return __('enums.complaint_type.' . $this->value);
+        return __('enums.complaint_type.'.$this->value);
     }
 
     public function icon(): string
     {
         return match ($this) {
-            self::Accident    => '🚗',
-            self::Breakdown   => '⚠️',
+            self::Accident => '🚗',
+            self::Breakdown => '⚠️',
             self::Maintenance => '🔧',
         };
     }
@@ -28,8 +28,8 @@ enum ComplaintType: string
     public function bootstrapColor(): string
     {
         return match ($this) {
-            self::Accident    => 'danger',
-            self::Breakdown   => 'warning',
+            self::Accident => 'danger',
+            self::Breakdown => 'warning',
             self::Maintenance => 'info',
         };
     }

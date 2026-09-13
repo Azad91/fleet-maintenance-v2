@@ -41,13 +41,13 @@ class CloseComplaintActionTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
-        $this->service    = app(ComplaintService::class);
+        $this->service = app(ComplaintService::class);
         $this->pdfService = app(ComplaintPdfService::class);
-        $this->action     = app(CloseComplaintAction::class);
+        $this->action = app(CloseComplaintAction::class);
     }
 
     protected function tearDown(): void
@@ -59,11 +59,11 @@ class CloseComplaintActionTest extends TestCase
     private function makeComplaint(string $status = 'pending'): Complaint
     {
         return Complaint::create([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => $status,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => $status,
             'complaint_type' => 'breakdown',
         ]);
     }
@@ -71,8 +71,8 @@ class CloseComplaintActionTest extends TestCase
     private function closeData(): array
     {
         return [
-            'end_date'  => now()->toDateString(),
-            'end_time'  => now()->format('H:i'),
+            'end_date' => now()->toDateString(),
+            'end_time' => now()->format('H:i'),
             'work_done' => 'Complaint resolved by test.',
         ];
     }
@@ -163,7 +163,8 @@ class CloseComplaintActionTest extends TestCase
         $complaint = $this->makeComplaint('pending');
 
         // Force the PDF service to throw by using an anonymous subclass.
-        $failingPdfService = new class extends ComplaintPdfService {
+        $failingPdfService = new class extends ComplaintPdfService
+        {
             public function save(Complaint $complaint): string
             {
                 throw new \RuntimeException('Simulated PDF failure');
@@ -183,7 +184,8 @@ class CloseComplaintActionTest extends TestCase
     {
         $complaint = $this->makeComplaint('pending');
 
-        $failingPdfService = new class extends ComplaintPdfService {
+        $failingPdfService = new class extends ComplaintPdfService
+        {
             public function save(Complaint $complaint): string
             {
                 throw new \RuntimeException('Simulated PDF failure');
@@ -213,7 +215,7 @@ class CloseComplaintActionTest extends TestCase
         $this->action->execute($complaint, $this->closeData());
 
         $this->assertDatabaseHas('complaints', [
-            'id'     => $complaint->id,
+            'id' => $complaint->id,
             'status' => 'completed',
         ]);
     }

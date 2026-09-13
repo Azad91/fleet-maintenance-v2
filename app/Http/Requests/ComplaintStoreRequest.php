@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Services\GarageContext;
 use App\Enums\ComplaintType;
 use App\Enums\Location;
+use App\Services\GarageContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,10 +30,10 @@ class ComplaintStoreRequest extends FormRequest
             ->whereNull('deleted_at'));
 
         return [
-            'bus_id'      => ['required', $busRule],
-            'yer'         => ['required', Rule::in(Location::values())],
+            'bus_id' => ['required', $busRule],
+            'yer' => ['required', Rule::in(Location::values())],
             'driver_name' => 'nullable|string|max:255',
-            'driver_id'   => ['nullable', 'required_if:yer,road', $driverRule],
+            'driver_id' => ['nullable', 'required_if:yer,road', $driverRule],
 
             // complaint_type is a CATEGORY enum (accident/breakdown/maintenance),
             // NOT a specific type from the complaint_types table.
@@ -42,23 +42,23 @@ class ComplaintStoreRequest extends FormRequest
 
             // complaint items are descriptions that should exist in complaint_types
             // for the CURRENT garage.
-            'complaints'      => 'required|array|min:1',
-            'complaints.*'    => [
+            'complaints' => 'required|array|min:1',
+            'complaints.*' => [
                 'required',
                 'string',
                 Rule::exists('complaint_types', 'name')->where('garage_id', $garageId),
             ],
 
-            'km'             => 'nullable|integer|min:0',
-            'status'         => 'required|in:pending,in_progress',
-            'details'                     => 'nullable|array',
-            'details.*.code'              => 'nullable|string',
-            'details.*.used_quantity'     => 'nullable|integer|min:1',
-            'details.*.employee_id'       => ['required_with:details.*.code', $employeeRule],
-            'details.*.notes'             => 'required_with:details.*.code|string|max:2000',
+            'km' => 'nullable|integer|min:0',
+            'status' => 'required|in:pending,in_progress',
+            'details' => 'nullable|array',
+            'details.*.code' => 'nullable|string',
+            'details.*.used_quantity' => 'nullable|integer|min:1',
+            'details.*.employee_id' => ['required_with:details.*.code', $employeeRule],
+            'details.*.notes' => 'required_with:details.*.code|string|max:2000',
             'employee_id' => ['nullable', $employeeRule],
             'service_template_id' => 'nullable|exists:service_templates,id',
-            'service_km'          => 'required_if:service_template_id,!null|nullable|integer|min:0',
+            'service_km' => 'required_if:service_template_id,!null|nullable|integer|min:0',
         ];
     }
 

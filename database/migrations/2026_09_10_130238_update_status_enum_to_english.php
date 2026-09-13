@@ -14,8 +14,8 @@ return new class extends Migration
         //    həll olundu → completed
         // ============================================================
         DB::statement('ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_status_check');
-        DB::statement("ALTER TABLE complaints ALTER COLUMN status DROP DEFAULT");
-        DB::statement("ALTER TABLE complaints ALTER COLUMN status TYPE varchar(50) USING status::varchar");
+        DB::statement('ALTER TABLE complaints ALTER COLUMN status DROP DEFAULT');
+        DB::statement('ALTER TABLE complaints ALTER COLUMN status TYPE varchar(50) USING status::varchar');
 
         DB::statement("UPDATE complaints SET status = 'pending' WHERE status = 'gözləmədə'");
         DB::statement("UPDATE complaints SET status = 'in_progress' WHERE status = 'işdə'");
@@ -50,8 +50,8 @@ return new class extends Migration
     {
         // Status geri
         DB::statement('ALTER TABLE complaints DROP CONSTRAINT IF EXISTS complaints_status_check');
-        DB::statement("ALTER TABLE complaints ALTER COLUMN status DROP DEFAULT");
-        DB::statement("ALTER TABLE complaints ALTER COLUMN status TYPE varchar(50) USING status::varchar");
+        DB::statement('ALTER TABLE complaints ALTER COLUMN status DROP DEFAULT');
+        DB::statement('ALTER TABLE complaints ALTER COLUMN status TYPE varchar(50) USING status::varchar');
 
         DB::statement("UPDATE complaints SET status = 'gözləmədə' WHERE status = 'pending'");
         DB::statement("UPDATE complaints SET status = 'işdə' WHERE status = 'in_progress'");

@@ -1,0 +1,75 @@
+name: fleet-prod
+
+services:
+  app:
+    image: ${FLEET_IMAGE:-fleet-v2-app:latest}
+    container_name: fleet-prod-app
+    restart: unless-stopped
+
+    # Production env faylı — sirləri bu fayldan oxuyur
+    env_file:
+      - .env.production
+
+    # Yalnız reverse proxy (nginx/traefik/caddy) bu porta qoşula bilər.
+    # Host-da birbaşa açmırıq — 127.0.0.1 ilə məhdudlaşdırırıq.
+    ports:
+      - "127.0.0.1:8080:80"
+
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./public/storage:/var/www/html/public/storage
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - fleet
+
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: fleet-prod-postgres
+    restart: unless-stopped
+
+    env_file:
+      - .env.production.db
+
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+
+    networks:
+      - fleet
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  postgres_prod_data:
+    name: fleet_prod_postgres_data
+
+networks:
+  fleet:
+    name: fleet_prod_network
+    driver: bridge

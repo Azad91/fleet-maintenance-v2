@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Director;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bus;
-use App\Models\Complaint;
 use App\Models\Company;
+use App\Models\Complaint;
 use App\Models\Garage;
 use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
@@ -34,11 +34,11 @@ class DirectorController extends Controller
         $garageIds = $company->garages()->pluck('id');
 
         $stats = [
-            'total_garages'         => $garageIds->count(),
-            'active_garages'        => $company->garages()->where('is_active', true)->count(),
-            'total_buses'           => $this->busQuery($garageIds)->count(),
-            'active_buses'          => $this->busQuery($garageIds)->where('is_active', true)->count(),
-            'open_complaints'       => $this->complaintQuery($garageIds)->where('status', '!=', 'completed')->count(),
+            'total_garages' => $garageIds->count(),
+            'active_garages' => $company->garages()->where('is_active', true)->count(),
+            'total_buses' => $this->busQuery($garageIds)->count(),
+            'active_buses' => $this->busQuery($garageIds)->where('is_active', true)->count(),
+            'open_complaints' => $this->complaintQuery($garageIds)->where('status', '!=', 'completed')->count(),
             'total_warehouse_items' => $this->warehouseQuery($garageIds)->sum('quantity'),
         ];
 
@@ -86,11 +86,11 @@ class DirectorController extends Controller
         }
 
         $stats = [
-            'total_buses'     => $this->busQuery([$garage->id])->count(),
-            'active_buses'    => $this->busQuery([$garage->id])->where('is_active', true)->count(),
+            'total_buses' => $this->busQuery([$garage->id])->count(),
+            'active_buses' => $this->busQuery([$garage->id])->where('is_active', true)->count(),
             'open_complaints' => $this->complaintQuery([$garage->id])->where('status', '!=', 'completed')->count(),
             'total_employees' => $garage->employees()->count(),
-            'total_drivers'   => $garage->drivers()->count(),
+            'total_drivers' => $garage->drivers()->count(),
         ];
 
         return view('director.garages.show', compact('company', 'garage', 'stats'));

@@ -2,14 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\MissingGarageContextException;
 use App\Models\Bus;
 use App\Models\Company;
 use App\Models\Garage;
 use App\Models\User;
 use App\Services\GarageContext;
-use App\Exceptions\MissingGarageContextException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class GarageScopeContextTest extends TestCase
@@ -83,7 +82,7 @@ class GarageScopeContextTest extends TestCase
         GarageContext::clear();
 
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -106,7 +105,7 @@ class GarageScopeContextTest extends TestCase
 
         $user = User::factory()->create([
             'role' => 'user',
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -132,7 +131,7 @@ class GarageScopeContextTest extends TestCase
 
         config(['app.debug' => false]);
 
-        $this->expectException(\App\Exceptions\MissingGarageContextException::class);
+        $this->expectException(MissingGarageContextException::class);
         $this->expectExceptionMessage('Garage context is not set');
 
         Bus::create([
@@ -152,7 +151,7 @@ class GarageScopeContextTest extends TestCase
 
         config(['app.debug' => true]);
 
-        $this->expectException(\App\Exceptions\MissingGarageContextException::class);
+        $this->expectException(MissingGarageContextException::class);
         $this->expectExceptionMessage('Garage context is not set');
 
         Bus::create([

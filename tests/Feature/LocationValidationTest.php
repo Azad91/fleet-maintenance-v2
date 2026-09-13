@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\Location;
 use App\Models\Bus;
+use App\Models\Company;
 use App\Models\Complaint;
 use App\Models\ComplaintType as ComplaintTypeModel;
-use App\Models\Company;
 use App\Models\Driver;
 use App\Models\Garage;
 use App\Models\User;
@@ -40,28 +40,28 @@ class LocationValidationTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         ComplaintTypeModel::withoutGlobalScopes()->create([
-            'name'       => $this->validDescription,
-            'garage_id'  => $this->garage->id,
+            'name' => $this->validDescription,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->driver = Driver::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => 'DRV-001',
+            'code' => 'DRV-001',
             'first_name' => 'Test',
-            'last_name'  => 'Driver',
-            'is_active'  => true,
+            'last_name' => 'Driver',
+            'is_active' => true,
         ]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
     }
@@ -75,7 +75,7 @@ class LocationValidationTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -89,11 +89,11 @@ class LocationValidationTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('complaints.store'), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'garage',
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'garage',
+                'status' => 'pending',
                 'complaint_type' => 'breakdown',
-                'complaints'     => [$this->validDescription],
+                'complaints' => [$this->validDescription],
             ]);
 
         $response->assertSessionHasNoErrors();
@@ -114,14 +114,14 @@ class LocationValidationTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('complaints.store'), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'road',
-                'driver_id'      => $this->driver->id,
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'road',
+                'driver_id' => $this->driver->id,
+                'status' => 'pending',
                 'complaint_type' => 'breakdown',
-                'complaints'     => [$this->validDescription],
-                'reported_date'  => now()->toDateString(),
-                'reported_time'  => now()->format('H:i'),
+                'complaints' => [$this->validDescription],
+                'reported_date' => now()->toDateString(),
+                'reported_time' => now()->format('H:i'),
             ]);
 
         $response->assertSessionHasNoErrors();
@@ -138,12 +138,12 @@ class LocationValidationTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('complaints.store'), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'road',
-                'driver_id'      => $this->driver->id,
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'road',
+                'driver_id' => $this->driver->id,
+                'status' => 'pending',
                 'complaint_type' => 'breakdown',
-                'complaints'     => [$this->validDescription],
+                'complaints' => [$this->validDescription],
                 // reported_date / reported_time yoxdur
             ]);
 
@@ -155,13 +155,13 @@ class LocationValidationTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('complaints.store'), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'road',
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'road',
+                'status' => 'pending',
                 'complaint_type' => 'breakdown',
-                'complaints'     => [$this->validDescription],
-                'reported_date'  => now()->toDateString(),
-                'reported_time'  => now()->format('H:i'),
+                'complaints' => [$this->validDescription],
+                'reported_date' => now()->toDateString(),
+                'reported_time' => now()->format('H:i'),
                 // driver_id yoxdur
             ]);
 
@@ -177,11 +177,11 @@ class LocationValidationTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('complaints.store'), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'yol', // legacy AZ value — must be rejected
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'yol', // legacy AZ value — must be rejected
+                'status' => 'pending',
                 'complaint_type' => 'breakdown',
-                'complaints'     => [$this->validDescription],
+                'complaints' => [$this->validDescription],
             ]);
 
         $response->assertSessionHasErrors('yer');
@@ -193,11 +193,11 @@ class LocationValidationTest extends TestCase
             $response = $this->actingAs($this->admin)
                 ->withSession($this->garageSession())
                 ->post(route('complaints.store'), [
-                    'bus_id'         => $this->bus->id,
-                    'yer'            => $badValue,
-                    'status'         => 'pending',
+                    'bus_id' => $this->bus->id,
+                    'yer' => $badValue,
+                    'status' => 'pending',
                     'complaint_type' => 'breakdown',
-                    'complaints'     => [$this->validDescription],
+                    'complaints' => [$this->validDescription],
                 ]);
 
             $response->assertSessionHasErrors('yer');
@@ -213,24 +213,24 @@ class LocationValidationTest extends TestCase
     public function test_update_from_road_to_garage_clears_driver_context(): void
     {
         $complaint = Complaint::create([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'road',
-            'driver_id'      => $this->driver->id,
-            'driver_name'    => $this->driver->full_name,
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'road',
+            'driver_id' => $this->driver->id,
+            'driver_name' => $this->driver->full_name,
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('complaints.update', $complaint), [
-                'bus_id'         => $this->bus->id,
-                'yer'            => 'garage',
-                'status'         => 'pending',
+                'bus_id' => $this->bus->id,
+                'yer' => 'garage',
+                'status' => 'pending',
                 'complaint_type' => 'breakdown',
-                'complaints'     => [$this->validDescription],
+                'complaints' => [$this->validDescription],
             ]);
 
         $response->assertSessionHasNoErrors();

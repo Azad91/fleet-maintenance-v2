@@ -14,8 +14,8 @@ class ComplaintCloseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'end_date'  => 'required|date',
-            'end_time'  => 'required|date_format:H:i',
+            'end_date' => 'required|date',
+            'end_time' => 'required|date_format:H:i',
             'work_done' => 'required|string|min:5',
         ];
     }

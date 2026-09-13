@@ -37,9 +37,9 @@ class AuditableTypeComparisonTest extends TestCase
     private function createBus(array $attributes = []): Bus
     {
         return Bus::factory()->create(array_merge([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'is_active'  => true,
+            'is_active' => true,
         ], $attributes));
     }
 

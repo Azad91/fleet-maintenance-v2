@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SuperAdmin\UserStoreRequest;
+use App\Http\Requests\SuperAdmin\UserUpdateRequest;
 use App\Models\User;
-use App\Http\Requests\SuperAdmin\GarageStoreRequest;
-use App\Http\Requests\SuperAdmin\GarageUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -61,7 +61,7 @@ class UserController extends Controller
     /**
      * Store a newly created user.
      */
-        public function store(UserStoreRequest $request): RedirectResponse
+    public function store(UserStoreRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -70,13 +70,13 @@ class UserController extends Controller
         $pin = $validated['pin'] ?? $this->generatePin();
 
         $user = User::create([
-            'name'           => $validated['name'],
-            'email'          => $validated['email'],
-            'password'       => Hash::make($validated['password']),
-            'employee_code'  => $employeeCode,
-            'pin'            => Hash::make($pin),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'employee_code' => $employeeCode,
+            'pin' => Hash::make($pin),
             'pin_is_default' => $pinWasGenerated,
-            'is_active'      => $request->boolean('is_active', true),
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return redirect()
@@ -84,7 +84,7 @@ class UserController extends Controller
             ->with('success', __('messages.super_admin.users.created', [
                 'name' => $user->name,
                 'code' => $employeeCode,
-                'pin'  => $pin,
+                'pin' => $pin,
             ]));
     }
 
@@ -114,8 +114,8 @@ class UserController extends Controller
         $validated = $request->validated();
 
         $updateData = [
-            'name'      => $validated['name'],
-            'email'     => $validated['email'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'is_active' => $request->boolean('is_active', true),
         ];
 
@@ -169,7 +169,7 @@ class UserController extends Controller
     private function generateEmployeeCode(): string
     {
         do {
-            $code = 'EMP-' . strtoupper(Str::random(6));
+            $code = 'EMP-'.strtoupper(Str::random(6));
         } while (User::where('employee_code', $code)->exists());
 
         return $code;

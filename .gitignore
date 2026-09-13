@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+.env.production.db
+.env.production.local
 .phpactor.json
 .phpunit.result.cache
 /.codex
@@ -25,4 +27,4 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
-"cookies.txt" 
+"cookies.txt"

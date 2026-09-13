@@ -31,14 +31,14 @@ class TokenExpirationTest extends TestCase
     public function test_login_still_works_with_expiration_configured(): void
     {
         $user = User::factory()->create([
-            'email'    => 'api@test.com',
+            'email' => 'api@test.com',
             'password' => Hash::make('secret123'),
-            'role'     => 'user',
+            'role' => 'user',
         ]);
 
         $response = $this->postJson('/api/login', [
-            'email'       => 'api@test.com',
-            'password'    => 'secret123',
+            'email' => 'api@test.com',
+            'password' => 'secret123',
             'device_name' => 'phpunit',
         ]);
 

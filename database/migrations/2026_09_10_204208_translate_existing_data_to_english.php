@@ -34,16 +34,16 @@ return new class extends Migration
 
         // ==================== COMPLAINT_TYPES.NAME ====================
         $typeMap = [
-            'Mühərrik səsi'        => 'Engine noise',
-            'Şin partlaması'       => 'Tire puncture',
-            'Əyləc problemi'       => 'Brake problem',
+            'Mühərrik səsi' => 'Engine noise',
+            'Şin partlaması' => 'Tire puncture',
+            'Əyləc problemi' => 'Brake problem',
             'İşıqlandırma nasazlığı' => 'Lighting failure',
-            'Transmissiya problemi'=> 'Transmission problem',
+            'Transmissiya problemi' => 'Transmission problem',
             'Süspansiyon problemi' => 'Suspension problem',
-            'Elektrik problemi'    => 'Electrical problem',
-            'Kondisioner nasazlığı'=> 'Air conditioning failure',
-            'Yağ sızması'          => 'Oil leak',
-            'Digər'                => 'Other',
+            'Elektrik problemi' => 'Electrical problem',
+            'Kondisioner nasazlığı' => 'Air conditioning failure',
+            'Yağ sızması' => 'Oil leak',
+            'Digər' => 'Other',
         ];
 
         foreach ($typeMap as $from => $to) {

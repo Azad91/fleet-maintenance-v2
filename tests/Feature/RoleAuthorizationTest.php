@@ -21,16 +21,16 @@ class RoleAuthorizationTest extends TestCase
         parent::setUp();
 
         $this->company = Company::create([
-            'name'      => 'Test Company',
-            'slug'      => 'test-company',
+            'name' => 'Test Company',
+            'slug' => 'test-company',
             'is_active' => true,
         ]);
 
         $this->garage = Garage::create([
             'company_id' => $this->company->id,
-            'name'       => 'Test Garage',
-            'code'       => 'TG-001',
-            'is_active'  => true,
+            'name' => 'Test Garage',
+            'code' => 'TG-001',
+            'is_active' => true,
         ]);
     }
 
@@ -52,12 +52,12 @@ class RoleAuthorizationTest extends TestCase
         $user = User::factory()->create();
 
         $user->garages()->attach($this->garage, [
-            'role'      => 'warehouse_manager',
+            'role' => 'warehouse_manager',
             'is_active' => true,
         ]);
 
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -70,12 +70,12 @@ class RoleAuthorizationTest extends TestCase
         $user = User::factory()->create();
 
         $user->garages()->attach($this->garage, [
-            'role'      => 'complaint_manager',
+            'role' => 'complaint_manager',
             'is_active' => true,
         ]);
 
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 
@@ -88,12 +88,12 @@ class RoleAuthorizationTest extends TestCase
         $user = User::factory()->create();
 
         $user->garages()->attach($this->garage, [
-            'role'      => 'complaint_worker',
+            'role' => 'complaint_worker',
             'is_active' => true,
         ]);
 
         session([
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ]);
 

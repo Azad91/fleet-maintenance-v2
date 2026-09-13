@@ -70,7 +70,7 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
             );
         }
 
-        $garageId  = $this->garageId;
+        $garageId = $this->garageId;
         $companyId = $this->companyId;
 
         $bus = Bus::withoutGlobalScopes()
@@ -131,7 +131,7 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
 
                 if ($usedQuantity > $warehouse->quantity) {
                     return __('messages.flash.stock_insufficient', [
-                        'name'      => $warehouse->name,
+                        'name' => $warehouse->name,
                         'requested' => $usedQuantity,
                         'available' => $warehouse->quantity,
                     ]);
@@ -144,29 +144,29 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
 
             // 3b. Complaint header
             $complaint = Complaint::create([
-                'garage_id'      => $garageId,
-                'company_id'     => $companyId ?? $bus->company_id,
-                'bus_id'         => $bus->id,
-                'yer'            => $rowArray['yer'] ?? null,
-                'driver_name'    => $rowArray['driver_name'] ?? null,
+                'garage_id' => $garageId,
+                'company_id' => $companyId ?? $bus->company_id,
+                'bus_id' => $bus->id,
+                'yer' => $rowArray['yer'] ?? null,
+                'driver_name' => $rowArray['driver_name'] ?? null,
                 'complaint_type' => $rowArray['complaint_type'] ?? null,
-                'reported_date'  => $rowArray['reported_date'] ?? null,
-                'reported_time'  => $rowArray['reported_time'] ?? null,
-                'start_date'     => $rowArray['start_date'] ?? null,
-                'start_time'     => $rowArray['start_time'] ?? null,
-                'end_date'       => $rowArray['end_date'] ?? null,
-                'end_time'       => $rowArray['end_time'] ?? null,
-                'status'         => $rowArray['status'] ?? ComplaintStatus::Pending->value,
-                'km'             => isset($rowArray['km']) ? (int) $rowArray['km'] : null,
-                'work_done_by'   => $rowArray['work_done_by'] ?? null,
-                'notes'          => $rowArray['notes'] ?? null,
+                'reported_date' => $rowArray['reported_date'] ?? null,
+                'reported_time' => $rowArray['reported_time'] ?? null,
+                'start_date' => $rowArray['start_date'] ?? null,
+                'start_time' => $rowArray['start_time'] ?? null,
+                'end_date' => $rowArray['end_date'] ?? null,
+                'end_time' => $rowArray['end_time'] ?? null,
+                'status' => $rowArray['status'] ?? ComplaintStatus::Pending->value,
+                'km' => isset($rowArray['km']) ? (int) $rowArray['km'] : null,
+                'work_done_by' => $rowArray['work_done_by'] ?? null,
+                'notes' => $rowArray['notes'] ?? null,
             ]);
 
             // 3c. Complaint item(s)
             if (! empty($rowArray['complaints'])) {
                 $complaint->items()->create([
                     'description' => $rowArray['complaints'],
-                    'type'        => $rowArray['complaint_type'] ?? null,
+                    'type' => $rowArray['complaint_type'] ?? null,
                 ]);
             }
 
@@ -174,11 +174,11 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
             if ($partCode !== '' && $usedQuantity > 0) {
                 $complaint->details()->create([
                     'shikayet_index' => 0,
-                    'code'           => $partCode,
-                    'name'           => $partName ?? $partCode,
+                    'code' => $partCode,
+                    'name' => $partName ?? $partCode,
                     'stock_quantity' => $stockQuantity,
-                    'used_quantity'  => $usedQuantity,
-                    'notes'          => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
+                    'used_quantity' => $usedQuantity,
+                    'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
                 ]);
             }
 
@@ -205,12 +205,12 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
     public function rules(): array
     {
         return [
-            'bus_dqn'        => 'sometimes|nullable',
-            'dqn'            => 'sometimes|nullable',
-            'status'         => ['nullable', Rule::in(ComplaintStatus::values())],
-            'yer'            => ['nullable', Rule::in(Location::values())],
+            'bus_dqn' => 'sometimes|nullable',
+            'dqn' => 'sometimes|nullable',
+            'status' => ['nullable', Rule::in(ComplaintStatus::values())],
+            'yer' => ['nullable', Rule::in(Location::values())],
             'complaint_type' => ['nullable', Rule::in(ComplaintType::values())],
-            'km'             => 'nullable|integer|min:0',
+            'km' => 'nullable|integer|min:0',
         ];
     }
 }

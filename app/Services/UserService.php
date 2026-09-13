@@ -22,14 +22,14 @@ class UserService
     ): User {
         return DB::transaction(function () use ($data, $garageId, $isActive) {
             $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => $data['password'],
-            // Role defaults to 'user' via User::$attributes — garage role lives on the pivot.
-        ]);
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                // Role defaults to 'user' via User::$attributes — garage role lives on the pivot.
+            ]);
 
             $user->garages()->attach($garageId, [
-                'role'      => $data['role'],
+                'role' => $data['role'],
                 'is_active' => $isActive,
             ]);
 
@@ -50,7 +50,7 @@ class UserService
         return DB::transaction(function () use ($user, $data, $garageId) {
             // users.role toxunulmur — yalnız şəxsi məlumatlar
             $userUpdate = [
-                'name'  => $data['name'],
+                'name' => $data['name'],
                 'email' => $data['email'],
             ];
 
@@ -62,7 +62,7 @@ class UserService
 
             // Qaraj rolu yalnız pivotda yenilənir
             $user->garages()->updateExistingPivot($garageId, [
-                'role'      => $data['role'],
+                'role' => $data['role'],
                 'is_active' => $data['is_active'],
             ]);
 

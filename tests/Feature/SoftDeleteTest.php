@@ -40,7 +40,7 @@ class SoftDeleteTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'current_garage_id' => $garage->id,
-                'current_company_id' => $company->id
+                'current_company_id' => $company->id,
             ])
             ->delete(route('buses.destroy', $bus->id))
             ->assertRedirect();
@@ -48,7 +48,7 @@ class SoftDeleteTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'current_garage_id' => $garage->id,
-                'current_company_id' => $company->id
+                'current_company_id' => $company->id,
             ])
             ->delete(route('warehouses.destroy', $warehouse->id))
             ->assertRedirect();

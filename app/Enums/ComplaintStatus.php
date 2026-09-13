@@ -4,17 +4,17 @@ namespace App\Enums;
 
 enum ComplaintStatus: string
 {
-    case Pending    = 'pending';
+    case Pending = 'pending';
     case InProgress = 'in_progress';
-    case Completed  = 'completed';
-    case Cancelled  = 'cancelled';
+    case Completed = 'completed';
+    case Cancelled = 'cancelled';
 
     /**
      * Human-readable label, translated via lang/{locale}/enums.php.
      */
     public function label(): string
     {
-        return __('enums.complaint_status.' . $this->value);
+        return __('enums.complaint_status.'.$this->value);
     }
 
     /**
@@ -24,8 +24,8 @@ enum ComplaintStatus: string
     {
         return match ($this) {
             self::Pending, self::Cancelled => 'secondary',
-            self::InProgress               => 'warning',
-            self::Completed                => 'success',
+            self::InProgress => 'warning',
+            self::Completed => 'success',
         };
     }
 

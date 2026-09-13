@@ -31,10 +31,10 @@ class WarehouseController extends Controller
         return response()->json([
             'data' => $warehouses->items(),
             'meta' => [
-                'total'        => $warehouses->total(),
-                'per_page'     => $warehouses->perPage(),
+                'total' => $warehouses->total(),
+                'per_page' => $warehouses->perPage(),
                 'current_page' => $warehouses->currentPage(),
-                'last_page'    => $warehouses->lastPage(),
+                'last_page' => $warehouses->lastPage(),
             ],
         ]);
     }
@@ -49,7 +49,7 @@ class WarehouseController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.created', ['Item' => 'Warehouse item']),
-            'data'    => $warehouse,
+            'data' => $warehouse,
         ], 201);
     }
 
@@ -68,7 +68,7 @@ class WarehouseController extends Controller
 
         return response()->json([
             'message' => __('messages.flash.updated', ['Item' => 'Warehouse item']),
-            'data'    => $warehouse->fresh(),
+            'data' => $warehouse->fresh(),
         ]);
     }
 
@@ -101,10 +101,10 @@ class WarehouseController extends Controller
         return response()->json([
             'data' => $warehouses->items(),
             'meta' => [
-                'total'        => $warehouses->total(),
-                'per_page'     => $warehouses->perPage(),
+                'total' => $warehouses->total(),
+                'per_page' => $warehouses->perPage(),
                 'current_page' => $warehouses->currentPage(),
-                'last_page'    => $warehouses->lastPage(),
+                'last_page' => $warehouses->lastPage(),
             ],
         ]);
     }

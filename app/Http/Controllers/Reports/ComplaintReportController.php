@@ -15,7 +15,7 @@ class ComplaintReportController extends ReportController
     public function summary(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint');
+        $scope = $this->scope('complaint');
 
         return $this->render('summary', $period, $scope, [
             'summary' => $this->service->summary($period, $scope),
@@ -25,7 +25,7 @@ class ComplaintReportController extends ReportController
     public function topTypes(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint');
+        $scope = $this->scope('complaint');
 
         return $this->render('top-types', $period, $scope, [
             'items' => $this->service->topTypes($period, $scope),
@@ -35,7 +35,7 @@ class ComplaintReportController extends ReportController
     public function workerActivity(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint');
+        $scope = $this->scope('complaint');
 
         return $this->render('worker-activity', $period, $scope, [
             'rows' => $this->service->workerActivity($period, $scope),
@@ -45,7 +45,7 @@ class ComplaintReportController extends ReportController
     public function byBus(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint');
+        $scope = $this->scope('complaint');
 
         return $this->render('by-bus', $period, $scope, [
             'items' => $this->service->byBus($period, $scope),
@@ -55,7 +55,7 @@ class ComplaintReportController extends ReportController
     public function avgCloseTime(Request $request): View
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint');
+        $scope = $this->scope('complaint');
 
         return $this->render('avg-close-time', $period, $scope, [
             'data' => $this->service->avgCloseTime($period, $scope),
@@ -65,10 +65,10 @@ class ComplaintReportController extends ReportController
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.complaint.{$view}", array_merge($data, [
-            'domain'       => 'complaint',
+            'domain' => 'complaint',
             'activeReport' => $view,
-            'period'       => $period,
-            'scope'        => $scope,
+            'period' => $period,
+            'scope' => $scope,
         ]));
     }
 }

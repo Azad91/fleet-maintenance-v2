@@ -23,13 +23,13 @@ trait HasGarageScope
 
             if ($garageId) {
                 $builder->where(
-                    $builder->getModel()->getTable() . '.garage_id',
+                    $builder->getModel()->getTable().'.garage_id',
                     $garageId
                 );
             }
         });
 
-                // ==================== CREATING EVENT ====================
+        // ==================== CREATING EVENT ====================
         static::creating(function ($model) {
             // If garage_id is already set, don't touch it (manual override).
             if ($model->garage_id !== null) {
@@ -38,11 +38,11 @@ trait HasGarageScope
 
             // Resolve via the centralized chain:
             // Context → session → auth user → null.
-            $garageId  = GarageContext::resolveGarageId();
+            $garageId = GarageContext::resolveGarageId();
             $companyId = GarageContext::resolveCompanyId();
 
             if ($garageId !== null) {
-                $model->garage_id  = $garageId;
+                $model->garage_id = $garageId;
                 $model->company_id = $companyId;
 
                 return;
@@ -67,7 +67,7 @@ trait HasGarageScope
                     $model->company_id = $garageCompanyId;
 
                     Log::warning('HasGarageScope: corrected mismatched company_id', [
-                        'model'     => get_class($model),
+                        'model' => get_class($model),
                         'garage_id' => $model->garage_id,
                         'attempted' => $attempted,
                         'corrected' => $garageCompanyId,
@@ -106,13 +106,13 @@ trait HasGarageScope
         // Log before throwing — helps diagnosis even when the exception
         // is caught and converted into a user-facing redirect.
         Log::error('Garage context missing — blocking write', [
-            'model'      => get_class($model),
+            'model' => get_class($model),
             'attributes' => collect($model->getAttributes())
                 ->except(['password', 'remember_token'])
                 ->toArray(),
             'request_id' => Context::get('request_id'),
-            'user_id'    => auth()->id(),
-            'url'        => request()?->fullUrl(),
+            'user_id' => auth()->id(),
+            'url' => request()?->fullUrl(),
         ]);
 
         throw new MissingGarageContextException(get_class($model));

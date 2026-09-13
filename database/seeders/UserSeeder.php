@@ -35,6 +35,7 @@ class UserSeeder extends Seeder
             } else {
                 $this->command->line('Super Admin already exists — password left untouched.');
             }
+
             return;
         }
 
@@ -46,9 +47,9 @@ class UserSeeder extends Seeder
         }
 
         $superAdmin = User::create([
-            'name'      => 'Super Admin',
-            'email'     => 'admin@fleet.com',
-            'password'  => Hash::make($password),
+            'name' => 'Super Admin',
+            'email' => 'admin@fleet.com',
+            'password' => Hash::make($password),
             'is_active' => true,
         ]);
 
@@ -65,8 +66,8 @@ class UserSeeder extends Seeder
      *   2. Production without env var → generate a strong random password
      *   3. Non-production → 'password' for developer convenience
      *
-     * @return string|null  The chosen password, or null to signal
-     *                      "caller must generate a random one".
+     * @return string|null The chosen password, or null to signal
+     *                     "caller must generate a random one".
      */
     private function resolveSuperAdminPassword(): ?string
     {
@@ -92,7 +93,7 @@ class UserSeeder extends Seeder
         $this->command->info(' SUPER ADMIN CREDENTIALS (shown ONLY once)');
         $this->command->info('══════════════════════════════════════════════════════════');
         $this->command->line('  Email:    admin@fleet.com');
-        $this->command->line('  Password: ' . $password);
+        $this->command->line('  Password: '.$password);
         $this->command->info('══════════════════════════════════════════════════════════');
 
         if ($generated) {
@@ -130,18 +131,19 @@ class UserSeeder extends Seeder
         // Skip in production — this is a known-credential test account.
         if (app()->environment('production')) {
             $this->command->warn('Skipped test garage admin (production environment).');
+
             return;
         }
 
         $admin = User::updateOrCreate(
             ['employee_code' => 'QAR-001'],
             [
-                'name'            => 'Garage Admin',
-                'email'           => 'garage.admin@example.com',
-                'password'        => Hash::make('password'),
-                'pin'             => Hash::make('1234'),
-                'pin_is_default'  => true,
-                'is_active'       => true,
+                'name' => 'Garage Admin',
+                'email' => 'garage.admin@example.com',
+                'password' => Hash::make('password'),
+                'pin' => Hash::make('1234'),
+                'pin_is_default' => true,
+                'is_active' => true,
             ]
         );
 
@@ -182,7 +184,7 @@ class UserSeeder extends Seeder
         // ─────────────────────────────────────────────────────────────
         $admin->garages()->syncWithoutDetaching([
             $garage->id => [
-                'role'      => 'admin',
+                'role' => 'admin',
                 'is_active' => true,
             ],
         ]);
@@ -191,7 +193,7 @@ class UserSeeder extends Seeder
         // does not flip `is_active` to true if the row already exists
         // with is_active = false.
         $garage->users()->updateExistingPivot($admin->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 

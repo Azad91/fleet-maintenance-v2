@@ -47,17 +47,17 @@ class BusesImport extends AbstractImport implements ToModel, WithChunkReading, W
         $bus ??= new Bus;
 
         $bus->fill([
-            'garage_id'     => $this->garageId,
-            'company_id'    => $this->companyId,
-            'dqn'           => $dqn,
-            'bus_project'   => $row['bus_project'] ?? null,
-            'vin'           => $row['vin'] ?? null,
-            'uzunluq'       => $row['uzunluq'] ?? null,
-            'route_number'  => $row['route_number'] ?? null,
+            'garage_id' => $this->garageId,
+            'company_id' => $this->companyId,
+            'dqn' => $dqn,
+            'bus_project' => $row['bus_project'] ?? null,
+            'vin' => $row['vin'] ?? null,
+            'uzunluq' => $row['uzunluq'] ?? null,
+            'route_number' => $row['route_number'] ?? null,
             'engine_number' => $row['engine_number'] ?? null,
-            'date'          => now()->format('Y-m-d'),
-            'is_active'     => true,
-            'km'            => isset($row['km']) ? (int) $row['km'] : null,
+            'date' => now()->format('Y-m-d'),
+            'is_active' => true,
+            'km' => isset($row['km']) ? (int) $row['km'] : null,
         ]);
 
         $this->incrementImported();

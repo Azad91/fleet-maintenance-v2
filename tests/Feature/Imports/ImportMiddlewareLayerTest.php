@@ -32,11 +32,11 @@ class ImportMiddlewareLayerTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
     }
@@ -132,7 +132,7 @@ class ImportMiddlewareLayerTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->withSession([
-                'current_garage_id'  => $otherGarage->id,
+                'current_garage_id' => $otherGarage->id,
                 'current_company_id' => $this->company->id,
             ])
             ->post(route('complaints.import.store'), [

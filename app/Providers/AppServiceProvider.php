@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
             // emailini kilidləyə bilməz, eyni IP-dən çoxlu email
             // yoxlaya da bilməz.
             return Limit::perMinutes($decayMinutes, $attempts)
-                ->by(strtolower((string) $request->input('email')) . '|' . $request->ip());
+                ->by(strtolower((string) $request->input('email')).'|'.$request->ip());
         });
 
         RateLimiter::for('api', function (Request $request) {
@@ -85,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
         $raw = (string) config("rate_limits.{$name}", '60,1');
         $parts = array_map('trim', explode(',', $raw));
 
-        $attempts     = max(1, (int) ($parts[0] ?? 60));
+        $attempts = max(1, (int) ($parts[0] ?? 60));
         $decayMinutes = max(1, (int) ($parts[1] ?? 1));
 
         return [$attempts, $decayMinutes];

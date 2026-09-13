@@ -22,9 +22,9 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $totalBuses          = Bus::count();
-        $activeBuses         = Bus::where('is_active', true)->count();
-        $activeComplaints    = Complaint::where('status', '!=', 'completed')->count();
+        $totalBuses = Bus::count();
+        $activeBuses = Bus::where('is_active', true)->count();
+        $activeComplaints = Complaint::where('status', '!=', 'completed')->count();
         $totalWarehouseItems = Warehouse::sum('quantity');
 
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();

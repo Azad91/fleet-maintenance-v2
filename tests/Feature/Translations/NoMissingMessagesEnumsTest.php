@@ -42,7 +42,7 @@ class NoMissingMessagesEnumsTest extends TestCase
             // Look for the wrong namespace in any form of string literal.
             if (preg_match('/messages\.enums\./', $contents)) {
                 $offenders[] = str_replace(
-                    base_path() . DIRECTORY_SEPARATOR,
+                    base_path().DIRECTORY_SEPARATOR,
                     '',
                     $path
                 );
@@ -52,8 +52,8 @@ class NoMissingMessagesEnumsTest extends TestCase
         $this->assertEmpty(
             $offenders,
             "The 'messages.enums.*' namespace does not exist. "
-            . "Use 'enums.*' instead. "
-            . "Offending files:\n - " . implode("\n - ", $offenders)
+            ."Use 'enums.*' instead. "
+            ."Offending files:\n - ".implode("\n - ", $offenders)
         );
     }
 

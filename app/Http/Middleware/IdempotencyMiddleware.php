@@ -11,7 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 class IdempotencyMiddleware
 {
     private const CACHE_TTL_HOURS = 12;
+
     private const LOCK_SECONDS = 30;
+
     private const MAX_KEY_LENGTH = 255;
 
     private const STRIPPED_HEADERS = [
@@ -35,7 +37,7 @@ class IdempotencyMiddleware
         }
 
         $cacheKey = $this->buildCacheKey($request, $idempotencyKey);
-        $lockKey  = $cacheKey . ':lock';
+        $lockKey = $cacheKey.':lock';
 
         // 1. CACHE HIT
         $cached = Cache::get($cacheKey);
@@ -63,7 +65,7 @@ class IdempotencyMiddleware
 
             if ($status >= 200 && $status < 400 && ! $hasValidationErrors) {
                 Cache::put($cacheKey, [
-                    'status'  => $status,
+                    'status' => $status,
                     'headers' => $this->filterHeaders($response->headers->all()),
                     'content' => $response->getContent(),
                 ], now()->addHours(self::CACHE_TTL_HOURS));
@@ -96,12 +98,12 @@ class IdempotencyMiddleware
 
     private function buildCacheKey(Request $request, string $idempotencyKey): string
     {
-        $userId   = $request->user()?->getKey() ?? 'guest';
+        $userId = $request->user()?->getKey() ?? 'guest';
         $garageId = GarageContext::getGarageId() ?? 'none';
-        $method   = $request->method();
-        $path     = $request->path();
-        $query    = $request->getQueryString() ?? '';
-        $keyHash  = hash('sha256', $idempotencyKey);
+        $method = $request->method();
+        $path = $request->path();
+        $query = $request->getQueryString() ?? '';
+        $keyHash = hash('sha256', $idempotencyKey);
 
         return "idempotency:{$userId}:{$garageId}:{$method}:{$path}:{$query}:{$keyHash}";
     }

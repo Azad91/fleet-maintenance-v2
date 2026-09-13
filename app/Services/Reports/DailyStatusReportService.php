@@ -31,7 +31,7 @@ class DailyStatusReportService
         $total = $rows->sum('total');
 
         return [
-            'rows'  => $rows,
+            'rows' => $rows,
             'total' => $total,
         ];
     }
@@ -78,7 +78,7 @@ class DailyStatusReportService
             ->keyBy('id');
 
         return $rows->map(fn ($row) => (object) [
-            'user'          => $users->get($row->user_id),
+            'user' => $users->get($row->user_id),
             'total_actions' => (int) $row->total_actions,
             'created_count' => (int) $row->created_count,
             'updated_count' => (int) $row->updated_count,

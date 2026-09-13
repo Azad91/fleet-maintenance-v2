@@ -37,7 +37,7 @@ class CreatedByProtectionTest extends TestCase
             'name' => 'Real Admin',
         ]);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -58,7 +58,7 @@ class CreatedByProtectionTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -69,17 +69,17 @@ class CreatedByProtectionTest extends TestCase
 
     public function test_created_by_is_not_fillable_on_warehouse(): void
     {
-        $this->assertNotContains('created_by', (new Warehouse())->getFillable());
+        $this->assertNotContains('created_by', (new Warehouse)->getFillable());
     }
 
     public function test_created_by_is_not_fillable_on_daily_km_record(): void
     {
-        $this->assertNotContains('created_by', (new DailyKmRecord())->getFillable());
+        $this->assertNotContains('created_by', (new DailyKmRecord)->getFillable());
     }
 
     public function test_created_by_is_not_fillable_on_bus_daily_status(): void
     {
-        $this->assertNotContains('created_by', (new BusDailyStatus())->getFillable());
+        $this->assertNotContains('created_by', (new BusDailyStatus)->getFillable());
     }
 
     // ==================================================================
@@ -91,9 +91,9 @@ class CreatedByProtectionTest extends TestCase
         $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('warehouses.store'), [
-                'code'       => 'W-SPOOF-TEST',
-                'name'       => 'Spoof Test',
-                'quantity'   => 10,
+                'code' => 'W-SPOOF-TEST',
+                'name' => 'Spoof Test',
+                'quantity' => 10,
                 'created_by' => $this->otherUser->id, // ← spoofing attempt
             ]);
 
@@ -117,16 +117,16 @@ class CreatedByProtectionTest extends TestCase
     public function test_daily_km_record_created_by_reflects_authenticated_user(): void
     {
         $bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('daily-km-records.store'), [
-                'bus_id'     => $bus->id,
-                'date'       => now()->toDateString(),
-                'km'         => 15000,
+                'bus_id' => $bus->id,
+                'date' => now()->toDateString(),
+                'km' => 15000,
                 'created_by' => $this->otherUser->id,
             ]);
 
@@ -142,16 +142,16 @@ class CreatedByProtectionTest extends TestCase
     public function test_bus_daily_status_created_by_reflects_authenticated_user(): void
     {
         $bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('bus-daily-statuses.store'), [
-                'bus_id'     => $bus->id,
-                'date'       => now()->toDateString(),
-                'status'     => 'READY',
+                'bus_id' => $bus->id,
+                'date' => now()->toDateString(),
+                'status' => 'READY',
                 'created_by' => $this->otherUser->id,
             ]);
 
@@ -171,11 +171,11 @@ class CreatedByProtectionTest extends TestCase
     public function test_direct_model_create_ignores_created_by_without_auth(): void
     {
         $warehouse = Warehouse::create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => 'W-NOAUTH',
-            'name'       => 'No Auth Create',
-            'quantity'   => 5,
+            'code' => 'W-NOAUTH',
+            'name' => 'No Auth Create',
+            'quantity' => 5,
             'created_by' => $this->otherUser->id, // must be ignored
         ]);
 
@@ -190,11 +190,11 @@ class CreatedByProtectionTest extends TestCase
         $this->actingAs($this->admin);
 
         $warehouse = Warehouse::create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => 'W-AUTHDIRECT',
-            'name'       => 'Auth Direct Create',
-            'quantity'   => 5,
+            'code' => 'W-AUTHDIRECT',
+            'name' => 'Auth Direct Create',
+            'quantity' => 5,
             'created_by' => $this->otherUser->id, // must be ignored
         ]);
 
@@ -214,11 +214,11 @@ class CreatedByProtectionTest extends TestCase
         $this->actingAs($this->admin);
 
         $warehouse = Warehouse::create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => 'W-FORCEFILL',
-            'name'       => 'ForceFill Test',
-            'quantity'   => 5,
+            'code' => 'W-FORCEFILL',
+            'name' => 'ForceFill Test',
+            'quantity' => 5,
         ]);
 
         // Bəzi hallarda sistem başqa user adına yaza bilər (məsələn import)

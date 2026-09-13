@@ -15,10 +15,10 @@ class GarageSeeder extends Seeder
         $company1 = Company::updateOrCreate(
             ['slug' => 'bakubus'],
             [
-                'name'      => 'BakuBus',
-                'email'     => 'info@bakubus.az',
-                'phone'     => '+994 12 123 45 67',
-                'address'   => 'Baku, Nasimi district',
+                'name' => 'BakuBus',
+                'email' => 'info@bakubus.az',
+                'phone' => '+994 12 123 45 67',
+                'address' => 'Baku, Nasimi district',
                 'is_active' => true,
             ]
         );
@@ -27,10 +27,10 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-001'],
             [
                 'company_id' => $company1->id,
-                'name'       => 'Central Garage',
-                'address'    => 'Baku, Yasamal district',
-                'phone'      => '+994 12 111 11 11',
-                'is_active'  => true,
+                'name' => 'Central Garage',
+                'address' => 'Baku, Yasamal district',
+                'phone' => '+994 12 111 11 11',
+                'is_active' => true,
             ]
         );
 
@@ -38,10 +38,10 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-002'],
             [
                 'company_id' => $company1->id,
-                'name'       => 'Sumgayit Garage',
-                'address'    => 'Sumgayit, Industrial zone',
-                'phone'      => '+994 12 222 22 22',
-                'is_active'  => true,
+                'name' => 'Sumgayit Garage',
+                'address' => 'Sumgayit, Industrial zone',
+                'phone' => '+994 12 222 22 22',
+                'is_active' => true,
             ]
         );
 
@@ -49,10 +49,10 @@ class GarageSeeder extends Seeder
         $company2 = Company::updateOrCreate(
             ['slug' => 'azavto'],
             [
-                'name'      => 'Azerbaijan Automobile',
-                'email'     => 'info@azavto.az',
-                'phone'     => '+994 12 987 65 43',
-                'address'   => 'Baku, Khatai district',
+                'name' => 'Azerbaijan Automobile',
+                'email' => 'info@azavto.az',
+                'phone' => '+994 12 987 65 43',
+                'address' => 'Baku, Khatai district',
                 'is_active' => true,
             ]
         );
@@ -61,10 +61,10 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-003'],
             [
                 'company_id' => $company2->id,
-                'name'       => 'Khatai Garage',
-                'address'    => 'Baku, Khatai district',
-                'phone'      => '+994 12 333 33 33',
-                'is_active'  => true,
+                'name' => 'Khatai Garage',
+                'address' => 'Baku, Khatai district',
+                'phone' => '+994 12 333 33 33',
+                'is_active' => true,
             ]
         );
 
@@ -72,10 +72,10 @@ class GarageSeeder extends Seeder
             ['code' => 'GAR-004'],
             [
                 'company_id' => $company2->id,
-                'name'       => 'Nasimi Garage',
-                'address'    => 'Baku, Nasimi district',
-                'phone'      => '+994 12 444 44 44',
-                'is_active'  => true,
+                'name' => 'Nasimi Garage',
+                'address' => 'Baku, Nasimi district',
+                'phone' => '+994 12 444 44 44',
+                'is_active' => true,
             ]
         );
 

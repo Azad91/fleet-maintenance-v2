@@ -39,22 +39,22 @@ class LoginRequest extends FormRequest
      * @throws ValidationException
      */
     public function authenticate(): void
-{
-    $this->ensureIsNotRateLimited();
+    {
+        $this->ensureIsNotRateLimited();
 
-    if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-        RateLimiter::hit(
-            $this->throttleKey(),
-            (int) config('rate_limits.login_decay_seconds', 900)
-        );
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit(
+                $this->throttleKey(),
+                (int) config('rate_limits.login_decay_seconds', 900)
+            );
 
-        throw ValidationException::withMessages([
-            'email' => trans('auth.failed'),
-        ]);
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
+        RateLimiter::clear($this->throttleKey());
     }
-
-    RateLimiter::clear($this->throttleKey());
-}
 
     /**
      * Ensure the login request is not rate limited.
@@ -62,24 +62,24 @@ class LoginRequest extends FormRequest
      * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
-{
-    $maxAttempts = (int) config('rate_limits.login_attempts', 5);
+    {
+        $maxAttempts = (int) config('rate_limits.login_attempts', 5);
 
-    if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
-        return;
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
+            return;
+        }
+
+        event(new Lockout($this));
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
     }
-
-    event(new Lockout($this));
-
-    $seconds = RateLimiter::availableIn($this->throttleKey());
-
-    throw ValidationException::withMessages([
-        'email' => trans('auth.throttle', [
-            'seconds' => $seconds,
-            'minutes' => ceil($seconds / 60),
-        ]),
-    ]);
-}
 
     /**
      * Get the rate limiting throttle key for the request.

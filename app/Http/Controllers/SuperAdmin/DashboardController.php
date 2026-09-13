@@ -22,15 +22,15 @@ class DashboardController extends Controller
     public function index(): View
     {
         $stats = [
-            'companies_total'     => Company::count(),
-            'companies_active'    => Company::where('is_active', true)->count(),
-            'garages_total'       => Garage::count(),
-            'garages_active'      => Garage::where('is_active', true)->count(),
-            'users_total'         => User::count(),
-            'users_active'        => User::where('is_active', true)->count(),
-            'users_super_admins'  => User::where('role', 'super_admin')->count(),
-            'buses_total'         => Bus::withoutGlobalScopes()->count(),
-            'complaints_open'     => Complaint::withoutGlobalScopes()->where('status', '!=', 'completed')->count(),
+            'companies_total' => Company::count(),
+            'companies_active' => Company::where('is_active', true)->count(),
+            'garages_total' => Garage::count(),
+            'garages_active' => Garage::where('is_active', true)->count(),
+            'users_total' => User::count(),
+            'users_active' => User::where('is_active', true)->count(),
+            'users_super_admins' => User::where('role', 'super_admin')->count(),
+            'buses_total' => Bus::withoutGlobalScopes()->count(),
+            'complaints_open' => Complaint::withoutGlobalScopes()->where('status', '!=', 'completed')->count(),
         ];
 
         $recentCompanies = Company::orderByDesc('id')->limit(5)->get();
@@ -51,16 +51,16 @@ class DashboardController extends Controller
 
         // Storage / runtime info
         $system = [
-            'php_version'      => PHP_VERSION,
-            'laravel_version'  => app()->version(),
-            'db_driver'        => DB::connection()->getDriverName(),
-            'cache_driver'     => config('cache.default'),
-            'session_driver'   => config('session.driver'),
-            'queue_driver'     => config('queue.default'),
-            'app_env'          => config('app.env'),
-            'app_debug'        => config('app.debug'),
-            'timezone'         => config('app.timezone'),
-            'locale'           => config('app.locale'),
+            'php_version' => PHP_VERSION,
+            'laravel_version' => app()->version(),
+            'db_driver' => DB::connection()->getDriverName(),
+            'cache_driver' => config('cache.default'),
+            'session_driver' => config('session.driver'),
+            'queue_driver' => config('queue.default'),
+            'app_env' => config('app.env'),
+            'app_debug' => config('app.debug'),
+            'timezone' => config('app.timezone'),
+            'locale' => config('app.locale'),
         ];
 
         return view('super-admin.dashboard', compact(

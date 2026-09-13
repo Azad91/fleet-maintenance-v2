@@ -60,8 +60,8 @@ class ReportScope
         $garageIds = $garageId ? [(int) $garageId] : [];
 
         // Worker within the domain → only own records
-        $isWorker = $user->hasGarageRole($domain . '_worker');
-        $userId   = $isWorker ? $user->id : null;
+        $isWorker = $user->hasGarageRole($domain.'_worker');
+        $userId = $isWorker ? $user->id : null;
 
         return new self(
             garageIds: $garageIds,

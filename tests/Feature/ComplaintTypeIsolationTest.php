@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\ComplaintType;
 use App\Models\Company;
+use App\Models\ComplaintType;
 use App\Models\Garage;
 use App\Models\User;
 use App\Services\GarageContext;
@@ -45,7 +45,7 @@ class ComplaintTypeIsolationTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -53,14 +53,14 @@ class ComplaintTypeIsolationTest extends TestCase
     public function test_admin_sees_only_own_garage_types(): void
     {
         ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Type A',
-            'garage_id'  => $this->garageA->id,
+            'name' => 'Type A',
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
         ]);
 
         ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Type B',
-            'garage_id'  => $this->garageB->id,
+            'name' => 'Type B',
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
         ]);
 
@@ -76,8 +76,8 @@ class ComplaintTypeIsolationTest extends TestCase
     public function test_admin_cannot_edit_type_from_other_garage(): void
     {
         $otherType = ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Other Garage Type',
-            'garage_id'  => $this->garageB->id,
+            'name' => 'Other Garage Type',
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
         ]);
 
@@ -92,8 +92,8 @@ class ComplaintTypeIsolationTest extends TestCase
     public function test_admin_cannot_delete_type_from_other_garage(): void
     {
         $otherType = ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Other Garage Type',
-            'garage_id'  => $this->garageB->id,
+            'name' => 'Other Garage Type',
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
         ]);
 
@@ -105,7 +105,7 @@ class ComplaintTypeIsolationTest extends TestCase
 
         // The other garage's type still exists
         $this->assertDatabaseHas('complaint_types', [
-            'id'   => $otherType->id,
+            'id' => $otherType->id,
             'name' => 'Other Garage Type',
         ]);
     }
@@ -113,15 +113,15 @@ class ComplaintTypeIsolationTest extends TestCase
     public function test_same_name_allowed_in_different_garages(): void
     {
         ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Same Name',
-            'garage_id'  => $this->garageA->id,
+            'name' => 'Same Name',
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
         ]);
 
         // Same name in a different garage — should be allowed
         ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Same Name',
-            'garage_id'  => $this->garageB->id,
+            'name' => 'Same Name',
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
         ]);
 
@@ -133,8 +133,8 @@ class ComplaintTypeIsolationTest extends TestCase
     public function test_duplicate_name_rejected_in_same_garage(): void
     {
         ComplaintType::withoutGlobalScopes()->create([
-            'name'       => 'Duplicate',
-            'garage_id'  => $this->garageA->id,
+            'name' => 'Duplicate',
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
         ]);
 
