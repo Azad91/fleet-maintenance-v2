@@ -14,5 +14,10 @@ class DatabaseSeeder extends Seeder
             ComplaintTypeSeeder::class,
             ServiceTemplateSeeder::class,
         ]);
+
+        // Only seed demo data outside production
+        if (! app()->environment('production')) {
+            $this->call(DemoDataSeeder::class);
+        }
     }
 }

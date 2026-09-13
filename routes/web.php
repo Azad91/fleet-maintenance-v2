@@ -294,7 +294,10 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     });
 
     // ==================== SUPER ADMIN ====================
-    Route::prefix('super-admin')->name('super-admin.')->group(function () {
+    Route::prefix('super-admin')
+        ->name('super-admin.')
+        ->middleware('super.admin')
+        ->group(function () {
         // Dashboard + Settings
         Route::get('/dashboard', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])
             ->name('dashboard');

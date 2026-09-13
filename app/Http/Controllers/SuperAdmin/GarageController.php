@@ -158,12 +158,4 @@ class GarageController extends Controller
             ->route('super-admin.garages.index')
             ->with('success', __('messages.super_admin.garages.deleted'));
     }
-
-    /**
-     * Ensure the authenticated user is a super admin.
-     */
-    private function ensureSuperAdmin(): void
-    {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403);
-    }
 }

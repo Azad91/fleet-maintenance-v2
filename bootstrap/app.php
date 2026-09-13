@@ -46,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'garage.selected' => \App\Http\Middleware\EnsureGarageSelected::class,
             'idempotent'      => \App\Http\Middleware\IdempotencyMiddleware::class,
             'api.garage'      => \App\Http\Middleware\EnsureApiGarageContext::class,
+            'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class, // ← YENİ
         ]);
 
         // API route-larında qaraj kontekstini məcburi edirik

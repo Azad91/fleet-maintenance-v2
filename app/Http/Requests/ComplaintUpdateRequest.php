@@ -32,14 +32,20 @@ class ComplaintUpdateRequest extends FormRequest
             'yer'         => 'required|in:road,garage',
             'driver_name' => 'nullable|string|max:255',
             'driver_id'   => ['nullable', 'required_if:yer,road', $driverRule],
+
+            // complaint_type is a CATEGORY enum
+            'complaint_type' => 'nullable|in:accident,breakdown,maintenance',
+
+            // complaint items must exist in complaint_types for the current garage
             'complaints'      => 'required|array|min:1',
-            'complaints.*'    => 'required|string',
-            'km'             => 'nullable|integer|min:0',
-            'status'         => 'required|in:pending,in_progress',
-            'complaint_type' => [
-                'nullable',
+            'complaints.*'    => [
+                'required',
+                'string',
                 Rule::exists('complaint_types', 'name')->where('garage_id', $garageId),
             ],
+
+            'km'             => 'nullable|integer|min:0',
+            'status'         => 'required|in:pending,in_progress',
             'details'                     => 'nullable|array',
             'details.*.code'              => 'nullable|string',
             'details.*.used_quantity'     => 'nullable|integer|min:1',

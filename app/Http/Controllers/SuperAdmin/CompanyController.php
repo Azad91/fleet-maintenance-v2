@@ -154,14 +154,6 @@ class CompanyController extends Controller
     }
 
     /**
-     * Ensure the authenticated user is a super admin.
-     */
-    private function ensureSuperAdmin(): void
-    {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403);
-    }
-
-    /**
      * Generate a unique slug from the given name.
      */
     private function generateUniqueSlug(string $name): string

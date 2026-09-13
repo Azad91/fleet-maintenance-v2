@@ -187,14 +187,6 @@ class UserController extends Controller
     }
 
     /**
-     * Ensure the authenticated user is a super admin.
-     */
-    private function ensureSuperAdmin(): void
-    {
-        abort_unless(auth()->user()?->isSuperAdmin(), 403);
-    }
-
-    /**
      * Generate a unique employee code.
      */
     private function generateEmployeeCode(): string
