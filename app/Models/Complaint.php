@@ -85,15 +85,21 @@ class Complaint extends Model
         return $this->hasMany(ComplaintDetail::class);
     }
 
-    // ==================== SKOPLAR ====================
+        // ==================== SKOPLAR ====================
     public function scopeOpen($query)
     {
-        return $query->where('status', '!=', 'completed');
+        return $query->whereIn('status', [
+            ComplaintStatus::Pending->value,
+            ComplaintStatus::InProgress->value,
+        ]);
     }
 
     public function scopeClosed($query)
     {
-        return $query->where('status', 'completed');
+        return $query->whereIn('status', [
+            ComplaintStatus::Completed->value,
+            ComplaintStatus::Cancelled->value,
+        ]);
     }
 
     public function scopeByType($query, $type)
@@ -102,15 +108,15 @@ class Complaint extends Model
     }
 
     // ==================== AKSESSORLAR ====================
-    public function getIsOpenAttribute()
+    public function getIsOpenAttribute(): bool
     {
-        return $this->status !== 'completed';
+        return ComplaintStatus::tryFrom((string) $this->status)?->isOpen() ?? false;
     }
 
-    public function getDurationAttribute()
+    public function getDurationAttribute(): string
     {
         if ($this->start_date && $this->end_date) {
-            return $this->start_date->diffInDays($this->end_date).' gün';
+            return $this->start_date->diffInDays($this->end_date) . ' gün';
         }
 
         return '-';

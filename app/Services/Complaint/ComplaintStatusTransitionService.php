@@ -2,38 +2,46 @@
 
 namespace App\Services\Complaint;
 
+use App\Enums\ComplaintStatus;
 use App\Models\Complaint;
 use Illuminate\Validation\ValidationException;
 
 class ComplaintStatusTransitionService
 {
-    protected const ALLOWED_TRANSITIONS = [
-        'pending'     => ['pending', 'in_progress', 'completed', 'cancelled'],
-        'in_progress' => ['in_progress', 'pending', 'completed', 'cancelled'],
-        'completed'   => ['completed'],
-        'cancelled'   => ['cancelled'],
-    ];
-
-    public function canTransition(string $currentStatus, string $newStatus): bool
+    /**
+     * Validate that the requested status change is legal.
+     *
+     * The `$complaint->status` value is stored as a plain string
+     * (no model cast yet), so we resolve it to a ComplaintStatus
+     * via tryFrom() and default to Pending if the value is null
+     * or unrecognized.
+     */
+    public function validateTransition(Complaint $complaint, string $newStatusValue): void
     {
-        $allowed = self::ALLOWED_TRANSITIONS[$currentStatus] ?? [];
+        $current = ComplaintStatus::tryFrom((string) $complaint->status)
+            ?? ComplaintStatus::Pending;
 
-        return in_array($newStatus, $allowed, true);
-    }
+        $next = ComplaintStatus::tryFrom($newStatusValue);
 
-    public function validateTransition(Complaint $complaint, string $newStatus): void
-    {
-        $currentStatus = $complaint->status ?? 'pending';
+        if ($next === null) {
+            throw ValidationException::withMessages([
+                'status' => __('messages.flash.invalid_status_transition', [
+                    'from' => $current->value,
+                    'to'   => $newStatusValue,
+                ]),
+            ]);
+        }
 
-        if ($currentStatus === $newStatus) {
+        // Self-transition is a no-op — always allowed.
+        if ($current === $next) {
             return;
         }
 
-        if (! $this->canTransition($currentStatus, $newStatus)) {
+        if (! $current->canTransitionTo($next)) {
             throw ValidationException::withMessages([
                 'status' => __('messages.flash.invalid_status_transition', [
-                    'from' => $currentStatus,
-                    'to'   => $newStatus,
+                    'from' => $current->value,
+                    'to'   => $next->value,
                 ]),
             ]);
         }
