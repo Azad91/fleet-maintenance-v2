@@ -20,22 +20,11 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming email/password authentication request.
-     *
-     * All post-login routing is delegated to PostLoginRedirector so
-     * that email login and PIN login produce identical behavior:
-     *
-     *   - Director (company-level)      → director.dashboard
-     *   - Super Admin                    → garage.selection
-     *   - 1 active garage membership     → auto-select + dashboard
-     *   - 0 or 2+ active memberships     → garage.selection
-     *
-     * Previously this method had inline routing that did not check for
-     * the Director role, which sent Directors to the garage selection
-     * page — breaking the company-level navigation promised in the spec.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
         $request->session()->regenerate();
 
         $user = Auth::user();
@@ -44,7 +33,8 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('login');
         }
 
-        // ↓ YENİ — PIN login ilə eyni davranış
+        // Default PIN varsa, PIN dəyişmə səhifəsinə yönləndir.
+        // Bu, PIN login ilə eyni davranışı təmin edir.
         if ($user->pin_is_default && $user->pin) {
             return redirect()->route('pin.change.show');
         }

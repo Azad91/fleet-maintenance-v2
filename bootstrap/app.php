@@ -23,8 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Trust proxies YALNIZ env dəyişəni ilə konfiqurasiya olunur
-        // Production-da: TRUSTED_PROXIES=127.0.0.1,10.0.0.0/8
-        // Local-də: TRUSTED_PROXIES= (boş → heç bir proxy-yə inanma)
         $trustedProxies = env('TRUSTED_PROXIES');
 
         if ($trustedProxies !== null && $trustedProxies !== '') {
@@ -38,6 +36,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Global middleware — hər request üçün
         $middleware->append(App\Http\Middleware\RequestIdMiddleware::class);
 
+        // Web middleware additions
+        // QEYD: EnforcePinChange web qrupundan çıxarıldı və
+        // route-level `pin.enforced` alias kimi təyin olundu.
+        // Səbəb: `auth`-dan əvvəl işləyirdi və kövrək idi.
         $middleware->web(append: [
             App\Http\Middleware\SetLocale::class,
         ]);
@@ -54,20 +56,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         // ============================================================
         // CUSTOM EXCEPTION RENDERERS
-        //
-        // Only exceptions that need project-specific behavior are
-        // registered here. Laravel already handles the following
-        // correctly out of the box:
-        //   - ValidationException        → 422 + {message, errors}
-        //   - ModelNotFoundException     → 404
-        //   - NotFoundHttpException      → 404
-        //   - AuthenticationException    → 401 JSON / redirect HTML
-        //   - AuthorizationException     → 403
         // ============================================================
 
-        // ============================================================
-        // 1. GARAGE ACCESS DENIED — 403, redirect to selection (HTML)
-        // ============================================================
+        // 1. GARAGE ACCESS DENIED — 403
         $exceptions->render(function (GarageAccessDeniedException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
@@ -78,9 +69,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->with('error', $e->getMessage());
         });
 
-        // ============================================================
         // 2. STOCK INSUFFICIENT — 422
-        // ============================================================
         $exceptions->render(function (StockInsufficientException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
@@ -89,9 +78,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->with('error', $e->getMessage())->withInput();
         });
 
-        // ============================================================
         // 3. MISSING GARAGE CONTEXT — block silent data corruption
-        // ============================================================
         $exceptions->render(function (MissingGarageContextException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -105,9 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->with('error', __('messages.flash.no_garage'));
         });
 
-        // ============================================================
         // 4. HTTP EXCEPTIONS (CSRF 419, Throttle 429) — localized JSON
-        // ============================================================
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
             if (! $request->expectsJson()) {
                 return null;
@@ -126,11 +111,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $status);
         });
 
-        // ============================================================
-        // 6. REPORTING — real xətaları log et, gözlənilənləri atla
-        // ============================================================
+        // 5. REPORTING
         $exceptions->reportable(function (Throwable $e) {
-            // Gözlənilən xətaları loglamırıq — Laravel özü düzgün cavab qaytarır
             if ($e instanceof ModelNotFoundException
                 || $e instanceof NotFoundHttpException
                 || $e instanceof AuthorizationException
@@ -140,7 +122,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 return false;
             }
 
-            // Real server xətalarını log edirik
             Log::error($e->getMessage(), [
                 'exception' => get_class($e),
                 'file' => $e->getFile(),

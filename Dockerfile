@@ -1,8 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
-
 # ════════════════════════════════════════════════════════════════
-# Stage 2 — PHP runtime (Apache)
+# PHP runtime (Apache)
+#
+# QEYD: Bu layihə JS build tələb etmir — Bootstrap, FontAwesome və
+# Bootstrap Icons artıq `public/vendor/` altında saxlanılır, Alpine.js
+# isə yalnız `resources/js/app.js`-də import olunur və istifadə
+# edilmir. Ona görə Node stage-i Dockerfile-dən çıxarıldı.
 # ════════════════════════════════════════════════════════════════
 FROM php:8.4-apache AS app
 
@@ -50,8 +54,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # ────────────────────────────────────────────────────────────────
-# PHP dependencies — cached layer, invalidated only when the
-# composer manifests change.
+# PHP dependencies — cached layer
 # ────────────────────────────────────────────────────────────────
 COPY composer.json composer.lock ./
 
@@ -70,7 +73,6 @@ COPY . .
 
 # ────────────────────────────────────────────────────────────────
 # Regenerate the Composer autoloader against the full source tree
-# so package:discover can see every provider.
 # ────────────────────────────────────────────────────────────────
 RUN composer dump-autoload --optimize --no-dev
 
