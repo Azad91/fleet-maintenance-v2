@@ -1,41 +1,122 @@
-FROM php:8.4-apache
+# syntax=docker/dockerfile:1.7
 
-WORKDIR /var/www/html
+# ════════════════════════════════════════════════════════════════
+# Stage 1 — Frontend build (Node 22 LTS)
+#
+# This stage is discarded from the final image. Node and its
+# dependencies never ship to production; only the compiled assets
+# under public/build are copied over.
+# ════════════════════════════════════════════════════════════════
+FROM node:22-alpine AS frontend
 
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libpq-dev \
-    libzip-dev \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    nodejs \
-    npm \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_pgsql pgsql zip gd \
-    && a2enmod rewrite \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Install JavaScript dependencies against the lockfile when present,
+# otherwise fall back to a plain install so first-time builds work
+# without committing a package-lock.json.
+COPY package.json package-lock.json* ./
 
-COPY composer.json composer.lock ./
+RUN --mount=type=cache,target=/root/.npm \
+    if [ -f package-lock.json ]; then \
+        npm ci --no-audit --no-fund --ignore-scripts; \
+    else \
+        npm install --no-audit --no-fund --ignore-scripts; \
+    fi
 
-COPY . .
-
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --prefer-dist \
-    --optimize-autoloader
-
-COPY package*.json ./
-
-RUN npm ci
+# Copy only the inputs Vite actually reads.
+COPY vite.config.js ./
+COPY postcss.config.js* ./
+COPY tailwind.config.js* ./
+COPY resources ./resources
+COPY public ./public
 
 RUN npm run build
 
-RUN sed -i 's#DocumentRoot /var/www/html#DocumentRoot /var/www/html/public#' /etc/apache2/sites-available/000-default.conf
+
+# ════════════════════════════════════════════════════════════════
+# Stage 2 — PHP runtime (Apache)
+# ════════════════════════════════════════════════════════════════
+FROM php:8.4-apache AS app
+
+# ────────────────────────────────────────────────────────────────
+# System dependencies + PHP extensions
+# ────────────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        unzip \
+        curl \
+        libpq-dev \
+        libzip-dev \
+        libpng-dev \
+        libjpeg62-turbo-dev \
+        libfreetype6-dev \
+        libicu-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo_pgsql \
+        pgsql \
+        zip \
+        gd \
+        intl \
+        opcache \
+    && a2enmod rewrite headers \
+    && rm -rf /var/lib/apt/lists/*
+
+# ────────────────────────────────────────────────────────────────
+# OPcache — production-ready defaults
+# ────────────────────────────────────────────────────────────────
+RUN { \
+        echo 'opcache.enable=1'; \
+        echo 'opcache.enable_cli=0'; \
+        echo 'opcache.validate_timestamps=0'; \
+        echo 'opcache.memory_consumption=256'; \
+        echo 'opcache.interned_strings_buffer=16'; \
+        echo 'opcache.max_accelerated_files=20000'; \
+    } > /usr/local/etc/php/conf.d/opcache.ini
+
+# ────────────────────────────────────────────────────────────────
+# Composer binary
+# ────────────────────────────────────────────────────────────────
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+# ────────────────────────────────────────────────────────────────
+# PHP dependencies — cached layer, invalidated only when the
+# composer manifests change.
+# ────────────────────────────────────────────────────────────────
+COPY composer.json composer.lock ./
+
+RUN composer install \
+        --no-dev \
+        --no-interaction \
+        --no-scripts \
+        --prefer-dist \
+        --optimize-autoloader \
+        --no-progress
+
+# ────────────────────────────────────────────────────────────────
+# Application source (excluding what .dockerignore filters out)
+# ────────────────────────────────────────────────────────────────
+COPY . .
+
+# ────────────────────────────────────────────────────────────────
+# Compiled frontend assets from stage 1
+# ────────────────────────────────────────────────────────────────
+COPY --from=frontend /build/public/build ./public/build
+
+# ────────────────────────────────────────────────────────────────
+# Regenerate the Composer autoloader against the full source tree
+# so package:discover can see every provider.
+# ────────────────────────────────────────────────────────────────
+RUN composer dump-autoload --optimize --no-dev
+
+# ────────────────────────────────────────────────────────────────
+# Apache — point DocumentRoot at /public
+# ────────────────────────────────────────────────────────────────
+RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
+        /etc/apache2/sites-available/000-default.conf \
+        /etc/apache2/apache2.conf
 
 RUN printf '<Directory /var/www/html/public>\n\
     AllowOverride All\n\
@@ -43,8 +124,17 @@ RUN printf '<Directory /var/www/html/public>\n\
 </Directory>\n' > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel
 
+# ────────────────────────────────────────────────────────────────
+# Permissions + storage symlink
+# ────────────────────────────────────────────────────────────────
 RUN chown -R www-data:www-data storage bootstrap/cache \
-    && php artisan storage:link
+    && php artisan storage:link || true
+
+# ────────────────────────────────────────────────────────────────
+# Healthcheck — Laravel's /up endpoint
+# ────────────────────────────────────────────────────────────────
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS http://localhost/up || exit 1
 
 EXPOSE 80
 
