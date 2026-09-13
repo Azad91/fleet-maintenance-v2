@@ -64,16 +64,36 @@ class BusService
         $bus->delete();
     }
 
+    /**
+     * Bulk-update the active flag on multiple buses.
+     *
+     * IMPORTANT: the audit call MUST run BEFORE the actual DB update.
+     * `auditBulkUpdate()` compares the requested new value against the
+     * current value stored in the database. If we update first, the
+     * comparison sees identical values and silently skips logging.
+     */
     public function bulkUpdateStatus(array $ids, bool $isActive): void
     {
         if (empty($ids)) {
             return;
         }
 
+        // Capture the audit trail before mutating the database.
+        Bus::auditBulkUpdate(
+            $ids,
+            ['is_active' => $isActive],
+            $isActive ? 'bulk_activated' : 'bulk_deactivated'
+        );
+
         Bus::whereIn('id', $ids)->update(['is_active' => $isActive]);
-        Bus::auditBulkUpdate($ids, ['is_active' => $isActive], $isActive ? 'bulk_activated' : 'bulk_deactivated');
     }
 
+    /**
+     * Bulk soft-delete multiple buses.
+     *
+     * The audit snapshot must be taken before deletion so that the
+     * original values are preserved in the audit log.
+     */
     public function bulkDelete(array $ids): void
     {
         if (empty($ids)) {
@@ -81,6 +101,7 @@ class BusService
         }
 
         Bus::auditBulkDelete($ids);
+
         Bus::whereIn('id', $ids)->delete();
     }
 }
