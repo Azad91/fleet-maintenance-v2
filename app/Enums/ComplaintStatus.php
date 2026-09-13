@@ -2,21 +2,6 @@
 
 namespace App\Enums;
 
-/**
- * All valid values for `complaints.status`.
- *
- * NOTE: The application currently stores status as a plain string in
- * the DB and does NOT cast the model attribute to this enum. This is
- * intentional — the cast was deferred to a later refactor step so
- * views (which use `'enums.complaint_status.' . $complaint->status`)
- * could be updated in the same pass.
- *
- * For now, this enum serves as the single source of truth for the
- * value strings and their transition rules. Code in services, scopes,
- * and policies should reference `ComplaintStatus::Case->value` rather
- * than writing 'pending' / 'in_progress' / 'completed' / 'cancelled'
- * as literals.
- */
 enum ComplaintStatus: string
 {
     case Pending    = 'pending';
@@ -33,8 +18,26 @@ enum ComplaintStatus: string
     }
 
     /**
-     * True when the complaint is still active (pending or in progress).
+     * Bootstrap 5 color name — used for `badge bg-{color}`.
      */
+    public function bootstrapColor(): string
+    {
+        return match ($this) {
+            self::Pending, self::Cancelled => 'secondary',
+            self::InProgress               => 'warning',
+            self::Completed                => 'success',
+        };
+    }
+
+    /**
+     * CSS modifier for the project's custom `.badge-status.{modifier}`
+     * component — underscores become dashes.
+     */
+    public function cssModifier(): string
+    {
+        return str_replace('_', '-', $this->value);
+    }
+
     public function isOpen(): bool
     {
         return match ($this) {
@@ -43,28 +46,17 @@ enum ComplaintStatus: string
         };
     }
 
-    /**
-     * True when the complaint has been fully resolved.
-     */
     public function isCompleted(): bool
     {
         return $this === self::Completed;
     }
 
-    /**
-     * True when the complaint was abandoned.
-     */
     public function isCancelled(): bool
     {
         return $this === self::Cancelled;
     }
 
     /**
-     * Statuses that can be reached from this one.
-     *
-     * A status is always allowed to transition to itself (a no-op),
-     * which keeps the transition service simple.
-     *
      * @return array<int, self>
      */
     public function allowedTransitions(): array
@@ -82,7 +74,6 @@ enum ComplaintStatus: string
                 self::Completed,
                 self::Cancelled,
             ],
-            // Terminal states — no further transitions permitted.
             self::Completed => [self::Completed],
             self::Cancelled => [self::Cancelled],
         };
@@ -94,24 +85,14 @@ enum ComplaintStatus: string
     }
 
     /**
-     * All status values as plain strings.
-     *
      * @return array<int, string>
      */
     public static function values(): array
     {
-        return array_map(
-            static fn (self $case) => $case->value,
-            self::cases()
-        );
+        return array_map(static fn (self $case) => $case->value, self::cases());
     }
 
     /**
-     * Statuses that a complaint may be created with.
-     *
-     * `completed` and `cancelled` are terminal states and can only be
-     * reached through a subsequent update or the close flow.
-     *
      * @return array<int, self>
      */
     public static function creatableCases(): array
@@ -124,9 +105,6 @@ enum ComplaintStatus: string
      */
     public static function creatableValues(): array
     {
-        return array_map(
-            static fn (self $case) => $case->value,
-            self::creatableCases()
-        );
+        return array_map(static fn (self $case) => $case->value, self::creatableCases());
     }
 }

@@ -12,8 +12,8 @@
                     <i class="bi bi-file-earmark-pdf"></i> {{ __('messages.complaints.pdf_print') }}
                 </a>
             @endcan
-            <span class="badge-status {{ str_replace('_', '-', $complaint->status) }}">
-                {{ __('enums.complaint_status.' . $complaint->status) }}
+            <span class="badge-status {{ $complaint->status->cssModifier() }}">
+                {{ $complaint->status->label() }}
             </span>
         </div>
     </div>
@@ -41,10 +41,10 @@
                         <div class="complaint-show-card__item">
                             <small>{{ __('messages.complaints.location') }}</small>
                             <strong>
-                                @if($complaint->yer === 'road')
-                                    🛣️ {{ __('enums.location.road') }}
-                                @elseif($complaint->yer === 'garage')
-                                    🏠 {{ __('enums.location.garage') }}
+                                @if($complaint->yer?->isRoad())
+                                    🛣️ {{ $complaint->yer->label() }}
+                                @elseif($complaint->yer?->isGarage())
+                                    🏠 {{ $complaint->yer->label() }}
                                 @else
                                     -
                                 @endif
@@ -97,7 +97,7 @@
                     <i class="bi bi-clock me-2"></i>{{ __('messages.complaints.date_time') }}
                 </h6>
                 <div class="row g-3">
-                    @if($complaint->yer === 'road')
+                    @if($complaint->yer?->isRoad())
                         <div class="col-md-4">
                             <div class="complaint-show-card__item">
                                 <small>📅 {{ __('messages.complaints.reported_date') }}</small>
@@ -234,14 +234,14 @@
                 <i class="bi bi-arrow-left me-1"></i> {{ __('messages.common.back') }}
             </a>
             @can('update', $complaint)
-                @if($complaint->status !== 'completed')
+                @if(! $complaint->status->isCompleted())
                     <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-warning">
                         <i class="bi bi-pencil"></i> {{ __('messages.common.edit') }}
                     </a>
                 @endif
             @endcan
             @can('close', $complaint)
-                @if($complaint->status !== 'completed')
+                @if(! $complaint->status->isCompleted())
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#closeModal{{ $complaint->id }}">
                         <i class="bi bi-check-circle"></i> {{ __('messages.complaints.close_button') }}
                     </button>
@@ -251,7 +251,7 @@
     </div>
 </div>
 
-@if($complaint->status !== 'completed' && auth()->user()->can('close', $complaint))
+@if(! $complaint->status->isCompleted() && auth()->user()->can('close', $complaint))
     <div class="modal fade" id="closeModal{{ $complaint->id }}" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">

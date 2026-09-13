@@ -156,7 +156,7 @@
                                     </td>
                                     <td>
                                         <span class="fleet-status fleet-status--warning">
-                                            {{ __('messages.enums.complaint_status.' . $complaint->status) }}
+                                            {{ $complaint->status->label() }}
                                         </span>
                                     </td>
                                     <td>{{ optional($complaint->created_at)->format('d.m.Y') }}</td>

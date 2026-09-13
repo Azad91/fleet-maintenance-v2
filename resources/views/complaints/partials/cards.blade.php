@@ -27,18 +27,18 @@
                             <td><strong>{{ $complaint->bus->dqn ?? '-' }}</strong></td>
                             <td>{{ $complaint->bus->route_number ?? '-' }}</td>
                             <td>
-                                @if($complaint->yer === 'road')
-                                    🛣️ {{ __('enums.location.road') }}
-                                @elseif($complaint->yer === 'garage')
-                                    🏠 {{ __('enums.location.garage') }}
+                                @if($complaint->yer?->isRoad())
+                                    🛣️ {{ $complaint->yer->label() }}
+                                @elseif($complaint->yer?->isGarage())
+                                    🏠 {{ $complaint->yer->label() }}
                                 @else
                                     -
                                 @endif
                             </td>
                             <td>{{ Str::limit($complaint->items->first()->description ?? '-', 50) }}</td>
                             <td>
-                                <span class="badge-status {{ str_replace('_', '-', $complaint->status) }}">
-                                    {{ __('enums.complaint_status.' . $complaint->status) }}
+                                <span class="badge-status {{ $complaint->status->cssModifier() }}">
+                                    {{ $complaint->status->label() }}
                                 </span>
                             </td>
                             <td>

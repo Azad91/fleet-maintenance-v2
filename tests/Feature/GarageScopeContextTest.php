@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Garage;
 use App\Models\User;
 use App\Services\GarageContext;
+use App\Exceptions\MissingGarageContextException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
@@ -121,33 +122,23 @@ class GarageScopeContextTest extends TestCase
     }
 
     // ==================================================================
-    // 4. MISSING CONTEXT — PRODUCTION (log)
+    // 4. MISSING CONTEXT — PRODUCTION (exception)
     // ==================================================================
 
-    public function test_missing_context_logs_warning_in_production_mode(): void
+    public function test_missing_context_throws_exception_in_production_mode(): void
     {
         GarageContext::clear();
-
         session()->forget(['current_garage_id', 'current_company_id']);
 
         config(['app.debug' => false]);
 
-        Log::spy();
+        $this->expectException(\App\Exceptions\MissingGarageContextException::class);
+        $this->expectExceptionMessage('Garage context is not set');
 
-        $bus = Bus::create([
-            'dqn' => 'NO-CONTEXT-1',
+        Bus::create([
+            'dqn' => 'NO-CONTEXT-PROD',
             'is_active' => true,
         ]);
-
-        $this->assertNull($bus->garage_id);
-        $this->assertNull($bus->company_id);
-
-        // Log warning yazıldı
-        Log::shouldHaveReceived('warning')
-            ->once()
-            ->withArgs(function ($message) {
-                return str_contains($message, 'Garage context is not set');
-            });
     }
 
     // ==================================================================
@@ -158,13 +149,14 @@ class GarageScopeContextTest extends TestCase
     {
         GarageContext::clear();
         session()->forget(['current_garage_id', 'current_company_id']);
+
         config(['app.debug' => true]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\App\Exceptions\MissingGarageContextException::class);
         $this->expectExceptionMessage('Garage context is not set');
 
         Bus::create([
-            'dqn' => 'NO-CONTEXT-2',
+            'dqn' => 'NO-CONTEXT-DEBUG',
             'is_active' => true,
         ]);
     }

@@ -58,29 +58,16 @@
                         </td>
                         <td>
                             @if($complaint->complaint_type)
-                                <span class="badge bg-{{
-                                    match($complaint->complaint_type) {
-                                        'accident'    => 'danger',
-                                        'breakdown'   => 'warning',
-                                        'maintenance' => 'info',
-                                        default       => 'secondary',
-                                    }
-                                }}">
-                                    {{ __('enums.complaint_type.' . $complaint->complaint_type) }}
+                                <span class="badge bg-{{ $complaint->complaint_type->bootstrapColor() }}">
+                                    {{ $complaint->complaint_type->label() }}
                                 </span>
                             @else
                                 <span class="badge bg-secondary">-</span>
                             @endif
                         </td>
                         <td>
-                            <span class="badge bg-{{
-                                match($complaint->status) {
-                                    'completed'   => 'success',
-                                    'in_progress' => 'warning',
-                                    default       => 'secondary',
-                                }
-                            }}">
-                                {{ __('enums.complaint_status.' . $complaint->status) }}
+                            <span class="badge bg-{{ $complaint->status->bootstrapColor() }}">
+                                {{ $complaint->status->label() }}
                             </span>
                         </td>
                         <td>{{ $complaint->created_at ? $complaint->created_at->format('d.m.Y') : '-' }}</td>
@@ -93,7 +80,7 @@
                                 @endcan
 
                                 @can('update', $complaint)
-                                    @if($complaint->status !== 'completed')
+                                    @if(! $complaint->status->isCompleted())
                                         <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-outline-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -101,7 +88,7 @@
                                 @endcan
 
                                 @can('close', $complaint)
-                                    @if($complaint->status !== 'completed')
+                                    @if(! $complaint->status->isCompleted())
                                         <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#closeModal{{ $complaint->id }}">
                                             <i class="bi bi-check-circle"></i> {{ __('messages.complaints.close_button') }}
                                         </button>
@@ -146,7 +133,7 @@
 
 {{-- Close Modals --}}
 @foreach($complaints as $complaint)
-    @if($complaint->status !== 'completed' && auth()->user()->can('close', $complaint))
+    @if(! $complaint->status->isCompleted() && auth()->user()->can('close', $complaint))
         <div class="modal fade" id="closeModal{{ $complaint->id }}" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">

@@ -111,10 +111,18 @@ class WarehouseController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
+        $garageId = (int) session('current_garage_id');
+
+        if ($garageId <= 0) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         try {
             Excel::import(
                 new WarehouseImport(
-                    (int) session('current_garage_id'),
+                    $garageId,
                     session('current_company_id') ? (int) session('current_company_id') : null
                 ),
                 $request->file('file')

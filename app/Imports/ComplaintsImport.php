@@ -4,10 +4,10 @@ namespace App\Imports;
 
 use App\Enums\ComplaintStatus;
 use App\Enums\ComplaintType;
+use App\Enums\Location;
 use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\Warehouse;
-use App\Enums\Location;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\OnEachRow;
@@ -18,35 +18,23 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Row;
 
-class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, WithHeadingRow, WithValidation
+/**
+ * Imports complaints from an Excel file.
+ *
+ * Base class (AbstractImport) provides:
+ *   - garage/company context + constructor guard (garageId > 0)
+ *   - $skipped array + recordSkip()
+ *   - $importedCount + incrementImported()
+ *   - $rowCounter + nextRowIndex()
+ *   - chunkSize() = 100
+ *
+ * Each row is processed atomically: stock deduction, complaint
+ * creation, items and details all run inside a single transaction.
+ * Any failure rolls back the entire row.
+ */
+class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailure, WithChunkReading, WithHeadingRow, WithValidation
 {
     use SkipsFailures;
-
-    public array $skipped = [];
-    public int $importedCount = 0;
-
-    /**
-     * @param  int  $garageId   Must be > 0. A zero or negative value
-     *                          would disable garage filtering and let
-     *                          the import touch other tenants' data.
-     */
-    public function __construct(
-        public int $garageId,
-        public ?int $companyId = null
-    ) {
-        if ($garageId <= 0) {
-            throw new \InvalidArgumentException(
-                'ComplaintsImport requires a valid garage id (> 0). '
-                . "Got [{$garageId}]. Make sure a garage is selected "
-                . 'before starting the import.'
-            );
-        }
-    }
-
-    public function chunkSize(): int
-    {
-        return 100;
-    }
 
     public function onRow(Row $row): void
     {
@@ -59,9 +47,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
      * Extracted from onRow() so that it can be tested directly without
      * constructing a Maatwebsite\Excel\Row instance.
      *
-     * All DB mutations (stock deduction, complaint, items, details) run
-     * inside a single transaction. Any failure rolls back the entire row,
-     * including the stock decrement, so a partial row never persists.
+     * @param  array<string, mixed>  $rowArray
      */
     public function processRow(array $rowArray, int $rowIndex): void
     {
@@ -71,12 +57,13 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
 
         if ($busDqn === '') {
             $this->recordSkip($rowIndex, '—', __('messages.imports.reasons.dqn_missing_in_row'));
+
             return;
         }
 
-        // Defensive: the constructor already guarantees this, but keeping
-        // the check here means any future refactor that bypasses the
-        // constructor still cannot cause cross-tenant writes.
+        // Defensive: the constructor already enforces this, but the
+        // check protects against future refactors that might bypass
+        // the constructor (e.g. reflection-based instantiations).
         if ($this->garageId <= 0) {
             throw new \RuntimeException(
                 'ComplaintsImport cannot run without a valid garage context.'
@@ -88,11 +75,12 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
 
         $bus = Bus::withoutGlobalScopes()
             ->where('dqn', $busDqn)
-            ->where('garage_id', $garageId) // ← explicit, no when() shortcut
+            ->where('garage_id', $garageId)
             ->first();
 
         if (! $bus) {
             $this->recordSkip($rowIndex, $busDqn, __('messages.imports.reasons.dqn_not_found'));
+
             return;
         }
 
@@ -115,6 +103,8 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             ?? null;
 
         // ---------- 3. ATOMIC BLOCK ----------
+        // Every mutation happens inside this transaction. If any step
+        // throws, PostgreSQL rolls back the whole row — no partial state.
 
         $skipReason = DB::transaction(function () use (
             $rowArray,
@@ -127,11 +117,11 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
         ) {
             $stockQuantity = 0;
 
-            // 3a. Stock deduction
+            // 3a. Stock deduction (row lock held for the duration)
             if ($partCode !== '' && $usedQuantity > 0) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('code', $partCode)
-                    ->where('garage_id', $garageId) // ← explicit, no when()
+                    ->where('garage_id', $garageId)
                     ->lockForUpdate()
                     ->first();
 
@@ -166,7 +156,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
                 'start_time'     => $rowArray['start_time'] ?? null,
                 'end_date'       => $rowArray['end_date'] ?? null,
                 'end_time'       => $rowArray['end_time'] ?? null,
-                'status'         => $rowArray['status'] ?? 'pending',
+                'status'         => $rowArray['status'] ?? ComplaintStatus::Pending->value,
                 'km'             => isset($rowArray['km']) ? (int) $rowArray['km'] : null,
                 'work_done_by'   => $rowArray['work_done_by'] ?? null,
                 'notes'          => $rowArray['notes'] ?? null,
@@ -192,6 +182,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
                 ]);
             }
 
+            // null = success
             return null;
         });
 
@@ -199,12 +190,18 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
 
         if ($skipReason !== null) {
             $this->recordSkip($rowIndex, $busDqn, $skipReason);
+
             return;
         }
 
-        $this->importedCount++;
+        $this->incrementImported();
     }
 
+    /**
+     * Validation rules for the import file.
+     *
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -213,16 +210,7 @@ class ComplaintsImport implements OnEachRow, SkipsOnFailure, WithChunkReading, W
             'status'         => ['nullable', Rule::in(ComplaintStatus::values())],
             'yer'            => ['nullable', Rule::in(Location::values())],
             'complaint_type' => ['nullable', Rule::in(ComplaintType::values())],
-            'km'             => ['nullable|integer|min:0'],
-        ];
-    }
-
-    private function recordSkip(int $rowIndex, string $dqn, string $reason): void
-    {
-        $this->skipped[] = [
-            'row'    => $rowIndex,
-            'dqn'    => $dqn,
-            'reason' => $reason,
+            'km'             => 'nullable|integer|min:0',
         ];
     }
 }

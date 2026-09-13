@@ -90,23 +90,26 @@ class WarehouseReportTest extends TestCase
         $worker = User::factory()->create(['role' => 'user']);
         $other  = User::factory()->create(['role' => 'user']);
 
-        Warehouse::withoutGlobalScopes()->create([
+        // `created_by` is not fillable (see A6), so we use forceFill to
+        // simulate rows authored by specific users (as if created at runtime
+        // while those users were authenticated).
+        $workerItem = Warehouse::withoutGlobalScopes()->create([
             'garage_id'  => $this->garageA->id,
             'company_id' => $this->company->id,
-            'created_by' => $worker->id,
             'code'       => 'W-001',
             'name'       => 'Worker Item',
             'quantity'   => 10,
         ]);
+        $workerItem->forceFill(['created_by' => $worker->id])->save();
 
-        Warehouse::withoutGlobalScopes()->create([
+        $otherItem = Warehouse::withoutGlobalScopes()->create([
             'garage_id'  => $this->garageA->id,
             'company_id' => $this->company->id,
-            'created_by' => $other->id,
             'code'       => 'O-001',
             'name'       => 'Other Item',
             'quantity'   => 20,
         ]);
+        $otherItem->forceFill(['created_by' => $other->id])->save();
 
         $scope = new ReportScope(
             garageIds: [$this->garageA->id],

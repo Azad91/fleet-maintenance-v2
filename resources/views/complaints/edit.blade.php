@@ -42,12 +42,12 @@
                 <div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="yer" id="yer_road" value="road"
-                               {{ $complaint->yer === 'road' ? 'checked' : '' }} onchange="toggleFields()">
+                            {{ $complaint->yer?->value === 'road' ? 'checked' : '' }} onchange="toggleFields()">
                         <label class="form-check-label" for="yer_road">🛣️ {{ __('enums.location.road') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="yer" id="yer_garage" value="garage"
-                               {{ $complaint->yer === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
+                            {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
                         <label class="form-check-label" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
                     </div>
                 </div>
@@ -174,10 +174,10 @@
             <div class="mb-3">
                 <label for="status" class="form-label fw-bold">📊 {{ __('messages.common.status') }}</label>
                 <select class="form-select" id="status" name="status" required>
-                    <option value="pending" {{ $complaint->status === 'pending' ? 'selected' : '' }}>
+                    <option value="pending" {{ $complaint->status?->value === 'pending' ? 'selected' : '' }}>
                         ⏳ {{ __('enums.complaint_status.pending') }}
                     </option>
-                    <option value="in_progress" {{ $complaint->status === 'in_progress' ? 'selected' : '' }}>
+                    <option value="in_progress" {{ $complaint->status?->value === 'in_progress' ? 'selected' : '' }}>
                         🔨 {{ __('enums.complaint_status.in_progress') }}
                     </option>
                 </select>
@@ -188,17 +188,17 @@
                 <div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="complaint_type" value="accident"
-                               {{ $complaint->complaint_type === 'accident' ? 'checked' : '' }}>
+                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }}>
                         <label class="form-check-label">🚗 {{ __('enums.complaint_type.accident') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="complaint_type" value="breakdown"
-                               {{ $complaint->complaint_type === 'breakdown' ? 'checked' : '' }}>
+                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }}>
                         <label class="form-check-label">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="complaint_type" value="maintenance"
-                               {{ $complaint->complaint_type === 'maintenance' ? 'checked' : '' }}>
+                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }}>
                         <label class="form-check-label">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
                     </div>
                 </div>

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 trait Auditable
 {
-
     protected static array $auditBaseExcludedFields = [
         'password',
         'remember_token',
@@ -34,7 +33,7 @@ trait Auditable
             $newValues = static::filterAuditValues($model->getChanges());
 
             if (empty($newValues)) {
-                return; 
+                return;
             }
 
             $oldValues = array_intersect_key(
@@ -93,7 +92,14 @@ trait Auditable
         ]);
     }
 
-   
+    /**
+     * Write a single audit log entry per record for a bulk update.
+     *
+     * Only fields whose values genuinely changed are recorded. Values are
+     * normalized before comparison so that DB-returned strings ('1') and
+     * PHP-native scalars (1, true) are treated as equal — since they
+     * represent the same underlying value.
+     */
     public static function auditBulkUpdate(
         array $ids,
         array $newValues,
@@ -110,13 +116,12 @@ trait Auditable
         foreach ($oldRecords as $id => $oldRecord) {
             $oldArray = static::filterAuditValues($oldRecord->getOriginal());
 
-            // Faktiki olaraq dəyişən sahələri tap
+            // Detect genuinely changed fields
             $changed = [];
             foreach ($newValues as $key => $value) {
                 $oldValue = $oldArray[$key] ?? null;
 
-                // Sərt tip yoxlaması — 0 === '0' kimi problemlərin qarşısını alır
-                if ($oldValue !== $value) {
+                if (static::valuesDiffer($oldValue, $value)) {
                     $changed[$key] = $value;
                 }
             }
@@ -138,7 +143,12 @@ trait Auditable
         }
     }
 
-
+    /**
+     * Write one audit log entry per record for a bulk delete.
+     *
+     * Each record's original values are snapshotted before deletion so
+     * the audit trail preserves what was removed.
+     */
     public static function auditBulkDelete(
         array $ids,
         string $event = 'bulk_deleted'
@@ -163,9 +173,52 @@ trait Auditable
         }
     }
 
-
     public function auditLogs()
     {
         return $this->morphMany(AuditLog::class, 'auditable');
+    }
+
+    // ==================== VALUE COMPARISON ====================
+
+    /**
+     * Determine whether two values differ for audit purposes.
+     *
+     * Values are normalized first, so that type mismatches alone (e.g.
+     * DB returning '1' vs PHP int 1, or PostgreSQL returning true vs
+     * PHP int 1) do not trigger a false-positive audit entry.
+     *
+     * Genuine differences (null vs '', null vs 0, 1 vs 2, etc.) are
+     * still correctly detected.
+     */
+    protected static function valuesDiffer(mixed $old, mixed $new): bool
+    {
+        return static::normalizeForComparison($old)
+            !== static::normalizeForComparison($new);
+    }
+
+    /**
+     * Normalize a value for comparison.
+     *
+     * Rules:
+     *   - null stays null (null must remain distinct from '', 0, false)
+     *   - bool → '1' or '0' (PostgreSQL returns true/false for booleans)
+     *   - array/object → returned as-is (PHP's === handles them)
+     *   - scalar (int/float/string) → cast to string for comparison
+     */
+    protected static function normalizeForComparison(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_array($value) || is_object($value)) {
+            return $value;
+        }
+
+        return (string) $value;
     }
 }

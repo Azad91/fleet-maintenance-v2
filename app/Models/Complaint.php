@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\ComplaintStatus;
+use App\Enums\ComplaintType;
+use App\Enums\Location;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
@@ -37,14 +40,27 @@ class Complaint extends Model
         'created_by',
     ];
 
+    /**
+     * Enum casts. `status`, `complaint_type`, and `yer` are backed
+     * enums so that reads return strongly-typed cases and views can
+     * use `->label()` / `->bootstrapColor()` instead of concatenating
+     * raw strings into translation keys.
+     *
+     * Writes may pass either the enum case or its ->value; Laravel
+     * normalizes both.
+     */
     protected $casts = [
-        'reported_date' => 'date',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'closed_at' => 'datetime',
+        'status'         => ComplaintStatus::class,
+        'complaint_type' => ComplaintType::class,
+        'yer'            => Location::class,
+        'reported_date'  => 'date',
+        'start_date'     => 'date',
+        'end_date'       => 'date',
+        'closed_at'      => 'datetime',
     ];
 
-    // ==================== ƏLAQƏLƏR ====================
+    // ==================== RELATIONS ====================
+
     public function bus()
     {
         return $this->belongsTo(Bus::class);
@@ -85,7 +101,8 @@ class Complaint extends Model
         return $this->hasMany(ComplaintDetail::class);
     }
 
-        // ==================== SKOPLAR ====================
+    // ==================== SCOPES ====================
+
     public function scopeOpen($query)
     {
         return $query->whereIn('status', [
@@ -102,15 +119,20 @@ class Complaint extends Model
         ]);
     }
 
-    public function scopeByType($query, $type)
+    public function scopeByType($query, ComplaintType|string $type)
     {
-        return $query->where('complaint_type', $type);
+        $value = $type instanceof ComplaintType ? $type->value : $type;
+
+        return $query->where('complaint_type', $value);
     }
 
-    // ==================== AKSESSORLAR ====================
+    // ==================== ACCESSORS ====================
+
     public function getIsOpenAttribute(): bool
     {
-        return ComplaintStatus::tryFrom((string) $this->status)?->isOpen() ?? false;
+        return $this->status instanceof ComplaintStatus
+            ? $this->status->isOpen()
+            : false;
     }
 
     public function getDurationAttribute(): string

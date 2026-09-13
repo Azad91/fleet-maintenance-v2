@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\GarageContext;
+use App\Services\PostLoginRedirector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,21 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
+    /**
+     * Handle an incoming email/password authentication request.
+     *
+     * All post-login routing is delegated to PostLoginRedirector so
+     * that email login and PIN login produce identical behavior:
+     *
+     *   - Director (company-level)      → director.dashboard
+     *   - Super Admin                    → garage.selection
+     *   - 1 active garage membership     → auto-select + dashboard
+     *   - 0 or 2+ active memberships     → garage.selection
+     *
+     * Previously this method had inline routing that did not check for
+     * the Director role, which sent Directors to the garage selection
+     * page — breaking the company-level navigation promised in the spec.
+     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
@@ -25,22 +41,13 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        if ($user && $user->current_garage_id) {
-            $garage = $user->currentGarage;
-
-            if ($garage) {
-                session([
-                    'current_garage_id'    => $garage->id,
-                    'current_garage_name'  => $garage->name,
-                    'current_company_id'   => $garage->company_id,
-                    'current_company_name' => $garage->company->name ?? null,
-                ]);
-
-                return redirect()->intended(route('dashboard', absolute: false));
-            }
+        if (! $user) {
+            // Defensive: authenticate() should have thrown on failure,
+            // but we guarantee a sane fallback if it somehow returns.
+            return redirect()->route('login');
         }
 
-        return redirect()->route('garage.selection');
+        return PostLoginRedirector::redirect($user);
     }
 
     public function destroy(Request $request): RedirectResponse

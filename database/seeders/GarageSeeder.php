@@ -80,8 +80,10 @@ class GarageSeeder extends Seeder
         );
 
         // === USERS ===
+        // Qeyd: `directorate` rolu artıq mövcud deyil.
+        // Director rolu company_user pivot cədvəlinə köçürülüb.
 
-        // 1. Admin — access to all garages
+        // 1. Admin — access to all garages (garage_user → admin)
         $admin = User::where('email', 'admin@fleet.com')->first();
         if ($admin) {
             $admin->garages()->detach();
@@ -94,57 +96,46 @@ class GarageSeeder extends Seeder
             $admin->setCurrentGarage($garage1);
         }
 
-        // 2. Directorate — read-only access to all garages
-        $directorate = User::where('email', 'directorate@fleet.com')->first();
-        if ($directorate) {
-            $directorate->garages()->detach();
-            $directorate->garages()->attach([
-                $garage1->id => ['role' => 'directorate', 'is_active' => true],
-                $garage2->id => ['role' => 'directorate', 'is_active' => true],
-                $garage3->id => ['role' => 'directorate', 'is_active' => true],
-                $garage4->id => ['role' => 'directorate', 'is_active' => true],
-            ]);
-            $directorate->setCurrentGarage($garage1);
-        }
-
-        // 3. Complaint manager — BakuBus garages
+        // 2. Complaint manager — BakuBus garages
         $complaint = User::where('email', 'complaint@fleet.com')->first();
         if ($complaint) {
             $complaint->garages()->detach();
             $complaint->garages()->attach([
-                $garage1->id => ['role' => 'complaint', 'is_active' => true],
-                $garage2->id => ['role' => 'complaint', 'is_active' => true],
+                $garage1->id => ['role' => 'complaint_manager', 'is_active' => true],
+                $garage2->id => ['role' => 'complaint_manager', 'is_active' => true],
             ]);
             $complaint->setCurrentGarage($garage1);
         }
 
-        // 4. Warehouse manager — BakuBus garages
+        // 3. Warehouse manager — BakuBus garages
         $warehouse = User::where('email', 'warehouse@fleet.com')->first();
         if ($warehouse) {
             $warehouse->garages()->detach();
             $warehouse->garages()->attach([
-                $garage1->id => ['role' => 'warehouse', 'is_active' => true],
-                $garage2->id => ['role' => 'warehouse', 'is_active' => true],
+                $garage1->id => ['role' => 'warehouse_manager', 'is_active' => true],
+                $garage2->id => ['role' => 'warehouse_manager', 'is_active' => true],
             ]);
             $warehouse->setCurrentGarage($garage1);
         }
 
-        // 5. Daily KM manager
+        // 4. Daily KM manager
         $dailyKm = User::where('email', 'daily-km@fleet.com')->first();
         if ($dailyKm) {
-            $dailyKm->garages()->sync([
-                $garage1->id => ['role' => 'daily_km', 'is_active' => true],
-                $garage2->id => ['role' => 'daily_km', 'is_active' => true],
+            $dailyKm->garages()->detach();
+            $dailyKm->garages()->attach([
+                $garage1->id => ['role' => 'daily_km_manager', 'is_active' => true],
+                $garage2->id => ['role' => 'daily_km_manager', 'is_active' => true],
             ]);
             $dailyKm->setCurrentGarage($garage1);
         }
 
-        // 6. Daily status manager
+        // 5. Daily status manager
         $dailyStatus = User::where('email', 'daily-status@fleet.com')->first();
         if ($dailyStatus) {
-            $dailyStatus->garages()->sync([
-                $garage1->id => ['role' => 'daily_status', 'is_active' => true],
-                $garage2->id => ['role' => 'daily_status', 'is_active' => true],
+            $dailyStatus->garages()->detach();
+            $dailyStatus->garages()->attach([
+                $garage1->id => ['role' => 'daily_status_manager', 'is_active' => true],
+                $garage2->id => ['role' => 'daily_status_manager', 'is_active' => true],
             ]);
             $dailyStatus->setCurrentGarage($garage1);
         }

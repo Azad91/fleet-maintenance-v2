@@ -34,9 +34,8 @@ Route::get('/', function () {
 Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'garage.selected'])
+    ->middleware(['auth', 'garage.selected'])  // ← Bu iki middleware kifayətdir
     ->name('dashboard');
-
 /*
 |--------------------------------------------------------------------------
 | Auth Routes (Breeze)

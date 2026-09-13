@@ -29,11 +29,10 @@ class ComplaintItem extends Model
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeRecurring($query, int $days = 30)
+        public function scopeRecurring($query, int $days = 30)
     {
         $garageId = Garage::getCurrentId();
 
-        // ✅ QORUMA: Qaraj konteksti yoxdursa, heç nə qaytarma
         if (! $garageId) {
             return $query->whereRaw('1 = 0');
         }
@@ -48,9 +47,8 @@ class ComplaintItem extends Model
             ->join('complaints', 'complaints.id', '=', 'complaint_items.complaint_id')
             ->whereNull('complaints.deleted_at')
             ->where('complaints.created_at', '>=', now()->subDays($days))
-            // Exclude completed complaints (including NULL status)
             ->where(function ($q) {
-                $q->where('complaints.status', '!=', 'completed')
+                $q->where('complaints.status', '!=', \App\Enums\ComplaintStatus::Completed->value)
                   ->orWhereNull('complaints.status');
             })
             ->where('complaints.garage_id', $garageId)

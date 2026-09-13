@@ -1,22 +1,20 @@
 @php
     $cssPath = 'file://' . str_replace(DIRECTORY_SEPARATOR, '/', public_path('css/pdf-akt.css'));
 
-    $statusClass = match ($complaint->status) {
-        'pending'     => 'badge--pending',
-        'in_progress' => 'badge--progress',
-        'completed'   => 'badge--done',
-        default       => 'badge--default',
-    };
+    $status = $complaint->status;
 
-    $typeLabel = $complaint->complaint_type
-        ? __('enums.complaint_type.' . $complaint->complaint_type)
-        : '—';
+    $statusClass = $status instanceof \App\Enums\ComplaintStatus
+        ? match ($status) {
+            \App\Enums\ComplaintStatus::Pending    => 'badge--pending',
+            \App\Enums\ComplaintStatus::InProgress => 'badge--progress',
+            \App\Enums\ComplaintStatus::Completed  => 'badge--done',
+            \App\Enums\ComplaintStatus::Cancelled  => 'badge--default',
+        }
+        : 'badge--default';
 
-    $yerLabel = $complaint->yer
-        ? __('enums.location.' . $complaint->yer)
-        : '—';
-
-    $statusLabel = __('enums.complaint_status.' . $complaint->status);
+    $typeLabel = $complaint->complaint_type?->label() ?? '—';
+    $yerLabel  = $complaint->yer?->label() ?? '—';
+    $statusLabel = $status?->label() ?? '—';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -114,7 +112,7 @@
         <div class="section-title">{{ __('messages.complaints.pdf_time') }}</div>
         <table class="info-table">
             <tr>
-                @if($complaint->yer === 'road' && $complaint->reported_date)
+                @if($complaint->yer?->isRoad() && $complaint->reported_date)
                     <td class="label">{{ __('messages.complaints.reported_date') }}</td>
                     <td>
                         {{ \Carbon\Carbon::parse($complaint->reported_date)->format('d.m.Y') }}

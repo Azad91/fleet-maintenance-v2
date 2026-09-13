@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\GarageAccessDeniedException;
+use App\Exceptions\MissingGarageContextException;
 use App\Exceptions\StockInsufficientException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -21,14 +22,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // ✅ Trust proxies YALNIZ env dəyişəni ilə konfiqurasiya olunur
+        // Trust proxies YALNIZ env dəyişəni ilə konfiqurasiya olunur
         // Production-da: TRUSTED_PROXIES=127.0.0.1,10.0.0.0/8
         // Local-də: TRUSTED_PROXIES= (boş → heç bir proxy-yə inanma)
         $trustedProxies = env('TRUSTED_PROXIES');
+
         if ($trustedProxies !== null && $trustedProxies !== '') {
             $proxies = $trustedProxies === '*'
                 ? '*'
                 : array_map('trim', explode(',', $trustedProxies));
+
             $middleware->trustProxies(at: $proxies);
         }
 
@@ -46,18 +49,34 @@ return Application::configure(basePath: dirname(__DIR__))
             'garage.selected' => \App\Http\Middleware\EnsureGarageSelected::class,
             'idempotent'      => \App\Http\Middleware\IdempotencyMiddleware::class,
             'api.garage'      => \App\Http\Middleware\EnsureApiGarageContext::class,
-            'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class, // ← YENİ
+            'super.admin'     => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // ============================================================
-        // 1. GARAGE ACCESS DENIED — 403
+        // CUSTOM EXCEPTION RENDERERS
+        //
+        // Only exceptions that need project-specific behavior are
+        // registered here. Laravel already handles the following
+        // correctly out of the box:
+        //   - ValidationException        → 422 + {message, errors}
+        //   - ModelNotFoundException     → 404
+        //   - NotFoundHttpException      → 404
+        //   - AuthenticationException    → 401 JSON / redirect HTML
+        //   - AuthorizationException     → 403
+        // ============================================================
+
+        // ============================================================
+        // 1. GARAGE ACCESS DENIED — 403, redirect to selection (HTML)
         // ============================================================
         $exceptions->render(function (GarageAccessDeniedException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
             }
-            return redirect()->route('garage.selection')->with('error', $e->getMessage());
+
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', $e->getMessage());
         });
 
         // ============================================================
@@ -67,78 +86,38 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
             }
+
             return back()->with('error', $e->getMessage())->withInput();
         });
 
         // ============================================================
-        // 3. VALIDATION — 422
+        // 3. MISSING GARAGE CONTEXT — block silent data corruption
         // ============================================================
-        $exceptions->render(function (ValidationException $e, Request $request) {
+        $exceptions->render(function (MissingGarageContextException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Validation error',
-                    'errors'  => $e->errors(),
-                ], 422);
+                    'message' => __('messages.flash.no_garage'),
+                    'error'   => 'garage_context_missing',
+                ], 500);
             }
-            // ✅ DÜZƏLİŞ: errorBag null ola bilər — explicit default
-            return redirect()->back()
-                ->withErrors($e->errors(), $e->errorBag ?? 'default')
-                ->withInput();
+
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_garage'));
         });
 
         // ============================================================
-        // 4. MODEL NOT FOUND — 404
-        // ============================================================
-        $exceptions->render(function (ModelNotFoundException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Resource not found'], 404);
-            }
-            return abort(404);
-        });
-
-        // ============================================================
-        // 5. NOT FOUND (HTTP-level 404) — 404
-        // ============================================================
-        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Endpoint not found'], 404);
-            }
-            // Laravel default 404 səhifəsinə fallback
-        });
-
-        // ============================================================
-        // 6. AUTHENTICATION — 401
-        // ============================================================
-        $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
-            }
-            return redirect()->route('login');
-        });
-
-        // ============================================================
-        // 7. AUTHORIZATION — 403
-        // ============================================================
-        $exceptions->render(function (AuthorizationException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $e->getMessage()], 403);
-            }
-            return abort(403, $e->getMessage());
-        });
-
-        // ============================================================
-        // 8. HTTP EXCEPTIONS (CSRF 419, Throttle 429, və s.) — statusa uyğun
+        // 4. HTTP EXCEPTIONS (CSRF 419, Throttle 429) — localized JSON
         // ============================================================
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
             if (! $request->expectsJson()) {
-                // HTML üçün Laravel default davranışına fallback
                 return null;
             }
 
-            $status = $e->getStatusCode();
+            $status  = $e->getStatusCode();
             $message = match ($status) {
-                419 => 'Sessiyanın vaxtı bitdi. Zəhmət olmasa səhifəni yeniləyin.',
-                429 => 'Çox sayda sorğu göndərildi. Bir az gözləyin.',
+                419     => 'Sessiyanın vaxtı bitdi. Zəhmət olmasa səhifəni yeniləyin.',
+                429     => 'Çox sayda sorğu göndərildi. Bir az gözləyin.',
                 default => $e->getMessage() ?: 'HTTP xətası',
             };
 
@@ -149,45 +128,27 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // ============================================================
-        // 9. FALLBACK — 500 (yalnız JSON üçün)
-        // ============================================================
-        $exceptions->render(function (Throwable $e, Request $request) {
-            if (! $request->expectsJson()) {
-                // HTML üçün Laravel default xəta səhifəsi
-                return null;
-            }
-
-            $isDebug = config('app.debug');
-
-            return response()->json([
-                'message' => 'Server error',
-                'error'   => $isDebug ? $e->getMessage() : 'Internal server error',
-                'trace'   => $isDebug ? collect($e->getTrace())->take(5)->toArray() : null,
-            ], 500);
-        });
-
-        // ============================================================
-        // REPORTS — Loglama və monitorinq
+        // 6. REPORTING — real xətaları log et, gözlənilənləri atla
         // ============================================================
         $exceptions->reportable(function (Throwable $e) {
-            // 404, 403, 419, 422 kimi gözlənilən xətaları loglamırıq
+            // Gözlənilən xətaları loglamırıq — Laravel özü düzgün cavab qaytarır
             if ($e instanceof ModelNotFoundException
                 || $e instanceof NotFoundHttpException
                 || $e instanceof AuthorizationException
                 || $e instanceof AuthenticationException
                 || $e instanceof ValidationException
                 || $e instanceof HttpExceptionInterface) {
-                return false; // false = Laravel default logger-inə də xəbər vermə
+                return false;
             }
 
-            // Real server xətalarını loglayırıq
+            // Real server xətalarını log edirik
             \Log::error($e->getMessage(), [
-                'exception' => get_class($e),
-                'file'      => $e->getFile(),
-                'line'      => $e->getLine(),
+                'exception'  => get_class($e),
+                'file'       => $e->getFile(),
+                'line'       => $e->getLine(),
                 'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
-                'user_id'   => auth()->id(),
-                'url'       => request()?->fullUrl(),
+                'user_id'    => auth()->id(),
+                'url'        => request()?->fullUrl(),
             ]);
         });
     })->create();

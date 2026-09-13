@@ -114,7 +114,14 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($this->user->fresh());
+
+        // User is soft-deleted, not hard-deleted (see A4).
+        // `fresh()` bypasses global scopes, so it would still return the model.
+        // `User::find()` respects the SoftDeletes global scope and returns null.
+        $this->assertNull(User::find($this->user->id));
+
+        // Confirm it exists in the DB with deleted_at set.
+        $this->assertSoftDeleted('users', ['id' => $this->user->id]);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

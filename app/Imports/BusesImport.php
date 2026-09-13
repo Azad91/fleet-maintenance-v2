@@ -7,69 +7,48 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class BusesImport implements ToModel, WithChunkReading, WithHeadingRow
+class BusesImport extends AbstractImport implements ToModel, WithChunkReading, WithHeadingRow
 {
-    public array $skipped = [];
-    public int $importedCount = 0;
-    private int $rowCounter = 0;
-
-    public function __construct(
-        public int $garageId,
-        public ?int $companyId = null
-    ) {}
-
-    public function chunkSize(): int
-    {
-        return 100;
-    }
-
     public function model(array $row)
     {
-        $this->rowCounter++;
-        $currentRow = $this->rowCounter + 1;
+        $currentRow = $this->nextRowIndex();
 
-        $dqn = trim($row['dqn'] ?? '');
+        $dqn = trim((string) ($row['dqn'] ?? ''));
 
-        if (empty($dqn)) {
-            $this->skipped[] = [
-                'row'    => $currentRow,
-                'dqn'    => '—',
-                'reason' => __('messages.imports.reasons.dqn_empty'),
-            ];
+        if ($dqn === '') {
+            $this->recordSkip($currentRow, '—', __('messages.imports.reasons.dqn_empty'));
+
             return null;
         }
 
-        $garageId = $this->garageId;
-        $companyId = $this->companyId;
-
-        $existingInAnotherGarage = Bus::withoutGlobalScopes()
+        // Reject if the DQN exists in a different garage — that is a
+        // hard conflict, not an update.
+        $existsInAnotherGarage = Bus::withoutGlobalScopes()
             ->where('dqn', $dqn)
-            ->where('garage_id', '!=', $garageId)
+            ->where('garage_id', '!=', $this->garageId)
             ->exists();
 
-        if ($existingInAnotherGarage) {
-            $this->skipped[] = [
-                'row'    => $currentRow,
-                'dqn'    => $dqn,
-                'reason' => __('messages.imports.reasons.dqn_other_garage'),
-            ];
+        if ($existsInAnotherGarage) {
+            $this->recordSkip($currentRow, $dqn, __('messages.imports.reasons.dqn_other_garage'));
+
             return null;
         }
 
         $bus = Bus::withoutGlobalScopes()
             ->withTrashed()
             ->where('dqn', $dqn)
-            ->when($garageId, fn ($q) => $q->where('garage_id', $garageId))
+            ->where('garage_id', $this->garageId)
             ->first();
 
         if ($bus?->trashed()) {
             $bus->restore();
         }
+
         $bus ??= new Bus;
 
         $bus->fill([
-            'garage_id'     => $garageId,
-            'company_id'    => $companyId,
+            'garage_id'     => $this->garageId,
+            'company_id'    => $this->companyId,
             'dqn'           => $dqn,
             'bus_project'   => $row['bus_project'] ?? null,
             'vin'           => $row['vin'] ?? null,
@@ -81,7 +60,7 @@ class BusesImport implements ToModel, WithChunkReading, WithHeadingRow
             'km'            => isset($row['km']) ? (int) $row['km'] : null,
         ]);
 
-        $this->importedCount++;
+        $this->incrementImported();
 
         return $bus;
     }

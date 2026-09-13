@@ -165,48 +165,48 @@ class DemoDataSeeder extends Seeder
     }
 
     private function createGarageUsers(Garage $garage): void
-    {
-        $suffix = $garage->code === 'DEMO-GAR-001' ? 'gar1' : 'gar2';
+{
+    $suffix = $garage->code === 'DEMO-GAR-001' ? 'gar1' : 'gar2';
 
-        $roleMap = [
-            'admin'                  => "Garage Admin ({$suffix})",
-            'complaint_manager'      => "Complaint Manager ({$suffix})",
-            'complaint_worker'       => "Complaint Worker ({$suffix})",
-            'warehouse_manager'      => "Warehouse Manager ({$suffix})",
-            'warehouse_worker'       => "Warehouse Worker ({$suffix})",
-            'daily_km_manager'       => "Daily KM Manager ({$suffix})",
-            'daily_km_worker'        => "Daily KM Worker ({$suffix})",
-            'daily_status_manager'   => "Daily Status Manager ({$suffix})",
-            'daily_status_worker'    => "Daily Status Worker ({$suffix})",
-        ];
+    $roleMap = [
+        'admin'                  => "Garage Admin ({$suffix})",
+        'complaint_manager'      => "Complaint Manager ({$suffix})",
+        'complaint_worker'       => "Complaint Worker ({$suffix})",
+        'warehouse_manager'      => "Warehouse Manager ({$suffix})",
+        'warehouse_worker'       => "Warehouse Worker ({$suffix})",
+        'daily_km_manager'       => "Daily KM Manager ({$suffix})",
+        'daily_km_worker'        => "Daily KM Worker ({$suffix})",
+        'daily_status_manager'   => "Daily Status Manager ({$suffix})",
+        'daily_status_worker'    => "Daily Status Worker ({$suffix})",
+    ];
 
-        $counter = 1;
+    $counter = 1;
 
-        foreach ($roleMap as $role => $name) {
-            $slug = $role === 'admin' ? 'admin' : str_replace('_', '.', $role);
-            $email = "{$slug}.{$suffix}@demo.com";
+    foreach ($roleMap as $role => $name) {
+        $slug  = $role === 'admin' ? 'admin' : str_replace('_', '.', $role);
+        $email = "{$slug}.{$suffix}@demo.com";
 
-            $user = User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'name'            => $name,
-                    'password'        => Hash::make('password'),
-                    'employee_code'   => ...,
-                    'pin'             => Hash::make('1234'),
-                    'pin_is_default'  => true,
-                    'is_active'       => true,
-                ]
-            );
-            // Role defaults to 'user'.
+        $user = User::updateOrCreate(
+            ['email' => $email],
+            [
+                'name'            => $name,
+                'password'        => Hash::make('password'),
+                'employee_code'   => sprintf('EMP-%s-%03d', strtoupper($suffix), $counter),
+                'pin'             => Hash::make('1234'),
+                'pin_is_default'  => true,
+                'is_active'       => true,
+            ]
+        );
+        // Role defaults to 'user'.
 
-            $user->garages()->syncWithoutDetaching([
-                $garage->id => ['role' => $role, 'is_active' => true],
-            ]);
+        $user->garages()->syncWithoutDetaching([
+            $garage->id => ['role' => $role, 'is_active' => true],
+        ]);
 
-            $this->command->line("     • {$role} → {$email} (PIN: 1234)");
-            $counter++;
-        }
+        $this->command->line("     • {$role} → {$email} (PIN: 1234)");
+        $counter++;
     }
+}
 
     private function createComplaintTypes(Garage $garage): void
     {

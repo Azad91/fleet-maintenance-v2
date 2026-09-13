@@ -2,9 +2,9 @@
 
 namespace App\Services\Complaint;
 
+use App\Enums\ComplaintStatus;
 use App\Models\Complaint;
 use App\Models\Driver;
-use App\Enums\Location;
 use Illuminate\Support\Facades\DB;
 
 class ComplaintService
@@ -75,11 +75,11 @@ class ComplaintService
     {
         $this->transitionService->validateTransition(
             $complaint,
-            ComplaintStatus::Completed->value
+            ComplaintStatus::Completed
         );
 
         $complaint->update([
-            'status'       => ComplaintStatus::Completed->value,
+            'status'       => ComplaintStatus::Completed,
             'end_date'     => $data['end_date'],
             'end_time'     => $data['end_time'],
             'work_done_by' => $data['work_done'],
