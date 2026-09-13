@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Complaints\CloseComplaintAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
@@ -10,12 +11,14 @@ use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\JsonResponse;
 
 class ComplaintController extends Controller
 {
     public function __construct(
         protected ComplaintService $complaintService,
-        protected ComplaintPdfService $pdfService
+        protected ComplaintPdfService $pdfService,
+        protected CloseComplaintAction $closeComplaintAction,
     ) {}
 
     public function index(Request $request)
@@ -101,33 +104,27 @@ class ComplaintController extends Controller
         ]);
     }
 
-    public function close(Request $request, Complaint $complaint)
+    public function close(Request $request, Complaint $complaint): JsonResponse
     {
         Gate::authorize('close', $complaint);
 
-        if ($complaint->status === 'completed') {
-            return response()->json([
-                'message' => __('messages.flash.already_closed'),
-            ], 422);
-        }
-
-        $request->validate([
+        $validated = $request->validate([
             'end_date'  => 'required|date',
             'end_time'  => 'required|date_format:H:i',
             'work_done' => 'required|string|min:5',
         ]);
 
-        $this->complaintService->close($complaint, $request->all());
-
         try {
-            $this->pdfService->save($complaint);
-        } catch (\Exception $e) {
-            \Log::error('PDF generation failed: '.$e->getMessage());
+            $closed = $this->closeComplaintAction->execute($complaint, $validated);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => $e->validator->errors()->first('status'),
+            ], 422);
         }
 
         return response()->json([
             'message' => __('messages.flash.closed_success'),
-            'data'    => $complaint->fresh(),
+            'data'    => $closed,
         ]);
     }
 

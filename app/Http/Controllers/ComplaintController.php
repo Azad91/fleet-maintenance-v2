@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Complaints\CloseComplaintAction;
 use App\Http\Requests\ComplaintCloseRequest;
 use App\Http\Requests\ComplaintStoreRequest;
 use App\Http\Requests\ComplaintUpdateRequest;
@@ -24,7 +25,8 @@ class ComplaintController extends Controller
 {
     public function __construct(
         protected ComplaintService $complaintService,
-        protected ComplaintPdfService $pdfService
+        protected ComplaintPdfService $pdfService,
+        protected CloseComplaintAction $closeComplaintAction,
     ) {}
 
     public function index(Request $request): View
@@ -189,20 +191,10 @@ class ComplaintController extends Controller
 
         $this->authorize('close', $complaint);
 
-        if ($complaint->status === 'completed') {
-            return back()->with('error', __('messages.flash.already_closed'));
-        }
-
-        $this->complaintService->close($complaint, $request->validated());
-
         try {
-            $this->pdfService->save($complaint);
-        } catch (\Throwable $e) {
-            Log::error('PDF generation failed', [
-                'complaint_id' => $complaint->id,
-                'error'        => $e->getMessage(),
-                'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
-            ]);
+            $this->closeComplaintAction->execute($complaint, $request->validated());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->with('error', $e->validator->errors()->first('status'));
         }
 
         return redirect()
@@ -244,9 +236,17 @@ class ComplaintController extends Controller
         $this->authorize('import', Complaint::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
+        $garageId = (int) session('current_garage_id');
+
+        if ($garageId <= 0) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         try {
             $import = new ComplaintsImport(
-                (int) session('current_garage_id'),
+                $garageId,
                 session('current_company_id') ? (int) session('current_company_id') : null
             );
 
