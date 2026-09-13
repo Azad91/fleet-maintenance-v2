@@ -6,14 +6,22 @@ use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\ComplaintItem;
 use App\Models\Warehouse;
-use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
+    /**
+     * Dashboard for the currently selected garage.
+     *
+     * Access control is enforced by the route middleware:
+     *   - auth              — user must be logged in
+     *   - garage.selected   — user must have an active garage context
+     *
+     * The previous implementation also called Gate::authorize() against
+     * a DashboardPolicy that always returned true — pure noise that
+     * documented a rule the framework already enforced.
+     */
     public function index()
     {
-        Gate::authorize('viewAny', DashboardController::class);
-
         $totalBuses          = Bus::count();
         $activeBuses         = Bus::where('is_active', true)->count();
         $activeComplaints    = Complaint::where('status', '!=', 'completed')->count();
