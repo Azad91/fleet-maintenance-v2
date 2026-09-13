@@ -87,6 +87,8 @@ class WarehouseController extends Controller
     {
         Gate::authorize('viewAny', Warehouse::class);
 
+        $perPage = min((int) $request->input('per_page', 15), 100);   // ← YENİ
+
         $query = Warehouse::query();
 
         if ($request->code) {
@@ -96,7 +98,7 @@ class WarehouseController extends Controller
             $query->where('name', 'ILIKE', "%{$request->name}%");
         }
 
-        $warehouses = $query->paginate($request->per_page ?? 15);
+        $warehouses = $query->paginate($perPage);
 
         return response()->json([
             'data' => $warehouses->items(),

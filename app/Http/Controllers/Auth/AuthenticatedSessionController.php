@@ -36,15 +36,17 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
         $user = Auth::user();
 
         if (! $user) {
-            // Defensive: authenticate() should have thrown on failure,
-            // but we guarantee a sane fallback if it somehow returns.
             return redirect()->route('login');
+        }
+
+        // ↓ YENİ — PIN login ilə eyni davranış
+        if ($user->pin_is_default && $user->pin) {
+            return redirect()->route('pin.change.show');
         }
 
         return PostLoginRedirector::redirect($user);

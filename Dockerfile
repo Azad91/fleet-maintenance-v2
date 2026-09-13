@@ -1,37 +1,5 @@
 # syntax=docker/dockerfile:1.7
 
-# ════════════════════════════════════════════════════════════════
-# Stage 1 — Frontend build (Node 22 LTS)
-#
-# This stage is discarded from the final image. Node and its
-# dependencies never ship to production; only the compiled assets
-# under public/build are copied over.
-# ════════════════════════════════════════════════════════════════
-FROM node:22-alpine AS frontend
-
-WORKDIR /build
-
-# Install JavaScript dependencies against the lockfile when present,
-# otherwise fall back to a plain install so first-time builds work
-# without committing a package-lock.json.
-COPY package.json package-lock.json* ./
-
-RUN --mount=type=cache,target=/root/.npm \
-    if [ -f package-lock.json ]; then \
-        npm ci --no-audit --no-fund --ignore-scripts; \
-    else \
-        npm install --no-audit --no-fund --ignore-scripts; \
-    fi
-
-# Copy only the inputs Vite actually reads.
-COPY vite.config.js ./
-COPY postcss.config.js* ./
-COPY tailwind.config.js* ./
-COPY resources ./resources
-COPY public ./public
-
-RUN npm run build
-
 
 # ════════════════════════════════════════════════════════════════
 # Stage 2 — PHP runtime (Apache)
@@ -99,11 +67,6 @@ RUN composer install \
 # Application source (excluding what .dockerignore filters out)
 # ────────────────────────────────────────────────────────────────
 COPY . .
-
-# ────────────────────────────────────────────────────────────────
-# Compiled frontend assets from stage 1
-# ────────────────────────────────────────────────────────────────
-COPY --from=frontend /build/public/build ./public/build
 
 # ────────────────────────────────────────────────────────────────
 # Regenerate the Composer autoloader against the full source tree

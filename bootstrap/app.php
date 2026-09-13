@@ -38,10 +38,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Global middleware — hər request üçün
         $middleware->append(App\Http\Middleware\RequestIdMiddleware::class);
 
-        // Web middleware additions
         $middleware->web(append: [
             App\Http\Middleware\SetLocale::class,
-            App\Http\Middleware\EnforcePinChange::class,
         ]);
 
         $middleware->alias([
@@ -50,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent' => App\Http\Middleware\IdempotencyMiddleware::class,
             'api.garage' => App\Http\Middleware\EnsureApiGarageContext::class,
             'super.admin' => App\Http\Middleware\EnsureSuperAdmin::class,
+            'pin.enforced' => App\Http\Middleware\EnforcePinChange::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

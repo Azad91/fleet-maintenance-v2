@@ -28,7 +28,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
             }
         }
 
-        $cacheKey = 'km_mapping_'.$this->garageId.'_'.($this->companyId ?? 0);
+        $cacheKey = 'km_mapping_'.$this->garageId.'_'.($this->companyId ?? 0).'_'.spl_object_id($this);
 
         if ($isFirstChunk) {
             $dateRow = $rows->get(0)->toArray();

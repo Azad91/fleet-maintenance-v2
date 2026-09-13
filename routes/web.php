@@ -111,7 +111,7 @@ Route::middleware(['auth', 'super.admin'])
 | Authenticated Routes (Auth + Garage Selected + Idempotent)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () {
+Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->group(function () {
 
     // ==================== PROFILE ====================
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
