@@ -2,6 +2,27 @@
 
 Fleet Control avtobus parkının texniki istismarını idarə etmək üçün hazırlanmış Laravel tətbiqidir. Sistem bir neçə şirkət və qarajla işləyir; məlumat, istifadəçi rolu və əməliyyatlar cari qaraj üzrə ayrılır.
 
+## İlkin giriş
+
+Seeder Super Admin hesabı yaradır:
+
+- **Email:** `admin@fleet.com`
+- **Parol:**
+  - **Production:** ya `SUPER_ADMIN_PASSWORD` env dəyişəni ilə təyin edin,
+    ya da seeder tərəfindən təsadüfi generasiya olunan güclü parolu
+    konsoldan bir dəfəlik kopyalayın (parol YALNIZ bir dəfə göstərilir!).
+  - **Local/dev:** `password`
+
+⚠️ **Diqqət:** Əgər production-da parol konsoldan kopyalanmasa, onu
+`php artisan tinker` vasitəsilə yenidən təyin etməli olacaqsınız:
+
+\`\`\`
+User::where('email','admin@fleet.com')
+    ->update(['password' => Hash::make('yeni-guclu-parol')]);
+\`\`\`
+
+İlk girişdən sonra **Profil → Şifrəni dəyiş** bölməsindən parolu dəyişin.
+
 ## Əsas imkanlar
 
 - Avtobusların, xətt nömrələrinin, DQN/VIN və son yürüşün idarə edilməsi
