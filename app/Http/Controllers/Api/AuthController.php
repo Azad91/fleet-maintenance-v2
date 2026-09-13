@@ -14,15 +14,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Maximum login attempts before lockout.
-     */
-    private const MAX_ATTEMPTS = 5;
-
-    /**
-     * Lockout duration in seconds (15 minutes).
-     */
-    private const LOCKOUT_SECONDS = 900;
 
     /**
      * Authenticate via email + password and issue a Sanctum token.
@@ -44,7 +35,10 @@ class AuthController extends Controller
         // Generic error to prevent user enumeration. We intentionally use the
         // same message for "no user" and "wrong password".
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            RateLimiter::hit($this->throttleKey($request), self::LOCKOUT_SECONDS);
+            RateLimiter::hit(
+                $this->throttleKey($request),
+                (int) config('rate_limits.login_decay_seconds', 900)
+            );
 
             Log::warning('API login failed', [
                 'email'      => $request->email,
@@ -60,7 +54,10 @@ class AuthController extends Controller
 
         // Reject deactivated accounts (matches web login behavior).
         if (! $user->is_active) {
-            RateLimiter::hit($this->throttleKey($request), self::LOCKOUT_SECONDS);
+            RateLimiter::hit(
+                $this->throttleKey($request),
+                (int) config('rate_limits.login_decay_seconds', 900)
+            );
 
             Log::warning('API login blocked — inactive account', [
                 'user_id'    => $user->id,
@@ -122,7 +119,9 @@ class AuthController extends Controller
      */
     private function ensureIsNotRateLimited(Request $request): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), self::MAX_ATTEMPTS)) {
+        $maxAttempts = (int) config('rate_limits.login_attempts', 5);
+
+        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), $maxAttempts)) {
             return;
         }
 

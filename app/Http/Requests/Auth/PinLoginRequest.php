@@ -75,7 +75,9 @@ class PinLoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $maxAttempts = (int) config('rate_limits.login_attempts', 5);
+
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }
 
@@ -98,7 +100,10 @@ class PinLoginRequest extends FormRequest
      */
     protected function failAndRateLimit(string $field): never
     {
-        RateLimiter::hit($this->throttleKey());
+        RateLimiter::hit(
+            $this->throttleKey(),
+            (int) config('rate_limits.login_decay_seconds', 900)
+        );
 
         throw ValidationException::withMessages([
             $field => __('auth.failed'),

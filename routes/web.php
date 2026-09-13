@@ -34,8 +34,9 @@ Route::get('/', function () {
 Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'garage.selected'])  // ← Bu iki middleware kifayətdir
+    ->middleware(['auth', 'garage.selected'])
     ->name('dashboard');
+
 /*
 |--------------------------------------------------------------------------
 | Auth Routes (Breeze)
@@ -70,7 +71,7 @@ Route::middleware(['auth'])
             ->name('garages');
         Route::get('/garages/{garage}', [\App\Http\Controllers\Director\DirectorController::class, 'showGarage'])
             ->name('garages.show');
-});
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -96,7 +97,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     // ==================== COMPLAINT TYPES (ADMIN ONLY) ====================
     Route::middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('complaint-types/import', [ComplaintTypeController::class, 'importForm'])->name('complaint-types.import');
-        Route::post('complaint-types/import', [ComplaintTypeController::class, 'import'])->name('complaint-types.import.store');
+        Route::post('complaint-types/import', [ComplaintTypeController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('complaint-types.import.store');
         Route::resource('complaint-types', ComplaintTypeController::class)->except(['show']);
     });
 
@@ -104,7 +107,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     Route::prefix('buses')->name('buses.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         // Static routes first
         Route::get('/import', [BusController::class, 'importForm'])->name('import');
-        Route::post('/import', [BusController::class, 'import'])->name('import.store');
+        Route::post('/import', [BusController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [BusController::class, 'create'])->name('create');
         Route::post('/bulk-deactivate', [BusController::class, 'bulkDeactivate'])->name('bulk.deactivate');
         Route::post('/bulk-activate', [BusController::class, 'bulkActivate'])->name('bulk.activate');
@@ -129,13 +134,17 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     Route::prefix('complaints')->name('complaints.')->middleware(['role:'.$complaintRoles])->group(function () {
         // Static routes first
         Route::get('/import', [ComplaintController::class, 'importForm'])->name('import');
-        Route::post('/import', [ComplaintController::class, 'import'])->name('import.store');
+        Route::post('/import', [ComplaintController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [ComplaintController::class, 'create'])->name('create');
 
         // Dynamic routes
         Route::get('/', [ComplaintController::class, 'index'])->name('index');
         Route::post('/', [ComplaintController::class, 'store'])->name('store');
-        Route::get('/{complaint}/pdf', [ComplaintController::class, 'downloadPdf'])->name('pdf');
+        Route::get('/{complaint}/pdf', [ComplaintController::class, 'downloadPdf'])
+            ->middleware('throttle:pdf')
+            ->name('pdf');
         Route::get('/{complaint}/edit', [ComplaintController::class, 'edit'])->name('edit');
         Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
         Route::put('/{complaint}', [ComplaintController::class, 'update'])->name('update');
@@ -152,7 +161,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     Route::prefix('warehouses')->name('warehouses.')->middleware(['role:'.$warehouseRoles])->group(function () {
         // Static routes first
         Route::get('/import', [WarehouseController::class, 'importForm'])->name('import');
-        Route::post('/import', [WarehouseController::class, 'import'])->name('import.store');
+        Route::post('/import', [WarehouseController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [WarehouseController::class, 'create'])->name('create');
         Route::get('/search', [WarehouseController::class, 'search'])->name('search');
 
@@ -168,7 +179,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     // ==================== MOTOR OIL (ADMIN ONLY) ====================
     Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [MotorOilController::class, 'importForm'])->name('import');
-        Route::post('/import', [MotorOilController::class, 'import'])->name('import.store');
+        Route::post('/import', [MotorOilController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/search', [MotorOilController::class, 'search'])->name('search');
         Route::get('/', [MotorOilController::class, 'index'])->name('index');
     });
@@ -176,7 +189,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     // ==================== EMPLOYEES (ADMIN ONLY) ====================
     Route::prefix('employees')->name('employees.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [EmployeeController::class, 'importForm'])->name('import');
-        Route::post('/import', [EmployeeController::class, 'import'])->name('import.store');
+        Route::post('/import', [EmployeeController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [EmployeeController::class, 'create'])->name('create');
         Route::post('/', [EmployeeController::class, 'store'])->name('store');
         Route::get('/', [EmployeeController::class, 'index'])->name('index');
@@ -194,7 +209,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->middleware(['role:'.$dailyStatusRoles])->group(function () {
         Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
-        Route::post('/import', [BusDailyStatusController::class, 'import'])->name('import.store');
+        Route::post('/import', [BusDailyStatusController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [BusDailyStatusController::class, 'create'])->name('create');
         Route::post('/', [BusDailyStatusController::class, 'store'])->name('store');
         Route::get('/', [BusDailyStatusController::class, 'index'])->name('index');
@@ -212,7 +229,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
     Route::prefix('daily-km-records')->name('daily-km-records.')->middleware(['role:'.$dailyKmRoles])->group(function () {
         Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
-        Route::post('/import', [DailyKmRecordController::class, 'import'])->name('import.store');
+        Route::post('/import', [DailyKmRecordController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [DailyKmRecordController::class, 'create'])->name('create');
         Route::post('/', [DailyKmRecordController::class, 'store'])->name('store');
         Route::get('/', [DailyKmRecordController::class, 'index'])->name('index');
@@ -225,7 +244,9 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
     // ==================== DRIVERS (ADMIN ONLY) ====================
     Route::prefix('drivers')->name('drivers.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [DriverController::class, 'importForm'])->name('import');
-        Route::post('/import', [DriverController::class, 'import'])->name('import.store');
+        Route::post('/import', [DriverController::class, 'import'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/export', [DriverController::class, 'export'])->name('export');
         Route::get('/create', [DriverController::class, 'create'])->name('create');
         Route::post('/', [DriverController::class, 'store'])->name('store');
