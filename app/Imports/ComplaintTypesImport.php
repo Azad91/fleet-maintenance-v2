@@ -12,34 +12,19 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Row;
 
-class ComplaintTypesImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure, WithChunkReading, WithHeadingRow, WithValidation
+class ComplaintTypesImport extends AbstractImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure, WithChunkReading, WithHeadingRow, WithValidation
 {
     use SkipsFailures;
 
-    public array $skipped = [];
-    public int $importedCount = 0;
-
-    public function __construct(
-        public int $garageId,
-        public ?int $companyId = null
-    ) {}
-
-    public function chunkSize(): int
+    public function onRow(Row $row): void
     {
-        return 100;
-    }
-
-    public function onRow(Row $row)
-    {
-        $rowArray = $row->toArray();
-        $name = trim((string) ($rowArray['name'] ?? ''));
+        $currentRow = $this->nextRowIndex();
+        $rowArray   = $row->toArray();
+        $name       = trim((string) ($rowArray['name'] ?? ''));
 
         if ($name === '') {
-            $this->skipped[] = [
-                'row'    => $row->getIndex(),
-                'dqn'    => '—',
-                'reason' => __('messages.imports.reasons.name_empty'),
-            ];
+            $this->recordSkip($currentRow, '—', __('messages.imports.reasons.name_empty'));
+
             return;
         }
 
@@ -53,7 +38,7 @@ class ComplaintTypesImport implements OnEachRow, SkipsEmptyRows, SkipsOnFailure,
             ]
         );
 
-        $this->importedCount++;
+        $this->incrementImported();
     }
 
     public function rules(): array

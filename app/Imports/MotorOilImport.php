@@ -8,21 +8,14 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
 
-class MotorOilImport implements OnEachRow, WithChunkReading, WithHeadingRow
+class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReading, WithHeadingRow
 {
-    public array $skipped = [];
-    public int $importedCount = 0;
-
     protected array $kmColumns = [];
 
-    public function chunkSize(): int
+    public function onRow(Row $row): void
     {
-        return 100;
-    }
-
-    public function onRow(Row $row)
-    {
-        $rowArray = $row->toArray();
+        $currentRow = $this->nextRowIndex();
+        $rowArray   = $row->toArray();
 
         if (empty($this->kmColumns)) {
             foreach ($rowArray as $key => $value) {
@@ -38,11 +31,8 @@ class MotorOilImport implements OnEachRow, WithChunkReading, WithHeadingRow
         $quantity = (float) ($rowArray['quantity'] ?? 0);
 
         if (! $partCode) {
-            $this->skipped[] = [
-                'row'    => $row->getIndex(),
-                'dqn'    => '—',
-                'reason' => __('messages.imports.reasons.part_code_empty'),
-            ];
+            $this->recordSkip($currentRow, '—', __('messages.imports.reasons.part_code_empty'));
+
             return;
         }
 
@@ -66,14 +56,13 @@ class MotorOilImport implements OnEachRow, WithChunkReading, WithHeadingRow
         }
 
         if ($createdForThisRow === 0) {
-            $this->skipped[] = [
-                'row'    => $row->getIndex(),
-                'dqn'    => $partCode,
-                'reason' => __('messages.imports.reasons.no_km_columns'),
-            ];
+            $this->recordSkip($currentRow, $partCode, __('messages.imports.reasons.no_km_columns'));
+
             return;
         }
 
-        $this->importedCount += $createdForThisRow;
+        // A single source row produced $createdForThisRow records — one
+        // for each KM column with a positive count.
+        $this->incrementImported($createdForThisRow);
     }
 }

@@ -12,21 +12,8 @@ use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, WithChunkReading
+class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithCalculatedFormulas, WithChunkReading
 {
-    public array $skipped = [];
-    public int $importedCount = 0;
-
-    public function __construct(
-        public int $garageId,
-        public ?int $companyId = null
-    ) {}
-
-    public function chunkSize(): int
-    {
-        return 100;
-    }
-
     public function collection(Collection $rows): void
     {
         if ($rows->isEmpty()) {
@@ -41,10 +28,10 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
             }
         }
 
-        $cacheKey = 'km_mapping_'.$this->garageId.'_'.($this->companyId ?? 0);
+        $cacheKey = 'km_mapping_' . $this->garageId . '_' . ($this->companyId ?? 0);
 
         if ($isFirstChunk) {
-            $dateRow = $rows->get(0)->toArray();
+            $dateRow   = $rows->get(0)->toArray();
             $headerRow = $rows->get(1)->toArray();
 
             $kmColumns = [];
@@ -75,7 +62,7 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
             $dataRows = $rows->slice(2);
         } else {
             $kmColumns = Cache::get($cacheKey, []);
-            $dataRows = $rows;
+            $dataRows  = $rows;
         }
 
         if (empty($kmColumns)) {
@@ -84,21 +71,19 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
 
         foreach ($dataRows as $row) {
             $dqn = trim((string) ($row[2] ?? ''));
+
             if ($dqn === '') {
                 continue;
             }
 
             $bus = Bus::withoutGlobalScopes()
                 ->where('dqn', $dqn)
-                ->when($this->garageId, fn ($q) => $q->where('garage_id', $this->garageId))
+                ->where('garage_id', $this->garageId)
                 ->first();
 
             if (! $bus) {
-                $this->skipped[] = [
-                    'row'    => '—',
-                    'dqn'    => $dqn,
-                    'reason' => __('messages.imports.reasons.dqn_not_found'),
-                ];
+                $this->recordSkip('—', $dqn, __('messages.imports.reasons.dqn_not_found'));
+
                 continue;
             }
 
@@ -121,7 +106,7 @@ class DailyKmRecordsImport implements ToCollection, WithCalculatedFormulas, With
                     ]
                 );
 
-                $this->importedCount++;
+                $this->incrementImported();
             }
         }
     }

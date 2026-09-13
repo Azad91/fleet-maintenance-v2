@@ -10,36 +10,18 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
-class BusDailyStatusesImport implements ToModel, WithChunkReading, WithHeadingRow
+class BusDailyStatusesImport extends AbstractImport implements ToModel, WithChunkReading, WithHeadingRow
 {
-    public array $skipped = [];
-    public int $importedCount = 0;
-    private int $rowCounter = 0;
-
-    public function __construct(
-        public int $garageId,
-        public ?int $companyId = null
-    ) {}
-
-    public function chunkSize(): int
-    {
-        return 100;
-    }
-
     public function model(array $row)
     {
-        $this->rowCounter++;
-        $currentRow = $this->rowCounter + 1;
+        $currentRow = $this->nextRowIndex();
 
         $dqn    = trim((string) ($row['dqn'] ?? ''));
         $status = $row['status'] ?? null;
 
         if (empty($dqn)) {
-            $this->skipped[] = [
-                'row'    => $currentRow,
-                'dqn'    => '—',
-                'reason' => __('messages.imports.reasons.dqn_empty'),
-            ];
+            $this->recordSkip($currentRow, '—', __('messages.imports.reasons.dqn_empty'));
+
             return null;
         }
 
@@ -48,15 +30,12 @@ class BusDailyStatusesImport implements ToModel, WithChunkReading, WithHeadingRo
 
         $bus = Bus::withoutGlobalScopes()
             ->where('dqn', $dqn)
-            ->when($this->garageId, fn ($q) => $q->where('garage_id', $this->garageId))
+            ->where('garage_id', $this->garageId)
             ->first();
 
         if (! $bus) {
-            $this->skipped[] = [
-                'row'    => $currentRow,
-                'dqn'    => $dqn,
-                'reason' => __('messages.imports.reasons.dqn_not_found'),
-            ];
+            $this->recordSkip($currentRow, $dqn, __('messages.imports.reasons.dqn_not_found'));
+
             return null;
         }
 
@@ -73,7 +52,7 @@ class BusDailyStatusesImport implements ToModel, WithChunkReading, WithHeadingRo
             ]
         );
 
-        $this->importedCount++;
+        $this->incrementImported();
 
         return $record;
     }
