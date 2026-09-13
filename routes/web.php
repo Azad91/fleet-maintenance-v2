@@ -65,12 +65,45 @@ Route::middleware(['auth'])
     ->prefix('director')
     ->name('director.')
     ->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\Director\DirectorController::class, 'dashboard'])
+        Route::get('/dashboard', [App\Http\Controllers\Director\DirectorController::class, 'dashboard'])
             ->name('dashboard');
-        Route::get('/garages', [\App\Http\Controllers\Director\DirectorController::class, 'garages'])
+        Route::get('/garages', [App\Http\Controllers\Director\DirectorController::class, 'garages'])
             ->name('garages');
-        Route::get('/garages/{garage}', [\App\Http\Controllers\Director\DirectorController::class, 'showGarage'])
+        Route::get('/garages/{garage}', [App\Http\Controllers\Director\DirectorController::class, 'showGarage'])
             ->name('garages.show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Super Admin Routes
+|--------------------------------------------------------------------------
+| SuperAdmin is a GLOBAL role — it has no garage context. These routes
+| intentionally sit OUTSIDE the `garage.selected` middleware group so a
+| super admin can reach the platform dashboard without being forced
+| through the garage selection flow.
+*/
+Route::middleware(['auth', 'super.admin'])
+    ->prefix('super-admin')
+    ->name('super-admin.')
+    ->group(function () {
+        // Dashboard + Settings
+        Route::get('/dashboard', [App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])
+            ->name('dashboard');
+        Route::get('/settings', [App\Http\Controllers\SuperAdmin\SettingsController::class, 'index'])
+            ->name('settings.index');
+        Route::post('/settings/clear-cache', [App\Http\Controllers\SuperAdmin\SettingsController::class, 'clearCache'])
+            ->name('settings.clear-cache');
+
+        // Resource routes
+        Route::resource('companies', CompanyController::class);
+        Route::resource('garages', GarageController::class);
+        Route::resource('users', SuperAdminUserController::class)->except(['show']);
+
+        // Company Director assignment
+        Route::post('companies/{company}/director', [AssignmentController::class, 'assignDirector'])
+            ->name('companies.assign-director');
+        Route::delete('companies/{company}/director/{user}', [AssignmentController::class, 'removeDirector'])
+            ->name('companies.remove-director');
     });
 
 /*
@@ -262,80 +295,55 @@ Route::middleware(['auth', 'garage.selected', 'idempotent'])->group(function () 
 
         // Warehouse reports
         Route::prefix('warehouse')->name('warehouse.')
-            ->middleware(['role:' . implode(',', array_merge(
+            ->middleware(['role:'.implode(',', array_merge(
                 [RoleEnum::ADMIN->value],
                 RoleEnum::warehouseRoles()
             ))])
             ->group(function () {
-                Route::get('/receipt', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'receipt'])->name('receipt');
-                Route::get('/usage', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'usage'])->name('usage');
-                Route::get('/worker-activity', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'workerActivity'])->name('worker-activity');
-                Route::get('/low-stock', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'lowStock'])->name('low-stock');
-                Route::get('/movement', [\App\Http\Controllers\Reports\WarehouseReportController::class, 'movement'])->name('movement');
+                Route::get('/receipt', [App\Http\Controllers\Reports\WarehouseReportController::class, 'receipt'])->name('receipt');
+                Route::get('/usage', [App\Http\Controllers\Reports\WarehouseReportController::class, 'usage'])->name('usage');
+                Route::get('/worker-activity', [App\Http\Controllers\Reports\WarehouseReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/low-stock', [App\Http\Controllers\Reports\WarehouseReportController::class, 'lowStock'])->name('low-stock');
+                Route::get('/movement', [App\Http\Controllers\Reports\WarehouseReportController::class, 'movement'])->name('movement');
             });
 
         // Complaint reports
         Route::prefix('complaint')->name('complaint.')
-            ->middleware(['role:' . implode(',', array_merge(
+            ->middleware(['role:'.implode(',', array_merge(
                 [RoleEnum::ADMIN->value],
                 RoleEnum::complaintRoles()
             ))])
             ->group(function () {
-                Route::get('/summary', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'summary'])->name('summary');
-                Route::get('/top-types', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'topTypes'])->name('top-types');
-                Route::get('/worker-activity', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'workerActivity'])->name('worker-activity');
-                Route::get('/by-bus', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'byBus'])->name('by-bus');
-                Route::get('/avg-close-time', [\App\Http\Controllers\Reports\ComplaintReportController::class, 'avgCloseTime'])->name('avg-close-time');
+                Route::get('/summary', [App\Http\Controllers\Reports\ComplaintReportController::class, 'summary'])->name('summary');
+                Route::get('/top-types', [App\Http\Controllers\Reports\ComplaintReportController::class, 'topTypes'])->name('top-types');
+                Route::get('/worker-activity', [App\Http\Controllers\Reports\ComplaintReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/by-bus', [App\Http\Controllers\Reports\ComplaintReportController::class, 'byBus'])->name('by-bus');
+                Route::get('/avg-close-time', [App\Http\Controllers\Reports\ComplaintReportController::class, 'avgCloseTime'])->name('avg-close-time');
             });
 
         // Daily KM reports
         Route::prefix('daily-km')->name('daily-km.')
-            ->middleware(['role:' . implode(',', array_merge(
+            ->middleware(['role:'.implode(',', array_merge(
                 [RoleEnum::ADMIN->value],
                 RoleEnum::dailyKmRoles()
             ))])
             ->group(function () {
-                Route::get('/missing', [\App\Http\Controllers\Reports\DailyKmReportController::class, 'missing'])->name('missing');
-                Route::get('/top-buses', [\App\Http\Controllers\Reports\DailyKmReportController::class, 'topBuses'])->name('top-buses');
-                Route::get('/worker-activity', [\App\Http\Controllers\Reports\DailyKmReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/missing', [App\Http\Controllers\Reports\DailyKmReportController::class, 'missing'])->name('missing');
+                Route::get('/top-buses', [App\Http\Controllers\Reports\DailyKmReportController::class, 'topBuses'])->name('top-buses');
+                Route::get('/worker-activity', [App\Http\Controllers\Reports\DailyKmReportController::class, 'workerActivity'])->name('worker-activity');
             });
 
         // Daily Status reports
         Route::prefix('daily-status')->name('daily-status.')
-            ->middleware(['role:' . implode(',', array_merge(
+            ->middleware(['role:'.implode(',', array_merge(
                 [RoleEnum::ADMIN->value],
                 RoleEnum::dailyStatusRoles()
             ))])
             ->group(function () {
-                Route::get('/distribution', [\App\Http\Controllers\Reports\DailyStatusReportController::class, 'distribution'])->name('distribution');
-                Route::get('/changes', [\App\Http\Controllers\Reports\DailyStatusReportController::class, 'changes'])->name('changes');
-                Route::get('/worker-activity', [\App\Http\Controllers\Reports\DailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/distribution', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'distribution'])->name('distribution');
+                Route::get('/changes', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'changes'])->name('changes');
+                Route::get('/worker-activity', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
             });
-    });
-
-    // ==================== SUPER ADMIN ====================
-    Route::prefix('super-admin')
-        ->name('super-admin.')
-        ->middleware('super.admin')
-        ->group(function () {
-        // Dashboard + Settings
-        Route::get('/dashboard', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])
-            ->name('dashboard');
-        Route::get('/settings', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'index'])
-            ->name('settings.index');
-        Route::post('/settings/clear-cache', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'clearCache'])
-            ->name('settings.clear-cache');
-
-        // Resource routes
-        Route::resource('companies', CompanyController::class);
-        Route::resource('garages', GarageController::class);
-        Route::resource('users', SuperAdminUserController::class)->except(['show']);
-
-        // Company Director assignment
-        Route::post('companies/{company}/director', [AssignmentController::class, 'assignDirector'])
-            ->name('companies.assign-director');
-        Route::delete('companies/{company}/director/{user}', [AssignmentController::class, 'removeDirector'])
-            ->name('companies.remove-director');
     });
 
     // ==================== API JSON (Garage Data) ====================
