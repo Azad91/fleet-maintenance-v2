@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ComplaintType extends Model
 {
-    use HasFactory, HasGarageScope;
+    use Auditable, HasFactory, HasGarageScope;
 
     protected $fillable = [
         'name',

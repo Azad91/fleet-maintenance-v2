@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\HasCreatedBy;
 use App\Services\GarageContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Garage extends Model
 {
-    use HasCreatedBy, HasFactory, SoftDeletes;
+    use Auditable, HasCreatedBy, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -67,6 +68,17 @@ class Garage extends Model
     public function dailyStatuses()
     {
         return $this->hasMany(BusDailyStatus::class);
+    }
+
+    /**
+     * A Garage IS a garage, so its audit logs are attached to its
+     * own id (not a related garage). The trait's default resolver
+     * would return null for `garage_id` since the Garage model has
+     * no such attribute.
+     */
+    protected function resolveAuditGarageId(): ?int
+    {
+        return $this->id ? (int) $this->id : null;
     }
 
     /**

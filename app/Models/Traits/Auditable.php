@@ -3,7 +3,9 @@
 namespace App\Models\Traits;
 
 use App\Models\AuditLog;
+use App\Services\GarageContext;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 trait Auditable
 {
@@ -56,21 +58,45 @@ trait Auditable
             );
         });
 
-        // Restore event (only for models with SoftDeletes)
-        static::restored(function (Model $model) {
-            $model->writeAudit(
-                'restored',
-                ['deleted_at' => $model->getOriginal('deleted_at')],
-                ['deleted_at' => null]
-            );
-        });
+        // Restore event.
+        //
+        // IMPORTANT: `restored()` is defined on the SoftDeletes trait, NOT
+        // on Model. Calling `static::restored(...)` on a model that does
+        // not use SoftDeletes would fall through to Model::__callStatic,
+        // which constructs a NEW model instance to proxy the call. Since
+        // this boot method runs from inside `bootIfNotBooted()`, creating
+        // a new instance re-enters `bootIfNotBooted()` while the model is
+        // still booting, and PHP throws a LogicException.
+        //
+        // Guard the registration so it only runs when SoftDeletes is
+        // actually in use.
+        if (static::usesSoftDeletes()) {
+            static::restored(function (Model $model) {
+                $model->writeAudit(
+                    'restored',
+                    ['deleted_at' => $model->getOriginal('deleted_at')],
+                    ['deleted_at' => null]
+                );
+            });
+        }
+    }
+
+    /**
+     * Determine whether the current model uses the SoftDeletes trait.
+     */
+    protected static function usesSoftDeletes(): bool
+    {
+        return in_array(
+            SoftDeletes::class,
+            class_uses_recursive(static::class),
+            true
+        );
     }
 
     protected static function filterAuditValues(array $values): array
     {
         $excluded = static::$auditBaseExcludedFields;
 
-        // Alt-model əlavə sahələr təyin edibsə, onları da əlavə et
         if (property_exists(static::class, 'auditExcluded')) {
             $excluded = array_merge($excluded, static::$auditExcluded);
         }
@@ -82,8 +108,8 @@ trait Auditable
     {
         AuditLog::create([
             'user_id' => auth()->id(),
-            'garage_id' => $this->garage_id ?? null,
-            'company_id' => $this->company_id ?? null,
+            'garage_id' => $this->resolveAuditGarageId(),
+            'company_id' => $this->resolveAuditCompanyId(),
             'auditable_type' => get_class($this),
             'auditable_id' => $this->getKey(),
             'event' => $event,
@@ -93,12 +119,43 @@ trait Auditable
     }
 
     /**
-     * Write a single audit log entry per record for a bulk update.
+     * Resolve the garage_id to associate with this audit log.
      *
-     * Only fields whose values genuinely changed are recorded. Values are
-     * normalized before comparison so that DB-returned strings ('1') and
-     * PHP-native scalars (1, true) are treated as equal — since they
-     * represent the same underlying value.
+     * Default: the model's own garage_id attribute if present,
+     * falling back to the current request's garage context.
+     *
+     * Models that do not have a `garage_id` attribute but represent
+     * a garage themselves (e.g. the Garage model) override this
+     * method to return their own primary key.
+     */
+    protected function resolveAuditGarageId(): ?int
+    {
+        if (! empty($this->garage_id)) {
+            return (int) $this->garage_id;
+        }
+
+        return GarageContext::getGarageId();
+    }
+
+    /**
+     * Resolve the company_id to associate with this audit log.
+     *
+     * Default: the model's own company_id attribute if present,
+     * falling back to the current request's company context.
+     *
+     * The Company model overrides this to return its own primary key.
+     */
+    protected function resolveAuditCompanyId(): ?int
+    {
+        if (! empty($this->company_id)) {
+            return (int) $this->company_id;
+        }
+
+        return GarageContext::getCompanyId();
+    }
+
+    /**
+     * Write a single audit log entry per record for a bulk update.
      */
     public static function auditBulkUpdate(
         array $ids,
@@ -116,7 +173,6 @@ trait Auditable
         foreach ($oldRecords as $id => $oldRecord) {
             $oldArray = static::filterAuditValues($oldRecord->getOriginal());
 
-            // Detect genuinely changed fields
             $changed = [];
             foreach ($newValues as $key => $value) {
                 $oldValue = $oldArray[$key] ?? null;
@@ -132,8 +188,8 @@ trait Auditable
 
             AuditLog::create([
                 'user_id' => auth()->id(),
-                'garage_id' => $oldRecord->garage_id ?? null,
-                'company_id' => $oldRecord->company_id ?? null,
+                'garage_id' => $oldRecord->resolveAuditGarageId(),
+                'company_id' => $oldRecord->resolveAuditCompanyId(),
                 'auditable_type' => static::class,
                 'auditable_id' => $id,
                 'event' => $event,
@@ -145,9 +201,6 @@ trait Auditable
 
     /**
      * Write one audit log entry per record for a bulk delete.
-     *
-     * Each record's original values are snapshotted before deletion so
-     * the audit trail preserves what was removed.
      */
     public static function auditBulkDelete(
         array $ids,
@@ -162,8 +215,8 @@ trait Auditable
         foreach ($oldRecords as $oldRecord) {
             AuditLog::create([
                 'user_id' => auth()->id(),
-                'garage_id' => $oldRecord->garage_id ?? null,
-                'company_id' => $oldRecord->company_id ?? null,
+                'garage_id' => $oldRecord->resolveAuditGarageId(),
+                'company_id' => $oldRecord->resolveAuditCompanyId(),
                 'auditable_type' => static::class,
                 'auditable_id' => $oldRecord->getKey(),
                 'event' => $event,
@@ -180,31 +233,12 @@ trait Auditable
 
     // ==================== VALUE COMPARISON ====================
 
-    /**
-     * Determine whether two values differ for audit purposes.
-     *
-     * Values are normalized first, so that type mismatches alone (e.g.
-     * DB returning '1' vs PHP int 1, or PostgreSQL returning true vs
-     * PHP int 1) do not trigger a false-positive audit entry.
-     *
-     * Genuine differences (null vs '', null vs 0, 1 vs 2, etc.) are
-     * still correctly detected.
-     */
     protected static function valuesDiffer(mixed $old, mixed $new): bool
     {
         return static::normalizeForComparison($old)
             !== static::normalizeForComparison($new);
     }
 
-    /**
-     * Normalize a value for comparison.
-     *
-     * Rules:
-     *   - null stays null (null must remain distinct from '', 0, false)
-     *   - bool → '1' or '0' (PostgreSQL returns true/false for booleans)
-     *   - array/object → returned as-is (PHP's === handles them)
-     *   - scalar (int/float/string) → cast to string for comparison
-     */
     protected static function normalizeForComparison(mixed $value): mixed
     {
         if ($value === null) {

@@ -4,29 +4,20 @@ namespace App\Services\Onboarding;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Services\PivotAuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
  * Handles atomic creation of a Company together with its first Director.
- *
- * The business rule enforced here (see SuperAdmin spec):
- *   "Every Company MUST have exactly one active Director."
- *
- * The DB-level partial unique index (company_user_single_director)
- * enforces "at most one" — this service enforces "at least one" by
- * creating both rows inside a single transaction. If either the
- * Company or the Director fails to persist, both are rolled back.
  */
 class CompanyOnboardingService
 {
-    /**
-     * Create a Company and its first Director atomically.
-     *
-     * @param  array{name: string, slug: string, email?: ?string, phone?: ?string, address?: ?string, is_active?: bool}  $companyData
-     * @param  array{name: string, email: string, password: string, pin: string}  $directorData
-     */
+    public function __construct(
+        protected PivotAuditService $pivotAuditor
+    ) {}
+
     public function createWithDirector(array $companyData, array $directorData): Company
     {
         return DB::transaction(function () use ($companyData, $directorData) {
@@ -45,7 +36,7 @@ class CompanyOnboardingService
                 'password'        => Hash::make($directorData['password']),
                 'employee_code'   => $this->generateDirectorCode(),
                 'pin'             => Hash::make($directorData['pin']),
-                'pin_is_default'  => true,  // Force PIN change on first login
+                'pin_is_default'  => true,
                 'is_active'       => true,
             ]);
 
@@ -54,16 +45,19 @@ class CompanyOnboardingService
                 'is_active' => true,
             ]);
 
+            // Audit: record the pivot attachment on the Company.
+            $this->pivotAuditor->log(
+                subject: $company,
+                event: 'director_assigned',
+                oldValues: null,
+                newValues: ['director_id' => $director->id, 'director_name' => $director->name],
+                companyId: $company->id,
+            );
+
             return $company->fresh(['directors']);
         });
     }
 
-    /**
-     * Generate a unique Director employee code (DIR-XXXXXX).
-     *
-     * The `DIR-` prefix mirrors the demo seeder and makes it easy to
-     * distinguish Director accounts from regular users at a glance.
-     */
     private function generateDirectorCode(): string
     {
         do {

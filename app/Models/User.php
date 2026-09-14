@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RoleEnum;
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use Auditable, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * Mass-assignable attributes.
@@ -37,6 +38,29 @@ class User extends Authenticatable
     ];
 
     /**
+     * Additional fields excluded from audit logs (in addition to the
+     * base list in the Auditable trait: password, remember_token,
+     * created_at, updated_at, deleted_at).
+     *
+     * - pin:                      bcrypt hash, never log
+     * - email_verified_at:        framework noise
+     * - current_garage_id:        changes on every garage switch
+     * - current_company_id:       changes on every garage switch
+     * - last_selected_garage_at:  changes on every garage switch
+     *
+     * NOTE: `pin_is_default` is intentionally NOT excluded — it flips
+     * from true to false when the user sets their own PIN, which is a
+     * meaningful security event worth auditing.
+     */
+    protected static array $auditExcluded = [
+        'pin',
+        'email_verified_at',
+        'current_garage_id',
+        'current_company_id',
+        'last_selected_garage_at',
+    ];
+
+    /**
      * Default attribute values for new model instances.
      */
     protected $attributes = [
@@ -56,17 +80,11 @@ class User extends Authenticatable
 
     // ==================== GLOBAL ROLE CHECKS ====================
 
-    /**
-     * Super Admin check – based only on users.role column.
-     */
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
     }
 
-    /**
-     * Returns true if the user's primary role is 'user'.
-     */
     public function isRegularUser(): bool
     {
         return $this->role === 'user';
@@ -74,15 +92,6 @@ class User extends Authenticatable
 
     // ==================== GARAGE-LEVEL ROLE CHECKS ====================
 
-    /**
-     * Garage-level role check – this is the CORE authorization mechanism.
-     * All business roles are checked against the garage_user pivot table.
-     *
-     * NOTE: Super Admins bypass policies at the Gate level (see AuthServiceProvider).
-     * This method checks ACTUAL membership — it does not auto-approve for super admins.
-     * If you need a "does this user have access to this garage?" check that also
-     * respects super admin, use `hasGarageAccess()` instead.
-     */
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
         $roles = (array) $roles;
@@ -99,33 +108,21 @@ class User extends Authenticatable
             ->exists();
     }
 
-    /**
-     * True if the user has ADMIN role in the given (or current) garage.
-     */
     public function isGarageAdmin(?int $garageId = null): bool
     {
         return $this->hasGarageRole(RoleEnum::ADMIN->value, $garageId);
     }
 
-    /**
-     * True if the user is a MANAGER in any domain of the current garage.
-     */
     public function isAnyManager(?int $garageId = null): bool
     {
         return $this->hasGarageRole(RoleEnum::managerRoles(), $garageId);
     }
 
-    /**
-     * True if the user is a WORKER in any domain of the current garage.
-     */
     public function isAnyWorker(?int $garageId = null): bool
     {
         return $this->hasGarageRole(RoleEnum::workerRoles(), $garageId);
     }
 
-    /**
-     * True if the user has ANY role (manager or worker) in the given domain.
-     */
     public function hasDomainRole(string $domain, ?int $garageId = null): bool
     {
         $domainRoles = match ($domain) {
@@ -145,12 +142,6 @@ class User extends Authenticatable
 
     // ==================== COMPANY-LEVEL ROLE CHECKS ====================
 
-    /**
-     * True if the user is an active Director of any company.
-     *
-     * Directors do not have garage memberships — they operate at the
-     * company level and get a dedicated read-only dashboard.
-     */
     public function isDirector(): bool
     {
         return $this->companies()
@@ -159,9 +150,6 @@ class User extends Authenticatable
             ->exists();
     }
 
-    /**
-     * Companies this user belongs to (via company_user pivot).
-     */
     public function companies()
     {
         return $this->belongsToMany(Company::class, 'company_user')
@@ -169,9 +157,6 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    /**
-     * Return the first active Director company, or null.
-     */
     public function activeDirectorCompany(): ?Company
     {
         return $this->companies()
@@ -217,10 +202,6 @@ class User extends Authenticatable
 
     // ==================== HELPERS ====================
 
-    /**
-     * True if the user has ANY access to the given garage —
-     * either as a member OR as a super admin.
-     */
     public function hasGarageAccess(int $garageId): bool
     {
         if ($this->isSuperAdmin()) {
@@ -233,9 +214,6 @@ class User extends Authenticatable
             ->exists();
     }
 
-    /**
-     * Return the user's role in the current garage, or null if not a member.
-     */
     public function getCurrentGarageRole(): ?string
     {
         $garageId = Garage::getCurrentId();
@@ -250,10 +228,6 @@ class User extends Authenticatable
         return $membership?->pivot->role;
     }
 
-    /**
-     * Return all active garage roles as an array of
-     * ['garage_id' => int, 'garage_name' => string, 'role' => string].
-     */
     public function getAllGarageRoles(): array
     {
         return $this->garages()
@@ -269,14 +243,6 @@ class User extends Authenticatable
 
     // ==================== ROLE MANAGEMENT ====================
 
-    /**
-     * Promote this user to Super Admin.
-     *
-     * Only one active Super Admin is allowed system-wide — enforced by the
-     * `users_single_super_admin` PostgreSQL partial unique index. Attempting
-     * to promote a second user while another active Super Admin exists will
-     * raise a QueryException.
-     */
     public function promoteToSuperAdmin(): static
     {
         $this->forceFill(['role' => RoleEnum::SUPER_ADMIN->value]);
@@ -284,9 +250,6 @@ class User extends Authenticatable
         return $this;
     }
 
-    /**
-     * Demote this user to a regular user (default role).
-     */
     public function demoteToRegularUser(): static
     {
         $this->forceFill(['role' => RoleEnum::USER->value]);

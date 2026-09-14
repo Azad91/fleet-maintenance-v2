@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\HasCreatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Company extends Model
 {
-    use HasCreatedBy, HasFactory, SoftDeletes;
+    use Auditable, HasCreatedBy, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -39,5 +40,16 @@ class Company extends Model
         return $this->users()
             ->wherePivot('role', 'director')
             ->wherePivot('is_active', true);
+    }
+
+    /**
+     * A Company IS a company, so its audit logs are attached to
+     * its own id (not a related one). The trait's default resolver
+     * would return null for `company_id` since the Company model
+     * has no such attribute.
+     */
+    protected function resolveAuditCompanyId(): ?int
+    {
+        return $this->id ? (int) $this->id : null;
     }
 }

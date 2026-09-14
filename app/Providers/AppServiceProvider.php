@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -20,7 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
-        // Global password policy
         Password::defaults(function () {
             return app()->isProduction()
                 ? Password::min(10)->letters()->numbers()->mixedCase()->symbols()
@@ -28,23 +32,75 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->registerRateLimiters();
+        $this->registerSuperAdminAuthListeners();
+    }
+
+    /**
+     * Log every successful and failed authentication involving the
+     * SuperAdmin account.
+     *
+     * The SuperAdmin is the single most privileged account on the
+     * platform. Even without MFA, emitting a `warning`-level log line
+     * on every SuperAdmin login (success OR failure) gives operators
+     * an immediate signal in monitoring tools if the account is being
+     * attacked or used unexpectedly.
+     *
+     * We use `warning` rather than `info` so the entries surface in
+     * production logs without lowering the log level.
+     */
+    protected function registerSuperAdminAuthListeners(): void
+    {
+        Event::listen(Login::class, function (Login $event) {
+            if (! $event->user instanceof User) {
+                return;
+            }
+
+            if (! $event->user->isSuperAdmin()) {
+                return;
+            }
+
+            Log::warning('SuperAdmin logged in', [
+                'user_id' => $event->user->id,
+                'email' => $event->user->email,
+                'ip' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
+        });
+
+        Event::listen(Failed::class, function (Failed $event) {
+            $email = $event->credentials['email'] ?? null;
+
+            if (! is_string($email) || $email === '') {
+                return;
+            }
+
+            // Look up the user to determine if the target is a SuperAdmin.
+            // This does NOT leak information back to the caller — the
+            // response to the user is identical regardless.
+            $user = User::where('email', $email)->first();
+
+            if (! $user || ! $user->isSuperAdmin()) {
+                return;
+            }
+
+            Log::warning('Failed SuperAdmin login attempt', [
+                'email' => $email,
+                'ip' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
+        });
     }
 
     /**
      * Named rate limiters — `throttle:<name>` middleware vasitəsilə işlədilir.
-     *
-     * Hər limiter `config/rate_limits.php`-dən "<attempts>,<decay_minutes>"
-     * formatını oxuyur. Yəni .env-də `RATE_LIMIT_PDF=3,5` yazsan, PDF
-     * endpoint 5 dəqiqə ərzində 3 cəhddən sonra 429 qaytaracaq.
      */
     protected function registerRateLimiters(): void
     {
         RateLimiter::for('login', function (Request $request) {
             [$attempts, $decayMinutes] = $this->parseRateLimit('login');
 
-            // Email + IP birləşməsi: attacker başqa IP-dən qurbanın
-            // emailini kilidləyə bilməz, eyni IP-dən çoxlu email
-            // yoxlaya da bilməz.
             return Limit::perMinutes($decayMinutes, $attempts)
                 ->by(strtolower((string) $request->input('email')).'|'.$request->ip());
         });
@@ -72,12 +128,6 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * `config/rate_limits.<name>` dəyərini [attempts, decayMinutes]-ə çevirir.
-     *
-     * Səhv format verilsə, təhlükəsiz default (60 cəhd / 1 dəqiqə) qaytarır —
-     * production-da səhv env səbəbindən endpoint-in tam açıq qalmasındansa,
-     * kiçik bir limit tətbiq olunması daha yaxşıdır.
-     *
      * @return array{0: int, 1: int}
      */
     protected function parseRateLimit(string $name): array
