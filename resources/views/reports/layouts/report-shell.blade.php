@@ -3,6 +3,12 @@
 @php
     use App\Enums\RoleEnum;
 
+    $shellUser = auth()->user();
+    $shellIsDirector = $shellUser?->isDirector() ?? false;
+
+    // Route prefix: Director sees director.reports.*, garage users see reports.*
+    $shellRoutePrefix = $shellIsDirector ? 'director.' : '';
+
     // Domain metadata — tabs and titles per domain
     $domainConfig = [
         'warehouse' => [
@@ -54,22 +60,32 @@
     $config = $domainConfig[$domain] ?? null;
     abort_unless($config, 404);
 
-    $currentUser = auth()->user();
-
-    // Filter which report tabs the current user can see
-    $visibleReports = array_filter($config['reports'], function ($r) use ($currentUser) {
-        if ($currentUser->isSuperAdmin()) {
-            return true; // Super Admin sees all
-        }
-        foreach ($r['roles'] as $role) {
-            if ($currentUser->hasGarageRole($role)) {
+    // Filter visible reports:
+    //   - Director sees ALL reports in their company's aggregated data
+    //   - SuperAdmin sees everything
+    //   - Garage user sees only reports matching their role
+    if ($shellIsDirector) {
+        $visibleReports = $config['reports'];
+    } else {
+        $visibleReports = array_filter($config['reports'], function ($r) use ($shellUser) {
+            if ($shellUser->isSuperAdmin()) {
                 return true;
             }
-        }
-        return false;
-    });
+            foreach ($r['roles'] as $role) {
+                if ($shellUser->hasGarageRole($role)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
 
-    // Preserve current period parameters when switching between tabs
+    // Resolve the effective route name for a given report config entry.
+    // For Director, prefixes with `director.`; otherwise keeps as-is.
+    $resolveRoute = function (string $routeName) use ($shellRoutePrefix) {
+        return $shellRoutePrefix.$routeName;
+    };
+
     $queryString = request()->only(['period', 'from', 'to']);
 @endphp
 
@@ -79,16 +95,35 @@
 <div class="fleet-dashboard">
     <section class="fleet-page-heading">
         <div>
-            <span class="fleet-eyebrow">{{ __('messages.reports.eyebrow') }} · {{ $config['eyebrow'] }}</span>
+            <span class="fleet-eyebrow">
+                {{ __('messages.reports.eyebrow') }}
+                · {{ $config['eyebrow'] }}
+                @if($shellIsDirector)
+                    · {{ __('messages.director.reports.company_scope') }}
+                @endif
+            </span>
             <h1>{{ $config['title'] }}</h1>
-            <p>{{ __('messages.reports.subtitle') }}</p>
+            <p>
+                @if($shellIsDirector)
+                    {{ __('messages.director.reports.subtitle') }}
+                @else
+                    {{ __('messages.reports.subtitle') }}
+                @endif
+            </p>
         </div>
+        @if($shellIsDirector)
+            <div class="fleet-page-heading__actions">
+                <a href="{{ route('director.dashboard') }}" class="fleet-button fleet-button--secondary">
+                    <i class="fas fa-arrow-left"></i> {{ __('messages.common.back') }}
+                </a>
+            </div>
+        @endif
     </section>
 
     {{-- Tabs --}}
     <div class="report-tabs mb-4">
         @foreach($visibleReports as $key => $r)
-            <a href="{{ route($r['route'], $queryString) }}"
+            <a href="{{ route($resolveRoute($r['route']), $queryString) }}"
                class="report-tab {{ $activeReport === $key ? 'report-tab--active' : '' }}">
                 {{ $r['label'] }}
             </a>
@@ -98,7 +133,7 @@
     {{-- Period filter --}}
     <div class="card mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route($config['reports'][$activeReport]['route'] ?? array_key_first($config['reports'])) }}">
+            <form method="GET" action="{{ route($resolveRoute($config['reports'][$activeReport]['route'] ?? array_key_first($config['reports']))) }}">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label fw-bold">{{ __('messages.reports.period.label') }}</label>

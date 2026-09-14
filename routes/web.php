@@ -60,6 +60,12 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 | Directors do NOT use the garage.selected middleware — they have no
 | garage context and operate at the company level.
+|
+| Reports are aggregated across every garage in the director's company
+| via ReportScope::for($user, $domain), which already returns the correct
+| company-wide scope. The route group mirrors the garage-level report
+| structure (reports.*) but lives under director.reports.* so the shell
+| can detect the Director context and adjust the tab route prefix.
 */
 Route::middleware(['auth'])
     ->prefix('director')
@@ -71,6 +77,45 @@ Route::middleware(['auth'])
             ->name('garages');
         Route::get('/garages/{garage}', [App\Http\Controllers\Director\DirectorController::class, 'showGarage'])
             ->name('garages.show');
+
+        /*
+        |------------------------------------------------------------------
+        | Director Reports (company-wide, read-only)
+        |------------------------------------------------------------------
+        */
+        Route::prefix('reports')->name('reports.')->group(function () {
+            // Warehouse reports
+            Route::prefix('warehouse')->name('warehouse.')->group(function () {
+                Route::get('/receipt', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'receipt'])->name('receipt');
+                Route::get('/usage', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'usage'])->name('usage');
+                Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/low-stock', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'lowStock'])->name('low-stock');
+                Route::get('/movement', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'movement'])->name('movement');
+            });
+
+            // Complaint reports
+            Route::prefix('complaint')->name('complaint.')->group(function () {
+                Route::get('/summary', [App\Http\Controllers\Director\Reports\DirectorComplaintReportController::class, 'summary'])->name('summary');
+                Route::get('/top-types', [App\Http\Controllers\Director\Reports\DirectorComplaintReportController::class, 'topTypes'])->name('top-types');
+                Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorComplaintReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/by-bus', [App\Http\Controllers\Director\Reports\DirectorComplaintReportController::class, 'byBus'])->name('by-bus');
+                Route::get('/avg-close-time', [App\Http\Controllers\Director\Reports\DirectorComplaintReportController::class, 'avgCloseTime'])->name('avg-close-time');
+            });
+
+            // Daily KM reports
+            Route::prefix('daily-km')->name('daily-km.')->group(function () {
+                Route::get('/missing', [App\Http\Controllers\Director\Reports\DirectorDailyKmReportController::class, 'missing'])->name('missing');
+                Route::get('/top-buses', [App\Http\Controllers\Director\Reports\DirectorDailyKmReportController::class, 'topBuses'])->name('top-buses');
+                Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorDailyKmReportController::class, 'workerActivity'])->name('worker-activity');
+            });
+
+            // Daily Status reports
+            Route::prefix('daily-status')->name('daily-status.')->group(function () {
+                Route::get('/distribution', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'distribution'])->name('distribution');
+                Route::get('/changes', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'changes'])->name('changes');
+                Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
+            });
+        });
     });
 
 /*

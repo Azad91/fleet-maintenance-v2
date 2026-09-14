@@ -136,8 +136,22 @@
                     <a href="{{ route('director.dashboard') }}" class="fleet-nav__link {{ request()->routeIs('director.dashboard') ? 'is-active' : '' }}">
                         <i class="fas fa-chart-line"></i><span>{{ __('messages.nav.dashboard') }}</span>
                     </a>
-                    <a href="{{ route('director.garages') }}" class="fleet-nav__link {{ request()->routeIs('director.garages.*') ? 'is-active' : '' }}">
+                    <a href="{{ route('director.garages') }}" class="fleet-nav__link {{ request()->routeIs('director.garages') || request()->routeIs('director.garages.show') ? 'is-active' : '' }}">
                         <i class="fas fa-warehouse"></i><span>{{ __('messages.director.garages_title') }}</span>
+                    </a>
+
+                    <p class="fleet-nav__label">{{ __('messages.reports.menu_label') }}</p>
+                    <a href="{{ route('director.reports.warehouse.receipt') }}" class="fleet-nav__link {{ request()->routeIs('director.reports.warehouse.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.reports.warehouse.title') }}</span>
+                    </a>
+                    <a href="{{ route('director.reports.complaint.summary') }}" class="fleet-nav__link {{ request()->routeIs('director.reports.complaint.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-screwdriver-wrench"></i><span>{{ __('messages.reports.complaint.title') }}</span>
+                    </a>
+                    <a href="{{ route('director.reports.daily-km.missing') }}" class="fleet-nav__link {{ request()->routeIs('director.reports.daily-km.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-gauge-high"></i><span>{{ __('messages.reports.daily_km.title') }}</span>
+                    </a>
+                    <a href="{{ route('director.reports.daily-status.distribution') }}" class="fleet-nav__link {{ request()->routeIs('director.reports.daily-status.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-clipboard-check"></i><span>{{ __('messages.reports.daily_status.title') }}</span>
                     </a>
                 @endif
 
