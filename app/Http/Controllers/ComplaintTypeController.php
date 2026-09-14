@@ -22,6 +22,16 @@ class ComplaintTypeController extends Controller
 
     public function create()
     {
+        // Resolve garage first — ComplaintTypePolicy::create() reads
+        // the current garage via hasGarageRole(). Without this order
+        // the user gets 403 instead of a clear redirect when no
+        // garage is selected.
+        if (! $this->hasResolvableGarage()) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $this->authorize('create', ComplaintType::class);
 
         return view('complaint-types.create');
@@ -29,6 +39,12 @@ class ComplaintTypeController extends Controller
 
     public function store(Request $request)
     {
+        if (! $this->hasResolvableGarage()) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $this->authorize('create', ComplaintType::class);
 
         $garageId = GarageContext::resolveGarageId();
@@ -49,6 +65,12 @@ class ComplaintTypeController extends Controller
 
     public function edit($id)
     {
+        if (! $this->hasResolvableGarage()) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $type = ComplaintType::findOrFail($id);
 
         $this->authorize('update', $type);
@@ -58,6 +80,12 @@ class ComplaintTypeController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (! $this->hasResolvableGarage()) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $type = ComplaintType::findOrFail($id);
 
         $this->authorize('update', $type);
@@ -81,6 +109,12 @@ class ComplaintTypeController extends Controller
 
     public function destroy($id)
     {
+        if (! $this->hasResolvableGarage()) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $type = ComplaintType::findOrFail($id);
 
         $this->authorize('delete', $type);
@@ -93,6 +127,12 @@ class ComplaintTypeController extends Controller
 
     public function importForm()
     {
+        if (! $this->hasResolvableGarage()) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $this->authorize('import', ComplaintType::class);
 
         return view('complaint-types.import');
@@ -100,13 +140,8 @@ class ComplaintTypeController extends Controller
 
     public function import(Request $request)
     {
-        $this->authorize('import', ComplaintType::class);
-
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
-
-        // Resolve via full fallback chain (Context → session → auth user).
+        // Resolve garage first so that a missing context redirects to
+        // garage selection instead of triggering a 403 in the policy.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -114,6 +149,12 @@ class ComplaintTypeController extends Controller
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
         }
+
+        $this->authorize('import', ComplaintType::class);
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
 
         try {
             Excel::import(
@@ -135,5 +176,18 @@ class ComplaintTypeController extends Controller
             return redirect()->route('complaint-types.index')
                 ->with('error', __('messages.flash.import_error'));
         }
+    }
+
+    /**
+     * True when a garage can be resolved from the current request
+     * context. Used as a precondition before calling authorize() so
+     * that the user is redirected to garage selection when no garage
+     * is active, instead of receiving a confusing 403.
+     */
+    private function hasResolvableGarage(): bool
+    {
+        $garageId = GarageContext::resolveGarageId();
+
+        return $garageId !== null && $garageId > 0;
     }
 }

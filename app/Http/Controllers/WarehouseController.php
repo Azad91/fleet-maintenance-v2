@@ -106,13 +106,8 @@ class WarehouseController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', Warehouse::class);
-
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
-        ]);
-
-        // Resolve via full fallback chain (Context → session → auth user).
+        // Garage context must be resolved BEFORE authorization — see
+        // ComplaintController::import() for the full rationale.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -120,6 +115,12 @@ class WarehouseController extends Controller
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
         }
+
+        $this->authorize('import', Warehouse::class);
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
 
         try {
             Excel::import(

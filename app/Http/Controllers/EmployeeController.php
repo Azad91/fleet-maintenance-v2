@@ -18,7 +18,7 @@ class EmployeeController extends Controller
         $this->authorize('viewAny', Employee::class);
 
         $employees = Employee::orderBy('first_name')
-            ->paginate(config('settings.pagination', 25));
+            ->paginate(config('settings.pagination', 30));
 
         return view('employees.index', compact('employees'));
     }
@@ -100,10 +100,8 @@ class EmployeeController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', Employee::class);
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
-
-        // Resolve via full fallback chain (Context → session → auth user).
+        // Resolve garage first so that a missing context redirects to
+        // garage selection instead of triggering a 403 in the policy.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -111,6 +109,9 @@ class EmployeeController extends Controller
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
         }
+
+        $this->authorize('import', Employee::class);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
             $import = new EmployeesImport(

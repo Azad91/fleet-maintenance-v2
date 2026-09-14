@@ -233,11 +233,11 @@ class ComplaintController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', Complaint::class);
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
-
-        // Resolve via full fallback chain: Context → session → auth user.
-        // Session-only resolution would fail in queue/CLI contexts.
+        // Garage context must be resolved BEFORE authorization. The
+        // ComplaintPolicy reads the current garage id via hasGarageRole(),
+        // so without a garage the policy would return false and the user
+        // would see a confusing 403 instead of being sent to garage
+        // selection. Resolving first makes the failure mode clear.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -245,6 +245,9 @@ class ComplaintController extends Controller
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
         }
+
+        $this->authorize('import', Complaint::class);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
             $import = new ComplaintsImport(

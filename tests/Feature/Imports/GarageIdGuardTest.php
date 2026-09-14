@@ -40,10 +40,6 @@ class GarageIdGuardTest extends TestCase
         parent::tearDown();
     }
 
-    // ==================================================================
-    // 1. CONSTRUCTOR GUARD — COMPLAINTS IMPORT
-    // ==================================================================
-
     public function test_complaints_import_rejects_zero_garage_id(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -66,10 +62,6 @@ class GarageIdGuardTest extends TestCase
         $this->assertEquals($this->garageA->id, $import->garageId);
     }
 
-    // ==================================================================
-    // 2. CONSTRUCTOR GUARD — WAREHOUSE IMPORT
-    // ==================================================================
-
     public function test_warehouse_import_rejects_zero_garage_id(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -85,13 +77,8 @@ class GarageIdGuardTest extends TestCase
         new WarehouseImport(-1);
     }
 
-    // ==================================================================
-    // 3. CROSS-TENANT PROTECTION — COMPLAINTS
-    // ==================================================================
-
     public function test_complaints_import_only_sees_buses_in_its_own_garage(): void
     {
-        // Bus exists ONLY in garage B. Import is for garage A.
         Bus::factory()->create([
             'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
@@ -108,24 +95,19 @@ class GarageIdGuardTest extends TestCase
             'status' => 'pending',
         ], 2);
 
-        // Must skip — DQN exists but in another garage.
         $this->assertEquals(0, $import->importedCount);
         $this->assertCount(1, $import->skipped);
-
-        // No complaint created for garage A
         $this->assertEquals(0, Complaint::withoutGlobalScopes()->count());
     }
 
     public function test_complaints_import_only_deducts_stock_from_its_own_garage(): void
     {
-        // Bus in garage A (the import's garage)
         Bus::factory()->create([
             'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
             'dqn' => 'OWN-001',
         ]);
 
-        // Same part code exists in BOTH garages with different quantities
         $warehouseA = Warehouse::withoutGlobalScopes()->create([
             'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
@@ -154,10 +136,8 @@ class GarageIdGuardTest extends TestCase
             'used_quantity' => 3,
         ], 2);
 
-        // Garage A's stock was decremented: 10 - 3 = 7
         $this->assertEquals(7, $warehouseA->fresh()->quantity);
 
-        // Garage B's stock is UNTOUCHED
         $this->assertEquals(
             50,
             $warehouseB->fresh()->quantity,
@@ -173,7 +153,6 @@ class GarageIdGuardTest extends TestCase
             'dqn' => 'OWN-002',
         ]);
 
-        // Part exists ONLY in garage B
         Warehouse::withoutGlobalScopes()->create([
             'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
@@ -194,30 +173,22 @@ class GarageIdGuardTest extends TestCase
             'used_quantity' => 5,
         ], 2);
 
-        // Must skip — part not in garage A
         $this->assertEquals(0, $import->importedCount);
         $this->assertCount(1, $import->skipped);
 
-        // Garage B stock untouched
         $warehouseB = Warehouse::withoutGlobalScopes()
             ->where('code', 'B-ONLY-001')
             ->first();
         $this->assertEquals(100, $warehouseB->quantity);
     }
 
-    // ==================================================================
-    // 4. HTTP LEVEL — CONTROLLER GUARD
-    // ==================================================================
-
     public function test_complaints_import_redirects_when_no_garage_in_session(): void
     {
         $admin = \App\Models\User::factory()->create(['role' => 'user']);
         $admin->garages()->attach($this->garageA->id, ['role' => 'admin', 'is_active' => true]);
 
-        // Bypass the middleware guards so that the CONTROLLER-level
-        // guard runs in isolation. In production, EnsureGarageSelected
-        // and RoleMiddleware intercept such requests first; this test
-        // verifies the controller's own defense-in-depth layer.
+        GarageContext::clear();
+
         $this->withoutMiddleware([
             \App\Http\Middleware\EnsureGarageSelected::class,
             \App\Http\Middleware\RoleMiddleware::class,
@@ -238,8 +209,8 @@ class GarageIdGuardTest extends TestCase
         $admin = \App\Models\User::factory()->create(['role' => 'user']);
         $admin->garages()->attach($this->garageA->id, ['role' => 'admin', 'is_active' => true]);
 
-        // Same reasoning as the complaints test above: isolate the
-        // controller's guard by bypassing the middleware layer.
+        GarageContext::clear();
+
         $this->withoutMiddleware([
             \App\Http\Middleware\EnsureGarageSelected::class,
             \App\Http\Middleware\RoleMiddleware::class,
@@ -255,13 +226,8 @@ class GarageIdGuardTest extends TestCase
         $response->assertSessionHas('error');
     }
 
-    // ==================================================================
-    // 5. WAREHOUSE IMPORT — CROSS-TENANT PROTECTION
-    // ==================================================================
-
     public function test_warehouse_import_does_not_overwrite_other_garage_items(): void
     {
-        // Same code in both garages, different quantities
         $warehouseA = Warehouse::withoutGlobalScopes()->create([
             'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
@@ -290,11 +256,9 @@ class GarageIdGuardTest extends TestCase
 
         $import->collection($rows);
 
-        // Garage A updated
         $this->assertEquals('Updated Garage A', $warehouseA->fresh()->name);
         $this->assertEquals(99, $warehouseA->fresh()->quantity);
 
-        // Garage B untouched
         $this->assertEquals('Garage B Item', $warehouseB->fresh()->name);
         $this->assertEquals(50, $warehouseB->fresh()->quantity);
     }

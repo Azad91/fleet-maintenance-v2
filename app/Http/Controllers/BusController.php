@@ -125,10 +125,11 @@ class BusController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $this->authorize('import', Bus::class);
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
-
-        // Resolve via full fallback chain (Context → session → auth user).
+        // Garage context must be resolved BEFORE authorization. The
+        // BusPolicy reads the current garage id via hasGarageRole(),
+        // so without a garage the policy returns false and the user
+        // would see a confusing 403 instead of being sent to garage
+        // selection. Resolving first makes the failure mode clear.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -136,6 +137,9 @@ class BusController extends Controller
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
         }
+
+        $this->authorize('import', Bus::class);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
             $import = new BusesImport(
