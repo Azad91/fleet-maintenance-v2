@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\GarageContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -31,7 +32,7 @@ class ComplaintItem extends Model
      */
     public function scopeRecurring($query, int $days = 30)
     {
-        $garageId = Garage::getCurrentId();
+        $garageId = GarageContext::resolveGarageId();
 
         if (! $garageId) {
             return $query->whereRaw('1 = 0');

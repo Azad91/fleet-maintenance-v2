@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Garage;
+use App\Services\GarageContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 abstract class Controller
@@ -27,8 +27,8 @@ abstract class Controller
 
     protected function addGarageContext(array $data): array
     {
-        $data['garage_id'] = Garage::getCurrentId();
-        $data['company_id'] = Garage::getCurrentCompanyId();
+        $data['garage_id'] = GarageContext::resolveGarageId();
+        $data['company_id'] = GarageContext::resolveCompanyId();
 
         return $data;
     }

@@ -18,7 +18,7 @@ class EmployeeController extends Controller
         $this->authorize('viewAny', Employee::class);
 
         $employees = Employee::orderBy('first_name')
-            ->paginate(config('settings.pagination', 30));
+            ->paginate(config('settings.pagination', 25));
 
         return view('employees.index', compact('employees'));
     }

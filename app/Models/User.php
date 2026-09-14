@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Enums\RoleEnum;
 use App\Models\Traits\Auditable;
+use App\Services\GarageContext;
+use App\Support\TwoFactor\TwoFactorManager;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use App\Support\TwoFactor\TwoFactorManager;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -75,6 +76,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'pin',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected $casts = [
@@ -102,7 +106,7 @@ class User extends Authenticatable
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
         $roles = (array) $roles;
-        $garageId ??= Garage::getCurrentId();
+        $garageId ??= GarageContext::resolveGarageId();
 
         if (! $garageId) {
             return false;
@@ -223,7 +227,7 @@ class User extends Authenticatable
 
     public function getCurrentGarageRole(): ?string
     {
-        $garageId = Garage::getCurrentId();
+        $garageId = GarageContext::resolveGarageId();
         if (! $garageId) {
             return null;
         }

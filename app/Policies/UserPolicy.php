@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\RoleEnum;
-use App\Models\Garage;
 use App\Models\User;
+use App\Services\GarageContext;
 
 class UserPolicy
 {
@@ -65,7 +65,7 @@ class UserPolicy
 
     private function targetSharesCurrentGarage(User $targetUser): bool
     {
-        $garageId = Garage::getCurrentId();
+        $garageId = GarageContext::resolveGarageId();
 
         if (! $garageId) {
             return false;

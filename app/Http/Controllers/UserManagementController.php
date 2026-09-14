@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\RoleEnum;
-use App\Models\Garage;
 use App\Models\User;
+use App\Services\GarageContext;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +33,7 @@ class UserManagementController extends Controller
             ->whereHas('garages', fn ($query) => $query->whereKey($garageId))
             ->with(['garages' => fn ($query) => $query->whereKey($garageId)])
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(config('settings.pagination', 25));
 
         return view('users.index', compact('users'));
     }
@@ -171,7 +171,7 @@ class UserManagementController extends Controller
 
     private function requireCurrentGarageId(): ?int
     {
-        $id = Garage::getCurrentId();
+        $id = GarageContext::resolveGarageId();
 
         return $id !== null ? (int) $id : null;
     }

@@ -19,7 +19,7 @@ class DriverController extends Controller
         $this->authorize('viewAny', Driver::class);
 
         $drivers = Driver::orderBy('code')
-            ->paginate(config('settings.pagination', 30));
+            ->paginate(config('settings.pagination', 25));
 
         return view('drivers.index', compact('drivers'));
     }

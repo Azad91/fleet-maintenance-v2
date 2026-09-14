@@ -28,7 +28,7 @@ class CompanyController extends Controller
 
         $companies = Company::withCount(['garages'])
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(config('settings.pagination', 25));
 
         return view('super-admin.companies.index', compact('companies'));
     }

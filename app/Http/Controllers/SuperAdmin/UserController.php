@@ -43,7 +43,7 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->orderBy('name')->paginate(20);
+        $users = $query->orderBy('name')->paginate(config('settings.pagination', 25));
 
         return view('super-admin.users.index', compact('users'));
     }

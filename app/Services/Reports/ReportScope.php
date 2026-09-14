@@ -4,6 +4,7 @@ namespace App\Services\Reports;
 
 use App\Models\Garage;
 use App\Models\User;
+use App\Services\GarageContext;
 
 /**
  * Describes the visibility scope of a report for the current user.
@@ -56,7 +57,7 @@ class ReportScope
         }
 
         // Garage users: current garage
-        $garageId = Garage::getCurrentId();
+        $garageId = GarageContext::resolveGarageId();
         $garageIds = $garageId ? [(int) $garageId] : [];
 
         // Worker within the domain → only own records

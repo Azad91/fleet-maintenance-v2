@@ -37,7 +37,7 @@ class GarageController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $garages = $query->orderBy('name')->paginate(20);
+        $garages = $query->orderBy('name')->paginate(config('settings.pagination', 25));
 
         $companies = Company::orderBy('name')->get();
 
