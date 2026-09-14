@@ -135,10 +135,16 @@ class Complaint extends Model
             : false;
     }
 
+    /**
+     * Human-readable duration between start_date and end_date.
+     * Uses the localized 'days' translation string.
+     */
     public function getDurationAttribute(): string
     {
         if ($this->start_date && $this->end_date) {
-            return $this->start_date->diffInDays($this->end_date).' gün';
+            $days = $this->start_date->diffInDays($this->end_date);
+
+            return $days.' '.__('messages.common.days');
         }
 
         return '-';

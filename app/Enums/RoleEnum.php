@@ -39,22 +39,23 @@ enum RoleEnum: string
     // ============================================================
     // LABELS
     // ============================================================
+    /**
+     * Human-readable label, translated via lang/{locale}/roles.php.
+     *
+     * Falls back to a title-cased version of the enum value if the
+     * translation key is missing — this prevents a raw key from
+     * leaking into the UI.
+     */
     public function label(): string
     {
-        return match ($this) {
-            self::SUPER_ADMIN => 'Super Admin',
-            self::USER => 'User',
-            self::DIRECTOR => 'Company Director',
-            self::ADMIN => 'Garage Admin',
-            self::COMPLAINT_MANAGER => 'Complaint Manager',
-            self::COMPLAINT_WORKER => 'Complaint Worker',
-            self::WAREHOUSE_MANAGER => 'Warehouse Manager',
-            self::WAREHOUSE_WORKER => 'Warehouse Worker',
-            self::DAILY_KM_MANAGER => 'Daily KM Manager',
-            self::DAILY_KM_WORKER => 'Daily KM Worker',
-            self::DAILY_STATUS_MANAGER => 'Daily Status Manager',
-            self::DAILY_STATUS_WORKER => 'Daily Status Worker',
-        };
+        $translated = __('roles.'.$this->value);
+
+        // Laravel returns the key itself when no translation is found.
+        if ($translated === 'roles.'.$this->value) {
+            return ucwords(str_replace('_', ' ', $this->value));
+        }
+
+        return $translated;
     }
 
     // ============================================================
