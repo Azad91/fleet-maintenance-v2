@@ -79,18 +79,19 @@ class AssignmentController extends Controller
                     'is_active' => true,
                 ]);
             }
-        });
 
-        // Audit: record the pivot change on the Company.
-        $this->pivotAuditor->log(
-            subject: $company,
-            event: $deactivatedDirector ? 'director_changed' : 'director_assigned',
-            oldValues: $deactivatedDirector
-                ? ['director_id' => $deactivatedDirector->id, 'director_name' => $deactivatedDirector->name]
-                : null,
-            newValues: ['director_id' => $newDirector->id, 'director_name' => $newDirector->name],
-            companyId: $company->id,
-        );
+            // Audit: transaction DAXİLİNDƏ — audit yazıla bilməzsə,
+            // pivot dəyişikliyi də geri qaytarılır (atomiklik).
+            $this->pivotAuditor->log(
+                subject: $company,
+                event: $deactivatedDirector ? 'director_changed' : 'director_assigned',
+                oldValues: $deactivatedDirector
+                    ? ['director_id' => $deactivatedDirector->id, 'director_name' => $deactivatedDirector->name]
+                    : null,
+                newValues: ['director_id' => $newDirector->id, 'director_name' => $newDirector->name],
+                companyId: $company->id,
+            );
+        });
 
         $message = $deactivatedDirector
             ? __('messages.super_admin.assignments.director_changed', [
@@ -113,16 +114,18 @@ class AssignmentController extends Controller
     {
         $this->ensureSuperAdmin();
 
-        $company->users()->detach($user->id);
+        DB::transaction(function () use ($company, $user) {
+            $company->users()->detach($user->id);
 
-        // Audit: record the pivot removal on the Company.
-        $this->pivotAuditor->log(
-            subject: $company,
-            event: 'director_removed',
-            oldValues: ['director_id' => $user->id, 'director_name' => $user->name],
-            newValues: null,
-            companyId: $company->id,
-        );
+            // Audit: transaction DAXİLİNDƏ — detach və audit bir yerdə.
+            $this->pivotAuditor->log(
+                subject: $company,
+                event: 'director_removed',
+                oldValues: ['director_id' => $user->id, 'director_name' => $user->name],
+                newValues: null,
+                companyId: $company->id,
+            );
+        });
 
         return back()->with('success', __(
             'messages.super_admin.assignments.director_removed',

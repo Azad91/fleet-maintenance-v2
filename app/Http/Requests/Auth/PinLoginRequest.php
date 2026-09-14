@@ -64,6 +64,7 @@ class PinLoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->accountThrottleKey());
 
         return $user;
     }
@@ -71,19 +72,37 @@ class PinLoginRequest extends FormRequest
     /**
      * Ensure the login request is not rate limited.
      *
+     * Two independent limits are enforced:
+     *   1. IP + employee_code — the existing per-endpoint guard
+     *   2. employee_code only — an account-level guard that survives
+     *      IP rotation, protecting against distributed brute-force
+     *      attacks against a single PIN
+     *
      * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {
         $maxAttempts = (int) config('rate_limits.login_attempts', 5);
 
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
-            return;
+        if (RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
+            $this->throwLockout($this->throttleKey());
         }
 
+        $accountMax = (int) config('rate_limits.pin_account_attempts', 15);
+
+        if (RateLimiter::tooManyAttempts($this->accountThrottleKey(), $accountMax)) {
+            $this->throwLockout($this->accountThrottleKey());
+        }
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    protected function throwLockout(string $key): never
+    {
         event(new Lockout($this));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+        $seconds = RateLimiter::availableIn($key);
 
         throw ValidationException::withMessages([
             'employee_code' => trans('auth.throttle', [
@@ -100,10 +119,11 @@ class PinLoginRequest extends FormRequest
      */
     protected function failAndRateLimit(string $field): never
     {
-        RateLimiter::hit(
-            $this->throttleKey(),
-            (int) config('rate_limits.login_decay_seconds', 900)
-        );
+        $decay = (int) config('rate_limits.login_decay_seconds', 900);
+
+        // Hər iki limiti eyni vaxtda vur — IP dəyişikliyi bypass etməsin.
+        RateLimiter::hit($this->throttleKey(), $decay);
+        RateLimiter::hit($this->accountThrottleKey(), $decay);
 
         throw ValidationException::withMessages([
             $field => __('auth.failed'),
@@ -111,12 +131,25 @@ class PinLoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Per-endpoint throttle key: employee_code + IP address.
      */
     public function throttleKey(): string
     {
         $code = Str::transliterate(Str::lower((string) $this->input('employee_code')));
 
         return $code.'|'.$this->ip();
+    }
+
+    /**
+     * Account-level throttle key: employee_code only, IP-independent.
+     *
+     * This exists specifically to close the IP-rotation bypass
+     * against a single employee account.
+     */
+    public function accountThrottleKey(): string
+    {
+        $code = Str::transliterate(Str::lower((string) $this->input('employee_code')));
+
+        return 'pin_account:'.$code;
     }
 }

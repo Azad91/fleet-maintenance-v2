@@ -30,4 +30,19 @@ return [
     */
     'login_attempts' => (int) env('RATE_LIMIT_LOGIN_ATTEMPTS', 5),
     'login_decay_seconds' => (int) env('RATE_LIMIT_LOGIN_DECAY', 900),
+
+    /*
+    |--------------------------------------------------------------------------
+    | PIN Login — Account-Level Lockout
+    |--------------------------------------------------------------------------
+    |
+    | Bu limit IP-dən asılı deyil — tək employee_code üzrə tətbiq olunur.
+    | Məqsəd: IP rotasiya edən hücumçunun 4 rəqəmli PIN-i brute-force
+    | etməsinin qarşısını almaq.
+    |
+    | 15 cəhd * 4 rəqəm = 10.000 kombinasiyadan 15-i. Bu, real istifadəçi
+    | üçün səxavətlidir, hücumçu üçün isə qeyri-real bir pəncərə yaradır.
+    |
+    */
+    'pin_account_attempts' => (int) env('RATE_LIMIT_PIN_ACCOUNT_ATTEMPTS', 15),
 ];
