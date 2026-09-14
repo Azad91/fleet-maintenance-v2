@@ -19,7 +19,10 @@ return [
     | Role Names
     |--------------------------------------------------------------------------
     */
-    'roles' => RoleEnum::labels(),
+    // ⚠️ SİLİNDİ: `'roles' => RoleEnum::labels()` burada çağırılırdı, amma
+    // `RoleEnum::label()` indi `__('roles.…')` işlədir → config yüklənərkən
+    // translator hələ hazır deyil → "Target class [translator] does not exist".
+    // Rol etiketləri lazım olan yerlərdə birbaşa `RoleEnum::labels()` çağırın.
 
     /*
     |--------------------------------------------------------------------------

@@ -10,6 +10,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -112,7 +113,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $status);
         });
 
-        // 5. REPORTING
+                // 5. REPORTING
         $exceptions->reportable(function (Throwable $e) {
             if ($e instanceof ModelNotFoundException
                 || $e instanceof NotFoundHttpException
@@ -123,13 +124,42 @@ return Application::configure(basePath: dirname(__DIR__))
                 return false;
             }
 
-            Log::error($e->getMessage(), [
-                'exception' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'request_id' => Illuminate\Support\Facades\Context::get('request_id'),
-                'user_id' => auth()->id(),
-                'url' => request()?->fullUrl(),
-            ]);
+            // The app may not be fully booted when this closure runs
+            // (e.g. an exception thrown during bootstrap itself). Any
+            // facade call would then fail with "A facade root has not
+            // been set", masking the original error. Guard against that
+            // and fall back to PHP's native error_log.
+            if (! function_exists('app') || ! app()->bound('log')) {
+                error_log(sprintf(
+                    '[Fleet] %s: %s in %s:%d',
+                    get_class($e),
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine(),
+                ));
+
+                return false;
+            }
+
+            try {
+                Log::error($e->getMessage(), [
+                    'exception' => get_class($e),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'request_id' => Illuminate\Support\Facades\Context::get('request_id'),
+                    'user_id' => auth()->id(),
+                    'url' => request()?->fullUrl(),
+                ]);
+            } catch (\Throwable $loggingFailure) {
+                // Logging itself failed — never let it mask the original.
+                error_log(sprintf(
+                    '[Fleet] %s: %s in %s:%d (logging also failed: %s)',
+                    get_class($e),
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine(),
+                    $loggingFailure->getMessage(),
+                ));
+            }
         });
     })->create();
