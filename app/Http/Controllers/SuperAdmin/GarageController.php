@@ -7,12 +7,16 @@ use App\Http\Requests\SuperAdmin\GarageStoreRequest;
 use App\Http\Requests\SuperAdmin\GarageUpdateRequest;
 use App\Models\Company;
 use App\Models\Garage;
+use App\Services\Onboarding\GarageOnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class GarageController extends Controller
 {
+    public function __construct(
+        protected GarageOnboardingService $onboardingService
+    ) {}
     /**
      * List all garages with optional filter by company.
      */
@@ -58,17 +62,34 @@ class GarageController extends Controller
     /**
      * Store a newly created garage in storage.
      */
-    public function store(GarageStoreRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
-        $validated['is_active'] = $request->boolean('is_active', true);
+        public function store(GarageStoreRequest $request): RedirectResponse
+        {
+            $validated = $request->validated();
 
-        $garage = Garage::create($validated);
+            $garage = $this->onboardingService->createWithAdmin(
+                garageData: [
+                    'company_id' => $validated['company_id'],
+                    'name'       => $validated['name'],
+                    'code'       => $validated['code'],
+                    'address'    => $validated['address'] ?? null,
+                    'phone'      => $validated['phone'] ?? null,
+                    'is_active'  => $request->boolean('is_active', true),
+                ],
+                adminData: [
+                    'name'     => $validated['admin_name'],
+                    'email'    => $validated['admin_email'],
+                    'password' => $validated['admin_password'],
+                    'pin'      => $validated['admin_pin'],
+                ],
+            );
 
-        return redirect()
-            ->route('super-admin.garages.show', $garage)
-            ->with('success', __('messages.super_admin.garages.created'));
-    }
+            return redirect()
+                ->route('super-admin.garages.show', $garage)
+                ->with('success', __('messages.super_admin.garages.created_with_admin', [
+                    'name'  => $garage->name,
+                    'admin' => $validated['admin_email'],
+                ]));
+        }
 
     /**
      * Display the specified garage with its admins and users.

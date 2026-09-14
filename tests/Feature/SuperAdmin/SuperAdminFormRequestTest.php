@@ -117,6 +117,7 @@ class SuperAdminFormRequestTest extends TestCase
 
     public function test_garage_code_must_be_unique_on_store(): void
     {
+        // Əgər bu test mövcuddursa:
         Garage::factory()->create(['code' => 'GAR-001', 'company_id' => $this->company->id]);
 
         $response = $this->asSuperAdmin()
@@ -124,6 +125,13 @@ class SuperAdminFormRequestTest extends TestCase
                 'company_id' => $this->company->id,
                 'name' => 'New Garage',
                 'code' => 'GAR-001',
+                // admin sahələri də əlavə et (validation xətası code-dan əvvəl admin-ə keçməsin deyə):
+                'admin_name' => 'Admin',
+                'admin_email' => 'unique@garage.test',
+                'admin_password' => 'Str0ngPass!',
+                'admin_password_confirmation' => 'Str0ngPass!',
+                'admin_pin' => '1234',
+                'admin_pin_confirmation' => '1234',
             ]);
 
         $response->assertSessionHasErrors('code');
@@ -153,17 +161,11 @@ class SuperAdminFormRequestTest extends TestCase
         $company = Company::factory()->create(['slug' => 'my-slug']);
 
         $response = $this->asSuperAdmin()
-        ->post(route('super-admin.companies.store'), [
-            'name' => 'Test Company',
-            'slug' => 'test-company',
-            'is_active' => 1,
-            'director_name' => 'Test Director',
-            'director_email' => 'director@test-company.test',
-            'director_password' => 'Str0ngPass!',
-            'director_password_confirmation' => 'Str0ngPass!',
-            'director_pin' => '1234',
-            'director_pin_confirmation' => '1234',
-        ]);
+            ->put(route('super-admin.companies.update', $company), [
+                'name' => 'Updated Name',
+                'slug' => 'my-slug', // same slug — must be allowed
+                'is_active' => 1,
+            ]);
 
         $response->assertSessionHasNoErrors();
         $this->assertSame('Updated Name', $company->fresh()->name);
@@ -276,6 +278,12 @@ class SuperAdminFormRequestTest extends TestCase
                 'name' => 'New Garage',
                 'code' => 'NEW-001',
                 'is_active' => 1,
+                'admin_name' => 'New Admin',
+                'admin_email' => 'newadmin@garage.test',
+                'admin_password' => 'Str0ngPass!',
+                'admin_password_confirmation' => 'Str0ngPass!',
+                'admin_pin' => '1234',
+                'admin_pin_confirmation' => '1234',
             ]);
 
         $response->assertRedirect();

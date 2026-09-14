@@ -76,6 +76,81 @@
                     <textarea class="form-control" id="address" name="address" rows="2">{{ old('address') }}</textarea>
                 </div>
 
+                {{-- ─── GARAGE ADMIN (required) ─── --}}
+                <div class="col-12">
+                    <hr class="my-2">
+                    <h5 class="mb-1">
+                        <i class="fas fa-user-shield"></i>
+                        {{ __('messages.super_admin.garages.admin_section') }}
+                    </h5>
+                    <p class="text-muted small mb-3">
+                        {{ __('messages.super_admin.garages.admin_section_hint') }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="admin_name" class="form-label fw-bold">
+                        {{ __('messages.super_admin.garages.admin_name') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="admin_name" name="admin_name"
+                        value="{{ old('admin_name') }}" required
+                        placeholder="{{ __('messages.super_admin.garages.admin_name_placeholder') }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="admin_email" class="form-label fw-bold">
+                        {{ __('messages.super_admin.garages.admin_email') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="email" class="form-control" id="admin_email" name="admin_email"
+                        value="{{ old('admin_email') }}" required
+                        placeholder="admin@garage.com">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="admin_password" class="form-label fw-bold">
+                        {{ __('messages.super_admin.garages.admin_password') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="password" class="form-control" id="admin_password"
+                        name="admin_password" required autocomplete="new-password">
+                    <small class="text-muted">
+                        {{ __('messages.super_admin.garages.admin_password_hint') }}
+                    </small>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="admin_password_confirmation" class="form-label fw-bold">
+                        {{ __('messages.super_admin.garages.admin_password_confirm') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="password" class="form-control" id="admin_password_confirmation"
+                        name="admin_password_confirmation" required autocomplete="new-password">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="admin_pin" class="form-label fw-bold">
+                        {{ __('messages.super_admin.garages.admin_pin') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="admin_pin" name="admin_pin"
+                        required maxlength="6" pattern="\d{4,6}"
+                        value="{{ old('admin_pin') }}" placeholder="1234">
+                    <small class="text-muted">
+                        {{ __('messages.super_admin.garages.admin_pin_hint') }}
+                    </small>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="admin_pin_confirmation" class="form-label fw-bold">
+                        {{ __('messages.super_admin.garages.admin_pin_confirm') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="admin_pin_confirmation"
+                        name="admin_pin_confirmation" required maxlength="6" pattern="\d{4,6}">
+                </div>
+
                 <div class="col-12">
                     <div class="form-check form-switch">
                         <input type="hidden" name="is_active" value="0">
