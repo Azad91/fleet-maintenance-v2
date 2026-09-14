@@ -6,24 +6,38 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Ensures every request carries a valid, unique X-Request-ID that is
+ * propagated to logs (via Context) and back to the client.
+ *
+ * The incoming header is accepted ONLY if it is a valid UUID. This
+ * prevents log injection and correlation poisoning — an attacker
+ * cannot send "X-Request-ID: anything" and end up with that value
+ * showing up in every log line for the request.
+ */
 class RequestIdMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // 1. Əgər sorğuda artıq Request-ID varsa (məsələn Nginx və ya Load Balancer-dən gəlirsə) onu götür, yoxdursa yeni UUID yarat
-        $requestId = $request->header('X-Request-ID', Str::uuid()->toString());
+        // Client-dən gələn header-i yalnız UUID formatında qəbul et.
+        // Əks halda öz UUID-mizi generasiya et.
+        $incoming = $request->header('X-Request-ID');
 
-        // 2. Bu ID-ni Laravel Context-ə əlavə et (Bütün loglarda avtomatik görünəcək)
+        $requestId = (is_string($incoming) && Str::isUuid($incoming))
+            ? $incoming
+            : Str::uuid()->toString();
+
+        // Laravel Context — bütün log qeydlərinə avtomatik düşür.
         Context::add('request_id', $requestId);
 
-        // 3. Sorğunun özünə də əlavə et ki, Controller-lərdə lazım olsa istifadə edilə bilsin
+        // Sorğunun header-inə yaz — controller-lər istifadə edə bilsin.
         $request->headers->set('X-Request-ID', $requestId);
 
-        // 4. Sorğunu işlət
         $response = $next($request);
 
-        // 5. Yekun cavabın (Response) header-inə də bu ID-ni əlavə et ki, frontend/mobil bu ID-ni görsün
+        // Cavabın header-inə də əlavə et — frontend/monitoring üçün.
         $response->headers->set('X-Request-ID', $requestId);
 
         return $response;

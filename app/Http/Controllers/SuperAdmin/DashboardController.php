@@ -16,6 +16,11 @@ use Illuminate\View\View;
  *
  * Unlike the regular DashboardController (garage-scoped), this view
  * aggregates data across ALL companies and garages on the platform.
+ *
+ * IMPORTANT: When counting tenant models, we remove ONLY the 'garage'
+ * global scope — never all scopes. Removing all scopes would also
+ * remove SoftDeletingScope, causing soft-deleted buses and complaints
+ * to appear in the platform statistics.
  */
 class DashboardController extends Controller
 {
@@ -29,8 +34,12 @@ class DashboardController extends Controller
             'users_total' => User::count(),
             'users_active' => User::where('is_active', true)->count(),
             'users_super_admins' => User::where('role', 'super_admin')->count(),
-            'buses_total' => Bus::withoutGlobalScopes()->count(),
-            'complaints_open' => Complaint::withoutGlobalScopes()->where('status', '!=', 'completed')->count(),
+
+            // Yalnız 'garage' scope silinir — SoftDeletes aktiv qalır.
+            'buses_total' => Bus::withoutGlobalScope('garage')->count(),
+            'complaints_open' => Complaint::withoutGlobalScope('garage')
+                ->where('status', '!=', 'completed')
+                ->count(),
         ];
 
         $recentCompanies = Company::orderByDesc('id')->limit(5)->get();
