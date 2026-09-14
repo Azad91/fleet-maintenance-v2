@@ -56,6 +56,24 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Two-Factor Challenge (SuperAdmin only)
+|--------------------------------------------------------------------------
+| These routes are intentionally OUTSIDE the `auth` middleware: the
+| user is not yet logged in when the challenge is shown. The session
+| key `two_factor.user_id` is what identifies the pending login.
+*/
+Route::middleware('guest')->group(function () {
+    Route::get('two-factor-challenge', [\App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'show'])
+        ->name('two-factor.challenge');
+    Route::post('two-factor-challenge', [\App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('two-factor.challenge.store');
+    Route::post('two-factor-challenge/cancel', [\App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'destroy'])
+        ->name('two-factor.challenge.cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Director Routes (company-level, read-only)
 |--------------------------------------------------------------------------
 | Directors do NOT use the garage.selected middleware — they have no
@@ -127,7 +145,7 @@ Route::middleware(['auth'])
 | super admin can reach the platform dashboard without being forced
 | through the garage selection flow.
 */
-Route::middleware(['auth', 'super.admin'])
+Route::middleware(['auth', 'super.admin', '2fa.verified'])
     ->prefix('super-admin')
     ->name('super-admin.')
     ->group(function () {
@@ -139,16 +157,27 @@ Route::middleware(['auth', 'super.admin'])
         Route::post('/settings/clear-cache', [App\Http\Controllers\SuperAdmin\SettingsController::class, 'clearCache'])
             ->name('settings.clear-cache');
 
-        // Resource routes
-        Route::resource('companies', CompanyController::class);
-        Route::resource('garages', GarageController::class);
-        Route::resource('users', SuperAdminUserController::class)->except(['show']);
+        // ─── 2FA Security (SuperAdmin only) ───
+        Route::prefix('security/2fa')->name('security.2fa.')->group(function () {
+            Route::get('/setup', [App\Http\Controllers\SuperAdmin\TwoFactorSetupController::class, 'show'])
+                ->name('setup');
+            Route::post('/setup/confirm', [App\Http\Controllers\SuperAdmin\TwoFactorSetupController::class, 'confirm'])
+                ->name('confirm');
+            Route::get('/recovery-codes', [App\Http\Controllers\SuperAdmin\TwoFactorSetupController::class, 'showRecoveryCodes'])
+                ->name('recovery-codes');
+        });
 
-        // Company Director assignment
-        Route::post('companies/{company}/director', [AssignmentController::class, 'assignDirector'])
-            ->name('companies.assign-director');
-        Route::delete('companies/{company}/director/{user}', [AssignmentController::class, 'removeDirector'])
-            ->name('companies.remove-director');
+        // ─── Everything below requires MFA to be verified ───
+        Route::middleware(['2fa.verified'])->group(function () {
+            Route::resource('companies', CompanyController::class);
+            Route::resource('garages', GarageController::class);
+            Route::resource('users', SuperAdminUserController::class)->except(['show']);
+
+            Route::post('companies/{company}/director', [AssignmentController::class, 'assignDirector'])
+                ->name('companies.assign-director');
+            Route::delete('companies/{company}/director/{user}', [AssignmentController::class, 'removeDirector'])
+                ->name('companies.remove-director');
+        });
     });
 
 /*

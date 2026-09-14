@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Support\TwoFactor\TwoFactorManager;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -35,6 +37,8 @@ class User extends Authenticatable
         'current_garage_id',
         'current_company_id',
         'last_selected_garage_at',
+        // 2FA columns are NOT fillable — set them only through
+        // twoFactorManager operations in the setup controller.
     ];
 
     /**
@@ -74,8 +78,11 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'email_verified_at'          => 'datetime',
+        'password'                   => 'hashed',
+        'two_factor_secret'          => 'encrypted',
+        'two_factor_recovery_codes'  => 'encrypted:array',
+        'two_factor_confirmed_at'    => 'datetime',
     ];
 
     // ==================== GLOBAL ROLE CHECKS ====================
@@ -255,5 +262,89 @@ class User extends Authenticatable
         $this->forceFill(['role' => RoleEnum::USER->value]);
 
         return $this;
+    }
+
+    // ==================== TWO-FACTOR AUTHENTICATION ====================
+
+    /**
+     * True when MFA is fully set up and confirmed for this user.
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_secret !== null
+            && $this->two_factor_confirmed_at !== null;
+    }
+
+    /**
+     * True when a secret exists but hasn't been confirmed yet
+     * (user is in the middle of setup).
+     */
+    public function hasPendingTwoFactorSetup(): bool
+    {
+        return $this->two_factor_secret !== null
+            && $this->two_factor_confirmed_at === null;
+    }
+
+    /**
+     * True when the user needs to be forced into MFA setup.
+     *
+     * Current rule (see audit & security plan): only SuperAdmin is
+     * required to use MFA. All other roles are unaffected.
+     */
+    public function requiresTwoFactorSetup(): bool
+    {
+        return $this->isSuperAdmin() && ! $this->hasTwoFactorEnabled();
+    }
+
+    /**
+     * Verify a TOTP code against this user's secret.
+     */
+    public function verifyTwoFactorCode(string $code): bool
+    {
+        if (! $this->two_factor_secret) {
+            return false;
+        }
+
+        return app(TwoFactorManager::class)->verifyCode(
+            $this->two_factor_secret,
+            $code,
+        );
+    }
+
+    /**
+     * Verify a recovery code. On success, the used code is removed
+     * from the stored list (one-time use).
+     *
+     * Defensive: if the value came back as a JSON string (this can happen
+     * if the `encrypted:array` cast was not applied for any reason — a
+     * stale model instance, a missing cast, or data written before the
+     * cast existed), decode it inline so the operation still works.
+     */
+    public function useRecoveryCode(string $code): bool
+    {
+        $codes = $this->two_factor_recovery_codes ?? [];
+
+        // Defensive: allow JSON-encoded string fallback.
+        if (is_string($codes)) {
+            $codes = json_decode($codes, true) ?? [];
+        }
+
+        if (! is_array($codes)) {
+            return false;
+        }
+
+        foreach ($codes as $index => $hashedCode) {
+            if (Hash::check($code, $hashedCode)) {
+                unset($codes[$index]);
+
+                $this->forceFill([
+                    'two_factor_recovery_codes' => array_values($codes),
+                ])->save();
+
+                return true;
+            }
+        }
+
+        return false;
     }
 }

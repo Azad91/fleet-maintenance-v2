@@ -21,6 +21,10 @@ class PinLoginController extends Controller
 
     /**
      * Authenticate via employee code + PIN.
+     *
+     * PIN login is only available to non-SuperAdmin users (the
+     * PinLoginRequest rejects SuperAdmins), so no MFA branch is
+     * needed here.
      */
     public function store(PinLoginRequest $request): RedirectResponse
     {
