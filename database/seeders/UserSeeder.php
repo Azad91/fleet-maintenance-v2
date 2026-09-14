@@ -2,19 +2,37 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\Garage;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
+/**
+ * Seeds the platform-level SuperAdmin account.
+ *
+ * Every other account type is created through its dedicated flow:
+ *
+ *   ┌─────────────────────┬──────────────────────────────────────────────┐
+ *   │ Account type        │ Created by                                   │
+ *   ├─────────────────────┼──────────────────────────────────────────────┤
+ *   │ SuperAdmin          │ THIS seeder (idempotent, platform-level)     │
+ *   │ Company Director    │ CompanyController::store                     │
+ *   │                     │   → CompanyOnboardingService                 │
+ *   │ Garage Admin        │ GarageController::store                      │
+ *   │                     │   → GarageOnboardingService                  │
+ *   │ Workers / Managers  │ UserManagementController (garage Admin)      │
+ *   └─────────────────────┴──────────────────────────────────────────────┘
+ *
+ * The SuperAdmin is intentionally NOT attached to any garage — it is
+ * a platform-scoped role, not a tenant-scoped one. The old
+ * `seedGarageAdmin()` method (which created `garage.admin@example.com`)
+ * was removed in favor of the onboarding flows above.
+ */
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
         $this->seedSuperAdmin();
-        $this->seedGarageAdmin();
     }
 
     // ============================================================
@@ -26,7 +44,7 @@ class UserSeeder extends Seeder
             ->where('email', 'admin@fleet.com')
             ->first();
 
-        // Idempotent: never overwrite an existing super admin's password.
+        // Idempotent: never overwrite an existing SuperAdmin's password.
         // Re-running `php artisan db:seed` must NOT reset credentials.
         if ($existing) {
             if (! $existing->isSuperAdmin()) {
@@ -107,100 +125,5 @@ class UserSeeder extends Seeder
         }
 
         $this->command->newLine();
-    }
-
-    // ============================================================
-    // 2. TEST GARAGE ADMIN (dev only — unchanged behavior)
-    // ============================================================
-    private function seedGarageAdmin(): void
-    {
-        $company = Company::where('slug', 'bakubus')->first();
-
-        if (! $company) {
-            return;
-        }
-
-        $garage = Garage::where('company_id', $company->id)
-            ->where('code', 'GAR-001')
-            ->first();
-
-        if (! $garage) {
-            return;
-        }
-
-        // Skip in production — this is a known-credential test account.
-        if (app()->environment('production')) {
-            $this->command->warn('Skipped test garage admin (production environment).');
-
-            return;
-        }
-
-        $admin = User::updateOrCreate(
-            ['employee_code' => 'QAR-001'],
-            [
-                'name' => 'Garage Admin',
-                'email' => 'garage.admin@example.com',
-                'password' => Hash::make('password'),
-                'pin' => Hash::make('1234'),
-                'pin_is_default' => true,
-                'is_active' => true,
-            ]
-        );
-
-        $admin->demoteToRegularUser()->save();
-
-        // ─────────────────────────────────────────────────────────────
-        // STEP 1: Deactivate any OTHER active admin in this garage.
-        //
-        // The `garage_user_single_admin` partial unique index allows only
-        // ONE active admin per garage. Without this step, attaching our
-        // seeder admin to a garage that already has an active admin
-        // raises a UniqueConstraintViolationException.
-        // ─────────────────────────────────────────────────────────────
-        $garage->users()
-            ->wherePivot('role', 'admin')
-            ->wherePivot('is_active', true)
-            ->where('users.id', '!=', $admin->id)
-            ->get()
-            ->each(function (User $otherAdmin) use ($garage) {
-                $garage->users()->updateExistingPivot($otherAdmin->id, [
-                    'is_active' => false,
-                ]);
-
-                $this->command->warn(sprintf(
-                    '  ⚠️  Deactivated existing admin (id=%d, %s) in garage "%s".',
-                    $otherAdmin->id,
-                    $otherAdmin->email,
-                    $garage->name,
-                ));
-            });
-
-        // ─────────────────────────────────────────────────────────────
-        // STEP 2: Attach the seeder admin.
-        //
-        // We use `syncWithoutDetaching` instead of `sync` so that
-        // pre-existing pivot rows for OTHER garages are preserved.
-        // `sync` would detach this user from every other garage.
-        // ─────────────────────────────────────────────────────────────
-        $admin->garages()->syncWithoutDetaching([
-            $garage->id => [
-                'role' => 'admin',
-                'is_active' => true,
-            ],
-        ]);
-
-        // Make sure our own pivot row is active — syncWithoutDetaching
-        // does not flip `is_active` to true if the row already exists
-        // with is_active = false.
-        $garage->users()->updateExistingPivot($admin->id, [
-            'role' => 'admin',
-            'is_active' => true,
-        ]);
-
-        $this->command->line(sprintf(
-            '  ✓ Garage admin seeded: %s (garage: %s)',
-            $admin->email,
-            $garage->name,
-        ));
     }
 }
