@@ -11,9 +11,11 @@ use App\Services\Onboarding\GarageOnboardingService;
 use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\MakesSuperAdminWithMfa;
 
 class PivotAuditTest extends TestCase
 {
+    use MakesSuperAdminWithMfa;
     use RefreshDatabase;
 
     // ==================================================================
@@ -165,8 +167,7 @@ class PivotAuditTest extends TestCase
 
     public function test_assign_director_logs_change_on_pivot_swap(): void
     {
-        $superAdmin = User::factory()->create(['role' => 'super_admin']);
-
+        $superAdmin = $this->makeSuperAdminWithMfa();
         $company = Company::factory()->create();
 
         $oldDirector = User::factory()->create(['role' => 'user', 'name' => 'Old Dir']);
@@ -197,7 +198,7 @@ class PivotAuditTest extends TestCase
 
     public function test_assign_first_director_logs_assignment(): void
     {
-        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $superAdmin = $this->makeSuperAdminWithMfa();
 
         $company = Company::factory()->create();
         $director = User::factory()->create(['role' => 'user']);
@@ -227,7 +228,7 @@ class PivotAuditTest extends TestCase
 
     public function test_remove_director_logs_removal(): void
     {
-        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $superAdmin = $this->makeSuperAdminWithMfa();
 
         $company = Company::factory()->create();
         $director = User::factory()->create(['role' => 'user', 'name' => 'To Remove']);

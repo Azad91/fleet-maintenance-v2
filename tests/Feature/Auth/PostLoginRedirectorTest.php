@@ -175,7 +175,7 @@ class PostLoginRedirectorTest extends TestCase
     // 6. SUPER ADMIN — NO GARAGE MEMBERSHIP
     // ==================================================================
 
-    public function test_super_admin_login_redirects_to_garage_selection(): void
+    public function test_super_admin_login_redirects_to_two_factor_challenge(): void
     {
         $superAdmin = User::factory()->create([
             'email' => 'sa@test.com',
@@ -189,9 +189,10 @@ class PostLoginRedirectorTest extends TestCase
             'password' => 'password',
         ]);
 
-        // Super Admin has no garage memberships → selection page.
-        // (The selection controller special-cases SAs to show all garages.)
-        $response->assertRedirect(route('garage.selection'));
+        // SuperAdmin login is deferred until MFA is verified.
+        $response->assertRedirect(route('two-factor.challenge'));
+        $this->assertGuest();
+        $this->assertEquals($superAdmin->id, session('two_factor.user_id'));
     }
 
     // ==================================================================

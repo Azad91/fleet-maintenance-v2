@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
+use Tests\Traits\MakesSuperAdminWithMfa;
 
 class CompanyOnboardingTest extends TestCase
 {
+    use MakesSuperAdminWithMfa;
     use RefreshDatabase;
 
     protected User $superAdmin;
@@ -25,8 +27,7 @@ class CompanyOnboardingTest extends TestCase
         $company = Company::factory()->create();
         $this->garage = Garage::factory()->create(['company_id' => $company->id]);
 
-        $this->superAdmin = User::factory()->create(['role' => 'super_admin']);
-    }
+        $this->superAdmin = $this->makeSuperAdminWithMfa();    }
 
     protected function asSuperAdmin(): self
     {
@@ -165,9 +166,12 @@ class CompanyOnboardingTest extends TestCase
 
     public function test_company_is_not_created_if_director_creation_fails(): void
     {
-        // Let exceptions propagate to the test instead of being converted
-        // into a 500 response by Laravel's HTTP exception handler.
-        $this->withoutExceptionHandling();
+    // Let the exception propagate to the test — otherwise the HTTP
+    // exception handler converts it into a 500 response and the
+    // try/catch below never fires.
+    $this->withoutExceptionHandling();
+
+    // The Director (User) row is inserted AFTER the Company row inside
 
         Event::listen(
             'eloquent.creating: '.User::class,

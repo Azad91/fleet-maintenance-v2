@@ -7,9 +7,11 @@ use App\Models\Garage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\MakesSuperAdminWithMfa;
 
 class SuperAdminFormRequestTest extends TestCase
 {
+    use MakesSuperAdminWithMfa;
     use RefreshDatabase;
 
     protected User $superAdmin;
@@ -29,8 +31,7 @@ class SuperAdminFormRequestTest extends TestCase
         $this->company = Company::factory()->create();
         $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
-        $this->superAdmin = User::factory()->create(['role' => 'super_admin']);
-    }
+        $this->superAdmin = $this->makeSuperAdminWithMfa();    }
 
     /**
      * Act as the super admin with a garage context in session.

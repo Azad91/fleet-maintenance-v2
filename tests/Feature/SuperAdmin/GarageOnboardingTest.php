@@ -9,9 +9,11 @@ use App\Services\Onboarding\GarageOnboardingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
+use Tests\Traits\MakesSuperAdminWithMfa;
 
 class GarageOnboardingTest extends TestCase
 {
+    use MakesSuperAdminWithMfa;
     use RefreshDatabase;
 
     protected User $superAdmin;
@@ -29,8 +31,7 @@ class GarageOnboardingTest extends TestCase
             'company_id' => $this->company->id,
         ]);
 
-        $this->superAdmin = User::factory()->create(['role' => 'super_admin']);
-    }
+        $this->superAdmin = $this->makeSuperAdminWithMfa();    }
 
     protected function asSuperAdmin(): self
     {

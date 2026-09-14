@@ -7,9 +7,11 @@ use App\Models\Garage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\Traits\MakesSuperAdminWithMfa;
 
 class ChangeDirectorTest extends TestCase
 {
+    use MakesSuperAdminWithMfa;
     use RefreshDatabase;
 
     protected User $superAdmin;
@@ -25,7 +27,7 @@ class ChangeDirectorTest extends TestCase
         $this->company = Company::factory()->create();
         $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
-        $this->superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $this->superAdmin = $this->makeSuperAdminWithMfa();
     }
 
     protected function asSuperAdmin(): self
