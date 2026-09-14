@@ -26,6 +26,11 @@
 
 <div class="card">
     <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ __('messages.super_admin.users.create_scope_warning') }}
+        </div>
+
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i> {{ __('messages.super_admin.users.create_hint') }}
         </div>

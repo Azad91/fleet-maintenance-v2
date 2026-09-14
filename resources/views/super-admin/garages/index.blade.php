@@ -69,6 +69,7 @@
                         <th>{{ __('messages.super_admin.garages.code') }}</th>
                         <th>{{ __('messages.super_admin.garages.company') }}</th>
                         <th class="text-center">{{ __('messages.super_admin.garages.users_count') }}</th>
+                        <th class="text-center">{{ __('messages.super_admin.garages.admins_count') }}</th>
                         <th>{{ __('messages.common.status') }}</th>
                         <th class="text-end">{{ __('messages.common.actions') }}</th>
                     </tr>
@@ -94,6 +95,22 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-secondary">{{ $garage->users_count }}</span>
+                            </td>
+                            <td class="text-center">
+                                @php
+                                    $activeAdminCount = $garage->users()
+                                        ->wherePivot('role', 'admin')
+                                        ->wherePivot('is_active', true)
+                                        ->count();
+                                @endphp
+                                @if($activeAdminCount === 0)
+                                    <span class="badge text-bg-danger"
+                                          title="{{ __('messages.super_admin.garages.no_admin_warning') }}">
+                                        <i class="fas fa-exclamation-triangle"></i> 0
+                                    </span>
+                                @else
+                                    <span class="badge text-bg-success">{{ $activeAdminCount }}</span>
+                                @endif
                             </td>
                             <td>
                                 @if($garage->is_active)
@@ -122,7 +139,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 <i class="fas fa-warehouse fa-2x mb-3 d-block" style="opacity: .3;"></i>
                                 {{ __('messages.common.no_data') }}
                             </td>

@@ -37,6 +37,8 @@
                         <th>Slug</th>
                         <th>{{ __('messages.super_admin.companies.email') }}</th>
                         <th class="text-center">{{ __('messages.super_admin.companies.garages_count') }}</th>
+                        <th class="text-center">{{ __('messages.super_admin.companies.directors_count') }}</th>
+                        <th>{{ __('messages.common.status') }}</th>
                         <th class="text-end">{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
@@ -53,6 +55,17 @@
                             <td>{{ $company->email ?? '—' }}</td>
                             <td class="text-center">
                                 <span class="badge bg-secondary">{{ $company->garages_count }}</span>
+                            </td>
+                            <td class="text-center">
+                                @php $directorCount = $company->directors()->count(); @endphp
+                                @if($directorCount === 0)
+                                    <span class="badge text-bg-danger"
+                                          title="{{ __('messages.super_admin.companies.no_director_warning') }}">
+                                        <i class="fas fa-exclamation-triangle"></i> 0
+                                    </span>
+                                @else
+                                    <span class="badge text-bg-success">{{ $directorCount }}</span>
+                                @endif
                             </td>
                             <td>
                                 @if($company->is_active)
@@ -81,7 +94,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 <i class="fas fa-building fa-2x mb-3 d-block" style="opacity: .3;"></i>
                                 {{ __('messages.common.no_data') }}
                             </td>
