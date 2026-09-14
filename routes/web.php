@@ -63,12 +63,12 @@ Route::middleware(['auth'])->group(function () {
 | key `two_factor.user_id` is what identifies the pending login.
 */
 Route::middleware('guest')->group(function () {
-    Route::get('two-factor-challenge', [\App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'show'])
+    Route::get('two-factor-challenge', [App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'show'])
         ->name('two-factor.challenge');
-    Route::post('two-factor-challenge', [\App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'store'])
+    Route::post('two-factor-challenge', [App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('two-factor.challenge.store');
-    Route::post('two-factor-challenge/cancel', [\App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'destroy'])
+    Route::post('two-factor-challenge/cancel', [App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'destroy'])
         ->name('two-factor.challenge.cancel');
 });
 

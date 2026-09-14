@@ -88,7 +88,7 @@ class UserController extends Controller
             ->with('success', __('messages.super_admin.users.created', [
                 'name' => e($user->name),
                 'code' => e($employeeCode),
-                'pin'  => e($pin),
+                'pin' => e($pin),
             ]));
     }
 

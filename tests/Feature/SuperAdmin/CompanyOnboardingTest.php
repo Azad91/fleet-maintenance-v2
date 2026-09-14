@@ -5,9 +5,8 @@ namespace Tests\Feature\SuperAdmin;
 use App\Models\Company;
 use App\Models\Garage;
 use App\Models\User;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 use Tests\Traits\MakesSuperAdminWithMfa;
 
@@ -27,7 +26,8 @@ class CompanyOnboardingTest extends TestCase
         $company = Company::factory()->create();
         $this->garage = Garage::factory()->create(['company_id' => $company->id]);
 
-        $this->superAdmin = $this->makeSuperAdminWithMfa();    }
+        $this->superAdmin = $this->makeSuperAdminWithMfa();
+    }
 
     protected function asSuperAdmin(): self
     {
@@ -166,12 +166,12 @@ class CompanyOnboardingTest extends TestCase
 
     public function test_company_is_not_created_if_director_creation_fails(): void
     {
-    // Let the exception propagate to the test — otherwise the HTTP
-    // exception handler converts it into a 500 response and the
-    // try/catch below never fires.
-    $this->withoutExceptionHandling();
+        // Let the exception propagate to the test — otherwise the HTTP
+        // exception handler converts it into a 500 response and the
+        // try/catch below never fires.
+        $this->withoutExceptionHandling();
 
-    // The Director (User) row is inserted AFTER the Company row inside
+        // The Director (User) row is inserted AFTER the Company row inside
 
         Event::listen(
             'eloquent.creating: '.User::class,

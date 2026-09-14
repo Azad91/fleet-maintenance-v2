@@ -16,6 +16,17 @@ services:
     volumes:
       - ./storage:/var/www/html/storage
       - ./public/storage:/var/www/html/public/storage
+      - ./app:/var/www/html/app
+      - ./bootstrap:/var/www/html/bootstrap
+      - ./config:/var/www/html/config
+      - ./database:/var/www/html/database
+      - ./lang:/var/www/html/lang
+      - ./public:/var/www/html/public
+      - ./resources:/var/www/html/resources
+      - ./routes:/var/www/html/routes
+      - ./tests:/var/www/html/tests
+      - ./pint.json:/var/www/html/pint.json
+      - ./phpunit.xml:/var/www/html/phpunit.xml
     networks:
       - fleet-v2
 

@@ -31,7 +31,8 @@ class GarageOnboardingTest extends TestCase
             'company_id' => $this->company->id,
         ]);
 
-        $this->superAdmin = $this->makeSuperAdminWithMfa();    }
+        $this->superAdmin = $this->makeSuperAdminWithMfa();
+    }
 
     protected function asSuperAdmin(): self
     {

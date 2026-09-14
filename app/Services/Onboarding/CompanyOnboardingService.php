@@ -22,26 +22,26 @@ class CompanyOnboardingService
     {
         return DB::transaction(function () use ($companyData, $directorData) {
             $company = Company::create([
-                'name'      => $companyData['name'],
-                'slug'      => $companyData['slug'],
-                'email'     => $companyData['email'] ?? null,
-                'phone'     => $companyData['phone'] ?? null,
-                'address'   => $companyData['address'] ?? null,
+                'name' => $companyData['name'],
+                'slug' => $companyData['slug'],
+                'email' => $companyData['email'] ?? null,
+                'phone' => $companyData['phone'] ?? null,
+                'address' => $companyData['address'] ?? null,
                 'is_active' => $companyData['is_active'] ?? true,
             ]);
 
             $director = User::create([
-                'name'            => $directorData['name'],
-                'email'           => $directorData['email'],
-                'password'        => Hash::make($directorData['password']),
-                'employee_code'   => $this->generateDirectorCode(),
-                'pin'             => Hash::make($directorData['pin']),
-                'pin_is_default'  => true,
-                'is_active'       => true,
+                'name' => $directorData['name'],
+                'email' => $directorData['email'],
+                'password' => Hash::make($directorData['password']),
+                'employee_code' => $this->generateDirectorCode(),
+                'pin' => Hash::make($directorData['pin']),
+                'pin_is_default' => true,
+                'is_active' => true,
             ]);
 
             $company->users()->attach($director->id, [
-                'role'      => 'director',
+                'role' => 'director',
                 'is_active' => true,
             ]);
 

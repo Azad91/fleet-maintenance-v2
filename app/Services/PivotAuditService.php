@@ -22,14 +22,14 @@ class PivotAuditService
     /**
      * Record a pivot change in the audit log.
      *
-     * @param  Model       $subject     The parent model the pivot belongs to
-     *                                  (Company for company_user, Garage for
-     *                                  garage_user, User for cross-references).
-     * @param  string      $event       Semantic event name, e.g. 'director_assigned'.
-     * @param  array|null  $oldValues   Previous state (null when newly attached).
-     * @param  array|null  $newValues   New state (null when removed).
-     * @param  int|null    $garageId    Garage context for the audit row.
-     * @param  int|null    $companyId   Company context for the audit row.
+     * @param  Model  $subject  The parent model the pivot belongs to
+     *                          (Company for company_user, Garage for
+     *                          garage_user, User for cross-references).
+     * @param  string  $event  Semantic event name, e.g. 'director_assigned'.
+     * @param  array|null  $oldValues  Previous state (null when newly attached).
+     * @param  array|null  $newValues  New state (null when removed).
+     * @param  int|null  $garageId  Garage context for the audit row.
+     * @param  int|null  $companyId  Company context for the audit row.
      */
     public function log(
         Model $subject,

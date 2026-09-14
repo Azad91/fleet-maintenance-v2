@@ -23,25 +23,25 @@ class GarageOnboardingService
         return DB::transaction(function () use ($garageData, $adminData) {
             $garage = Garage::create([
                 'company_id' => $garageData['company_id'],
-                'name'       => $garageData['name'],
-                'code'       => $garageData['code'],
-                'address'    => $garageData['address'] ?? null,
-                'phone'      => $garageData['phone'] ?? null,
-                'is_active'  => $garageData['is_active'] ?? true,
+                'name' => $garageData['name'],
+                'code' => $garageData['code'],
+                'address' => $garageData['address'] ?? null,
+                'phone' => $garageData['phone'] ?? null,
+                'is_active' => $garageData['is_active'] ?? true,
             ]);
 
             $admin = User::create([
-                'name'           => $adminData['name'],
-                'email'          => $adminData['email'],
-                'password'       => Hash::make($adminData['password']),
-                'employee_code'  => $this->generateAdminCode(),
-                'pin'            => Hash::make($adminData['pin']),
+                'name' => $adminData['name'],
+                'email' => $adminData['email'],
+                'password' => Hash::make($adminData['password']),
+                'employee_code' => $this->generateAdminCode(),
+                'pin' => Hash::make($adminData['pin']),
                 'pin_is_default' => true,
-                'is_active'      => true,
+                'is_active' => true,
             ]);
 
             $garage->users()->attach($admin->id, [
-                'role'      => 'admin',
+                'role' => 'admin',
                 'is_active' => true,
             ]);
 

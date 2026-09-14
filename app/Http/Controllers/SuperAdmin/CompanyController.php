@@ -14,7 +14,6 @@ use Illuminate\View\View;
 
 class CompanyController extends Controller
 {
-
     public function __construct(
         protected CompanyOnboardingService $onboardingService
     ) {}
@@ -56,25 +55,25 @@ class CompanyController extends Controller
 
         $company = $this->onboardingService->createWithDirector(
             companyData: [
-                'name'      => $validated['name'],
-                'slug'      => $validated['slug'],
-                'email'     => $validated['email'] ?? null,
-                'phone'     => $validated['phone'] ?? null,
-                'address'   => $validated['address'] ?? null,
+                'name' => $validated['name'],
+                'slug' => $validated['slug'],
+                'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
                 'is_active' => $request->boolean('is_active', true),
             ],
             directorData: [
-                'name'     => $validated['director_name'],
-                'email'    => $validated['director_email'],
+                'name' => $validated['director_name'],
+                'email' => $validated['director_email'],
                 'password' => $validated['director_password'],
-                'pin'      => $validated['director_pin'],
+                'pin' => $validated['director_pin'],
             ],
         );
 
         return redirect()
             ->route('super-admin.companies.show', $company)
             ->with('success', __('messages.super_admin.companies.created_with_director', [
-                'name'     => $company->name,
+                'name' => $company->name,
                 'director' => $validated['director_email'],
             ]));
     }

@@ -31,7 +31,8 @@ class SuperAdminFormRequestTest extends TestCase
         $this->company = Company::factory()->create();
         $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
-        $this->superAdmin = $this->makeSuperAdminWithMfa();    }
+        $this->superAdmin = $this->makeSuperAdminWithMfa();
+    }
 
     /**
      * Act as the super admin with a garage context in session.
@@ -255,17 +256,17 @@ class SuperAdminFormRequestTest extends TestCase
     public function test_super_admin_can_create_company(): void
     {
         $response = $this->asSuperAdmin()
-        ->post(route('super-admin.companies.store'), [
-            'name' => 'Test Company',
-            'slug' => 'test-company',
-            'is_active' => 1,
-            'director_name' => 'Test Director',
-            'director_email' => 'director@test-company.test',
-            'director_password' => 'Str0ngPass!',
-            'director_password_confirmation' => 'Str0ngPass!',
-            'director_pin' => '1234',
-            'director_pin_confirmation' => '1234',
-        ]);
+            ->post(route('super-admin.companies.store'), [
+                'name' => 'Test Company',
+                'slug' => 'test-company',
+                'is_active' => 1,
+                'director_name' => 'Test Director',
+                'director_email' => 'director@test-company.test',
+                'director_password' => 'Str0ngPass!',
+                'director_password_confirmation' => 'Str0ngPass!',
+                'director_pin' => '1234',
+                'director_pin_confirmation' => '1234',
+            ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('companies', ['slug' => 'test-company']);

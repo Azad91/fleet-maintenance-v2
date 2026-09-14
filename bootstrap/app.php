@@ -113,7 +113,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $status);
         });
 
-                // 5. REPORTING
+        // 5. REPORTING
         $exceptions->reportable(function (Throwable $e) {
             if ($e instanceof ModelNotFoundException
                 || $e instanceof NotFoundHttpException
@@ -150,7 +150,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'user_id' => auth()->id(),
                     'url' => request()?->fullUrl(),
                 ]);
-            } catch (\Throwable $loggingFailure) {
+            } catch (Throwable $loggingFailure) {
                 // Logging itself failed — never let it mask the original.
                 error_log(sprintf(
                     '[Fleet] %s: %s in %s:%d (logging also failed: %s)',

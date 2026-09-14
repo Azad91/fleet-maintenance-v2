@@ -44,7 +44,7 @@ class TwoFactorManager
         $writer = new \BaconQrCode\Writer(
             new \BaconQrCode\Renderer\ImageRenderer(
                 new \BaconQrCode\Renderer\RendererStyle\RendererStyle(220),
-                new \BaconQrCode\Renderer\Image\SvgImageBackEnd(),
+                new \BaconQrCode\Renderer\Image\SvgImageBackEnd,
             )
         );
 

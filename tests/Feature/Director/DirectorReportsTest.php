@@ -2,10 +2,7 @@
 
 namespace Tests\Feature\Director;
 
-use App\Models\Bus;
 use App\Models\Company;
-use App\Models\Complaint;
-use App\Models\ComplaintType;
 use App\Models\Garage;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -37,7 +34,7 @@ class DirectorReportsTest extends TestCase
 
         $this->garageA1 = Garage::factory()->create(['company_id' => $this->companyA->id]);
         $this->garageA2 = Garage::factory()->create(['company_id' => $this->companyA->id]);
-        $this->garageB  = Garage::factory()->create(['company_id' => $this->companyB->id]);
+        $this->garageB = Garage::factory()->create(['company_id' => $this->companyB->id]);
 
         $this->director = User::factory()->create(['role' => 'user']);
         $this->companyA->users()->attach($this->director->id, [

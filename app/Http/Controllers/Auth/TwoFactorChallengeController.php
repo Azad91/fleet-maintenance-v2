@@ -54,6 +54,7 @@ class TwoFactorChallengeController extends Controller
 
         if (! $user) {
             $request->session()->forget('two_factor.user_id');
+
             return redirect()->route('login');
         }
 

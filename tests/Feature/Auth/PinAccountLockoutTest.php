@@ -114,7 +114,7 @@ class PinAccountLockoutTest extends TestCase
     // 4. SUCCESS CLEARS BOTH LIMITERS
     // ==================================================================
 
-        public function test_successful_login_clears_all_limiters(): void
+    public function test_successful_login_clears_all_limiters(): void
     {
         $this->makeUser('EMP-LOCK', '1234');
 
