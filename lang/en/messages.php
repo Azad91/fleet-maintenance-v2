@@ -3,7 +3,7 @@
 return [
 
     // ==================== COMMON ====================
-    'common' => [
+        'common' => [
         'save' => 'Save',
         'update' => 'Update',
         'create' => 'Create',
@@ -49,6 +49,7 @@ return [
         'company' => 'Company',
         'garage' => 'Garage',
         'or' => 'or',
+        'days' => 'days',
     ],
 
     // ==================== NAVIGATION ====================

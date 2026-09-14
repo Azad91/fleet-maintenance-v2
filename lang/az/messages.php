@@ -3,7 +3,7 @@
 return [
 
     // ==================== COMMON ====================
-    'common' => [
+        'common' => [
         'save' => 'Yadda saxla',
         'update' => 'Yenilə',
         'create' => 'Yarat',
@@ -49,6 +49,7 @@ return [
         'company' => 'Şirkət',
         'garage' => 'Qaraj',
         'or' => 'və ya',
+        'days' => 'gün',
     ],
 
     // ==================== NAVIGATION ====================

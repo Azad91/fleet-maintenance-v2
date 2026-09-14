@@ -3,7 +3,7 @@
 return [
 
     // ==================== COMMON ====================
-    'common' => [
+        'common' => [
         'save' => 'Kaydet',
         'update' => 'Güncelle',
         'create' => 'Oluştur',
@@ -49,6 +49,7 @@ return [
         'company' => 'Şirket',
         'garage' => 'Garaj',
         'or' => 'veya',
+        'days' => 'gün',
     ],
 
     // ==================== NAVIGATION ====================
