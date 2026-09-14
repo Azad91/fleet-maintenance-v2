@@ -8,26 +8,14 @@ services:
     container_name: fleet-v2-app
     ports:
       - "8000:80"
-    environment:
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8000
-
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: fleet_maintenance_v2
-      DB_USERNAME: fleet
-      DB_PASSWORD: fleet_password
-
+    env_file:
+      - .env.docker
     depends_on:
       postgres:
         condition: service_healthy
-
     volumes:
       - ./storage:/var/www/html/storage
       - ./public/storage:/var/www/html/public/storage
-
     networks:
       - fleet-v2
 
