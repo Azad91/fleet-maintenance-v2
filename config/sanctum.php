@@ -22,7 +22,6 @@ return [
         '%s%s',
         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
         Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
     ))),
 
     /*
@@ -47,9 +46,13 @@ return [
     | The number of minutes until an issued token will be considered expired.
     | Default: 30 days. First-party sessions are not affected by this value.
     |
+    | NOTE: env() always returns a string when the value comes from a .env
+    | file. The (int) cast keeps this config type-consistent so tests and
+    | static analysis tools see an integer, not '43200'.
+    |
     */
 
-    'expiration' => env('SANCTUM_EXPIRATION', 60 * 24 * 30),
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------

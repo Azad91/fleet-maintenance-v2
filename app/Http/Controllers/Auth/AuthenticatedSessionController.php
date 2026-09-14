@@ -21,10 +21,17 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming email/password authentication request.
      *
-     * If the authenticated user is a SuperAdmin, the login is not
-     * completed here — instead the user id is stored in the session
-     * and the request is redirected to the two-factor challenge.
-     * The user is only logged in after the TOTP code is verified.
+     * SuperAdmin handling is a two-step flow:
+     *
+     *   1. If MFA is already configured, the password step stores the
+     *      user id in the session and redirects to the TOTP challenge.
+     *      The user is only logged in after the code is verified.
+     *
+     *   2. If MFA is NOT yet configured (a freshly seeded account, or
+     *      one whose secret was reset), the user is logged in immediately
+     *      and sent to the setup wizard. Without this branch the flow
+     *      deadlocks: the challenge needs a secret, the setup screen
+     *      needs an authenticated session.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -38,11 +45,22 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('login');
         }
 
-        // SuperAdmin: defer login until MFA is verified.
+        // ─── SuperAdmin branch ───
         if ($user->isSuperAdmin()) {
             $remember = (bool) $request->boolean('remember');
 
-            // Log out for now — the challenge controller will log back in.
+            // First-time SuperAdmin: no confirmed MFA secret yet.
+            // Log in and go straight to the setup wizard.
+            if (! $user->hasTwoFactorEnabled()) {
+                Auth::login($user, $remember);
+                $request->session()->regenerate();
+
+                return redirect()
+                    ->route('super-admin.security.2fa.setup')
+                    ->with('warning', __('messages.two_factor.setup_required'));
+            }
+
+            // MFA is configured — defer login until the code is verified.
             Auth::guard('web')->logout();
 
             $request->session()->put('two_factor.user_id', $user->id);
