@@ -14,6 +14,7 @@ use App\Models\Driver;
 use App\Models\Employee;
 use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
+use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -235,9 +236,11 @@ class ComplaintController extends Controller
         $this->authorize('import', Complaint::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
-        $garageId = (int) session('current_garage_id');
+        // Resolve via full fallback chain: Context → session → auth user.
+        // Session-only resolution would fail in queue/CLI contexts.
+        $garageId = GarageContext::resolveGarageId();
 
-        if ($garageId <= 0) {
+        if ($garageId === null || $garageId <= 0) {
             return redirect()
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
@@ -246,7 +249,7 @@ class ComplaintController extends Controller
         try {
             $import = new ComplaintsImport(
                 $garageId,
-                session('current_company_id') ? (int) session('current_company_id') : null
+                GarageContext::resolveCompanyId(),
             );
 
             Excel::import($import, $request->file('file'));

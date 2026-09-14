@@ -6,6 +6,7 @@ use App\Http\Requests\WarehouseStoreRequest;
 use App\Http\Requests\WarehouseUpdateRequest;
 use App\Imports\WarehouseImport;
 use App\Models\Warehouse;
+use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -111,9 +112,10 @@ class WarehouseController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
-        $garageId = (int) session('current_garage_id');
+        // Resolve via full fallback chain (Context → session → auth user).
+        $garageId = GarageContext::resolveGarageId();
 
-        if ($garageId <= 0) {
+        if ($garageId === null || $garageId <= 0) {
             return redirect()
                 ->route('garage.selection')
                 ->with('error', __('messages.flash.no_current_garage'));
@@ -123,7 +125,7 @@ class WarehouseController extends Controller
             Excel::import(
                 new WarehouseImport(
                     $garageId,
-                    session('current_company_id') ? (int) session('current_company_id') : null
+                    GarageContext::resolveCompanyId(),
                 ),
                 $request->file('file')
             );

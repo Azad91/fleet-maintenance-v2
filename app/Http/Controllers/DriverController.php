@@ -91,10 +91,19 @@ class DriverController extends Controller
         $this->authorize('import', Driver::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
+        // Resolve via full fallback chain (Context → session → auth user).
+        $garageId = GarageContext::resolveGarageId();
+
+        if ($garageId === null || $garageId <= 0) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         try {
             $import = new DriversImport(
-                (int) GarageContext::getGarageId(),
-                GarageContext::getCompanyId() ? (int) GarageContext::getCompanyId() : null
+                $garageId,
+                GarageContext::resolveCompanyId(),
             );
 
             Excel::import($import, $request->file('file'));

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Imports\ComplaintTypesImport;
 use App\Models\ComplaintType;
-use App\Models\Garage;
+use App\Services\GarageContext;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -31,7 +31,7 @@ class ComplaintTypeController extends Controller
     {
         $this->authorize('create', ComplaintType::class);
 
-        $garageId = Garage::getCurrentId();
+        $garageId = GarageContext::resolveGarageId();
 
         $validated = $request->validate([
             'name' => [
@@ -62,7 +62,7 @@ class ComplaintTypeController extends Controller
 
         $this->authorize('update', $type);
 
-        $garageId = Garage::getCurrentId();
+        $garageId = GarageContext::resolveGarageId();
 
         $validated = $request->validate([
             'name' => [
@@ -106,11 +106,20 @@ class ComplaintTypeController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
+        // Resolve via full fallback chain (Context → session → auth user).
+        $garageId = GarageContext::resolveGarageId();
+
+        if ($garageId === null || $garageId <= 0) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         try {
             Excel::import(
                 new ComplaintTypesImport(
-                    (int) Garage::getCurrentId(),
-                    Garage::getCurrentCompanyId() ? (int) Garage::getCurrentCompanyId() : null
+                    $garageId,
+                    GarageContext::resolveCompanyId(),
                 ),
                 $request->file('file')
             );
