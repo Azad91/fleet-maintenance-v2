@@ -8,9 +8,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
+use Tests\Traits\MakesSuperAdminWithMfa;
 
 class PostLoginRedirectorTest extends TestCase
 {
+    use MakesSuperAdminWithMfa;
     use RefreshDatabase;
 
     protected Company $company;
@@ -175,7 +177,23 @@ class PostLoginRedirectorTest extends TestCase
     // 6. SUPER ADMIN — NO GARAGE MEMBERSHIP
     // ==================================================================
 
-    public function test_super_admin_login_redirects_to_two_factor_challenge(): void
+    public function test_super_admin_with_mfa_login_redirects_to_two_factor_challenge(): void
+    {
+        $superAdmin = $this->makeSuperAdminWithMfa();
+
+        $response = $this->post('/login', [
+            'email' => $superAdmin->email,
+            'password' => 'password',
+        ]);
+
+        // SuperAdmin with MFA configured: login is deferred until the
+        // TOTP code is verified. The user must be a guest at this point.
+        $response->assertRedirect(route('two-factor.challenge'));
+        $this->assertGuest();
+        $this->assertEquals($superAdmin->id, session('two_factor.user_id'));
+    }
+
+    public function test_super_admin_without_mfa_login_redirects_to_setup(): void
     {
         $superAdmin = User::factory()->create([
             'email' => 'sa@test.com',
@@ -189,10 +207,11 @@ class PostLoginRedirectorTest extends TestCase
             'password' => 'password',
         ]);
 
-        // SuperAdmin login is deferred until MFA is verified.
-        $response->assertRedirect(route('two-factor.challenge'));
-        $this->assertGuest();
-        $this->assertEquals($superAdmin->id, session('two_factor.user_id'));
+        // A freshly-seeded SuperAdmin has no confirmed MFA secret. The
+        // challenge screen would deadlock (it needs a secret to verify),
+        // so the flow logs the user in and sends them to the setup wizard.
+        $response->assertRedirect(route('super-admin.security.2fa.setup'));
+        $this->assertAuthenticatedAs($superAdmin);
     }
 
     // ==================================================================

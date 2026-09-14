@@ -17,7 +17,21 @@ class TwoFactorAuthenticationTest extends TestCase
     // 1. LOGIN FLOW — SuperAdmin redirected to challenge
     // ==================================================================
 
-    public function test_super_admin_login_redirects_to_two_factor_challenge(): void
+    public function test_super_admin_with_mfa_login_redirects_to_two_factor_challenge(): void
+    {
+        $sa = $this->makeSuperAdminWithMfa();
+
+        $response = $this->post('/login', [
+            'email' => $sa->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('two-factor.challenge'));
+        $this->assertGuest();
+        $this->assertEquals($sa->id, session('two_factor.user_id'));
+    }
+
+    public function test_super_admin_without_mfa_login_redirects_to_setup(): void
     {
         $sa = User::factory()->create([
             'email' => 'sa@test.com',
@@ -31,9 +45,10 @@ class TwoFactorAuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('two-factor.challenge'));
-        $this->assertGuest();
-        $this->assertEquals($sa->id, session('two_factor.user_id'));
+        // Setup wizard is reached authenticated; the challenge cannot be
+        // shown because there is no secret to verify yet.
+        $response->assertRedirect(route('super-admin.security.2fa.setup'));
+        $this->assertAuthenticatedAs($sa);
     }
 
     public function test_regular_user_login_still_completes_normally(): void

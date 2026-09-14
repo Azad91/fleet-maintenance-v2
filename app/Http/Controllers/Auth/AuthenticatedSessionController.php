@@ -50,28 +50,23 @@ class AuthenticatedSessionController extends Controller
             $remember = (bool) $request->boolean('remember');
 
             // First-time SuperAdmin: no confirmed MFA secret yet.
-            // Log in and go straight to the setup wizard.
+            // The user is already authenticated by LoginRequest::authenticate()
+            // (Auth::attempt + remember flag), so we only need to redirect.
             if (! $user->hasTwoFactorEnabled()) {
-                Auth::login($user, $remember);
-                $request->session()->regenerate();
-
                 return redirect()
                     ->route('super-admin.security.2fa.setup')
                     ->with('warning', __('messages.two_factor.setup_required'));
             }
 
             // MFA is configured — defer login until the code is verified.
+            // Log out the session started by authenticate() so the user is
+            // NOT authenticated while we wait for the TOTP code.
             Auth::guard('web')->logout();
 
             $request->session()->put('two_factor.user_id', $user->id);
             $request->session()->put('two_factor.remember', $remember);
 
             return redirect()->route('two-factor.challenge');
-        }
-
-        // Default PIN varsa, PIN dəyişmə səhifəsinə yönləndir.
-        if ($user->pin_is_default && $user->pin) {
-            return redirect()->route('pin.change.show');
         }
 
         return PostLoginRedirector::redirect($user);
