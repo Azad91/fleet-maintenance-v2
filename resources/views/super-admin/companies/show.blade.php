@@ -1,3 +1,8 @@
+@php
+    $currentDirector = $company->directors->first();
+    $hasActiveDirector = $currentDirector !== null;
+@endphp
+
 @extends('layouts.app')
 
 @section('title', $company->name)
@@ -118,7 +123,10 @@
                 <h5 class="mb-0">{{ __('messages.super_admin.companies.directors_title') }} ({{ $company->directors->count() }})</h5>
                 @if($availableUsers->isNotEmpty())
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addDirectorModal">
-                        <i class="fas fa-plus"></i> {{ __('messages.super_admin.assignments.add_director') }}
+                        <i class="fas {{ $hasActiveDirector ? 'fa-exchange-alt' : 'fa-plus' }}"></i>
+                        {{ $hasActiveDirector
+                            ? __('messages.super_admin.assignments.change_director')
+                            : __('messages.super_admin.assignments.add_director') }}
                     </button>
                 @endif
             </div>
@@ -153,7 +161,7 @@
     </div>
 </div>
 
-{{-- Add Director Modal --}}
+{{-- Add / Change Director Modal --}}
 @if($availableUsers->isNotEmpty())
     <div class="modal fade" id="addDirectorModal" tabindex="-1">
         <div class="modal-dialog">
@@ -162,16 +170,32 @@
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="fas fa-user-tie"></i> {{ __('messages.super_admin.assignments.add_director') }}
+                            <i class="fas fa-user-tie"></i>
+                            {{ $hasActiveDirector
+                                ? __('messages.super_admin.assignments.change_director')
+                                : __('messages.super_admin.assignments.add_director') }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-info">
-                            {{ __('messages.super_admin.assignments.add_director_hint', ['company' => $company->name]) }}
-                        </div>
+                        @if($hasActiveDirector)
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ __('messages.super_admin.assignments.change_director_warning', [
+                                    'current' => $currentDirector->name,
+                                ]) }}
+                            </div>
+                        @else
+                            <div class="alert alert-info">
+                                {{ __('messages.super_admin.assignments.add_director_hint', [
+                                    'company' => $company->name,
+                                ]) }}
+                            </div>
+                        @endif
 
-                        <label for="user_id" class="form-label fw-bold">{{ __('messages.super_admin.assignments.select_user') }}</label>
+                        <label for="user_id" class="form-label fw-bold">
+                            {{ __('messages.super_admin.assignments.select_user') }}
+                        </label>
                         <select name="user_id" id="user_id" class="form-select" required>
                             <option value="">{{ __('messages.common.select') }}</option>
                             @foreach($availableUsers as $user)
@@ -183,9 +207,14 @@
                         </select>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.common.cancel') }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            {{ __('messages.common.cancel') }}
+                        </button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-check"></i> {{ __('messages.super_admin.assignments.assign_button') }}
+                            <i class="fas fa-check"></i>
+                            {{ $hasActiveDirector
+                                ? __('messages.super_admin.assignments.change_director_button')
+                                : __('messages.super_admin.assignments.assign_button') }}
                         </button>
                     </div>
                 </form>
