@@ -7,12 +7,18 @@ use App\Http\Requests\SuperAdmin\CompanyStoreRequest;
 use App\Http\Requests\SuperAdmin\CompanyUpdateRequest;
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Onboarding\CompanyOnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CompanyController extends Controller
 {
+
+    public function __construct(
+        protected CompanyOnboardingService $onboardingService
+    ) {}
+
     /**
      * List all companies with their garages count and users count.
      */
@@ -48,13 +54,29 @@ class CompanyController extends Controller
             $validated['slug'] = $this->generateUniqueSlug($validated['name']);
         }
 
-        $validated['is_active'] = $request->boolean('is_active', true);
-
-        $company = Company::create($validated);
+        $company = $this->onboardingService->createWithDirector(
+            companyData: [
+                'name'      => $validated['name'],
+                'slug'      => $validated['slug'],
+                'email'     => $validated['email'] ?? null,
+                'phone'     => $validated['phone'] ?? null,
+                'address'   => $validated['address'] ?? null,
+                'is_active' => $request->boolean('is_active', true),
+            ],
+            directorData: [
+                'name'     => $validated['director_name'],
+                'email'    => $validated['director_email'],
+                'password' => $validated['director_password'],
+                'pin'      => $validated['director_pin'],
+            ],
+        );
 
         return redirect()
             ->route('super-admin.companies.show', $company)
-            ->with('success', __('messages.super_admin.companies.created'));
+            ->with('success', __('messages.super_admin.companies.created_with_director', [
+                'name'     => $company->name,
+                'director' => $validated['director_email'],
+            ]));
     }
 
     /**

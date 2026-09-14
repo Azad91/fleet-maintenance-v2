@@ -153,11 +153,17 @@ class SuperAdminFormRequestTest extends TestCase
         $company = Company::factory()->create(['slug' => 'my-slug']);
 
         $response = $this->asSuperAdmin()
-            ->put(route('super-admin.companies.update', $company), [
-                'name' => 'Updated Name',
-                'slug' => 'my-slug', // same slug — must be allowed
-                'is_active' => 1,
-            ]);
+        ->post(route('super-admin.companies.store'), [
+            'name' => 'Test Company',
+            'slug' => 'test-company',
+            'is_active' => 1,
+            'director_name' => 'Test Director',
+            'director_email' => 'director@test-company.test',
+            'director_password' => 'Str0ngPass!',
+            'director_password_confirmation' => 'Str0ngPass!',
+            'director_pin' => '1234',
+            'director_pin_confirmation' => '1234',
+        ]);
 
         $response->assertSessionHasNoErrors();
         $this->assertSame('Updated Name', $company->fresh()->name);
@@ -246,11 +252,17 @@ class SuperAdminFormRequestTest extends TestCase
     public function test_super_admin_can_create_company(): void
     {
         $response = $this->asSuperAdmin()
-            ->post(route('super-admin.companies.store'), [
-                'name' => 'Test Company',
-                'slug' => 'test-company',
-                'is_active' => 1,
-            ]);
+        ->post(route('super-admin.companies.store'), [
+            'name' => 'Test Company',
+            'slug' => 'test-company',
+            'is_active' => 1,
+            'director_name' => 'Test Director',
+            'director_email' => 'director@test-company.test',
+            'director_password' => 'Str0ngPass!',
+            'director_password_confirmation' => 'Str0ngPass!',
+            'director_pin' => '1234',
+            'director_pin_confirmation' => '1234',
+        ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('companies', ['slug' => 'test-company']);

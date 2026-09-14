@@ -67,6 +67,81 @@
                     <textarea class="form-control" id="address" name="address" rows="2">{{ old('address') }}</textarea>
                 </div>
 
+                {{-- ─── COMPANY DIRECTOR (required) ─── --}}
+                <div class="col-12">
+                    <hr class="my-2">
+                    <h5 class="mb-1">
+                        <i class="fas fa-user-tie"></i>
+                        {{ __('messages.super_admin.companies.director_section') }}
+                    </h5>
+                    <p class="text-muted small mb-3">
+                        {{ __('messages.super_admin.companies.director_section_hint') }}
+                    </p>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="director_name" class="form-label fw-bold">
+                        {{ __('messages.super_admin.companies.director_name') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="director_name" name="director_name"
+                        value="{{ old('director_name') }}" required
+                        placeholder="{{ __('messages.super_admin.companies.director_name_placeholder') }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="director_email" class="form-label fw-bold">
+                        {{ __('messages.super_admin.companies.director_email') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="email" class="form-control" id="director_email" name="director_email"
+                        value="{{ old('director_email') }}" required
+                        placeholder="director@company.com">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="director_password" class="form-label fw-bold">
+                        {{ __('messages.super_admin.companies.director_password') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="password" class="form-control" id="director_password"
+                        name="director_password" required autocomplete="new-password">
+                    <small class="text-muted">
+                        {{ __('messages.super_admin.companies.director_password_hint') }}
+                    </small>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="director_password_confirmation" class="form-label fw-bold">
+                        {{ __('messages.super_admin.companies.director_password_confirm') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="password" class="form-control" id="director_password_confirmation"
+                        name="director_password_confirmation" required autocomplete="new-password">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="director_pin" class="form-label fw-bold">
+                        {{ __('messages.super_admin.companies.director_pin') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="director_pin" name="director_pin"
+                        required maxlength="6" pattern="\d{4,6}"
+                        value="{{ old('director_pin') }}" placeholder="1234">
+                    <small class="text-muted">
+                        {{ __('messages.super_admin.companies.director_pin_hint') }}
+                    </small>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="director_pin_confirmation" class="form-label fw-bold">
+                        {{ __('messages.super_admin.companies.director_pin_confirm') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="director_pin_confirmation"
+                        name="director_pin_confirmation" required maxlength="6" pattern="\d{4,6}">
+                </div>
+
                 <div class="col-12">
                     <div class="form-check form-switch">
                         <input type="hidden" name="is_active" value="0">
