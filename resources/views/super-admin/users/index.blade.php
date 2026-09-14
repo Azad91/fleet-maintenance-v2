@@ -16,6 +16,8 @@
 
 @if(session('success'))
     <div class="fleet-alert fleet-alert--success">
+        {{-- Translation `<code>` / `<strong>` HTML saxlayır; istifadəçi
+             mənbəli dəyərlər controller-də e() ilə escape olunub. --}}
         <i class="fas fa-circle-check"></i>{!! session('success') !!}
     </div>
 @endif

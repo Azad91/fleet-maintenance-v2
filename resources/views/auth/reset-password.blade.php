@@ -1,39 +1,60 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('password.store') }}">
-        @csrf
+@extends('layouts.guest')
 
-        <!-- Password Reset Token -->
-        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+@section('title', __('Şifrəni sıfırla') . ' · Fleet Control')
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+@section('content')
+<div class="auth-container">
+    <div class="card-auth">
+        <div class="logo">
+            <i class="bi bi-shield-lock-fill"></i>
         </div>
+        <div class="auth-title">{{ __('Şifrəni sıfırla') }}</div>
+        <p class="auth-subtitle">{{ __('Yeni şifrənizi daxil edin.') }}</p>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+        @if ($errors->any())
+            <div class="alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ $errors->first() }}
+            </div>
+        @endif
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+        <form method="POST" action="{{ route('password.store') }}">
+            @csrf
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
+            <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
+            <div class="form-group">
+                <label for="email">{{ __('messages.auth.email') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input id="email" type="email" class="form-control" name="email"
+                           value="{{ old('email', $request->email) }}"
+                           required autofocus autocomplete="username">
+                </div>
+            </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+            <div class="form-group">
+                <label for="password">{{ __('messages.profile.new_password') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input id="password" type="password" class="form-control" name="password"
+                           required autocomplete="new-password">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password_confirmation">{{ __('messages.profile.confirm_password') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input id="password_confirmation" type="password" class="form-control"
+                           name="password_confirmation" required autocomplete="new-password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="bi bi-check-circle me-2"></i> {{ __('Şifrəni yenilə') }}
+            </button>
+        </form>
+    </div>
+</div>
+@endsection

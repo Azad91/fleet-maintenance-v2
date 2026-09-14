@@ -79,12 +79,16 @@ class UserController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
+        // Bütün istifadəçi mənbəli dəyərlər escape olunur — translation
+        // `<code>` / `<strong>` HTML saxlayır, ona görə blade `{!! !!}`
+        // istifadə edir. `:name` user tərəfindən daxil edildiyi üçün
+        // escape mütləqdir.
         return redirect()
             ->route('super-admin.users.index')
             ->with('success', __('messages.super_admin.users.created', [
-                'name' => $user->name,
-                'code' => $employeeCode,
-                'pin' => $pin,
+                'name' => e($user->name),
+                'code' => e($employeeCode),
+                'pin'  => e($pin),
             ]));
     }
 

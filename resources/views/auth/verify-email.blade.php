@@ -1,31 +1,38 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+@extends('layouts.guest')
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+@section('title', __('Email təsdiqi') . ' · Fleet Control')
+
+@section('content')
+<div class="auth-container">
+    <div class="card-auth">
+        <div class="logo">
+            <i class="bi bi-envelope-check-fill"></i>
         </div>
-    @endif
+        <div class="auth-title">{{ __('Email təsdiqi') }}</div>
+        <p class="auth-subtitle">
+            {{ __('Davam etməzdən əvvəl email ünvanınızı təsdiqləyin. Link göndərildi.') }}
+        </p>
 
-    <div class="mt-4 flex items-center justify-between">
+        @if (session('status') == 'verification-link-sent')
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ __('Yeni təsdiq linki email ünvanınıza göndərildi.') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
-
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
-            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-send me-2"></i> {{ __('Təsdiq linkini yenidən göndər') }}
+            </button>
         </form>
 
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ route('logout') }}" class="mt-3">
             @csrf
-
-            <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {{ __('Log Out') }}
+            <button type="submit" class="btn-register w-100">
+                <i class="bi bi-box-arrow-left"></i> {{ __('messages.auth.logout') }}
             </button>
         </form>
     </div>
-</x-guest-layout>
+</div>
+@endsection

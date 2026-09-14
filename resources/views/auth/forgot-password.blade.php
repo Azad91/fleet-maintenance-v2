@@ -1,25 +1,55 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+@extends('layouts.guest')
+
+@section('title', __('messages.auth.forgot_password') . ' · Fleet Control')
+
+@section('content')
+<div class="auth-container">
+    <div class="card-auth">
+        <div class="logo">
+            <i class="bi bi-envelope-fill"></i>
+        </div>
+        <div class="auth-title">{{ __('messages.auth.forgot_password') }}</div>
+        <p class="auth-subtitle">
+            {{ __('Email ilə şifrə sıfırlama linki göndərəcəyik.') }}
+        </p>
+
+        @if (session('status'))
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ session('status') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ $errors->first() }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.email') }}">
+            @csrf
+
+            <div class="form-group">
+                <label for="email">{{ __('messages.auth.email') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input id="email" type="email" class="form-control" name="email"
+                           value="{{ old('email') }}"
+                           placeholder="{{ __('messages.auth.email_placeholder') }}"
+                           required autofocus>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="bi bi-send me-2"></i> {{ __('Şifrə sıfırlama linki göndər') }}
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <a href="{{ route('login') }}">
+                <i class="bi bi-arrow-left"></i> {{ __('messages.common.back') }}
+            </a>
+        </div>
     </div>
-
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('password.email') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+</div>
+@endsection
