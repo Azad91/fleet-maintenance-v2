@@ -14,10 +14,16 @@ namespace App\Imports;
  * Subclasses only need to implement their row-handling logic and call
  * recordSkip() / incrementImported() as appropriate.
  *
- * The constructor throws InvalidArgumentException for garageId <= 0
- * so that no import can accidentally run without a valid garage
- * context — which would bypass the global scope and potentially
- * touch another tenant's data.
+ * The constructor accepts a nullable garage id:
+ *
+ *   - A positive value means "tenant-scoped import" — the import will
+ *     be filtered by that garage, and no row can touch another tenant.
+ *   - null means "global-catalog import" — used by MotorOilImport,
+ *     whose target table (motor_oil_details) has no garage_id column.
+ *     The garage guard does not apply.
+ *
+ * Zero and negative values are still rejected so that no tenant-scoped
+ * import can accidentally run without a valid garage context.
  */
 abstract class AbstractImport
 {
@@ -34,19 +40,19 @@ abstract class AbstractImport
     protected int $rowCounter = 0;
 
     /**
-     * @param  int  $garageId  Must be > 0.
+     * @param  int|null  $garageId  Positive for tenant imports, null for global catalogs.
      * @param  int|null  $companyId  Optional, used for strict company scoping.
      *
-     * @throws \InvalidArgumentException when $garageId is not positive.
+     * @throws \InvalidArgumentException when a garage id is provided but not positive.
      */
     public function __construct(
-        public readonly int $garageId,
+        public readonly ?int $garageId = null,
         public readonly ?int $companyId = null,
     ) {
-        if ($garageId <= 0) {
+        if ($garageId !== null && $garageId <= 0) {
             throw new \InvalidArgumentException(sprintf(
-                '%s requires a valid garage id (> 0). Got [%d]. '
-                .'Make sure a garage is selected before starting the import.',
+                '%s requires a valid garage id (> 0) when one is provided. Got [%d]. '
+                .'Pass null for global-catalog imports (e.g. MotorOilImport).',
                 static::class,
                 $garageId,
             ));
