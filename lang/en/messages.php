@@ -599,6 +599,7 @@ return [
             'part_code_empty' => 'Part code is empty',
             'part_not_found' => 'Part (:code) not found in warehouse',
             'no_km_columns' => 'No KM column has quantity > 0',
+            'employee_code_empty' => 'Employee code is empty',
         ],
     ],
 

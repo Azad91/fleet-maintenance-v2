@@ -14,6 +14,7 @@ class EmployeeFactory extends Factory
         return [
             'garage_id' => 1,
             'company_id' => 1,
+            'code' => 'EMP-'.$this->faker->unique()->numberBetween(1000, 9999),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'position' => 'master',

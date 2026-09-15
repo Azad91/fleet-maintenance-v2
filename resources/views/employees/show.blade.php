@@ -9,6 +9,10 @@
     <div class="section-title">📋 {{ __('messages.warehouse.basic_info') }}</div>
 
     <div class="field">
+        <span class="label">{{ __('messages.employees.code') }}:</span>
+        <span class="value"><strong>{{ $employee->code ?? '—' }}</strong></span>
+    </div>
+    <div class="field">
         <span class="label">ID:</span>
         <span class="value">{{ $employee->id }}</span>
     </div>

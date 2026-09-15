@@ -599,6 +599,7 @@ return [
             'part_code_empty' => 'Detal kodu boşdur',
             'part_not_found' => 'Detal (:code) anbarda tapılmadı',
             'no_km_columns' => 'Heç bir KM sütununda miqdar > 0 deyil',
+            'employee_code_empty' => 'İşçi kodu boşdur',
         ],
     ],
 

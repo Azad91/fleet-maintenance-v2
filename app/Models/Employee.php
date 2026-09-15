@@ -13,8 +13,14 @@ class Employee extends Model
     use Auditable, HasFactory, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
-        'first_name', 'last_name', 'position', 'is_active', 'notes', 'garage_id', 'company_id',
-        // əvvəl: ad, soyad, vezifesi, aktiv, qeyd
+        'code',
+        'first_name',
+        'last_name',
+        'position',
+        'is_active',
+        'notes',
+        'garage_id',
+        'company_id',
     ];
 
     protected $casts = [

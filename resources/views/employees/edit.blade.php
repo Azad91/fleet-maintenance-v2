@@ -23,6 +23,16 @@
             @method('PUT')
 
             <div class="mb-3">
+                <label for="code" class="form-label fw-bold">
+                    {{ __('messages.employees.code') }} <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="code" name="code" required
+                       value="{{ old('code', $employee->code) }}"
+                       placeholder="{{ __('messages.employees.code_placeholder') }}"
+                       style="text-transform: uppercase;">
+            </div>
+
+            <div class="mb-3">
                 <label for="first_name" class="form-label fw-bold">{{ __('messages.employees.first_name') }} <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="first_name" name="first_name" required
                        value="{{ old('first_name', $employee->first_name) }}">

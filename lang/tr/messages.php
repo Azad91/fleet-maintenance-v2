@@ -561,6 +561,7 @@ return [
             'part_code_empty' => 'Parça kodu boş',
             'part_not_found' => 'Parça (:code) depoda bulunamadı',
             'no_km_columns' => 'Hiçbir KM sütununda miktar > 0 değil',
+            'employee_code_empty' => 'Çalışan kodu boş',
         ],
     ],
 

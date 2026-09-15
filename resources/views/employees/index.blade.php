@@ -21,7 +21,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>{{ __('messages.employees.code') }}</th>
                         <th>{{ __('messages.employees.full_name') }}</th>
                         <th>{{ __('messages.employees.position') }}</th>
                         <th>{{ __('messages.common.status') }}</th>
@@ -31,8 +31,8 @@
                 <tbody>
                     @forelse($employees as $employee)
                     <tr>
-                        <td>{{ $employee->id }}</td>
-                        <td><strong>{{ $employee->full_name }}</strong></td>
+                        <td><strong>{{ $employee->code ?? '—' }}</strong></td>
+                        <td>{{ $employee->full_name }}</td>
                         <td>{{ $employee->position }}</td>
                         <td>
                             <span class="badge-status {{ $employee->is_active ? 'aktiv' : 'passiv' }}">

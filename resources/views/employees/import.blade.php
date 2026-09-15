@@ -15,6 +15,7 @@
                 <i class="bi bi-info-circle"></i>
                 <strong>{{ __('messages.complaints.import_format_title') }}:</strong>
                 <ul class="mt-2 mb-0">
+                    <li><strong>code</strong> — {{ __('messages.employees.code') }} <span class="text-danger">*</span></li>
                     <li><strong>first_name</strong> — {{ __('messages.employees.first_name') }} <span class="text-danger">*</span></li>
                     <li><strong>last_name</strong> — {{ __('messages.employees.last_name') }} <span class="text-danger">*</span></li>
                     <li><strong>position</strong> — {{ __('messages.employees.position') }}</li>
