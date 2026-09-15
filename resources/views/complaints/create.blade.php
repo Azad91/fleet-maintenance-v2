@@ -42,6 +42,8 @@
     // ═══════════════════════════════════════════════════════════════
     // BUS
     // ═══════════════════════════════════════════════════════════════
+    let busLookupRequest = 0;
+
     function getBusByDqn(dqnValue) {
         const input = document.getElementById('dqn');
         const routeInput = document.getElementById('route_number');
@@ -60,17 +62,26 @@
 
         if (!dqn) return;
 
+        // ⚡ Race condition qoruması — köhnə sorğunun gec cavabı
+        // yeni sorğunun düzgün cavabını üstündən yazmasın.
+        const requestId = ++busLookupRequest;
+
         fetch('/get-bus-by-dqn/' + encodeURIComponent(dqn), {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             credentials: 'same-origin',
         })
         .then(response => response.json())
         .then(data => {
+            // Bu cavab artıq köhnədirsə — ignore et
+            if (requestId !== busLookupRequest) return;
+
             if (data.found) {
                 routeInput.value = data.route_number || '';
                 busIdInput.value = data.bus_id || '';
                 kmInput.value = data.km || '';
                 input.classList.add('is-valid');
+                help.textContent = '';
+                help.className = 'form-text';
 
                 // Texniki xidmət seçilmişdisə → intervalları yüklə
                 const typeInput = document.querySelector('input[name="complaint_type"]:checked');
