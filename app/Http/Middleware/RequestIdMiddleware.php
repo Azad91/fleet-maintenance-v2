@@ -21,23 +21,26 @@ class RequestIdMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Client-dən gələn header-i yalnız UUID formatında qəbul et.
-        // Əks halda öz UUID-mizi generasiya et.
+        // Only accept an incoming header if it is a valid UUID.
+        // Otherwise generate our own UUID.
         $incoming = $request->header('X-Request-ID');
 
         $requestId = (is_string($incoming) && Str::isUuid($incoming))
             ? $incoming
             : Str::uuid()->toString();
 
-        // Laravel Context — bütün log qeydlərinə avtomatik düşür.
+        // Laravel Context — this value is automatically attached to
+        // every log entry produced during the request.
         Context::add('request_id', $requestId);
 
-        // Sorğunun header-inə yaz — controller-lər istifadə edə bilsin.
+        // Write it back onto the request headers so controllers can
+        // access it if needed.
         $request->headers->set('X-Request-ID', $requestId);
 
         $response = $next($request);
 
-        // Cavabın header-inə də əlavə et — frontend/monitoring üçün.
+        // Add it to the response headers too — for frontend and
+        // monitoring tools.
         $response->headers->set('X-Request-ID', $requestId);
 
         return $response;

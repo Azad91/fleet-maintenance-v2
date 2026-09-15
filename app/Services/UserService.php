@@ -12,10 +12,10 @@ class UserService
     ) {}
 
     /**
-     * Yeni istifadəçi yaradır və cari qaraja təyin edir.
+     * Create a new user and attach them to the given garage.
      *
-     * Bütün əməliyyatlar bir transaction içindədir — ya hamısı,
-     * ya heç biri. Yarı-yaradılmış istifadəçi problemi olmaz.
+     * Every step runs inside a single transaction — all or nothing,
+     * so a half-created user can never end up in the database.
      */
     public function createUserWithGarageRole(
         array $data,
@@ -48,7 +48,7 @@ class UserService
     }
 
     /**
-     * İstifadəçinin profilini və qaraj rolunu yeniləyir.
+     * Update the user's profile and their garage role.
      */
     public function updateUserWithGarageRole(
         User $user,

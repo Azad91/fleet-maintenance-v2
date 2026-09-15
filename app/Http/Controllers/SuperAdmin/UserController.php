@@ -79,10 +79,10 @@ class UserController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        // Bütün istifadəçi mənbəli dəyərlər escape olunur — translation
-        // `<code>` / `<strong>` HTML saxlayır, ona görə blade `{!! !!}`
-        // istifadə edir. `:name` user tərəfindən daxil edildiyi üçün
-        // escape mütləqdir.
+        // All user-supplied values are escaped before being placed
+        // into the flash message: the translation keys contain HTML
+        // (<code> and <strong>) and the blade renders it raw, so
+        // escaping here is mandatory.
         return redirect()
             ->route('super-admin.users.index')
             ->with('success', __('messages.super_admin.users.created', [

@@ -43,9 +43,9 @@ class WarehouseController extends Controller
     {
         Gate::authorize('create', Warehouse::class);
 
-        $data = $this->addGarageContext($request->validated());
-
-        $warehouse = Warehouse::create($data);
+        // HasGarageScope auto-populates garage_id and company_id on
+        // create, so no explicit context injection is needed here.
+        $warehouse = Warehouse::create($request->validated());
 
         return response()->json([
             'message' => __('messages.flash.created', ['Item' => 'Warehouse item']),
@@ -87,7 +87,7 @@ class WarehouseController extends Controller
     {
         Gate::authorize('viewAny', Warehouse::class);
 
-        $perPage = min((int) $request->input('per_page', 15), 100);   // ← YENİ
+        $perPage = min((int) $request->input('per_page', 15), 100);
 
         $query = Warehouse::query();
 

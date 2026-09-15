@@ -59,8 +59,9 @@ class GarageDataController extends Controller
             ]);
         }
 
-        // `dailyKmRecords()` model-də artıq `orderBy('date', 'desc')` edir,
-        // ona görə `value('km')` ən son qeydi qaytarır.
+        // The dailyKmRecords() relation already applies
+        // `orderBy('date', 'desc')`, so `value('km')` returns the most
+        // recent record.
         $latestKm = $bus->dailyKmRecords()->value('km') ?? $bus->km;
 
         return response()->json([
@@ -132,10 +133,11 @@ class GarageDataController extends Controller
     {
         $bus = Bus::findOrFail($busId);
 
-        // Cari KM — günlük KM-dən, yoxsa bus-un km sahəsindən
+        // Current KM — prefer the latest daily record, fall back to the
+        // bus's own km field.
         $currentKm = (int) ($bus->dailyKmRecords()->value('km') ?? $bus->km ?? 0);
 
-        // Bütün unikal intervalları sıralı götür
+        // Fetch every distinct interval, sorted ascending.
         $intervals = MotorOilDetail::query()
             ->select('km')
             ->distinct()
@@ -144,7 +146,7 @@ class GarageDataController extends Controller
             ->map(fn ($km) => (int) $km)
             ->all();
 
-        // Ən yaxın keçmiş interval
+        // Closest interval in the past
         $past = null;
         foreach ($intervals as $km) {
             if ($km <= $currentKm) {
@@ -154,7 +156,7 @@ class GarageDataController extends Controller
             }
         }
 
-        // Növbəti interval
+        // Next interval in the future
         $next = null;
         foreach ($intervals as $km) {
             if ($km > $currentKm) {

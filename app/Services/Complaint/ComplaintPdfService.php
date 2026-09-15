@@ -15,7 +15,8 @@ class ComplaintPdfService
     {
         $complaint->loadMissing(['details.employee', 'bus', 'creator', 'closer']);
 
-        // Bütün əlaqəli employee ID-lərini topla (details-dən + əsas employee_id)
+        // Collect every related employee id — both from details and
+        // from the top-level employee_id field.
         $employeeIds = $complaint->details
             ->pluck('employee_id')
             ->filter()

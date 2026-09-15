@@ -12,11 +12,12 @@ class ComplaintDetail extends Model
     use Auditable, HasGarageScope, SoftDeletes;
 
     /**
-     * Audit loglarına yazılmayan sahələr.
+     * Fields excluded from audit logging.
      *
-     * `stock_quantity` — bu, anbar snapshot-ıdır; hər detalların
-     * istifadəsi nəticəsində avtomatik dəyişir və audit üçün maraqlı
-     * deyil. İstifadəçi bunun yerinə `used_quantity`-i görmək istəyir.
+     * `stock_quantity` — this is a snapshot of the warehouse quantity
+     * at the time the detail was created. It changes automatically
+     * whenever a part is used and is not meaningful for auditing.
+     * Operators care about `used_quantity`, not the running balance.
      */
     protected static array $auditExcluded = [
         'stock_quantity',

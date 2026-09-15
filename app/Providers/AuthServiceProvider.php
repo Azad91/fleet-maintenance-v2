@@ -38,14 +38,15 @@ class AuthServiceProvider extends ServiceProvider
         DailyKmRecord::class => DailyKmRecordPolicy::class,
         MotorOilDetail::class => MotorOilPolicy::class,
         ComplaintType::class => ComplaintTypePolicy::class,
-        // Dashboard üçün ayrıca policy yoxdur, amma əlavə etmək olar
     ];
 
     public function boot(): void
     {
         $this->registerPolicies();
 
-        // ✅ SUPER_ADMIN hər şeyə icazə alır
+        // Super Admin bypasses every policy check.
+        // Individual policies still handle garage-scoped rules for
+        // everyone else.
         Gate::before(function ($user, $ability) {
             if ($user->isSuperAdmin()) {
                 return true;

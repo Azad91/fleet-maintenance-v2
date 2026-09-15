@@ -35,7 +35,7 @@ class DashboardController extends Controller
             'users_active' => User::where('is_active', true)->count(),
             'users_super_admins' => User::where('role', 'super_admin')->count(),
 
-            // Yalnız 'garage' scope silinir — SoftDeletes aktiv qalır.
+            // Only the 'garage' scope is removed — SoftDeletes stays active.
             'buses_total' => Bus::withoutGlobalScope('garage')->count(),
             'complaints_open' => Complaint::withoutGlobalScope('garage')
                 ->where('status', '!=', 'completed')

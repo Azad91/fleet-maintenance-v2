@@ -20,8 +20,9 @@ class Company extends Model
         'address',
         'logo',
         'is_active',
-        // 'created_by' — HasCreatedBy trait tərəfindən avtomatik doldurulur.
-        // Mass-assignment spoofing-inin qarşısını almaq üçün fillable DEYİL.
+        // 'created_by' is intentionally NOT fillable — it is set
+        // automatically by the HasCreatedBy trait, and leaving it out
+        // prevents mass-assignment spoofing.
     ];
 
     public function garages()

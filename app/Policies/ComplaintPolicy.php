@@ -75,7 +75,7 @@ class ComplaintPolicy
             return false;
         }
 
-        // Yalnız admin + manager silə bilər
+        // Only admin + manager can delete
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::COMPLAINT_MANAGER->value]
@@ -92,7 +92,7 @@ class ComplaintPolicy
             return false;
         }
 
-        // Yalnız admin + manager bağlaya bilər
+        // Only admin + manager can close
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::COMPLAINT_MANAGER->value]
@@ -105,7 +105,7 @@ class ComplaintPolicy
             return true;
         }
 
-        // Yalnız admin + manager import edə bilər
+        // Only admin + manager can import
         return $user->hasGarageRole(array_merge(
             [RoleEnum::ADMIN->value],
             [RoleEnum::COMPLAINT_MANAGER->value]
