@@ -22,44 +22,49 @@
             @csrf
             @method('PUT')
 
+            {{-- Bus --}}
             <div class="mb-3">
                 <label class="form-label fw-bold">🚌 {{ __('messages.complaints.bus') }}</label>
                 <div class="row">
                     <div class="col-md-6">
                         <label>{{ __('messages.buses.dqn') }}</label>
                         <input type="text" class="form-control" id="dqn"
-                            value="{{ $complaint->bus->dqn ?? '' }}"
-                            oninput="getBusByDqn(this.value)"
-                            autocomplete="off"
-                            style="text-transform: uppercase;">
+                               value="{{ $complaint->bus->dqn ?? '' }}"
+                               oninput="getBusByDqn(this.value)"
+                               autocomplete="off"
+                               style="text-transform: uppercase;">
                         <div id="dqnHelp" class="form-text"></div>
                     </div>
                     <div class="col-md-6">
                         <label>{{ __('messages.buses.route_number') }}</label>
                         <input type="text" class="form-control" id="route_number"
-                            value="{{ $complaint->bus->route_number ?? '' }}"
-                            readonly style="background:#e9ecef;">
+                               value="{{ $complaint->bus->route_number ?? '' }}"
+                               readonly style="background:#e9ecef;">
                     </div>
                 </div>
                 <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id }}">
             </div>
 
+            {{-- Location --}}
             <div class="mb-3">
                 <label class="form-label fw-bold">📍 {{ __('messages.complaints.location') }}</label>
                 <div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="yer" id="yer_road" value="road"
-                            {{ $complaint->yer?->value === 'road' ? 'checked' : '' }} onchange="toggleFields()">
-                        <label class="form-check-label" for="yer_road">🛣️ {{ __('enums.location.road') }}</label>
+                            {{ $complaint->yer?->value === 'road' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted" for="yer_road">🛣️ {{ __('enums.location.road') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="yer" id="yer_garage" value="garage"
-                            {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
-                        <label class="form-check-label" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
+                            {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
                     </div>
+                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
+                    <input type="hidden" name="yer" value="{{ $complaint->yer?->value }}">
                 </div>
             </div>
 
+            {{-- Driver --}}
             <div class="mb-3" id="surucuField">
                 <label class="form-label fw-bold">🧑‍✈️ {{ __('messages.complaints.driver') }}</label>
                 <div class="row g-3">
@@ -84,6 +89,7 @@
                 </div>
             </div>
 
+            {{-- Complaints --}}
             <div class="mb-3">
                 <label class="form-label fw-bold">📝 {{ __('messages.complaints.complaints_list') }}</label>
                 <div id="complaintsContainer">
@@ -131,12 +137,14 @@
                 </button>
             </div>
 
+            {{-- KM --}}
             <div class="mb-3">
                 <label for="km" class="form-label fw-bold">📊 {{ __('messages.complaints.km') }}</label>
                 <input type="number" class="form-control" id="km" name="km"
                        value="{{ old('km', $complaint->km) }}" min="0" readonly style="background:#e9ecef;">
             </div>
 
+            {{-- Reported --}}
             <div id="bildirilmeFields">
                 <div class="row">
                     <div class="col-md-6">
@@ -152,6 +160,7 @@
                 </div>
             </div>
 
+            {{-- Start / End --}}
             <div class="row">
                 <div class="col-md-6">
                     <label class="form-label fw-bold">📅 {{ __('messages.complaints.start_date') }}</label>
@@ -178,6 +187,7 @@
                 </div>
             </div>
 
+            {{-- Status --}}
             <div class="mb-3">
                 <label for="status" class="form-label fw-bold">📊 {{ __('messages.common.status') }}</label>
                 <select class="form-select" id="status" name="status" required>
@@ -190,27 +200,31 @@
                 </select>
             </div>
 
+            {{-- Complaint Type (disabled) --}}
             <div class="mb-3">
                 <label class="form-label fw-bold">🏷️ {{ __('messages.complaints.complaint_type') }}</label>
                 <div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="complaint_type" value="accident"
-                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }}>
-                        <label class="form-check-label">🚗 {{ __('enums.complaint_type.accident') }}</label>
+                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted">🚗 {{ __('enums.complaint_type.accident') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="complaint_type" value="breakdown"
-                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }}>
-                        <label class="form-check-label">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
+                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="complaint_type" value="maintenance"
-                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }}>
-                        <label class="form-check-label">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
+                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
                     </div>
+                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
+                    <input type="hidden" name="complaint_type" value="{{ $complaint->complaint_type?->value }}">
                 </div>
             </div>
 
+            {{-- Parts --}}
             <div class="complaint-details-card p-3 mb-3">
                 <h5 class="fw-bold mb-3">🔧 {{ __('messages.complaints.used_parts') }}</h5>
                 <div id="detailsContainer">
@@ -540,6 +554,43 @@
             });
     }
 
+    let employeeLookupRequest = 0;
+
+    function getEmployeeByCode(input) {
+        const code = input.value.trim().toUpperCase();
+        const item = input.closest('.detail-item');
+        const nameInput = item.querySelector('input[name*="[employee_name]"]');
+        const idInput = item.querySelector('input[name*="[employee_id]"]');
+
+        nameInput.value = '';
+        idInput.value = '';
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!code) return;
+
+        const requestId = ++employeeLookupRequest;
+
+        fetch('/get-employee-by-kod/' + encodeURIComponent(code), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (requestId !== employeeLookupRequest) return;
+            if (data.found) {
+                nameInput.value = data.employee_name || '';
+                idInput.value = data.employee_id || '';
+                input.classList.add('is-valid');
+            } else {
+                input.classList.add('is-invalid');
+            }
+        })
+        .catch(error => console.error('Employee lookup error:', error));
+    }
+
     function getBusByDqn(dqnValue) {
         const input = document.getElementById('dqn');
         const routeInput = document.getElementById('route_number');
@@ -582,43 +633,6 @@
             }
         })
         .catch(err => console.error('Bus search error:', err));
-    }
-
-    let employeeLookupRequest = 0;
-
-    function getEmployeeByCode(input) {
-        const code = input.value.trim().toUpperCase();
-        const item = input.closest('.detail-item');
-        const nameInput = item.querySelector('input[name*="[employee_name]"]');
-        const idInput = item.querySelector('input[name*="[employee_id]"]');
-
-        nameInput.value = '';
-        idInput.value = '';
-        input.classList.remove('is-valid', 'is-invalid');
-
-        if (!code) return;
-
-        const requestId = ++employeeLookupRequest;
-
-        fetch('/get-employee-by-kod/' + encodeURIComponent(code), {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
-            credentials: 'same-origin',
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (requestId !== employeeLookupRequest) return;
-            if (data.found) {
-                nameInput.value = data.employee_name || '';
-                idInput.value = data.employee_id || '';
-                input.classList.add('is-valid');
-            } else {
-                input.classList.add('is-invalid');
-            }
-        })
-        .catch(error => console.error('Employee lookup error:', error));
     }
 
     document.addEventListener('DOMContentLoaded', function() {

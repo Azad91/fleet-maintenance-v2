@@ -7,17 +7,20 @@
                 <div>
                     <div class="form-check form-check-inline mt-1">
                         <input class="form-check-input" type="radio" name="complaint_type" value="accident"
-                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }}>
+                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }}
+                            onchange="handleComplaintTypeChange()">
                         <label class="form-check-label">🚗 {{ __('enums.complaint_type.accident') }}</label>
                     </div>
                     <div class="form-check form-check-inline mt-1">
                         <input class="form-check-input" type="radio" name="complaint_type" value="breakdown"
-                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }}>
+                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }}
+                            onchange="handleComplaintTypeChange()">
                         <label class="form-check-label">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
                     </div>
                     <div class="form-check form-check-inline mt-1">
                         <input class="form-check-input" type="radio" name="complaint_type" value="maintenance"
-                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }}>
+                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }}
+                            onchange="handleComplaintTypeChange()">
                         <label class="form-check-label">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
                     </div>
                 </div>
@@ -60,7 +63,7 @@
             </div>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="yer" id="yer_garage" value="garage"
-                    {{ ($complaint->yer?->value ?? 'garage') === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
+                    {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
                 <label class="form-check-label" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
             </div>
         </div>

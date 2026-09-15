@@ -232,6 +232,35 @@
         }
     }
 
+    function handleComplaintTypeChange() {
+        const typeInput = document.querySelector('input[name="complaint_type"]:checked');
+        const roadRadio = document.getElementById('yer_road');
+        const garageRadio = document.getElementById('yer_garage');
+
+        if (!roadRadio || !garageRadio) return;
+
+        // Yer hər zaman əvvəlcə sıfırlanır
+        const wasMaintenanceLocked = roadRadio.disabled;
+
+        roadRadio.disabled = false;
+        garageRadio.disabled = false;
+        roadRadio.checked = false;
+        garageRadio.checked = false;
+
+        // Sürücü sahəsini də gizlət (Yer sıfırlandığı üçün)
+        toggleFields();
+
+        if (!typeInput) return;
+
+        if (typeInput.value === 'maintenance') {
+            // Texniki xidmət → Yol disabled, Qaraj avtomatik seçilir
+            roadRadio.disabled = true;
+            garageRadio.checked = true;
+            toggleFields();
+        }
+        // Qəzalı / Nasazlıq → heç nə (Yer sərbəst, istifadəçi özü seçir)
+    }
+
     function getPartByCode(input) {
         const code = input.value;
         const item = input.closest('.detail-item');
@@ -253,11 +282,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        toggleFields();
+        handleComplaintTypeChange();
 
-        // Create page: DQN is empty, nothing to look up on load.
-        // (Validation errors → old DQN is rendered by the server and the
-        //  hidden bus_id is preserved; no extra lookup needed.)
+        toggleFields();
     });
 </script>
 @endsection
