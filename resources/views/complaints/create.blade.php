@@ -205,47 +205,70 @@
     // COMPLAINT TYPE → LOCATION LOGIC
     // ═══════════════════════════════════════════════════════════════
     function handleComplaintTypeChange() {
-        const typeInput = document.querySelector('input[name="complaint_type"]:checked');
-        const roadRadio = document.getElementById('yer_road');
-        const garageRadio = document.getElementById('yer_garage');
+    const typeInput = document.querySelector('input[name="complaint_type"]:checked');
+    const roadRadio = document.getElementById('yer_road');
+    const garageRadio = document.getElementById('yer_garage');
 
-        if (!roadRadio || !garageRadio) return;
+    if (!roadRadio || !garageRadio) return;
 
-        // Yer sıfırlanır
-        roadRadio.disabled = false;
-        garageRadio.disabled = false;
-        roadRadio.checked = false;
-        garageRadio.checked = false;
+    // Yer sıfırlanır
+    roadRadio.disabled = false;
+    garageRadio.disabled = false;
+    roadRadio.checked = false;
+    garageRadio.checked = false;
 
+    toggleFields();
+
+    if (!typeInput) return;
+
+    if (typeInput.value === 'maintenance') {
+        roadRadio.disabled = true;
+        garageRadio.checked = true;
         toggleFields();
 
-        if (!typeInput) return;
+        // Şikayətlər dropdown gizlət, Xidmət Növü göstər
+        document.getElementById('complaintsDropdown').style.display = 'none';
+        document.getElementById('serviceTypeBlock').style.display = 'block';
+        document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
 
-        if (typeInput.value === 'maintenance') {
-            roadRadio.disabled = true;
-            garageRadio.checked = true;
-            toggleFields();
+        // ⚡ HTML5 validation-dan çıxarmaq üçün dropdown-dakı select-ləri disable et.
+        // Disabled elementlər form submit-də iştirak etmir və focus tələb etmir.
+        document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
+            el.disabled = true;
+            el.required = false;
+        });
 
-            // Şikayətlər dropdown gizlət, Xidmət Növü göstər
-            document.getElementById('complaintsDropdown').style.display = 'none';
-            document.getElementById('serviceTypeBlock').style.display = 'block';
-            document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
+        // Xidmət blokunu aktivləşdir
+        document.querySelectorAll('#serviceTypeBlock select, #serviceTypeBlock input').forEach(el => {
+            el.disabled = false;
+        });
 
-            // Bus artıq seçilibsə, intervalları yüklə
-            if (document.getElementById('bus_id').value) {
-                loadMotorOilIntervals();
-            }
-        } else {
-            // Şikayətlər dropdown göstər, Xidmət Növü gizlət
-            document.getElementById('complaintsDropdown').style.display = 'block';
-            document.getElementById('serviceTypeBlock').style.display = 'none';
-            document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.complaints_list'));
-
-            // Service dəyərlərini sıfırla
-            document.getElementById('service_km_select').innerHTML = '<option value="">' + @json(__('messages.complaints.select_service')) + '</option>';
-            document.getElementById('serviceComplaintLabel').value = '';
+        // Bus artıq seçilibsə, intervalları yüklə
+        if (document.getElementById('bus_id').value) {
+            loadMotorOilIntervals();
         }
+    } else {
+        // Şikayətlər dropdown göstər, Xidmət Növü gizlət
+        document.getElementById('complaintsDropdown').style.display = 'block';
+        document.getElementById('serviceTypeBlock').style.display = 'none';
+        document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.complaints_list'));
+
+        // ⚡ Dropdown-dakı select-ləri yenidən aktivləşdir
+        document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
+            el.disabled = false;
+            el.required = true;
+        });
+
+        // Xidmət blokunu disable et — gizli olduğu üçün submit olunmasın
+        document.querySelectorAll('#serviceTypeBlock select, #serviceTypeBlock input').forEach(el => {
+            el.disabled = true;
+        });
+
+        // Service dəyərlərini sıfırla
+        document.getElementById('service_km_select').innerHTML = '<option value="">' + @json(__('messages.complaints.select_service')) + '</option>';
+        document.getElementById('serviceComplaintLabel').value = '';
     }
+}
 
     // ═══════════════════════════════════════════════════════════════
     // MOTOR OIL
