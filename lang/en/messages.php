@@ -216,6 +216,10 @@ return [
         'import_note_auto' => 'column is auto-generated, no need to write in Excel.',
         'import_select_file' => 'Select Excel File (.xlsx, .xls, .csv)',
         'import_button' => 'Import',
+        'tab_general' => 'General',
+        'tab_km_history' => 'KM History',
+        'tab_status_history' => 'Status History',
+        'no_status_records' => 'No status records for this bus.',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -502,9 +506,11 @@ return [
         'history_count' => ':count records',
         'no_records' => 'No KM records yet.',
         'no_records_for_bus' => 'No KM records for this bus.',
+        'filter_date_hint' => 'Default: today. Clear to see all dates.',
         'add_for_bus' => 'Add KM for this Bus',
         'auto_read' => 'auto-read from header',
         'ignored_columns' => 'Other columns (ROUTE, FUEL, etc.) are ignored.',
+        'filter_date_hint' => 'Default: today. Clear to see all dates.',
     ],
 
     // ==================== DAILY STATUS ====================

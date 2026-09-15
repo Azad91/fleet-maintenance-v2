@@ -25,15 +25,43 @@
     @endif
 </div>
 
-<form method="GET" class="mb-4">
-    <div class="input-group">
-        <input type="text" class="form-control" name="search"
-               placeholder="{{ __('messages.daily_km.search_placeholder') }}"
-               value="{{ request('search') }}">
-        <button class="btn btn-primary"><i class="bi bi-search"></i> {{ __('messages.common.search') }}</button>
-        <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary">{{ __('messages.common.reset') }}</a>
+{{-- ─── Filter panel ─── --}}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('daily-km-records.index') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="date" class="form-label fw-bold">
+                    <i class="bi bi-calendar-event"></i> {{ __('messages.daily_km.date') }}
+                </label>
+                <input type="date" name="date" id="date" class="form-control" value="{{ $date }}">
+                <small class="text-muted d-block mt-1">{{ __('messages.daily_km.filter_date_hint') }}</small>
+            </div>
+            <div class="col-md-4">
+                <label for="dqn" class="form-label fw-bold">
+                    <i class="bi bi-bus-front"></i> {{ __('messages.buses.dqn') }}
+                </label>
+                <input type="text" name="dqn" id="dqn" class="form-control"
+                       value="{{ $dqn }}"
+                       placeholder="{{ __('messages.buses.filter_dqn') }}"
+                       autocomplete="off"
+                       style="text-transform: uppercase;">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="bi bi-search"></i> {{ __('messages.common.filter') }}
+                </button>
+                <a href="{{ route('daily-km-records.index') }}" class="btn btn-secondary" title="{{ __('messages.common.reset') }}">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                <a href="{{ route('daily-km-records.export', ['date' => $date, 'dqn' => $dqn]) }}"
+                   class="btn btn-outline-success"
+                   title="{{ __('messages.common.export') }}">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 
 <div class="card">
     <div class="card-body">
@@ -53,7 +81,7 @@
                 <tbody>
                     @forelse($records as $record)
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $records->firstItem() + $loop->index }}</td>
                         <td><strong>{{ $record->bus->dqn ?? '-' }}</strong></td>
                         <td>{{ $record->bus->route_number ?? '-' }}</td>
                         <td>{{ $record->date ? \Carbon\Carbon::parse($record->date)->format('d.m.Y') : '-' }}</td>
@@ -93,11 +121,19 @@
             </table>
         </div>
 
-        @if($records->hasPages())
-            <div class="d-flex justify-content-center mt-4">
-                {{ $records->links() }}
+        @if($records->total() > 0)
+            <div class="text-center text-muted small mt-2 mb-3">
+                {{ __('messages.common.showing', [
+                    'from'  => $records->firstItem(),
+                    'to'    => $records->lastItem(),
+                    'total' => $records->total(),
+                ]) }}
             </div>
         @endif
     </div>
+</div>
+
+<div class="pagination-wrapper d-flex justify-content-center mt-4">
+    {{ $records->withQueryString()->links() }}
 </div>
 @endsection

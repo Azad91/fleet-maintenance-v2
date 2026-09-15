@@ -11,6 +11,8 @@ use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DailyKmRecordsExport;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DailyKmRecordController extends Controller
 {
@@ -18,22 +20,28 @@ class DailyKmRecordController extends Controller
     {
         $this->authorize('viewAny', DailyKmRecord::class);
 
-        $search = $request->search;
+        // Same filtering model as bus-daily-statuses:
+        // default to today, explicit empty date = all dates.
+        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $dqn = $request->input('dqn');
+
         $query = DailyKmRecord::with('bus');
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('bus', function ($bq) use ($search) {
-                    $bq->where('dqn', 'ILIKE', "%{$search}%")
-                        ->orWhere('route_number', 'ILIKE', "%{$search}%");
-                })->orWhere('date', 'ILIKE', "%{$search}%");
-            });
+        if ($date) {
+            $query->whereDate('date', $date);
         }
 
-        $records = $query->orderBy('date', 'desc')
-            ->paginate(config('settings.pagination', 15));
+        if ($dqn) {
+            $query->whereHas('bus', fn ($q) => $q->where('dqn', 'ILIKE', "%{$dqn}%"));
+        }
 
-        return view('daily-km-records.index', compact('records', 'search'));
+        $records = $query
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15))
+            ->withQueryString();
+
+        return view('daily-km-records.index', compact('records', 'date', 'dqn'));
     }
 
     public function create()
@@ -230,5 +238,22 @@ class DailyKmRecordController extends Controller
             return redirect()->route('daily-km-records.index')
                 ->with('error', __('messages.flash.import_error'));
         }
+    }
+    /**
+     * Export the currently-filtered KM list to Excel.
+     */
+    public function export(Request $request): BinaryFileResponse
+    {
+        $this->authorize('viewAny', DailyKmRecord::class);
+
+        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $dqn = $request->input('dqn');
+
+        $filename = 'daily-km-records-'.now()->format('Y-m-d-His').'.xlsx';
+
+        return Excel::download(
+            new DailyKmRecordsExport($date, $dqn),
+            $filename
+        );
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Requests\BusDailyStatusStoreRequest;
 use App\Http\Requests\BusDailyStatusUpdateRequest;
 use App\Imports\BusDailyStatusesImport;
 use App\Models\Bus;
+use App\Exports\BusDailyStatusesExport;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use App\Models\BusDailyStatus;
 use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
@@ -14,15 +16,61 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class BusDailyStatusController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', BusDailyStatus::class);
 
-        $statuses = BusDailyStatus::with('bus')
-            ->orderBy('date', 'desc')
-            ->paginate(config('settings.pagination', 15));
+        // ── Filter parameters ──
+        //
+        // `date` defaults to today so the page opens on the most common
+        // query (the operator checks the current day's statuses first
+        // thing in the morning).
+        //
+        // An EMPTY date (`?date=`) means "all dates" — that's how the user
+        // can browse the full history if they want. `has('date')` is what
+        // distinguishes "not provided" (default to today) from "explicitly
+        // empty" (show everything).
+        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $dqn = $request->input('dqn');
+        $status = $request->input('status');
 
-        return view('bus-daily-statuses.index', compact('statuses'));
+        $query = BusDailyStatus::with('bus');
+
+        if ($date) {
+            $query->whereDate('date', $date);
+        }
+
+        if ($dqn) {
+            $query->whereHas('bus', fn ($q) => $q->where('dqn', 'ILIKE', "%{$dqn}%"));
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $statuses = $query
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15))
+            ->withQueryString();
+
+        // Status dropdown values — sourced from the current garage's data
+        // so it stays in sync with whatever Excel imports contain.
+        // HasGarageScope filters this automatically.
+        $availableStatuses = BusDailyStatus::query()
+            ->distinct()
+            ->orderBy('status')
+            ->pluck('status')
+            ->filter()
+            ->values();
+
+        return view('bus-daily-statuses.index', compact(
+            'statuses',
+            'date',
+            'dqn',
+            'status',
+            'availableStatuses',
+        ));
     }
 
     public function create()
@@ -165,5 +213,27 @@ class BusDailyStatusController extends Controller
             return redirect()->route('bus-daily-statuses.index')
                 ->with('error', __('messages.flash.import_error'));
         }
+    }
+    /**
+     * Export the currently-filtered status list to Excel.
+     *
+     * Uses exactly the same filters as index() so that "what you see
+     * is what you export" — the operator can filter on screen, click
+     * the button, and get the same rows in the spreadsheet.
+     */
+    public function export(Request $request): BinaryFileResponse
+    {
+        $this->authorize('viewAny', BusDailyStatus::class);
+
+        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $dqn = $request->input('dqn');
+        $status = $request->input('status');
+
+        $filename = 'bus-daily-statuses-'.now()->format('Y-m-d-His').'.xlsx';
+
+        return Excel::download(
+            new BusDailyStatusesExport($date, $dqn, $status),
+            $filename
+        );
     }
 }

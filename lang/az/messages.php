@@ -79,6 +79,7 @@ return [
         'app_name' => 'Fleet Maintenance',
         'super_admin' => 'Super Admin Paneli',
         'super_admin_menu' => 'SUPER ADMIN',
+        'filter_date_hint' => 'Standart: bugün. Hamısını görmək üçün təmizləyin.',
     ],
 
     // ==================== AUTH ====================
@@ -216,6 +217,10 @@ return [
         'import_note_auto' => 'sütun avtomatik yaranır, Excel-də yazmağa ehtiyac yoxdur.',
         'import_select_file' => 'Excel faylını seçin (.xlsx, .xls, .csv)',
         'import_button' => 'İdxal et',
+        'tab_general' => 'Ümumi',
+        'tab_km_history' => 'KM tarixçəsi',
+        'tab_status_history' => 'Status tarixçəsi',
+        'no_status_records' => 'Bu avtobus üçün status qeydi yoxdur.',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -881,6 +886,7 @@ return [
             'distribution' => 'Status paylanması',
             'changes' => 'Status dəyişiklikləri',
             'worker_activity' => 'Worker fəaliyyəti',
+            'filter_date_hint' => 'Standart: bugün. Hamısını görmək üçün təmizləyin.',
         ],
 
         'content' => [

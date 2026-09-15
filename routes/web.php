@@ -315,6 +315,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
     ));
 
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->middleware(['role:'.$dailyStatusRoles])->group(function () {
+        Route::get('/export', [BusDailyStatusController::class, 'export'])->name('export');    
         Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
         Route::post('/import', [BusDailyStatusController::class, 'import'])
             ->middleware('throttle:import')
@@ -335,6 +336,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
     ));
 
     Route::prefix('daily-km-records')->name('daily-km-records.')->middleware(['role:'.$dailyKmRoles])->group(function () {
+        Route::get('/export', [DailyKmRecordController::class, 'export'])->name('export');
         Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
         Route::post('/import', [DailyKmRecordController::class, 'import'])
             ->middleware('throttle:import')

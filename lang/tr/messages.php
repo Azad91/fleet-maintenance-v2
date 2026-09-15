@@ -199,6 +199,10 @@ return [
         'import_note_auto' => 'sütun otomatik oluşturulur, Excel\'e yazmanıza gerek yok.',
         'import_select_file' => 'Excel dosyası seçin (.xlsx, .xls, .csv)',
         'import_button' => 'İçe Aktar',
+        'tab_general' => 'Genel',
+        'tab_km_history' => 'KM Geçmişi',
+        'tab_status_history' => 'Durum Geçmişi',
+        'no_status_records' => 'Bu otobüs için durum kaydı yok.',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -467,6 +471,7 @@ return [
     // ==================== DAILY KM ====================
     'daily_km' => [
         'title' => 'Günlük KM Kayıtları',
+        'filter_date_hint' => 'Varsayılan: bugün. Tüm tarihleri görmek için temizleyin.',
         'new' => 'Yeni KM Kaydı',
         'edit' => 'KM Kaydını Düzenle',
         'details' => 'KM Kayıt Bilgileri',
@@ -492,6 +497,7 @@ return [
     // ==================== DAILY STATUS ====================
     'daily_status' => [
         'title' => 'Günlük Otobüs Durumları',
+        'filter_date_hint' => 'Varsayılan: bugün. Tüm tarihleri görmek için temizleyin.',
         'new' => 'Yeni Durum',
         'edit' => 'Durumu Düzenle',
         'details' => 'Durum Bilgileri',

@@ -61,12 +61,23 @@ class BusController extends Controller
             || $request->boolean('_ajax');
     }
 
-    public function show(int $id): View
+    public function show(Request $request, int $id): View
     {
         $bus = Bus::findOrFail($id);
         $this->authorize('view', $bus);
 
-        return view('buses.show', compact('bus'));
+        // Two independent paginators on one page. Laravel lets each
+        // paginator use its own page-name so the tabs don't fight for
+        // the same `?page=` query parameter.
+        $kmRecords = $bus->dailyKmRecords()
+            ->paginate(30, ['*'], 'km_page')
+            ->withQueryString();
+
+        $statusRecords = $bus->dailyStatuses()
+            ->paginate(30, ['*'], 'status_page')
+            ->withQueryString();
+
+        return view('buses.show', compact('bus', 'kmRecords', 'statusRecords'));
     }
 
     public function create(): View
