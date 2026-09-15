@@ -432,6 +432,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
         Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
         Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
+        Route::get('get-employee-by-kod/{kod}', [GarageDataController::class, 'employeeByCode'])->name('get.employee.by.kod');
         Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');
         Route::get('get-motor-oil-services/{bus_id}', [GarageDataController::class, 'motorOilServices'])->name('get.motor.oil.services');
     });

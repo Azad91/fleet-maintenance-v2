@@ -118,7 +118,7 @@ class ComplaintController extends Controller
 
     public function edit(int $id): View
     {
-        $complaint = Complaint::with(['items', 'details'])->findOrFail($id);
+        $complaint = Complaint::with(['items', 'details.employee'])->findOrFail($id);
 
         $this->authorize('update', $complaint);
 
@@ -135,6 +135,8 @@ class ComplaintController extends Controller
                 'stock_quantity' => $detail->stock_quantity,
                 'used_quantity' => $detail->used_quantity,
                 'employee_id' => $detail->employee_id,
+                'employee_code' => $detail->employee?->code,
+                'employee_name' => $detail->employee?->full_name_with_position,
                 'notes' => $detail->notes,
             ];
         })->toArray();

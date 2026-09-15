@@ -241,21 +241,27 @@
                                         <input type="number" class="form-control" name="details[{{ $index }}][used_quantity]"
                                                value="{{ $detail['used_quantity'] ?? 1 }}" min="1" required>
                                     </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label fw-bold">{{ __('messages.complaints.employee') }}</label>
-                                        <select class="form-select" name="details[{{ $index }}][employee_id]" required>
-                                            <option value="">{{ __('messages.common.select') }}</option>
-                                            @foreach($employees as $employee)
-                                                <option value="{{ $employee->id }}" {{ old("details.$index.employee_id", $detail['employee_id'] ?? '') == $employee->id ? 'selected' : '' }}>
-                                                    {{ $employee->full_name_with_position }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control"
+                                                   name="details[{{ $index }}][employee_code]"
+                                                   placeholder="{{ __('messages.employees.code_placeholder') }}"
+                                                   value="{{ old("details.$index.employee_code", $detail['employee_code'] ?? '') }}"
+                                                   oninput="getEmployeeByCode(this)"
+                                                   autocomplete="off"
+                                                   style="text-transform: uppercase;">
+                                            <input type="text" class="form-control input-disabled" readonly tabindex="-1"
+                                                   name="details[{{ $index }}][employee_name]"
+                                                   value="{{ old("details.$index.employee_name", $detail['employee_name'] ?? '') }}">
+                                            <input type="hidden" name="details[{{ $index }}][employee_id]"
+                                                   value="{{ old("details.$index.employee_id", $detail['employee_id'] ?? '') }}">
+                                        </div>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-1">
                                         <label class="form-label fw-bold">&nbsp;</label>
                                         <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
-                                            <i class="bi bi-trash"></i> {{ __('messages.common.remove') }}
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -265,6 +271,7 @@
                                         <textarea class="form-control" name="details[{{ $index }}][notes]" rows="2">{{ $detail['notes'] ?? '' }}</textarea>
                                     </div>
                                 </div>
+                                <hr>
                             </div>
                         @endforeach
                     @else
@@ -292,19 +299,24 @@
                                     <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
                                     <input type="number" class="form-control" name="details[0][used_quantity]" min="1" value="1" required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold">{{ __('messages.complaints.employee') }}</label>
-                                    <select class="form-select" name="details[0][employee_id]" required>
-                                        <option value="">{{ __('messages.common.select') }}</option>
-                                        @foreach($employees as $employee)
-                                            <option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                               name="details[0][employee_code]"
+                                               placeholder="{{ __('messages.employees.code_placeholder') }}"
+                                               oninput="getEmployeeByCode(this)"
+                                               autocomplete="off"
+                                               style="text-transform: uppercase;">
+                                        <input type="text" class="form-control input-disabled" readonly tabindex="-1"
+                                               name="details[0][employee_name]">
+                                        <input type="hidden" name="details[0][employee_id]">
+                                    </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-1">
                                     <label class="form-label fw-bold">&nbsp;</label>
                                     <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
-                                        <i class="bi bi-trash"></i> {{ __('messages.common.remove') }}
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </div>
@@ -420,19 +432,24 @@
                     <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
                     <input type="number" class="form-control" name="details[${detailCount}][used_quantity]" min="1" value="1" required>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.employee') }}</label>
-                    <select class="form-select" name="details[${detailCount}][employee_id]" required>
-                        <option value="">{{ __('messages.common.select') }}</option>
-                        @foreach($employees as $employee)
-                            <option value="{{ $employee->id }}">{{ $employee->full_name_with_position }}</option>
-                        @endforeach
-                    </select>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control"
+                               name="details[${detailCount}][employee_code]"
+                               placeholder="{{ __('messages.employees.code_placeholder') }}"
+                               oninput="getEmployeeByCode(this)"
+                               autocomplete="off"
+                               style="text-transform: uppercase;">
+                        <input type="text" class="form-control input-disabled" readonly tabindex="-1"
+                               name="details[${detailCount}][employee_name]">
+                        <input type="hidden" name="details[${detailCount}][employee_id]">
+                    </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <label class="form-label fw-bold">&nbsp;</label>
                     <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
-                        <i class="bi bi-trash"></i> {{ __('messages.common.remove') }}
+                        <i class="bi bi-trash"></i>
                     </button>
                 </div>
             </div>
@@ -514,6 +531,43 @@
                     help.className = 'form-text text-danger';
                 }
             });
+    }
+
+    let employeeLookupRequest = 0;
+
+    function getEmployeeByCode(input) {
+        const code = input.value.trim().toUpperCase();
+        const item = input.closest('.detail-item');
+        const nameInput = item.querySelector('input[name*="[employee_name]"]');
+        const idInput = item.querySelector('input[name*="[employee_id]"]');
+
+        nameInput.value = '';
+        idInput.value = '';
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!code) return;
+
+        const requestId = ++employeeLookupRequest;
+
+        fetch('/get-employee-by-kod/' + encodeURIComponent(code), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (requestId !== employeeLookupRequest) return;
+            if (data.found) {
+                nameInput.value = data.employee_name || '';
+                idInput.value = data.employee_id || '';
+                input.classList.add('is-valid');
+            } else {
+                input.classList.add('is-invalid');
+            }
+        })
+        .catch(error => console.error('Employee lookup error:', error));
     }
 
     document.addEventListener('DOMContentLoaded', function() {

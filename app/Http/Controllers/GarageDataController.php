@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bus;
 use App\Models\BusServiceInterval;
 use App\Models\Driver;
+use App\Models\Employee;
 use App\Models\MotorOilDetail;
 use App\Models\ServiceTemplate;
 use App\Models\Warehouse;
@@ -113,6 +114,19 @@ class GarageDataController extends Controller
             'driver_name' => $driver?->full_name,
             'driver_id' => $driver?->id,
             'found' => (bool) $driver,
+        ]);
+    }
+
+    public function employeeByCode(string $kod)
+    {
+        $employee = Employee::active()
+            ->where('code', mb_strtoupper(trim($kod)))
+            ->first();
+
+        return response()->json([
+            'employee_id' => $employee?->id,
+            'employee_name' => $employee?->full_name_with_position,
+            'found' => (bool) $employee,
         ]);
     }
 }

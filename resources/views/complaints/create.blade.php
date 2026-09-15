@@ -99,6 +99,7 @@
         const item = source.cloneNode(true);
         item.querySelectorAll('input:not([type="hidden"])').forEach(i => i.value = '');
         item.querySelectorAll('textarea').forEach(t => t.value = '');
+        item.querySelectorAll('input[type="hidden"]').forEach(i => i.value = '');
         if (item.querySelector('input[name*="[used_quantity]"]')) {
             item.querySelector('input[name*="[used_quantity]"]').value = '1';
         }
@@ -158,6 +159,43 @@
                     help.className = 'form-text text-danger';
                 }
             });
+    }
+
+    let employeeLookupRequest = 0;
+
+    function getEmployeeByCode(input) {
+        const code = input.value.trim().toUpperCase();
+        const item = input.closest('.detail-item');
+        const nameInput = item.querySelector('input[name*="[employee_name]"]');
+        const idInput = item.querySelector('input[name*="[employee_id]"]');
+
+        nameInput.value = '';
+        idInput.value = '';
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!code) return;
+
+        const requestId = ++employeeLookupRequest;
+
+        fetch('/get-employee-by-kod/' + encodeURIComponent(code), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (requestId !== employeeLookupRequest) return;
+            if (data.found) {
+                nameInput.value = data.employee_name || '';
+                idInput.value = data.employee_id || '';
+                input.classList.add('is-valid');
+            } else {
+                input.classList.add('is-invalid');
+            }
+        })
+        .catch(error => console.error('Employee lookup error:', error));
     }
 
     function toggleFields() {
