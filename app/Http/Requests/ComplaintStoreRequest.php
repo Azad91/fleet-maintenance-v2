@@ -29,19 +29,17 @@ class ComplaintStoreRequest extends FormRequest
             ->where('is_active', true)
             ->whereNull('deleted_at'));
 
+        $serviceTemplateRule = Rule::exists('service_templates', 'id')
+            ->where('garage_id', $garageId);
+
         return [
             'bus_id' => ['required', $busRule],
             'yer' => ['required', Rule::in(Location::values())],
             'driver_name' => 'nullable|string|max:255',
             'driver_id' => ['nullable', 'required_if:yer,road', $driverRule],
 
-            // complaint_type is a CATEGORY enum (accident/breakdown/maintenance),
-            // NOT a specific type from the complaint_types table.
-            // The valid values are defined in App\Enums\ComplaintType.
             'complaint_type' => ['nullable', Rule::in(ComplaintType::values())],
 
-            // complaint items are descriptions that should exist in complaint_types
-            // for the CURRENT garage.
             'complaints' => 'required|array|min:1',
             'complaints.*' => [
                 'required',
@@ -57,7 +55,7 @@ class ComplaintStoreRequest extends FormRequest
             'details.*.employee_id' => ['required_with:details.*.code', $employeeRule],
             'details.*.notes' => 'required_with:details.*.code|string|max:2000',
             'employee_id' => ['nullable', $employeeRule],
-            'service_template_id' => 'nullable|exists:service_templates,id',
+            'service_template_id' => ['nullable', $serviceTemplateRule],
             'service_km' => 'required_if:service_template_id,!null|nullable|integer|min:0',
         ];
     }

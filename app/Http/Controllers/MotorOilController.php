@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Imports\MotorOilImport;
 use App\Models\MotorOilDetail;
+use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -51,11 +52,26 @@ class MotorOilController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
+        // Resolve garage context BEFORE authorization, matching every
+        // other import controller. Without it the MotorOilDetail model
+        // would throw MissingGarageContextException during the import.
+        $garageId = GarageContext::resolveGarageId();
+
+        if ($garageId === null || $garageId <= 0) {
+            return redirect()
+                ->route('garage.selection')
+                ->with('error', __('messages.flash.no_current_garage'));
+        }
+
         $this->authorize('import', MotorOilDetail::class);
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
 
         try {
-            $import = new MotorOilImport;
+            $import = new MotorOilImport(
+                $garageId,
+                GarageContext::resolveCompanyId(),
+            );
+
             Excel::import($import, $request->file('file'));
 
             $skipped = $import->skipped;

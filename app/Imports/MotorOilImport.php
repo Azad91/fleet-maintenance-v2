@@ -43,6 +43,8 @@ class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReadi
 
             if ($count > 0) {
                 MotorOilDetail::create([
+                    'garage_id' => $this->garageId,
+                    'company_id' => $this->companyId,
                     'part_code' => $partCode,
                     'part_name' => $partName,
                     'unit' => $unit,
@@ -61,8 +63,6 @@ class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReadi
             return;
         }
 
-        // A single source row produced $createdForThisRow records — one
-        // for each KM column with a positive count.
         $this->incrementImported($createdForThisRow);
     }
 }

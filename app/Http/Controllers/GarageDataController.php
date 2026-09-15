@@ -51,7 +51,13 @@ class GarageDataController extends Controller
     {
         $bus = Bus::findOrFail($busId);
 
-        $templates = Cache::remember('service_templates', 3600, function () {
+        // Cache key MUST include the garage id — otherwise the first
+        // garage's template list would be served to every other garage
+        // for the next hour. The global scope only filters the query;
+        // it does not partition the cache.
+        $cacheKey = 'service_templates:garage:'.$bus->garage_id;
+
+        $templates = Cache::remember($cacheKey, 3600, function () {
             return ServiceTemplate::orderBy('default_km_interval')->get();
         });
 
@@ -73,7 +79,11 @@ class GarageDataController extends Controller
         $bus = Bus::findOrFail($busId);
         $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;
 
-        $motorOils = Cache::remember('motor_oil_details', 3600, function () {
+        // Cache key MUST include the garage id — same reasoning as
+        // serviceTemplates() above.
+        $cacheKey = 'motor_oil_details:garage:'.$bus->garage_id;
+
+        $motorOils = Cache::remember($cacheKey, 3600, function () {
             return MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
         });
 
