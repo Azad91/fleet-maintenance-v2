@@ -21,26 +21,36 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Rich demo data for development and manual testing.
+ * Development-only demo data.
  *
- * Creates:
- *   - 2 companies (LEGACY MOTOR and SERVICE, BAKUBUS)
- *   - 3 garages per company (6 total)
- *   - 1 Director per company
- *   - Per garage: 1 Admin + 8 Managers/Workers, 10 complaint types,
- *     5 motor-oil intervals with service templates, 5 buses,
- *     10 warehouse items, 4 employees, 4 drivers,
- *     30 days of KM records and daily statuses, 10 complaints
+ * Creates TWO companies with different purposes:
  *
- * ⚠️  DO NOT RUN IN PRODUCTION.
- *     The run() method aborts immediately when APP_ENV=production.
- *     This keeps production data clean: only the SuperAdmin is seeded
- *     there, and all real tenants are created through the UI.
+ *   1. "Demo Company"  → FULLY SEEDED
+ *      Every garage has the full catalog: buses, warehouse items,
+ *      motor-oil details, service templates, employees, drivers,
+ *      30 days of KM records and daily statuses, and complaints.
+ *      This is the sandbox you can freely destroy and re-create by
+ *      running `php artisan migrate:fresh --seed`.
+ *
+ *   2. "LEGACY MOTOR and SERVICE"  → STRUCTURE ONLY
+ *      The company, its garages, directors, garage admins and
+ *      default complaint types are created, but NO domain data.
+ *      This is your personal workspace: load your real buses,
+ *      warehouse, motor oil, etc. through the UI. Running the
+ *      seeder again will NOT touch anything you added here.
+ *
+ * The split means: seed everything → LEGACY is ready for your
+ * real data, Demo Company is ready for tests.
+ *
+ * ⚠️  Blocked in production. Real tenants are created through
+ *     the SuperAdmin UI in production.
  */
 class DemoDataSeeder extends Seeder
 {
     /**
-     * Default complaint types seeded for every garage.
+     * Default complaint types seeded for every garage — including
+     * the LEGACY garages, because a new complaint form should work
+     * out of the box.
      */
     private const COMPLAINT_TYPES = [
         'Engine noise',
@@ -56,10 +66,7 @@ class DemoDataSeeder extends Seeder
     ];
 
     /**
-     * Motor-oil service intervals (in km) seeded for every garage.
-     * Each interval produces one ServiceTemplate and 3 MotorOilDetail
-     * rows (filter, oil, gasket) so the whole "maintenance" workflow
-     * has real data to work against.
+     * Motor-oil service intervals (km) for the DEMO company.
      */
     private const SERVICE_INTERVALS = [15000, 30000, 60000, 90000, 120000];
 
@@ -79,29 +86,31 @@ class DemoDataSeeder extends Seeder
         $this->command->info('🌱 Seeding demo data...');
 
         DB::transaction(function () {
-            $companyA = $this->createCompany('LEGACY MOTOR and SERVICE', 'legacy-motor');
-            $companyB = $this->createCompany('BAKUBUS', 'bakubus');
+            // ─── Company 1: Demo Company (fully seeded) ───
+            $demo = $this->createCompany('Demo Company', 'demo-company');
+            $this->createDirector($demo, 'Demo Director', 'director@demo.test');
 
-            $this->createDirector($companyA, 'Rəşad Direktor', 'director@legacy.test');
-            $this->createDirector($companyB, 'Elşad Direktor', 'director@bakubus.test');
+            $this->seedGarage($demo, 'Demo Central Garage', 'demo-central', withDomainData: true);
+            $this->seedGarage($demo, 'Demo North Garage', 'demo-north', withDomainData: true);
+            $this->seedGarage($demo, 'Demo South Garage', 'demo-south', withDomainData: true);
 
-            $this->createGarage($companyA, 'Depo1', 'depo1');
-            $this->createGarage($companyA, 'Depo2', 'depo2');
-            $this->createGarage($companyA, 'DepoGence', 'depogence');
+            // ─── Company 2: LEGACY MOTOR and SERVICE (structure only) ───
+            $legacy = $this->createCompany('LEGACY MOTOR and SERVICE', 'legacy-motor');
+            $this->createDirector($legacy, 'Rəşad Direktor', 'director@legacy.test');
 
-            $this->createGarage($companyB, 'Mərkəzi Qaraj', 'merkezi-qaraj');
-            $this->createGarage($companyB, 'Sumqayıt Qaraj', 'sumqayit-qaraj');
-            $this->createGarage($companyB, 'Xətai Qaraj', 'xetai-qaraj');
+            $this->seedGarage($legacy, 'Depo1', 'depo1', withDomainData: false);
+            $this->seedGarage($legacy, 'Depo2', 'depo2', withDomainData: false);
+            $this->seedGarage($legacy, 'DepoGence', 'depogence', withDomainData: false);
         });
 
         $this->command->info('✅ Demo data seeded successfully.');
         $this->command->newLine();
-        $this->command->info('Login credentials:');
-        $this->command->info('  Super Admin  → admin@fleet.com / password');
-        $this->command->info('  Director A   → director@legacy.test / password');
-        $this->command->info('  Director B   → director@bakubus.test / password');
-        $this->command->info('  Admin        → {garage.code}.admin@demo.test / password');
-        $this->command->info('  Workers      → PIN 1234 (employee code printed per garage)');
+        $this->command->info('Login credentials (all passwords: password):');
+        $this->command->info('  Super Admin    → admin@fleet.com');
+        $this->command->info('  Demo Director  → director@demo.test');
+        $this->command->info('  Legacy Director→ director@legacy.test');
+        $this->command->info('  Garage admins  → {garage.code}.admin@demo.test');
+        $this->command->info('  Workers        → PIN 1234');
     }
 
     // ==================================================================
@@ -140,12 +149,11 @@ class DemoDataSeeder extends Seeder
             $director->demoteToRegularUser()->save();
         }
 
-        // Ensure the director is active on the company pivot
         $company->users()->syncWithoutDetaching([
             $director->id => ['role' => 'director', 'is_active' => true],
         ]);
 
-        // And ensure only one active director exists
+        // Ensure only one active director per company
         $company->users()
             ->wherePivot('role', 'director')
             ->wherePivot('is_active', true)
@@ -159,11 +167,30 @@ class DemoDataSeeder extends Seeder
     }
 
     // ==================================================================
-    // GARAGE — orchestrates every per-garage seeding step
+    // GARAGE — the single entry point for seeding a garage
     // ==================================================================
 
-    private function createGarage(Company $company, string $name, string $code): Garage
-    {
+    /**
+     * Create (or update) a garage and optionally seed its domain data.
+     *
+     * When $withDomainData is false, only the structure is created:
+     *   - the garage itself
+     *   - its admin user (so someone can log in)
+     *   - the default complaint-type catalog (so the new-complaint
+     *     form works out of the box)
+     *
+     * No buses, no warehouse, no motor oil, no employees, no drivers,
+     * no KM records, no statuses, no complaints.
+     *
+     * That way, running the seeder again never overwrites the real
+     * data the operator has loaded into the LEGACY garages.
+     */
+    private function seedGarage(
+        Company $company,
+        string $name,
+        string $code,
+        bool $withDomainData
+    ): Garage {
         $garage = Garage::updateOrCreate(
             ['code' => $code],
             [
@@ -179,18 +206,25 @@ class DemoDataSeeder extends Seeder
         // right tenant. HasGarageScope and Auditable both rely on it.
         GarageContext::set($garage->id, $company->id);
 
-        $this->command->line("  → Seeding garage: {$garage->name} ({$garage->code})");
+        $this->command->line("  → Seeding garage: {$garage->name} ({$garage->code})".
+            ($withDomainData ? '' : '  [structure only]'));
 
-        $this->createGarageUsers($garage);
+        // Structure — always seeded.
+        $this->createGarageAdmin($garage);
         $this->createComplaintTypes($garage);
-        $this->createMotorOilCatalog($garage);
-        $this->createWarehouseItems($garage);
-        $this->createBuses($garage);
-        $this->createEmployees($garage);
-        $this->createDrivers($garage);
-        $this->createDailyKmRecords($garage);
-        $this->createDailyStatuses($garage);
-        $this->createComplaints($garage);
+
+        // Domain data — only for the demo company.
+        if ($withDomainData) {
+            $this->createGarageUsers($garage);
+            $this->createMotorOilCatalog($garage);
+            $this->createWarehouseItems($garage);
+            $this->createBuses($garage);
+            $this->createEmployees($garage);
+            $this->createDrivers($garage);
+            $this->createDailyKmRecords($garage);
+            $this->createDailyStatuses($garage);
+            $this->createComplaints($garage);
+        }
 
         GarageContext::clear();
 
@@ -198,12 +232,11 @@ class DemoDataSeeder extends Seeder
     }
 
     // ==================================================================
-    // PER-GARAGE SEEDERS
+    // PER-GARAGE SEEDERS — STRUCTURE
     // ==================================================================
 
-    private function createGarageUsers(Garage $garage): void
+    private function createGarageAdmin(Garage $garage): void
     {
-        // ── Admin ──
         $adminEmail = "{$garage->code}.admin@demo.test";
 
         $admin = User::updateOrCreate(
@@ -240,8 +273,25 @@ class DemoDataSeeder extends Seeder
             'role' => 'admin',
             'is_active' => true,
         ]);
+    }
 
-        // ── Managers + Workers: 4 domains × 2 tiers = 8 accounts ──
+    private function createComplaintTypes(Garage $garage): void
+    {
+        foreach (self::COMPLAINT_TYPES as $name) {
+            ComplaintType::withoutGlobalScopes()->updateOrCreate(
+                ['name' => $name, 'garage_id' => $garage->id],
+                ['company_id' => $garage->company_id]
+            );
+        }
+    }
+
+    // ==================================================================
+    // PER-GARAGE SEEDERS — DOMAIN DATA (Demo Company only)
+    // ==================================================================
+
+    private function createGarageUsers(Garage $garage): void
+    {
+        // Managers + Workers: 4 domains × 2 tiers = 8 accounts
         $roleMatrix = [
             'complaint_manager', 'complaint_worker',
             'warehouse_manager', 'warehouse_worker',
@@ -249,7 +299,7 @@ class DemoDataSeeder extends Seeder
             'daily_status_manager', 'daily_status_worker',
         ];
 
-        foreach ($roleMatrix as $index => $role) {
+        foreach ($roleMatrix as $role) {
             $slug = str_replace('_', '.', $role);
             $email = "{$garage->code}.{$slug}@demo.test";
 
@@ -273,36 +323,16 @@ class DemoDataSeeder extends Seeder
             $garage->users()->syncWithoutDetaching([
                 $user->id => ['role' => $role, 'is_active' => true],
             ]);
-
-            $this->command->line("     • {$role} → {$email} (PIN: 1234)");
         }
     }
 
-    private function createComplaintTypes(Garage $garage): void
-    {
-        foreach (self::COMPLAINT_TYPES as $name) {
-            ComplaintType::withoutGlobalScopes()->updateOrCreate(
-                ['name' => $name, 'garage_id' => $garage->id],
-                ['company_id' => $garage->company_id]
-            );
-        }
-    }
-
-    /**
-     * Motor-oil catalog + one ServiceTemplate per interval.
-     *
-     * Templates are derived from the catalog, mirroring the pattern
-     * previously implemented by ServiceTemplateSeeder. Because the
-     * whole operation runs inside GarageContext, all rows land in the
-     * right garage.
-     */
     private function createMotorOilCatalog(Garage $garage): void
     {
         foreach (self::SERVICE_INTERVALS as $km) {
             $parts = [
-                ['code' => "OIL-FLT-{$km}", 'name' => "Oil filter ({$km} km)", 'qty' => 1,  'unit' => 'piece'],
+                ['code' => "OIL-FLT-{$km}", 'name' => "Oil filter ({$km} km)", 'qty' => 1, 'unit' => 'piece'],
                 ['code' => "OIL-15W40-{$km}", 'name' => "Engine oil 15W40 ({$km} km)", 'qty' => 18, 'unit' => 'liter'],
-                ['code' => "OIL-GSK-{$km}", 'name' => "Gasket ({$km} km)", 'qty' => 1,  'unit' => 'piece'],
+                ['code' => "OIL-GSK-{$km}", 'name' => "Gasket ({$km} km)", 'qty' => 1, 'unit' => 'piece'],
             ];
 
             foreach ($parts as $part) {
@@ -322,7 +352,6 @@ class DemoDataSeeder extends Seeder
                 );
             }
 
-            // One service template per interval
             ServiceTemplate::updateOrCreate(
                 [
                     'garage_id' => $garage->id,
@@ -345,16 +374,16 @@ class DemoDataSeeder extends Seeder
     private function createWarehouseItems(Garage $garage): void
     {
         $items = [
-            ['code' => 'W-FLT-001', 'name' => 'Oil Filter',         'qty' => 45,  'min' => 10, 'price' => 15.50,  'unit' => 'piece'],
-            ['code' => 'W-FLT-002', 'name' => 'Air Filter',         'qty' => 32,  'min' => 10, 'price' => 22.00,  'unit' => 'piece'],
-            ['code' => 'W-FLT-003', 'name' => 'Fuel Filter',        'qty' => 18,  'min' => 8,  'price' => 30.75,  'unit' => 'piece'],
-            ['code' => 'W-OIL-001', 'name' => 'Engine Oil 15W40',   'qty' => 120, 'min' => 30, 'price' => 8.50,   'unit' => 'liter'],
-            ['code' => 'W-OIL-002', 'name' => 'Gearbox Oil',        'qty' => 85,  'min' => 20, 'price' => 12.00,  'unit' => 'liter'],
-            ['code' => 'W-BRK-001', 'name' => 'Brake Pads',         'qty' => 24,  'min' => 8,  'price' => 45.00,  'unit' => 'piece'],
-            ['code' => 'W-BRK-002', 'name' => 'Brake Disc',         'qty' => 6,   'min' => 8,  'price' => 180.00, 'unit' => 'piece'],
-            ['code' => 'W-TIR-001', 'name' => 'Tire 295/80',        'qty' => 12,  'min' => 5,  'price' => 650.00, 'unit' => 'piece'],
-            ['code' => 'W-BLT-001', 'name' => 'V-Belt',             'qty' => 30,  'min' => 10, 'price' => 25.00,  'unit' => 'piece'],
-            ['code' => 'W-LMP-001', 'name' => 'Headlight Bulb',     'qty' => 3,   'min' => 10, 'price' => 8.00,   'unit' => 'piece'],
+            ['code' => 'W-FLT-001', 'name' => 'Oil Filter', 'qty' => 45, 'min' => 10, 'price' => 15.50, 'unit' => 'piece'],
+            ['code' => 'W-FLT-002', 'name' => 'Air Filter', 'qty' => 32, 'min' => 10, 'price' => 22.00, 'unit' => 'piece'],
+            ['code' => 'W-FLT-003', 'name' => 'Fuel Filter', 'qty' => 18, 'min' => 8, 'price' => 30.75, 'unit' => 'piece'],
+            ['code' => 'W-OIL-001', 'name' => 'Engine Oil 15W40', 'qty' => 120, 'min' => 30, 'price' => 8.50, 'unit' => 'liter'],
+            ['code' => 'W-OIL-002', 'name' => 'Gearbox Oil', 'qty' => 85, 'min' => 20, 'price' => 12.00, 'unit' => 'liter'],
+            ['code' => 'W-BRK-001', 'name' => 'Brake Pads', 'qty' => 24, 'min' => 8, 'price' => 45.00, 'unit' => 'piece'],
+            ['code' => 'W-BRK-002', 'name' => 'Brake Disc', 'qty' => 6, 'min' => 8, 'price' => 180.00, 'unit' => 'piece'],
+            ['code' => 'W-TIR-001', 'name' => 'Tire 295/80', 'qty' => 12, 'min' => 5, 'price' => 650.00, 'unit' => 'piece'],
+            ['code' => 'W-BLT-001', 'name' => 'V-Belt', 'qty' => 30, 'min' => 10, 'price' => 25.00, 'unit' => 'piece'],
+            ['code' => 'W-LMP-001', 'name' => 'Headlight Bulb', 'qty' => 3, 'min' => 10, 'price' => 8.00, 'unit' => 'piece'],
         ];
 
         foreach ($items as $item) {
@@ -461,13 +490,11 @@ class DemoDataSeeder extends Seeder
         for ($day = 30; $day >= 0; $day--) {
             $date = now()->subDays($day);
 
-            // Skip Sundays to make the "missing" report meaningful
             if ($date->isSunday()) {
                 continue;
             }
 
             foreach ($buses as $bus) {
-                // 10% chance to skip so the "missing KM" report shows data
                 if (random_int(1, 100) <= 10) {
                     continue;
                 }
@@ -514,7 +541,6 @@ class DemoDataSeeder extends Seeder
             $date = now()->subDays($day);
 
             foreach ($buses as $bus) {
-                // Only create statuses for ~40% of buses per day
                 if (random_int(1, 100) > 40) {
                     continue;
                 }
@@ -584,12 +610,10 @@ class DemoDataSeeder extends Seeder
                 'work_done_by' => $status === 'completed' ? 'Standard repair completed.' : null,
             ]);
 
-            // Backdate created_at to match the "start_date"
             DB::table('complaints')
                 ->where('id', $complaint->id)
                 ->update(['created_at' => $createdAt]);
 
-            // 1-2 complaint items per card
             for ($j = 0; $j < random_int(1, 2); $j++) {
                 $complaint->items()->create([
                     'description' => $descriptions[array_rand($descriptions)],
