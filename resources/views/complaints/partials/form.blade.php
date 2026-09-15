@@ -1,3 +1,40 @@
+@php
+    // ─── Form context ───
+    // `new Complaint` (create) → exists = false
+    // `findOrFail` (edit)   → exists = true
+    $isCreate = ! ($complaint->exists ?? false);
+
+    // ─── Defaults for create ───
+    // Kart açılanda start_date = bugün, start_time = indiki saat.
+    // Validation xətası olduqda isə old() dəyəri qalır.
+    $defaultStartDate = $isCreate ? now()->format('Y-m-d') : '';
+    $defaultStartTime = $isCreate ? now()->format('H:i') : '';
+
+    // ─── Complaints list (old input fallback) ───
+    $defaultComplaints = isset($complaint) && $complaint->items
+        ? $complaint->items->pluck('description')->toArray()
+        : [];
+    $complaintsList = old('complaints', $defaultComplaints);
+    if (! is_array($complaintsList)) {
+        $complaintsList = [];
+    }
+
+    // ─── Details (old input fallback) ───
+    $detailsData = old('details', $details ?? []);
+    if (! is_array($detailsData)) {
+        $detailsData = [];
+    }
+
+    // Yeni detal üçün başlanğıc index — mövcud ən böyük açar + 1
+    $detailCount = 1;
+    if (! empty($detailsData)) {
+        $numericKeys = array_filter(array_keys($detailsData), 'is_numeric');
+        if (! empty($numericKeys)) {
+            $detailCount = (int) max($numericKeys) + 1;
+        }
+    }
+@endphp
+
 <div class="row">
     {{-- Complaint Type --}}
     <div class="col-md-12 mb-3">
@@ -7,19 +44,19 @@
                 <div>
                     <div class="form-check form-check-inline mt-1">
                         <input class="form-check-input" type="radio" name="complaint_type" value="accident"
-                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }}
+                            {{ old('complaint_type', $complaint->complaint_type?->value) === 'accident' ? 'checked' : '' }}
                             onchange="handleComplaintTypeChange()">
                         <label class="form-check-label">🚗 {{ __('enums.complaint_type.accident') }}</label>
                     </div>
                     <div class="form-check form-check-inline mt-1">
                         <input class="form-check-input" type="radio" name="complaint_type" value="breakdown"
-                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }}
+                            {{ old('complaint_type', $complaint->complaint_type?->value) === 'breakdown' ? 'checked' : '' }}
                             onchange="handleComplaintTypeChange()">
                         <label class="form-check-label">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
                     </div>
                     <div class="form-check form-check-inline mt-1">
                         <input class="form-check-input" type="radio" name="complaint_type" value="maintenance"
-                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }}
+                            {{ old('complaint_type', $complaint->complaint_type?->value) === 'maintenance' ? 'checked' : '' }}
                             onchange="handleComplaintTypeChange()">
                         <label class="form-check-label">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
                     </div>
@@ -36,7 +73,7 @@
                 <label>{{ __('messages.buses.dqn') }}</label>
                 <input type="text" class="form-control" id="dqn"
                        placeholder="{{ __('messages.buses.dqn_placeholder') }}"
-                       value="{{ $complaint->bus?->dqn ?? '' }}"
+                       value="{{ old('dqn', $complaint->bus?->dqn ?? '') }}"
                        oninput="getBusByDqn(this.value)"
                        autocomplete="off"
                        style="text-transform: uppercase;">
@@ -45,11 +82,11 @@
             <div class="col-md-6">
                 <label>{{ __('messages.buses.route_number') }}</label>
                 <input type="text" class="form-control" id="route_number"
-                       value="{{ $complaint->bus?->route_number ?? '' }}"
-                       readonly>
+                       value="{{ old('route_number', $complaint->bus?->route_number ?? '') }}"
+                       readonly style="background:#e9ecef;">
             </div>
         </div>
-        <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id ?? '' }}">
+        <input type="hidden" name="bus_id" id="bus_id" value="{{ old('bus_id', $complaint->bus_id ?? '') }}">
     </div>
 
     {{-- Location --}}
@@ -58,12 +95,12 @@
         <div>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="yer" id="yer_road" value="road"
-                    {{ $complaint->yer?->value === 'road' ? 'checked' : '' }} onchange="toggleFields()">
+                    {{ old('yer', $complaint->yer?->value) === 'road' ? 'checked' : '' }} onchange="toggleFields()">
                 <label class="form-check-label" for="yer_road">🛣️ {{ __('enums.location.road') }}</label>
             </div>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="yer" id="yer_garage" value="garage"
-                    {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
+                    {{ old('yer', $complaint->yer?->value) === 'garage' ? 'checked' : '' }} onchange="toggleFields()">
                 <label class="form-check-label" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
             </div>
         </div>
@@ -105,12 +142,6 @@
         {{-- Accident / Breakdown: complaint_types dropdown --}}
         <div id="complaintsDropdown">
             <div id="complaintsContainer">
-                @php
-                    $complaintsList = isset($complaint) && $complaint->items
-                        ? $complaint->items->pluck('description')->toArray()
-                        : [];
-                @endphp
-
                 @if(count($complaintsList) > 0)
                     @foreach($complaintsList as $index => $description)
                         <div class="complaint-item mb-2">
@@ -158,15 +189,15 @@
                 <option value="">{{ __('messages.complaints.select_service') }}</option>
             </select>
             <div class="form-text">{{ __('messages.complaints.service_hint') }}</div>
-            {{-- Hidden input — complaint_items cədvəlinə yazılacaq --}}
-            <input type="hidden" name="complaints[]" id="serviceComplaintLabel">
+            <input type="hidden" name="complaints[]" id="serviceComplaintLabel"
+                   value="{{ old('service_km_label') }}">
         </div>
     </div>
 
     {{-- KM --}}
     <div class="col-md-12 mb-3">
         <label for="km" class="form-label fw-bold">📊 {{ __('messages.complaints.km') }}</label>
-        <input type="number" class="form-control" id="km" name="km"
+        <input type="number" class="form-control input-readonly" id="km" name="km"
                value="{{ old('km', $complaint->km ?? '') }}" min="0"
                readonly>
     </div>
@@ -182,7 +213,7 @@
             <div class="col-md-6">
                 <label class="form-label fw-bold">🕐 {{ __('messages.complaints.reported_time') }}</label>
                 <input type="time" class="form-control" name="reported_time"
-                       value="{{ old('reported_time', $complaint->reported_time ?? '') }}">
+                       value="{{ old('reported_time', $complaint->reported_time ? \Carbon\Carbon::parse($complaint->reported_time)->format('H:i') : '') }}">
             </div>
         </div>
     </div>
@@ -193,12 +224,12 @@
             <div class="col-md-3">
                 <label class="form-label fw-bold">📅 {{ __('messages.complaints.start_date') }}</label>
                 <input type="date" class="form-control" name="start_date"
-                       value="{{ old('start_date', isset($complaint->start_date) && $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('Y-m-d') : '') }}">
+                       value="{{ old('start_date', isset($complaint->start_date) && $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('Y-m-d') : $defaultStartDate) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-bold">🕐 {{ __('messages.complaints.start_time') }}</label>
                 <input type="time" class="form-control" name="start_time"
-                       value="{{ old('start_time', $complaint->start_time ?? '') }}">
+                       value="{{ old('start_time', $complaint->start_time ? \Carbon\Carbon::parse($complaint->start_time)->format('H:i') : $defaultStartTime) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-bold">📅 {{ __('messages.complaints.end_date') }}</label>
@@ -208,7 +239,7 @@
             <div class="col-md-3">
                 <label class="form-label fw-bold">🕐 {{ __('messages.complaints.end_time') }}</label>
                 <input type="time" class="form-control" name="end_time"
-                       value="{{ old('end_time', $complaint->end_time ?? '') }}">
+                       value="{{ old('end_time', $complaint->end_time ? \Carbon\Carbon::parse($complaint->end_time)->format('H:i') : '') }}">
             </div>
         </div>
     </div>
@@ -218,11 +249,12 @@
         <div class="row">
             <div class="col-md-6">
                 <label for="status" class="form-label fw-bold">📊 {{ __('messages.common.status') }}</label>
+                @php $currentStatus = old('status', $complaint->status?->value ?? 'pending'); @endphp
                 <select class="form-select" id="status" name="status" required>
-                    <option value="pending" {{ $complaint->status?->value === 'pending' ? 'selected' : '' }}>
+                    <option value="pending" {{ $currentStatus === 'pending' ? 'selected' : '' }}>
                         ⏳ {{ __('enums.complaint_status.pending') }}
                     </option>
-                    <option value="in_progress" {{ $complaint->status?->value === 'in_progress' ? 'selected' : '' }}>
+                    <option value="in_progress" {{ $currentStatus === 'in_progress' ? 'selected' : '' }}>
                         🔨 {{ __('enums.complaint_status.in_progress') }}
                     </option>
                 </select>
@@ -234,7 +266,6 @@
     <div class="col-md-12 complaint-details-card p-3 mb-3">
         <h5 class="fw-bold mb-3">🔧 {{ __('messages.complaints.used_parts') }}</h5>
         <div id="detailsContainer">
-            @php $detailsData = $details ?? []; @endphp
             @if(count($detailsData) > 0)
                 @foreach($detailsData as $index => $detail)
                     <div class="detail-item">
@@ -274,15 +305,15 @@
                                     <input type="text" class="form-control"
                                            name="details[{{ $index }}][employee_code]"
                                            placeholder="{{ __('messages.employees.code_placeholder') }}"
-                                           value="{{ old("details.$index.employee_code", $detail['employee_code'] ?? '') }}"
+                                           value="{{ $detail['employee_code'] ?? '' }}"
                                            oninput="getEmployeeByCode(this)"
                                            autocomplete="off"
                                            style="text-transform: uppercase;">
                                     <input type="text" class="form-control input-disabled" readonly tabindex="-1"
                                            name="details[{{ $index }}][employee_name]"
-                                           value="{{ old("details.$index.employee_name", $detail['employee_name'] ?? '') }}">
+                                           value="{{ $detail['employee_name'] ?? '' }}">
                                     <input type="hidden" name="details[{{ $index }}][employee_id]"
-                                           value="{{ old("details.$index.employee_id", $detail['employee_id'] ?? '') }}">
+                                           value="{{ $detail['employee_id'] ?? '' }}">
                                 </div>
                             </div>
                             <div class="col-md-1">
@@ -363,6 +394,9 @@
             <i class="bi bi-plus-circle"></i> {{ __('messages.complaints.add_part') }}
         </button>
     </div>
+
+    {{-- Hidden — form partial communicates next detail index to create.blade.php --}}
+    <input type="hidden" id="detailCountValue" value="{{ $detailCount }}">
 
     <div class="col-md-12 d-flex gap-2">
         <button type="submit" class="btn btn-success">

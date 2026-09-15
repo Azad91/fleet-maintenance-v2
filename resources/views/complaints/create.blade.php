@@ -62,8 +62,6 @@
 
         if (!dqn) return;
 
-        // ⚡ Race condition qoruması — köhnə sorğunun gec cavabı
-        // yeni sorğunun düzgün cavabını üstündən yazmasın.
         const requestId = ++busLookupRequest;
 
         fetch('/get-bus-by-dqn/' + encodeURIComponent(dqn), {
@@ -72,7 +70,6 @@
         })
         .then(response => response.json())
         .then(data => {
-            // Bu cavab artıq köhnədirsə — ignore et
             if (requestId !== busLookupRequest) return;
 
             if (data.found) {
@@ -83,7 +80,6 @@
                 help.textContent = '';
                 help.className = 'form-text';
 
-                // Texniki xidmət seçilmişdisə → intervalları yüklə
                 const typeInput = document.querySelector('input[name="complaint_type"]:checked');
                 if (typeInput && typeInput.value === 'maintenance') {
                     loadMotorOilIntervals();
@@ -178,7 +174,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PART (warehouse)
+    // PART
     // ═══════════════════════════════════════════════════════════════
     function getPartByCode(input) {
         const code = input.value;
@@ -202,73 +198,73 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // COMPLAINT TYPE → LOCATION LOGIC
+    // COMPLAINT TYPE → LOCATION
+    //
+    // `resetLocation` — page load zamanı false (old('yer') qorunsun),
+    // istifadəçi radio dəyişəndə true (Yer sıfırlansın).
     // ═══════════════════════════════════════════════════════════════
-    function handleComplaintTypeChange() {
-    const typeInput = document.querySelector('input[name="complaint_type"]:checked');
-    const roadRadio = document.getElementById('yer_road');
-    const garageRadio = document.getElementById('yer_garage');
+    function handleComplaintTypeChange(resetLocation) {
+        if (typeof resetLocation === 'undefined') {
+            resetLocation = true;
+        }
 
-    if (!roadRadio || !garageRadio) return;
+        const typeInput = document.querySelector('input[name="complaint_type"]:checked');
+        const roadRadio = document.getElementById('yer_road');
+        const garageRadio = document.getElementById('yer_garage');
 
-    // Yer sıfırlanır
-    roadRadio.disabled = false;
-    garageRadio.disabled = false;
-    roadRadio.checked = false;
-    garageRadio.checked = false;
+        if (!roadRadio || !garageRadio) return;
 
-    toggleFields();
+        // Enable both (əvvəlki maintenance seçimindən qalma disabled ola bilər)
+        roadRadio.disabled = false;
+        garageRadio.disabled = false;
 
-    if (!typeInput) return;
+        if (resetLocation) {
+            roadRadio.checked = false;
+            garageRadio.checked = false;
+        }
 
-    if (typeInput.value === 'maintenance') {
-        roadRadio.disabled = true;
-        garageRadio.checked = true;
         toggleFields();
 
-        // Şikayətlər dropdown gizlət, Xidmət Növü göstər
-        document.getElementById('complaintsDropdown').style.display = 'none';
-        document.getElementById('serviceTypeBlock').style.display = 'block';
-        document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
+        if (!typeInput) return;
 
-        // ⚡ HTML5 validation-dan çıxarmaq üçün dropdown-dakı select-ləri disable et.
-        // Disabled elementlər form submit-də iştirak etmir və focus tələb etmir.
-        document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
-            el.disabled = true;
-            el.required = false;
-        });
+        if (typeInput.value === 'maintenance') {
+            roadRadio.disabled = true;
+            garageRadio.checked = true;
+            toggleFields();
 
-        // Xidmət blokunu aktivləşdir
-        document.querySelectorAll('#serviceTypeBlock select, #serviceTypeBlock input').forEach(el => {
-            el.disabled = false;
-        });
+            document.getElementById('complaintsDropdown').style.display = 'none';
+            document.getElementById('serviceTypeBlock').style.display = 'block';
+            document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
 
-        // Bus artıq seçilibsə, intervalları yüklə
-        if (document.getElementById('bus_id').value) {
-            loadMotorOilIntervals();
+            // Dropdown select-lərini disable et — HTML5 validation bloklamasın
+            document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
+                el.disabled = true;
+                el.required = false;
+            });
+            document.querySelectorAll('#serviceTypeBlock select, #serviceTypeBlock input').forEach(el => {
+                el.disabled = false;
+            });
+
+            if (document.getElementById('bus_id').value) {
+                loadMotorOilIntervals();
+            }
+        } else {
+            document.getElementById('complaintsDropdown').style.display = 'block';
+            document.getElementById('serviceTypeBlock').style.display = 'none';
+            document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.complaints_list'));
+
+            document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
+                el.disabled = false;
+                el.required = true;
+            });
+            document.querySelectorAll('#serviceTypeBlock select, #serviceTypeBlock input').forEach(el => {
+                el.disabled = true;
+            });
+
+            document.getElementById('service_km_select').innerHTML = '<option value="">' + @json(__('messages.complaints.select_service')) + '</option>';
+            document.getElementById('serviceComplaintLabel').value = '';
         }
-    } else {
-        // Şikayətlər dropdown göstər, Xidmət Növü gizlət
-        document.getElementById('complaintsDropdown').style.display = 'block';
-        document.getElementById('serviceTypeBlock').style.display = 'none';
-        document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.complaints_list'));
-
-        // ⚡ Dropdown-dakı select-ləri yenidən aktivləşdir
-        document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
-            el.disabled = false;
-            el.required = true;
-        });
-
-        // Xidmət blokunu disable et — gizli olduğu üçün submit olunmasın
-        document.querySelectorAll('#serviceTypeBlock select, #serviceTypeBlock input').forEach(el => {
-            el.disabled = true;
-        });
-
-        // Service dəyərlərini sıfırla
-        document.getElementById('service_km_select').innerHTML = '<option value="">' + @json(__('messages.complaints.select_service')) + '</option>';
-        document.getElementById('serviceComplaintLabel').value = '';
     }
-}
 
     // ═══════════════════════════════════════════════════════════════
     // MOTOR OIL
@@ -314,14 +310,12 @@
         const busId = document.getElementById('bus_id').value;
         const labelInput = document.getElementById('serviceComplaintLabel');
 
-        // Hidden complaints[] dəyərini doldur
         if (km && select.selectedIndex >= 0) {
             labelInput.value = select.options[select.selectedIndex].text;
         } else {
             labelInput.value = '';
         }
 
-        // Detalları sıfırla
         const detailsContainer = document.getElementById('detailsContainer');
         detailsContainer.innerHTML = '';
 
@@ -449,11 +443,13 @@
     // ═══════════════════════════════════════════════════════════════
     // DETAILS (add / remove)
     // ═══════════════════════════════════════════════════════════════
+    // Server tərəfindən gələn başlanğıc index (old input-da olan max + 1)
+    let detailCount = parseInt(document.getElementById('detailCountValue')?.value || '1', 10) || 1;
+
     function addDetail() {
         const container = document.getElementById('detailsContainer');
         const source = container.querySelector('.detail-item');
 
-        // Texniki xidmətdə manual əlavə bloklanır (avtomatik dolur)
         const typeInput = document.querySelector('input[name="complaint_type"]:checked');
         if (typeInput && typeInput.value === 'maintenance') {
             return;
@@ -470,14 +466,14 @@
             item.querySelector('input[name*="[used_quantity]"]').value = '1';
         }
 
-        const newIndex = container.querySelectorAll('.detail-item').length;
         item.querySelectorAll('input, select, textarea').forEach(el => {
             if (el.name) {
-                el.name = el.name.replace(/\[\d+\]/, '[' + newIndex + ']');
+                el.name = el.name.replace(/\[\d+\]/, '[' + detailCount + ']');
             }
         });
 
         container.append(item);
+        detailCount++;
     }
 
     function removeDetail(button) {
@@ -485,9 +481,8 @@
         if (items.length > 1) {
             button.closest('.detail-item').remove();
         } else {
-            // Son detalı da silə bilər (used_quantity = 0 olacaq)
             const item = button.closest('.detail-item');
-            item.querySelectorAll('input:not([type="hidden"])').forEach(i => {
+            item.querySelectorAll('input').forEach(i => {
                 if (i.name && i.name.includes('used_quantity')) {
                     i.value = '0';
                 }
@@ -496,7 +491,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // LOCATION (Yol / Qaraj → driver visibility)
+    // LOCATION
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');
@@ -522,7 +517,10 @@
     // INIT
     // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
-        handleComplaintTypeChange();
+        // ⚡ Page load → Yer-i sıfırlama (old('yer') qorunsun).
+        //    İstifadəçi radio dəyişəndə onchange default → reset = true.
+        handleComplaintTypeChange(false);
+
         toggleFields();
     });
 </script>
