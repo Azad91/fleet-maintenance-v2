@@ -49,6 +49,16 @@ class ComplaintUpdateRequest extends FormRequest
 
             'km' => 'nullable|integer|min:0',
             'status' => 'required|in:pending,in_progress',
+
+            // ── Date & time fields ──
+            'reported_date' => ['required_if:yer,road', 'nullable', 'date'],
+            'reported_time' => ['required_if:yer,road', 'nullable', 'date_format:H:i'],
+            'start_date'    => ['nullable', 'date'],
+            'start_time'    => ['nullable', 'date_format:H:i'],
+            'end_date'      => ['nullable', 'date'],
+            'end_time'      => ['nullable', 'date_format:H:i'],
+
+            // ── Parts / details ──
             'details' => 'nullable|array',
             'details.*.code' => 'nullable|string',
             'details.*.used_quantity' => 'nullable|integer|min:1',
@@ -62,18 +72,6 @@ class ComplaintUpdateRequest extends FormRequest
 
     public function withValidator($validator): void
     {
-        $validator->sometimes('driver_name', 'required|string|max:255', function ($input) {
-            return $input->yer === 'road';
-        });
-
-        $validator->sometimes('reported_date', 'required|date', function ($input) {
-            return $input->yer === 'road';
-        });
-
-        $validator->sometimes('reported_time', 'required|date_format:H:i', function ($input) {
-            return $input->yer === 'road';
-        });
-
         $validator->after(function ($validator) {
             foreach ($this->input('details', []) as $index => $detail) {
                 if (blank($detail['code'] ?? null)) {
