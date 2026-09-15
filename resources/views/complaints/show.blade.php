@@ -2,6 +2,10 @@
 
 @section('title', __('messages.complaints.details_title'))
 
+@php
+    $isMaintenance = $complaint->complaint_type?->value === 'maintenance';
+@endphp
+
 @section('content')
 <div class="card complaint-show-card">
     <div class="card-header complaint-show-card__header d-flex justify-content-between align-items-center">
@@ -67,28 +71,72 @@
             </div>
         </div>
 
-        {{-- Complaints list --}}
-        <div class="row mb-4">
-            <div class="col-12">
-                <h6 class="complaint-show-card__section-title">
-                    <i class="bi bi-clipboard me-2"></i>{{ __('messages.complaints.complaints_list') }}
-                </h6>
-                @php $complaintsList = $complaint->items->pluck('description')->toArray(); @endphp
-
-                @if(count($complaintsList) > 0)
-                    @foreach($complaintsList as $index => $description)
-                        <div class="complaint-show-card__entry">
-                            <span class="complaint-show-card__entry-number">{{ $index + 1 }}</span>
-                            <strong>{{ trim($description) }}</strong>
+        {{-- Complaint Type --}}
+        @if($complaint->complaint_type)
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="complaint-show-card__section-title">
+                        <i class="bi bi-tag me-2"></i>{{ __('messages.complaints.complaint_type') }}
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="complaint-show-card__item complaint-show-card__item--wide">
+                                <span class="badge bg-{{ $complaint->complaint_type->bootstrapColor() }}"
+                                      style="font-size: 14px; padding: 8px 16px;">
+                                    {{ $complaint->complaint_type->icon() }} {{ $complaint->complaint_type->label() }}
+                                </span>
+                            </div>
                         </div>
-                    @endforeach
-                @else
-                    <div class="complaint-show-card__empty">
-                        <p>{{ __('messages.complaints.no_complaint_entered') }}</p>
                     </div>
-                @endif
+                </div>
             </div>
-        </div>
+        @endif
+
+        {{-- Service Type (maintenance) OR Complaints list (accident/breakdown) --}}
+        @if($isMaintenance)
+            {{-- Maintenance: show Xidmət Növü --}}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="complaint-show-card__section-title">
+                        <i class="bi bi-tools me-2"></i>{{ __('messages.complaints.service_type_label') }}
+                    </h6>
+                    @if($complaint->service_km)
+                        <div class="complaint-show-card__item complaint-show-card__item--wide">
+                            <span style="font-size: 15px; font-weight: 700;">
+                                {{ __('messages.complaints.motor_oil_service_label', ['km' => number_format($complaint->service_km, 0, '', '')]) }}
+                            </span>
+                        </div>
+                    @else
+                        <div class="complaint-show-card__empty">
+                            <p>{{ __('messages.complaints.no_parts_for_interval') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @else
+            {{-- Accident/Breakdown: show Complaints List --}}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="complaint-show-card__section-title">
+                        <i class="bi bi-clipboard me-2"></i>{{ __('messages.complaints.complaints_list') }}
+                    </h6>
+                    @php $complaintsList = $complaint->items->pluck('description')->toArray(); @endphp
+
+                    @if(count($complaintsList) > 0)
+                        @foreach($complaintsList as $index => $description)
+                            <div class="complaint-show-card__entry">
+                                <span class="complaint-show-card__entry-number">{{ $index + 1 }}</span>
+                                <strong>{{ trim($description) }}</strong>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="complaint-show-card__empty">
+                            <p>{{ __('messages.complaints.no_complaint_entered') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         {{-- Date & Time --}}
         <div class="row mb-4">
@@ -103,7 +151,7 @@
                                 <small>📅 {{ __('messages.complaints.reported_date') }}</small>
                                 <strong>
                                     {{ $complaint->reported_date ? \Carbon\Carbon::parse($complaint->reported_date)->format('d.m.Y') : '-' }}
-                                    {{ $complaint->reported_time ? ' - ' . $complaint->reported_time : '' }}
+                                    {{ $complaint->reported_time ? ' - ' . \Carbon\Carbon::parse($complaint->reported_time)->format('H:i') : '' }}
                                 </strong>
                             </div>
                         </div>
@@ -113,7 +161,7 @@
                             <small>📅 {{ __('messages.complaints.start_date') }}</small>
                             <strong>
                                 {{ $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('d.m.Y') : '-' }}
-                                {{ $complaint->start_time ? ' - ' . $complaint->start_time : '' }}
+                                {{ $complaint->start_time ? ' - ' . \Carbon\Carbon::parse($complaint->start_time)->format('H:i') : '' }}
                             </strong>
                         </div>
                     </div>
@@ -122,7 +170,7 @@
                             <small>📅 {{ __('messages.complaints.end_date') }}</small>
                             <strong>
                                 {{ $complaint->end_date ? \Carbon\Carbon::parse($complaint->end_date)->format('d.m.Y') : '-' }}
-                                {{ $complaint->end_time ? ' - ' . $complaint->end_time : '' }}
+                                {{ $complaint->end_time ? ' - ' . \Carbon\Carbon::parse($complaint->end_time)->format('H:i') : '' }}
                             </strong>
                         </div>
                     </div>
@@ -158,13 +206,18 @@
                             $shikayetText = isset($complaintsList[$shikayetIndex])
                                 ? trim($complaintsList[$shikayetIndex])
                                 : "Complaint " . ($shikayetIndex + 1);
+                            $employee = $detail->employee_id
+                                ? ($employeesById[$detail->employee_id] ?? null)
+                                : null;
                         @endphp
                         <div class="complaint-show-card__detail">
                             <div class="row g-3">
-                                <div class="col-md-3">
-                                    <small>📌 {{ __('messages.complaints.related_complaint') }}</small>
-                                    <span class="complaint-show-card__pill">{{ $shikayetText }}</span>
-                                </div>
+                                @unless($isMaintenance)
+                                    <div class="col-md-3">
+                                        <small>📌 {{ __('messages.complaints.related_complaint') }}</small>
+                                        <span class="complaint-show-card__pill">{{ $shikayetText }}</span>
+                                    </div>
+                                @endunless
                                 <div class="col-md-2">
                                     <small>{{ __('messages.complaints.part_code') }}</small>
                                     <strong>{{ $detail->code ?? '-' }}</strong>
@@ -183,7 +236,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <small>👤 {{ __('messages.complaints.employee') }}</small>
-                                    <strong>{{ $employeesById[$detail->employee_id ?? null]->full_name_with_position ?? '-' }}</strong>
+                                    <strong>{{ $employee?->full_name_with_position ?? '-' }}</strong>
                                 </div>
                             </div>
                             @if(!empty($detail->notes))
