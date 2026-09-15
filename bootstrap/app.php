@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Trust proxies YALNIZ env dəyişəni ilə konfiqurasiya olunur
+        // Trust proxies is configured ONLY through the env variable.
         $trustedProxies = env('TRUSTED_PROXIES');
 
         if ($trustedProxies !== null && $trustedProxies !== '') {
@@ -34,13 +34,13 @@ return Application::configure(basePath: dirname(__DIR__))
             $middleware->trustProxies(at: $proxies);
         }
 
-        // Global middleware — hər request üçün
+        // Global middleware — runs on every request.
         $middleware->append(App\Http\Middleware\RequestIdMiddleware::class);
 
-        // Web middleware additions
-        // QEYD: EnforcePinChange web qrupundan çıxarıldı və
-        // route-level `pin.enforced` alias kimi təyin olundu.
-        // Səbəb: `auth`-dan əvvəl işləyirdi və kövrək idi.
+        // Web middleware additions.
+        // NOTE: EnforcePinChange was moved out of the web group and
+        // registered as a route-level `pin.enforced` alias, because
+        // it used to run BEFORE `auth` and was fragile.
         $middleware->web(append: [
             App\Http\Middleware\SetLocale::class,
         ]);
@@ -102,9 +102,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $status = $e->getStatusCode();
             $message = match ($status) {
-                419 => 'Sessiyanın vaxtı bitdi. Zəhmət olmasa səhifəni yeniləyin.',
-                429 => 'Çox sayda sorğu göndərildi. Bir az gözləyin.',
-                default => $e->getMessage() ?: 'HTTP xətası',
+                419 => 'Your session has expired. Please refresh the page.',
+                429 => 'Too many requests. Please wait a moment.',
+                default => $e->getMessage() ?: 'HTTP error',
             };
 
             return response()->json([

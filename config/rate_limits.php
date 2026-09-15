@@ -3,14 +3,15 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Named Rate Limiters (throttle middleware üçün)
+    | Named Rate Limiters (used by the throttle middleware)
     |--------------------------------------------------------------------------
     |
     | Format: "<attempts>,<decay_minutes>"
-    | Nümunə: "5,1" = 1 dəqiqə ərzində 5 cəhd
+    | Example: "5,1" = 5 attempts per minute
     |
-    | Bu adlar AppServiceProvider::registerRateLimiters()-dəki adlarla
-    | üst-üstə düşməlidir. Route-larda `throttle:<ad>` kimi istifadə olunur.
+    | These names must match the ones registered in
+    | AppServiceProvider::registerRateLimiters(). Routes reference
+    | them via `throttle:<name>`.
     |
     */
     'login' => env('RATE_LIMIT_LOGIN', '5,1'),
@@ -23,9 +24,10 @@ return [
     | Login Lockout (web + API email login, PIN login)
     |--------------------------------------------------------------------------
     |
-    | `attempts` səhv cəhddən sonra `decay_seconds` müddətində blok.
-    | Bu, RateLimiter::for() deyil — LoginRequest daxilində birbaşa
-    | RateLimiter::hit() / tooManyAttempts() ilə idarə olunur.
+    | After `attempts` failed attempts, the source is locked out for
+    | `decay_seconds`. This is NOT a RateLimiter::for() rule — it is
+    | enforced directly inside LoginRequest using RateLimiter::hit()
+    | and RateLimiter::tooManyAttempts().
     |
     */
     'login_attempts' => (int) env('RATE_LIMIT_LOGIN_ATTEMPTS', 5),
@@ -36,12 +38,12 @@ return [
     | PIN Login — Account-Level Lockout
     |--------------------------------------------------------------------------
     |
-    | Bu limit IP-dən asılı deyil — tək employee_code üzrə tətbiq olunur.
-    | Məqsəd: IP rotasiya edən hücumçunun 4 rəqəmli PIN-i brute-force
-    | etməsinin qarşısını almaq.
+    | This limit is IP-independent: it applies to a single employee_code.
+    | Its purpose is to prevent an attacker who rotates IPs from
+    | brute-forcing a 4-digit PIN.
     |
-    | 15 cəhd * 4 rəqəm = 10.000 kombinasiyadan 15-i. Bu, real istifadəçi
-    | üçün səxavətlidir, hücumçu üçün isə qeyri-real bir pəncərə yaradır.
+    | 15 attempts * 4-digit space = 15 out of 10,000 combinations.
+    | That is generous for a real user but unrealistic for an attacker.
     |
     */
     'pin_account_attempts' => (int) env('RATE_LIMIT_PIN_ACCOUNT_ATTEMPTS', 15),
