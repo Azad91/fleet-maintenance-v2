@@ -15,6 +15,15 @@
     $typeLabel = $complaint->complaint_type?->label() ?? '—';
     $yerLabel  = $complaint->yer?->label() ?? '—';
     $statusLabel = $status?->label() ?? '—';
+
+    $isMaintenance = $complaint->complaint_type?->value === 'maintenance';
+
+    // Time formatting helper — DB time sütunu HH:MM:SS qaytarır,
+    // PDF-də H:i göstərmək daha yaxşıdır.
+    $fmtTime = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : '';
+
+    // Date formatting helper — DB və Carbon dəyərlərini təhlükəsiz formatla.
+    $fmtDate = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('d.m.Y') : '';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -84,28 +93,47 @@
                         {{ $complaint->driver_name ?? '—' }}
                     @endif
                 </td>
+                <td class="label">{{ __('messages.complaints.complaint_type') }}</td>
+                <td>{{ $typeLabel }}</td>
+            </tr>
+            <tr>
                 <td class="label">{{ __('messages.common.status') }}</td>
-                <td><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
+                <td colspan="3"><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>
             </tr>
         </table>
     </div>
 
-    {{-- COMPLAINTS --}}
-    <div class="section">
-        <div class="section-title">{{ __('messages.complaints.pdf_complaints') }}</div>
-        @if($complaint->items->count() > 0)
-            <ul class="complaint-list">
-                @foreach($complaint->items as $index => $item)
-                    <li>
-                        <span class="num">{{ $index + 1 }}</span>
-                        {{ trim($item->description) }}
-                    </li>
-                @endforeach
-            </ul>
-        @else
-            <div class="work-block text-muted">{{ __('messages.complaints.no_complaint_entered') }}</div>
-        @endif
-    </div>
+    {{-- COMPLAINTS (accident/breakdown) OR SERVICE TYPE (maintenance) --}}
+    @if($isMaintenance)
+        <div class="section">
+            <div class="section-title">{{ __('messages.complaints.service_type_label') }}</div>
+            @if($complaint->service_km)
+                <div class="work-block">
+                    <strong>
+                        {{ __('messages.complaints.motor_oil_service_label', ['km' => number_format($complaint->service_km, 0, '', '')]) }}
+                    </strong>
+                </div>
+            @else
+                <div class="work-block text-muted">—</div>
+            @endif
+        </div>
+    @else
+        <div class="section">
+            <div class="section-title">{{ __('messages.complaints.pdf_complaints') }}</div>
+            @if($complaint->items->count() > 0)
+                <ul class="complaint-list">
+                    @foreach($complaint->items as $index => $item)
+                        <li>
+                            <span class="num">{{ $index + 1 }}</span>
+                            {{ trim($item->description) }}
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <div class="work-block text-muted">{{ __('messages.complaints.no_complaint_entered') }}</div>
+            @endif
+        </div>
+    @endif
 
     {{-- TIME --}}
     <div class="section">
@@ -115,21 +143,21 @@
                 @if($complaint->yer?->isRoad() && $complaint->reported_date)
                     <td class="label">{{ __('messages.complaints.reported_date') }}</td>
                     <td>
-                        {{ \Carbon\Carbon::parse($complaint->reported_date)->format('d.m.Y') }}
-                        {{ $complaint->reported_time ? '· ' . $complaint->reported_time : '' }}
+                        {{ $fmtDate($complaint->reported_date) }}
+                        {{ $complaint->reported_time ? '· ' . $fmtTime($complaint->reported_time) : '' }}
                     </td>
                 @endif
                 <td class="label">{{ __('messages.complaints.start_date') }}</td>
                 <td>
-                    {{ $complaint->start_date ? \Carbon\Carbon::parse($complaint->start_date)->format('d.m.Y') : '—' }}
-                    {{ $complaint->start_time ? '· ' . $complaint->start_time : '' }}
+                    {{ $fmtDate($complaint->start_date) ?: '—' }}
+                    {{ $complaint->start_time ? '· ' . $fmtTime($complaint->start_time) : '' }}
                 </td>
             </tr>
             <tr>
                 <td class="label">{{ __('messages.complaints.end_date') }}</td>
                 <td>
-                    {{ $complaint->end_date ? \Carbon\Carbon::parse($complaint->end_date)->format('d.m.Y') : '—' }}
-                    {{ $complaint->end_time ? '· ' . $complaint->end_time : '' }}
+                    {{ $fmtDate($complaint->end_date) ?: '—' }}
+                    {{ $complaint->end_time ? '· ' . $fmtTime($complaint->end_time) : '' }}
                 </td>
                 <td class="label">{{ __('messages.complaints.complaint_type') }}</td>
                 <td>{{ $typeLabel }}</td>
@@ -155,7 +183,7 @@
                     @foreach($complaint->details as $idx => $detail)
                         @php
                             $employee = $detail->employee_id
-                                ? $employeesById->get($detail->employee_id)
+                                ? ($employeesById->get($detail->employee_id) ?? null)
                                 : null;
                         @endphp
                         <tr>
