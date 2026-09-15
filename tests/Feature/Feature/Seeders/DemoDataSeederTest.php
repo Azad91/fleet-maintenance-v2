@@ -19,6 +19,19 @@ class DemoDataSeederTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Company that gets fully seeded with domain data.
+     */
+    private const DEMO_COMPANY_SLUG = 'demo-company';
+
+    /**
+     * Company that is intentionally created with structure only
+     * (company + garages + director + admins + complaint types)
+     * so that the operator can load real data into it without
+     * the seeder ever overwriting it.
+     */
+    private const LEGACY_COMPANY_SLUG = 'legacy-motor';
+
     protected function seedAll(): void
     {
         $this->seed(UserSeeder::class);
@@ -29,6 +42,32 @@ class DemoDataSeederTest extends TestCase
     {
         GarageContext::clear();
         parent::tearDown();
+    }
+
+    // ==================================================================
+    // HELPERS
+    // ==================================================================
+
+    /**
+     * @return \Illuminate\Support\Collection<int, Garage>
+     */
+    private function demoGarages()
+    {
+        return Company::where('slug', self::DEMO_COMPANY_SLUG)
+            ->first()
+            ->garages()
+            ->get();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, Garage>
+     */
+    private function legacyGarages()
+    {
+        return Company::where('slug', self::LEGACY_COMPANY_SLUG)
+            ->first()
+            ->garages()
+            ->get();
     }
 
     // ==================================================================
@@ -115,7 +154,8 @@ class DemoDataSeederTest extends TestCase
     }
 
     // ==================================================================
-    // 5. PER-GARAGE DATA — every garage has the expected catalog
+    // 5. COMPLAINT TYPES — seeded for EVERY garage
+    //    (both demo and legacy, so the new-complaint form works)
     // ==================================================================
 
     public function test_every_garage_has_complaint_types(): void
@@ -135,11 +175,15 @@ class DemoDataSeederTest extends TestCase
         }
     }
 
-    public function test_every_garage_has_motor_oil_details(): void
+    // ==================================================================
+    // 6. DOMAIN DATA — only Demo Company is fully seeded
+    // ==================================================================
+
+    public function test_demo_garages_have_motor_oil_details(): void
     {
         $this->seedAll();
 
-        foreach (Garage::all() as $garage) {
+        foreach ($this->demoGarages() as $garage) {
             $count = MotorOilDetail::withoutGlobalScopes()
                 ->where('garage_id', $garage->id)
                 ->count();
@@ -147,16 +191,16 @@ class DemoDataSeederTest extends TestCase
             $this->assertGreaterThanOrEqual(
                 15,
                 $count,
-                "Garage [{$garage->name}] must have at least 15 motor-oil detail rows"
+                "Demo garage [{$garage->name}] must have at least 15 motor-oil detail rows"
             );
         }
     }
 
-    public function test_every_garage_has_service_templates(): void
+    public function test_demo_garages_have_service_templates(): void
     {
         $this->seedAll();
 
-        foreach (Garage::all() as $garage) {
+        foreach ($this->demoGarages() as $garage) {
             $count = ServiceTemplate::withoutGlobalScopes()
                 ->where('garage_id', $garage->id)
                 ->count();
@@ -164,16 +208,16 @@ class DemoDataSeederTest extends TestCase
             $this->assertSame(
                 5,
                 $count,
-                "Garage [{$garage->name}] must have 5 service templates"
+                "Demo garage [{$garage->name}] must have 5 service templates"
             );
         }
     }
 
-    public function test_every_garage_has_buses(): void
+    public function test_demo_garages_have_buses(): void
     {
         $this->seedAll();
 
-        foreach (Garage::all() as $garage) {
+        foreach ($this->demoGarages() as $garage) {
             $count = Bus::withoutGlobalScopes()
                 ->where('garage_id', $garage->id)
                 ->count();
@@ -181,13 +225,68 @@ class DemoDataSeederTest extends TestCase
             $this->assertSame(
                 5,
                 $count,
-                "Garage [{$garage->name}] must have 5 buses"
+                "Demo garage [{$garage->name}] must have 5 buses"
             );
         }
     }
 
     // ==================================================================
-    // 6. IDEMPOTENCY — re-running does not duplicate data
+    // 7. LEGACY GARAGES — structure only, NO domain data
+    // ==================================================================
+
+    public function test_legacy_garages_have_no_motor_oil_details(): void
+    {
+        $this->seedAll();
+
+        foreach ($this->legacyGarages() as $garage) {
+            $count = MotorOilDetail::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
+
+            $this->assertSame(
+                0,
+                $count,
+                "Legacy garage [{$garage->name}] must have NO motor-oil details"
+            );
+        }
+    }
+
+    public function test_legacy_garages_have_no_service_templates(): void
+    {
+        $this->seedAll();
+
+        foreach ($this->legacyGarages() as $garage) {
+            $count = ServiceTemplate::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
+
+            $this->assertSame(
+                0,
+                $count,
+                "Legacy garage [{$garage->name}] must have NO service templates"
+            );
+        }
+    }
+
+    public function test_legacy_garages_have_no_buses(): void
+    {
+        $this->seedAll();
+
+        foreach ($this->legacyGarages() as $garage) {
+            $count = Bus::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
+
+            $this->assertSame(
+                0,
+                $count,
+                "Legacy garage [{$garage->name}] must have NO buses"
+            );
+        }
+    }
+
+    // ==================================================================
+    // 8. IDEMPOTENCY — re-running does not duplicate data
     // ==================================================================
 
     public function test_seeder_is_idempotent(): void
@@ -197,12 +296,15 @@ class DemoDataSeederTest extends TestCase
 
         $this->assertSame(2, Company::count(), 'Re-running must not duplicate companies');
         $this->assertSame(6, Garage::count(), 'Re-running must not duplicate garages');
-        $this->assertSame(2, Company::all()->sum(fn ($c) => $c->directors()->count()),
-            'Re-running must not duplicate directors');
+        $this->assertSame(
+            2,
+            Company::all()->sum(fn ($c) => $c->directors()->count()),
+            'Re-running must not duplicate directors'
+        );
     }
 
     // ==================================================================
-    // 7. TENANT ISOLATION — each garage has its own data
+    // 9. TENANT ISOLATION — each garage has its own admin
     // ==================================================================
 
     public function test_each_garage_has_a_distinct_admin(): void
