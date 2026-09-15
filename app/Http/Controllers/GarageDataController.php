@@ -127,6 +127,94 @@ class GarageDataController extends Controller
         );
     }
 
+    public function motorOilIntervals(int $busId)
+    {
+        $bus = Bus::findOrFail($busId);
+
+        // Cari KM — günlük KM-dən, yoxsa bus-un km sahəsindən
+        $currentKm = (int) ($bus->dailyKmRecords()->value('km') ?? $bus->km ?? 0);
+
+        // Bütün unikal intervalları sıralı götür
+        $intervals = MotorOilDetail::query()
+            ->select('km')
+            ->distinct()
+            ->orderBy('km')
+            ->pluck('km')
+            ->map(fn ($km) => (int) $km)
+            ->all();
+
+        // Ən yaxın keçmiş interval
+        $past = null;
+        foreach ($intervals as $km) {
+            if ($km <= $currentKm) {
+                $past = $km;
+            } else {
+                break;
+            }
+        }
+
+        // Növbəti interval
+        $next = null;
+        foreach ($intervals as $km) {
+            if ($km > $currentKm) {
+                $next = $km;
+                break;
+            }
+        }
+
+        $result = [];
+
+        if ($past !== null) {
+            $result[] = [
+                'km' => $past,
+                'label' => __('messages.complaints.motor_oil_service_label', ['km' => number_format($past, 0, '', '')]),
+            ];
+        }
+
+        if ($next !== null) {
+            $result[] = [
+                'km' => $next,
+                'label' => __('messages.complaints.motor_oil_service_label', ['km' => number_format($next, 0, '', '')]),
+            ];
+        }
+
+        return response()->json([
+            'current_km' => $currentKm,
+            'intervals' => $result,
+        ]);
+    }
+
+    public function motorOilParts(Request $request, int $busId)
+    {
+        $bus = Bus::findOrFail($busId);
+        $km = (int) $request->query('km');
+
+        if ($km <= 0) {
+            return response()->json(['parts' => []]);
+        }
+
+        $parts = MotorOilDetail::where('km', $km)
+            ->orderBy('part_name')
+            ->get()
+            ->map(function (MotorOilDetail $part) {
+                $warehouse = Warehouse::withoutGlobalScopes()
+                    ->where('code', $part->part_code)
+                    ->where('garage_id', $part->garage_id)
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                return [
+                    'part_code' => $part->part_code,
+                    'part_name' => $part->part_name,
+                    'unit' => $part->unit,
+                    'quantity' => (float) $part->quantity,
+                    'stock_quantity' => $warehouse?->quantity ?? 0,
+                ];
+            });
+
+        return response()->json(['parts' => $parts]);
+    }
+
     public function driverByCode(string $code)
     {
         $driver = Driver::active()

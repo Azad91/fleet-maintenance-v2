@@ -35,18 +35,18 @@
             <div class="col-md-6">
                 <label>{{ __('messages.buses.dqn') }}</label>
                 <input type="text" class="form-control" id="dqn"
-                    placeholder="{{ __('messages.buses.dqn_placeholder') }}"
-                    value="{{ $complaint->bus?->dqn ?? '' }}"
-                    oninput="getBusByDqn(this.value)"
-                    autocomplete="off"
-                    style="text-transform: uppercase;">
+                       placeholder="{{ __('messages.buses.dqn_placeholder') }}"
+                       value="{{ $complaint->bus?->dqn ?? '' }}"
+                       oninput="getBusByDqn(this.value)"
+                       autocomplete="off"
+                       style="text-transform: uppercase;">
                 <div id="dqnHelp" class="form-text"></div>
             </div>
             <div class="col-md-6">
                 <label>{{ __('messages.buses.route_number') }}</label>
                 <input type="text" class="form-control" id="route_number"
-                    value="{{ $complaint->bus?->route_number ?? '' }}"
-                    readonly style="background:#e9ecef;">
+                       value="{{ $complaint->bus?->route_number ?? '' }}"
+                       readonly style="background:#e9ecef;">
             </div>
         </div>
         <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id ?? '' }}">
@@ -98,27 +98,46 @@
         </div>
     </div>
 
-    {{-- Complaints --}}
-    <div class="col-md-12 mb-3">
-        <label class="form-label fw-bold">📝 {{ __('messages.complaints.complaints_list') }}</label>
-        <div id="complaintsContainer">
-            @php
-                $complaintsList = isset($complaint) && $complaint->items
-                    ? $complaint->items->pluck('description')->toArray()
-                    : [];
-            @endphp
+    {{-- Complaints / Service Type --}}
+    <div class="col-md-12 mb-3" id="complaintsBlock">
+        <label class="form-label fw-bold" id="complaintsLabel">📝 {{ __('messages.complaints.complaints_list') }}</label>
 
-            @if(count($complaintsList) > 0)
-                @foreach($complaintsList as $index => $description)
+        {{-- Accident / Breakdown: complaint_types dropdown --}}
+        <div id="complaintsDropdown">
+            <div id="complaintsContainer">
+                @php
+                    $complaintsList = isset($complaint) && $complaint->items
+                        ? $complaint->items->pluck('description')->toArray()
+                        : [];
+                @endphp
+
+                @if(count($complaintsList) > 0)
+                    @foreach($complaintsList as $index => $description)
+                        <div class="complaint-item mb-2">
+                            <div class="input-group">
+                                <span class="input-group-text complaint-number">{{ $index + 1 }}.</span>
+                                <select class="form-select" name="complaints[]" required>
+                                    <option value="">{{ __('messages.complaints.select_complaint') }}</option>
+                                    @foreach($complaintTypes as $type)
+                                        <option value="{{ $type->name }}" {{ trim($description) === $type->name ? 'selected' : '' }}>
+                                            {{ $type->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
                     <div class="complaint-item mb-2">
                         <div class="input-group">
-                            <span class="input-group-text complaint-number">{{ $index + 1 }}.</span>
+                            <span class="input-group-text complaint-number">1.</span>
                             <select class="form-select" name="complaints[]" required>
                                 <option value="">{{ __('messages.complaints.select_complaint') }}</option>
                                 @foreach($complaintTypes as $type)
-                                    <option value="{{ $type->name }}" {{ trim($description) === $type->name ? 'selected' : '' }}>
-                                        {{ $type->name }}
-                                    </option>
+                                    <option value="{{ $type->name }}">{{ $type->name }}</option>
                                 @endforeach
                             </select>
                             <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
@@ -126,27 +145,22 @@
                             </button>
                         </div>
                     </div>
-                @endforeach
-            @else
-                <div class="complaint-item mb-2">
-                    <div class="input-group">
-                        <span class="input-group-text complaint-number">1.</span>
-                        <select class="form-select" name="complaints[]" required>
-                            <option value="">{{ __('messages.complaints.select_complaint') }}</option>
-                            @foreach($complaintTypes as $type)
-                                <option value="{{ $type->name }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                        <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            @endif
+                @endif
+            </div>
+            <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
+                <i class="bi bi-plus-circle"></i> {{ __('messages.complaints.add_complaint') }}
+            </button>
         </div>
-        <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
-            <i class="bi bi-plus-circle"></i> {{ __('messages.complaints.add_complaint') }}
-        </button>
+
+        {{-- Maintenance: service_km dropdown --}}
+        <div id="serviceTypeBlock" style="display:none;">
+            <select class="form-select" id="service_km_select" name="service_km" onchange="onServiceChange()">
+                <option value="">{{ __('messages.complaints.select_service') }}</option>
+            </select>
+            <div class="form-text">{{ __('messages.complaints.service_hint') }}</div>
+            {{-- Hidden input — complaint_items cədvəlinə yazılacaq --}}
+            <input type="hidden" name="complaints[]" id="serviceComplaintLabel">
+        </div>
     </div>
 
     {{-- KM --}}
@@ -252,7 +266,7 @@
                                 <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
                                 <input type="number" class="form-control"
                                        name="details[{{ $index }}][used_quantity]"
-                                       value="{{ $detail['used_quantity'] ?? 1 }}" min="1" required>
+                                       value="{{ $detail['used_quantity'] ?? 1 }}" min="0" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
@@ -313,7 +327,7 @@
                         <div class="col-md-1">
                             <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
                             <input type="number" class="form-control" name="details[0][used_quantity]"
-                                   min="1" value="1" required>
+                                   min="0" value="1" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
@@ -342,7 +356,6 @@
                             <textarea class="form-control" name="details[0][notes]" rows="2"></textarea>
                         </div>
                     </div>
-                    <hr>
                 </div>
             @endif
         </div>

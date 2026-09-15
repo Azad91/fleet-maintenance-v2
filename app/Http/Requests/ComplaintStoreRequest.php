@@ -29,9 +29,6 @@ class ComplaintStoreRequest extends FormRequest
             ->where('is_active', true)
             ->whereNull('deleted_at'));
 
-        $serviceTemplateRule = Rule::exists('service_templates', 'id')
-            ->where('garage_id', $garageId);
-
         return [
             'bus_id' => ['required', $busRule],
             'yer' => ['required', Rule::in(Location::values())],
@@ -44,7 +41,13 @@ class ComplaintStoreRequest extends FormRequest
             'complaints.*' => [
                 'required',
                 'string',
-                Rule::exists('complaint_types', 'name')->where('garage_id', $garageId),
+                Rule::when(
+                    fn () => in_array($this->input('complaint_type'), [
+                        ComplaintType::Accident->value,
+                        ComplaintType::Breakdown->value,
+                    ], true),
+                    Rule::exists('complaint_types', 'name')->where('garage_id', $garageId),
+                ),
             ],
 
             'km' => 'nullable|integer|min:0',
@@ -65,8 +68,14 @@ class ComplaintStoreRequest extends FormRequest
             'details.*.employee_id' => ['required_with:details.*.code', $employeeRule],
             'details.*.notes' => 'required_with:details.*.code|string|max:2000',
             'employee_id' => ['nullable', $employeeRule],
-            'service_template_id' => ['nullable', $serviceTemplateRule],
-            'service_km' => 'required_if:service_template_id,!null|nullable|integer|min:0',
+
+            // ── Service (maintenance) ──
+            'service_km' => [
+                'nullable',
+                'integer',
+                'min:0',
+                Rule::requiredIf(fn () => $this->input('complaint_type') === ComplaintType::Maintenance->value),
+            ],
         ];
     }
 

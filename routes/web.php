@@ -436,6 +436,8 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::get('get-employee-by-kod/{kod}', [GarageDataController::class, 'employeeByCode'])->name('get.employee.by.kod');
         Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');
         Route::get('get-motor-oil-services/{bus_id}', [GarageDataController::class, 'motorOilServices'])->name('get.motor.oil.services');
+        Route::get('get-motor-oil-intervals/{bus_id}', [GarageDataController::class, 'motorOilIntervals'])->name('get.motor.oil.intervals');
+        Route::get('get-motor-oil-parts/{bus_id}', [GarageDataController::class, 'motorOilParts'])->name('get.motor.oil.parts');
     });
 
 });

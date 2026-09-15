@@ -45,7 +45,7 @@
                 <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id }}">
             </div>
 
-            {{-- Location --}}
+            {{-- Location (disabled) --}}
             <div class="mb-3">
                 <label class="form-label fw-bold">📍 {{ __('messages.complaints.location') }}</label>
                 <div>
@@ -89,24 +89,77 @@
                 </div>
             </div>
 
-            {{-- Complaints --}}
+            {{-- Complaint Type (disabled) --}}
             <div class="mb-3">
-                <label class="form-label fw-bold">📝 {{ __('messages.complaints.complaints_list') }}</label>
-                <div id="complaintsContainer">
-                    @php
-                        $complaintsList = $complaint->items->pluck('description')->toArray();
-                    @endphp
-                    @if(count($complaintsList) > 0)
-                        @foreach($complaintsList as $index => $description)
+                <label class="form-label fw-bold">🏷️ {{ __('messages.complaints.complaint_type') }}</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="complaint_type" value="accident"
+                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted">🚗 {{ __('enums.complaint_type.accident') }}</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="complaint_type" value="breakdown"
+                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="complaint_type" value="maintenance"
+                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }} disabled>
+                        <label class="form-check-label text-muted">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
+                    </div>
+                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
+                    <input type="hidden" name="complaint_type" value="{{ $complaint->complaint_type?->value }}">
+                </div>
+            </div>
+
+            {{-- Complaints / Service Type --}}
+            <div class="mb-3">
+                @if($complaint->complaint_type?->value === 'maintenance')
+                    {{-- Maintenance: service_km read-only --}}
+                    <label class="form-label fw-bold">📝 {{ __('messages.complaints.service_type_label') }}</label>
+                    <input type="text" class="form-control" readonly
+                           value="{{ $complaint->service_km ? __('messages.complaints.motor_oil_service_label', ['km' => number_format($complaint->service_km, 0, '', '')]) : '—' }}">
+                    <input type="hidden" name="service_km" value="{{ $complaint->service_km }}">
+
+                    {{-- Hidden complaints[] — mövcud item-lər saxlanılsın --}}
+                    @foreach($complaint->items as $item)
+                        <input type="hidden" name="complaints[]" value="{{ $item->description }}">
+                    @endforeach
+                @else
+                    {{-- Accident / Breakdown: normal complaints dropdown --}}
+                    <label class="form-label fw-bold">📝 {{ __('messages.complaints.complaints_list') }}</label>
+                    <div id="complaintsContainer">
+                        @php
+                            $complaintsList = $complaint->items->pluck('description')->toArray();
+                        @endphp
+                        @if(count($complaintsList) > 0)
+                            @foreach($complaintsList as $index => $description)
+                                <div class="complaint-item mb-2">
+                                    <div class="input-group">
+                                        <span class="input-group-text complaint-number">{{ $index + 1 }}.</span>
+                                        <select class="form-select" name="complaints[]" required>
+                                            <option value="">{{ __('messages.complaints.select_complaint') }}</option>
+                                            @foreach($complaintTypes as $type)
+                                                <option value="{{ $type->name }}" {{ trim($description) === $type->name ? 'selected' : '' }}>
+                                                    {{ $type->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
                             <div class="complaint-item mb-2">
                                 <div class="input-group">
-                                    <span class="input-group-text complaint-number">{{ $index + 1 }}.</span>
+                                    <span class="input-group-text complaint-number">1.</span>
                                     <select class="form-select" name="complaints[]" required>
                                         <option value="">{{ __('messages.complaints.select_complaint') }}</option>
                                         @foreach($complaintTypes as $type)
-                                            <option value="{{ $type->name }}" {{ trim($description) === $type->name ? 'selected' : '' }}>
-                                                {{ $type->name }}
-                                            </option>
+                                            <option value="{{ $type->name }}">{{ $type->name }}</option>
                                         @endforeach
                                     </select>
                                     <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
@@ -114,27 +167,12 @@
                                     </button>
                                 </div>
                             </div>
-                        @endforeach
-                    @else
-                        <div class="complaint-item mb-2">
-                            <div class="input-group">
-                                <span class="input-group-text complaint-number">1.</span>
-                                <select class="form-select" name="complaints[]" required>
-                                    <option value="">{{ __('messages.complaints.select_complaint') }}</option>
-                                    @foreach($complaintTypes as $type)
-                                        <option value="{{ $type->name }}">{{ $type->name }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-                <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
-                    <i class="bi bi-plus-circle"></i> {{ __('messages.complaints.add_complaint') }}
-                </button>
+                        @endif
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm mt-2" onclick="addComplaint()">
+                        <i class="bi bi-plus-circle"></i> {{ __('messages.complaints.add_complaint') }}
+                    </button>
+                @endif
             </div>
 
             {{-- KM --}}
@@ -200,30 +238,6 @@
                 </select>
             </div>
 
-            {{-- Complaint Type (disabled) --}}
-            <div class="mb-3">
-                <label class="form-label fw-bold">🏷️ {{ __('messages.complaints.complaint_type') }}</label>
-                <div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="complaint_type" value="accident"
-                            {{ $complaint->complaint_type?->value === 'accident' ? 'checked' : '' }} disabled>
-                        <label class="form-check-label text-muted">🚗 {{ __('enums.complaint_type.accident') }}</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="complaint_type" value="breakdown"
-                            {{ $complaint->complaint_type?->value === 'breakdown' ? 'checked' : '' }} disabled>
-                        <label class="form-check-label text-muted">⚠️ {{ __('enums.complaint_type.breakdown') }}</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="complaint_type" value="maintenance"
-                            {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }} disabled>
-                        <label class="form-check-label text-muted">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
-                    </div>
-                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
-                    <input type="hidden" name="complaint_type" value="{{ $complaint->complaint_type?->value }}">
-                </div>
-            </div>
-
             {{-- Parts --}}
             <div class="complaint-details-card p-3 mb-3">
                 <h5 class="fw-bold mb-3">🔧 {{ __('messages.complaints.used_parts') }}</h5>
@@ -235,11 +249,7 @@
                                     <div class="col-md-2">
                                         <label class="form-label fw-bold">{{ __('messages.complaints.related_complaint') }}</label>
                                         <select class="form-select" name="details[{{ $index }}][shikayet_index]">
-                                            @foreach($complaintsList as $i => $c)
-                                                <option value="{{ $i }}" {{ ($detail['shikayet_index'] ?? 0) == $i ? 'selected' : '' }}>
-                                                    {{ trim($c) }}
-                                                </option>
-                                            @endforeach
+                                            <option value="0">1</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2">
@@ -260,7 +270,7 @@
                                     <div class="col-md-1">
                                         <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
                                         <input type="number" class="form-control" name="details[{{ $index }}][used_quantity]"
-                                               value="{{ $detail['used_quantity'] ?? 1 }}" min="1" required>
+                                               value="{{ $detail['used_quantity'] ?? 1 }}" min="0" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
@@ -318,7 +328,7 @@
                                 </div>
                                 <div class="col-md-1">
                                     <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
-                                    <input type="number" class="form-control" name="details[0][used_quantity]" min="1" value="1" required>
+                                    <input type="number" class="form-control" name="details[0][used_quantity]" min="0" value="1" required>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
@@ -372,147 +382,52 @@
 
 @section('scripts')
 <script>
-    function toggleFields() {
-        const yer = document.querySelector('input[name="yer"]:checked');
-        if (!yer) return;
+    // ═══════════════════════════════════════════════════════════════
+    // BUS
+    // ═══════════════════════════════════════════════════════════════
+    function getBusByDqn(dqnValue) {
+        const input = document.getElementById('dqn');
+        const routeInput = document.getElementById('route_number');
+        const busIdInput = document.getElementById('bus_id');
+        const kmInput = document.getElementById('km');
+        const help = document.getElementById('dqnHelp');
 
-        const driverField = document.getElementById('surucuField');
-        const reportFields = document.getElementById('bildirilmeFields');
+        const dqn = (dqnValue || '').trim().toUpperCase();
 
-        if (yer.value === 'garage') {
-            if (driverField) driverField.style.display = 'none';
-            if (reportFields) reportFields.style.display = 'none';
-        } else {
-            if (driverField) driverField.style.display = 'block';
-            if (reportFields) reportFields.style.display = 'block';
-        }
+        routeInput.value = '';
+        busIdInput.value = '';
+        kmInput.value = '';
+        help.textContent = '';
+        help.className = 'form-text';
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!dqn) return;
+
+        fetch('/get-bus-by-dqn/' + encodeURIComponent(dqn), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.found) {
+                routeInput.value = data.route_number || '';
+                busIdInput.value = data.bus_id || '';
+                kmInput.value = data.km || '';
+                input.classList.add('is-valid');
+                help.textContent = '';
+                help.className = 'form-text';
+            } else {
+                input.classList.add('is-invalid');
+                help.textContent = @json(__('messages.complaints.dqn_not_found'));
+                help.className = 'form-text text-danger';
+            }
+        })
+        .catch(err => console.error('Bus search error:', err));
     }
 
-    function addComplaint() {
-        const container = document.getElementById('complaintsContainer');
-        const items = container.querySelectorAll('.complaint-item');
-        const newNumber = items.length + 1;
-
-        const newItem = document.createElement('div');
-        newItem.className = 'complaint-item mb-2';
-        newItem.innerHTML = `
-            <div class="input-group">
-                <span class="input-group-text complaint-number">${newNumber}.</span>
-                <select class="form-select" name="complaints[]" required>
-                    <option value="">{{ __('messages.complaints.select_complaint') }}</option>
-                    @foreach($complaintTypes as $type)
-                        <option value="{{ $type->name }}">{{ $type->name }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        `;
-        container.appendChild(newItem);
-    }
-
-    function removeComplaint(button) {
-        const container = document.getElementById('complaintsContainer');
-        if (container.querySelectorAll('.complaint-item').length > 1) {
-            button.closest('.complaint-item').remove();
-            container.querySelectorAll('.complaint-number').forEach((el, idx) => {
-                el.textContent = (idx + 1) + '.';
-            });
-        }
-    }
-
-    let detailCount = {{ !empty($details) ? count($details) : 1 }};
-
-    function addDetail() {
-        const container = document.getElementById('detailsContainer');
-
-        const newItem = document.createElement('div');
-        newItem.className = 'detail-item';
-        newItem.innerHTML = `
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.related_complaint') }}</label>
-                    <select class="form-select" name="details[${detailCount}][shikayet_index]">
-                        <option value="0">1</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.part_code') }}</label>
-                    <input type="text" class="form-control" name="details[${detailCount}][code]" oninput="getPartByCode(this)">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.part_name') }}</label>
-                    <input type="text" class="form-control input-disabled" name="details[${detailCount}][name]" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
-                    <input type="text" class="form-control input-disabled" name="details[${detailCount}][stock_quantity]" readonly>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
-                    <input type="number" class="form-control" name="details[${detailCount}][used_quantity]" min="1" value="1" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control"
-                               name="details[${detailCount}][employee_code]"
-                               placeholder="{{ __('messages.employees.code_placeholder') }}"
-                               oninput="getEmployeeByCode(this)"
-                               autocomplete="off"
-                               style="text-transform: uppercase;">
-                        <input type="text" class="form-control input-disabled" readonly tabindex="-1"
-                               name="details[${detailCount}][employee_name]">
-                        <input type="hidden" name="details[${detailCount}][employee_id]">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <label class="form-label fw-bold">&nbsp;</label>
-                    <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-12">
-                    <label class="form-label fw-bold">📝 {{ __('messages.complaints.work_done_notes') }}</label>
-                    <textarea class="form-control" name="details[${detailCount}][notes]" rows="2"></textarea>
-                </div>
-            </div>
-        `;
-        container.appendChild(newItem);
-        detailCount++;
-    }
-
-    function removeDetail(button) {
-        const items = document.querySelectorAll('.detail-item');
-        if (items.length > 1) {
-            button.closest('.detail-item').remove();
-        }
-    }
-
-    function getPartByCode(input) {
-        const code = input.value;
-        const item = input.closest('.detail-item');
-        const nameInput = item.querySelector('input[name*="[name]"]');
-        const stockInput = item.querySelector('input[name*="[stock_quantity]"]');
-
-        if (!code) {
-            nameInput.value = '';
-            stockInput.value = '';
-            return;
-        }
-
-        fetch('/get-detal-by-kod/' + encodeURIComponent(code))
-            .then(response => response.json())
-            .then(data => {
-                nameInput.value = data.detallar_name || '';
-                stockInput.value = data.stock_quantity || '';
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
+    // ═══════════════════════════════════════════════════════════════
+    // DRIVER
+    // ═══════════════════════════════════════════════════════════════
     let driverLookupRequest = 0;
 
     function getDriverByCode(code) {
@@ -554,6 +469,9 @@
             });
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // EMPLOYEE
+    // ═══════════════════════════════════════════════════════════════
     let employeeLookupRequest = 0;
 
     function getEmployeeByCode(input) {
@@ -571,10 +489,7 @@
         const requestId = ++employeeLookupRequest;
 
         fetch('/get-employee-by-kod/' + encodeURIComponent(code), {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             credentials: 'same-origin',
         })
         .then(response => response.json())
@@ -591,50 +506,176 @@
         .catch(error => console.error('Employee lookup error:', error));
     }
 
-    function getBusByDqn(dqnValue) {
-        const input = document.getElementById('dqn');
-        const routeInput = document.getElementById('route_number');
-        const busIdInput = document.getElementById('bus_id');
-        const kmInput = document.getElementById('km');
-        const help = document.getElementById('dqnHelp');
+    // ═══════════════════════════════════════════════════════════════
+    // PART (warehouse)
+    // ═══════════════════════════════════════════════════════════════
+    function getPartByCode(input) {
+        const code = input.value;
+        const item = input.closest('.detail-item');
+        const nameInput = item.querySelector('input[name*="[name]"]');
+        const stockInput = item.querySelector('input[name*="[stock_quantity]"]');
 
-        const dqn = (dqnValue || '').trim().toUpperCase();
+        if (!code) {
+            nameInput.value = '';
+            stockInput.value = '';
+            return;
+        }
 
-        // Reset
-        routeInput.value = '';
-        busIdInput.value = '';
-        kmInput.value = '';
-        help.textContent = '';
-        help.className = 'form-text';
-        input.classList.remove('is-valid', 'is-invalid');
-
-        if (!dqn) return;
-
-        fetch('/get-bus-by-dqn/' + encodeURIComponent(dqn), {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
-            credentials: 'same-origin',
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.found) {
-                routeInput.value = data.route_number || '';
-                busIdInput.value = data.bus_id || '';
-                kmInput.value = data.km || '';
-                input.classList.add('is-valid');
-                help.textContent = '';
-                help.className = 'form-text';
-            } else {
-                input.classList.add('is-invalid');
-                help.textContent = @json(__('messages.complaints.dqn_not_found'));
-                help.className = 'form-text text-danger';
-            }
-        })
-        .catch(err => console.error('Bus search error:', err));
+        fetch('/get-detal-by-kod/' + encodeURIComponent(code))
+            .then(response => response.json())
+            .then(data => {
+                nameInput.value = data.detallar_name || '';
+                stockInput.value = data.stock_quantity || '';
+            })
+            .catch(error => console.error('Part lookup error:', error));
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // COMPLAINTS (add / remove)
+    // ═══════════════════════════════════════════════════════════════
+    function addComplaint() {
+        const container = document.getElementById('complaintsContainer');
+        if (!container) return;
+
+        const items = container.querySelectorAll('.complaint-item');
+        const newNumber = items.length + 1;
+
+        const newItem = document.createElement('div');
+        newItem.className = 'complaint-item mb-2';
+        newItem.innerHTML = `
+            <div class="input-group">
+                <span class="input-group-text complaint-number">${newNumber}.</span>
+                <select class="form-select" name="complaints[]" required>
+                    <option value="">{{ __('messages.complaints.select_complaint') }}</option>
+                    @foreach($complaintTypes as $type)
+                        <option value="{{ $type->name }}">{{ $type->name }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-danger" onclick="removeComplaint(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newItem);
+    }
+
+    function removeComplaint(button) {
+        const container = document.getElementById('complaintsContainer');
+        if (container && container.querySelectorAll('.complaint-item').length > 1) {
+            button.closest('.complaint-item').remove();
+            container.querySelectorAll('.complaint-number').forEach((el, idx) => {
+                el.textContent = (idx + 1) + '.';
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DETAILS (add / remove)
+    // ═══════════════════════════════════════════════════════════════
+    let detailCount = {{ !empty($details) ? count($details) : 1 }};
+
+    function addDetail() {
+        const container = document.getElementById('detailsContainer');
+
+        const newItem = document.createElement('div');
+        newItem.className = 'detail-item';
+        newItem.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">{{ __('messages.complaints.related_complaint') }}</label>
+                    <select class="form-select" name="details[${detailCount}][shikayet_index]">
+                        <option value="0">1</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">{{ __('messages.complaints.part_code') }}</label>
+                    <input type="text" class="form-control" name="details[${detailCount}][code]" oninput="getPartByCode(this)">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">{{ __('messages.complaints.part_name') }}</label>
+                    <input type="text" class="form-control input-disabled" name="details[${detailCount}][name]" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
+                    <input type="text" class="form-control input-disabled" name="details[${detailCount}][stock_quantity]" readonly>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
+                    <input type="number" class="form-control" name="details[${detailCount}][used_quantity]" min="0" value="1" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">👤 {{ __('messages.complaints.employee') }}</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control"
+                               name="details[${detailCount}][employee_code]"
+                               placeholder="{{ __('messages.employees.code_placeholder') }}"
+                               oninput="getEmployeeByCode(this)"
+                               autocomplete="off"
+                               style="text-transform: uppercase;">
+                        <input type="text" class="form-control input-disabled" readonly tabindex="-1"
+                               name="details[${detailCount}][employee_name]">
+                        <input type="hidden" name="details[${detailCount}][employee_id]">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label fw-bold">&nbsp;</label>
+                    <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeDetail(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <label class="form-label fw-bold">📝 {{ __('messages.complaints.work_done_notes') }}</label>
+                    <textarea class="form-control" name="details[${detailCount}][notes]" rows="2"></textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        detailCount++;
+    }
+
+    function removeDetail(button) {
+        const items = document.querySelectorAll('.detail-item');
+        if (items.length > 1) {
+            button.closest('.detail-item').remove();
+        } else {
+            // Son detal — used_quantity = 0 edək (silinmə yerinə)
+            const item = button.closest('.detail-item');
+            item.querySelectorAll('input').forEach(i => {
+                if (i.name && i.name.includes('used_quantity')) {
+                    i.value = '0';
+                }
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // LOCATION (Yol / Qaraj → driver visibility)
+    // ═══════════════════════════════════════════════════════════════
+    function toggleFields() {
+        const yer = document.querySelector('input[name="yer"]:checked');
+        const driverField = document.getElementById('surucuField');
+        const reportFields = document.getElementById('bildirilmeFields');
+
+        if (!yer) {
+            if (driverField) driverField.style.display = 'none';
+            if (reportFields) reportFields.style.display = 'none';
+            return;
+        }
+
+        if (yer.value === 'garage') {
+            if (driverField) driverField.style.display = 'none';
+            if (reportFields) reportFields.style.display = 'none';
+        } else {
+            if (driverField) driverField.style.display = 'block';
+            if (reportFields) reportFields.style.display = 'block';
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
         toggleFields();
     });
