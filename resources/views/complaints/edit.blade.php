@@ -2,6 +2,14 @@
 
 @section('title', __('messages.complaints.edit_title'))
 
+@php
+    // ─── Time formatting helper ───
+    // DB `time` sütunu HH:MM:SS formatında qaytarır; <input type="time">
+    // yalnız HH:MM qəbul edir. Həm old() (validasiya xətasından sonra),
+    // həm DB dəyərini təhlükəsiz şəkildə H:i formatına salırıq.
+    $fmtTime = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : '';
+@endphp
+
 @section('content')
 <div class="card">
     <div class="card-header">
@@ -193,7 +201,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold">🕐 {{ __('messages.complaints.reported_time') }}</label>
                         <input type="time" class="form-control" name="reported_time"
-                               value="{{ old('reported_time', $complaint->reported_time) }}">
+                               value="{{ $fmtTime(old('reported_time', $complaint->reported_time)) }}">
                     </div>
                 </div>
             </div>
@@ -208,7 +216,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-bold">🕐 {{ __('messages.complaints.start_time') }}</label>
                     <input type="time" class="form-control" name="start_time"
-                           value="{{ old('start_time', $complaint->start_time) }}">
+                           value="{{ $fmtTime(old('start_time', $complaint->start_time)) }}">
                 </div>
             </div>
 
@@ -221,7 +229,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-bold">🕐 {{ __('messages.complaints.end_time') }}</label>
                     <input type="time" class="form-control" name="end_time"
-                           value="{{ old('end_time', $complaint->end_time) }}">
+                           value="{{ $fmtTime(old('end_time', $complaint->end_time)) }}">
                 </div>
             </div>
 
@@ -640,7 +648,6 @@
         if (items.length > 1) {
             button.closest('.detail-item').remove();
         } else {
-            // Son detal — used_quantity = 0 edək (silinmə yerinə)
             const item = button.closest('.detail-item');
             item.querySelectorAll('input').forEach(i => {
                 if (i.name && i.name.includes('used_quantity')) {
