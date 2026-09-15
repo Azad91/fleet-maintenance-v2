@@ -429,6 +429,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
 
     Route::middleware(['role:'.$garageDataRoles])->group(function () {
         Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
+        Route::get('get-bus-by-dqn/{dqn}', [GarageDataController::class, 'busByDqn'])->name('get.bus.by.dqn');
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
         Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
         Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');

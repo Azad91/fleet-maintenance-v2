@@ -30,18 +30,20 @@
         <label class="form-label fw-bold">🚌 {{ __('messages.complaints.bus') }}</label>
         <div class="row">
             <div class="col-md-6">
-                <label>{{ __('messages.complaints.route_or_dqn') }}</label>
-                <input type="text" class="form-control" id="route_number"
-                       placeholder="{{ __('messages.complaints.route_or_dqn_placeholder') }}"
-                       value="{{ $complaint->bus?->route_number ?? '' }}"
-                       oninput="getBusByRoute(this.value)"
-                       {{ isset($complaint->id) ? 'readonly style=background:#e9ecef;' : '' }}>
-            </div>
-            <div class="col-md-6">
                 <label>{{ __('messages.buses.dqn') }}</label>
                 <input type="text" class="form-control" id="dqn"
-                       value="{{ $complaint->bus?->dqn ?? '' }}"
-                       readonly style="background:#e9ecef;">
+                    placeholder="{{ __('messages.buses.dqn_placeholder') }}"
+                    value="{{ $complaint->bus?->dqn ?? '' }}"
+                    oninput="getBusByDqn(this.value)"
+                    autocomplete="off"
+                    style="text-transform: uppercase;">
+                <div id="dqnHelp" class="form-text"></div>
+            </div>
+            <div class="col-md-6">
+                <label>{{ __('messages.buses.route_number') }}</label>
+                <input type="text" class="form-control" id="route_number"
+                    value="{{ $complaint->bus?->route_number ?? '' }}"
+                    readonly style="background:#e9ecef;">
             </div>
         </div>
         <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id ?? '' }}">

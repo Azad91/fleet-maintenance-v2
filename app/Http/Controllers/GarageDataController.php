@@ -48,6 +48,29 @@ class GarageDataController extends Controller
         return response()->json(['km' => $latestKm ?? $bus->km]);
     }
 
+    public function busByDqn(string $dqn)
+    {
+        $bus = Bus::where('dqn', $dqn)->first();
+
+        if (! $bus) {
+            return response()->json([
+                'found' => false,
+            ]);
+        }
+
+        // `dailyKmRecords()` model-də artıq `orderBy('date', 'desc')` edir,
+        // ona görə `value('km')` ən son qeydi qaytarır.
+        $latestKm = $bus->dailyKmRecords()->value('km') ?? $bus->km;
+
+        return response()->json([
+            'found' => true,
+            'bus_id' => $bus->id,
+            'dqn' => $bus->dqn,
+            'route_number' => $bus->route_number,
+            'km' => $latestKm,
+        ]);
+    }
+
     public function serviceTemplates(int $busId)
     {
         $bus = Bus::findOrFail($busId);

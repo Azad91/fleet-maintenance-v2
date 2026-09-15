@@ -39,30 +39,48 @@
 
 @section('scripts')
 <script>
-    function getBusByRoute(route_number) {
-        if (!route_number) {
-            document.getElementById('dqn').value = '';
-            document.getElementById('bus_id').value = '';
-            document.getElementById('km').value = '';
-            return;
-        }
+    function getBusByDqn(dqnValue) {
+        const input = document.getElementById('dqn');
+        const routeInput = document.getElementById('route_number');
+        const busIdInput = document.getElementById('bus_id');
+        const kmInput = document.getElementById('km');
+        const help = document.getElementById('dqnHelp');
 
-        fetch('/get-bus-id-by-xett/' + encodeURIComponent(route_number))
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('dqn').value = data.dqn || '';
-                document.getElementById('bus_id').value = data.bus_id || '';
+        const dqn = (dqnValue || '').trim().toUpperCase();
 
-                if (data.bus_id) {
-                    fetch('/get-bus-km-by-id/' + data.bus_id)
-                        .then(response => response.json())
-                        .then(kmData => {
-                            document.getElementById('km').value = kmData.km || '';
-                        })
-                        .catch(err => console.error('KM error:', err));
-                }
-            })
-            .catch(err => console.error('Bus search error:', err));
+        // Reset
+        routeInput.value = '';
+        busIdInput.value = '';
+        kmInput.value = '';
+        help.textContent = '';
+        help.className = 'form-text';
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!dqn) return;
+
+        fetch('/get-bus-by-dqn/' + encodeURIComponent(dqn), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.found) {
+                routeInput.value = data.route_number || '';
+                busIdInput.value = data.bus_id || '';
+                kmInput.value = data.km || '';
+                input.classList.add('is-valid');
+                help.textContent = '';
+                help.className = 'form-text';
+            } else {
+                input.classList.add('is-invalid');
+                help.textContent = @json(__('messages.complaints.dqn_not_found'));
+                help.className = 'form-text text-danger';
+            }
+        })
+        .catch(err => console.error('Bus search error:', err));
     }
 
     function addComplaint() {
@@ -237,10 +255,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         toggleFields();
 
-        const routeInput = document.getElementById('route_number');
-        if (routeInput && routeInput.value && !document.getElementById('bus_id').value) {
-            getBusByRoute(routeInput.value);
-        }
+        // Create page: DQN is empty, nothing to look up on load.
+        // (Validation errors → old DQN is rendered by the server and the
+        //  hidden bus_id is preserved; no extra lookup needed.)
     });
 </script>
 @endsection

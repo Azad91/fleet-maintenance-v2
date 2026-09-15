@@ -26,15 +26,22 @@
                 <label class="form-label fw-bold">🚌 {{ __('messages.complaints.bus') }}</label>
                 <div class="row">
                     <div class="col-md-6">
-                        <label>{{ __('messages.buses.route_number') }}</label>
-                        <input type="text" class="form-control" value="{{ $complaint->bus->route_number ?? '' }}" readonly style="background:#e9ecef;">
+                        <label>{{ __('messages.buses.dqn') }}</label>
+                        <input type="text" class="form-control" id="dqn"
+                            value="{{ $complaint->bus->dqn ?? '' }}"
+                            oninput="getBusByDqn(this.value)"
+                            autocomplete="off"
+                            style="text-transform: uppercase;">
+                        <div id="dqnHelp" class="form-text"></div>
                     </div>
                     <div class="col-md-6">
-                        <label>{{ __('messages.buses.dqn') }}</label>
-                        <input type="text" class="form-control" value="{{ $complaint->bus->dqn ?? '' }}" readonly style="background:#e9ecef;">
+                        <label>{{ __('messages.buses.route_number') }}</label>
+                        <input type="text" class="form-control" id="route_number"
+                            value="{{ $complaint->bus->route_number ?? '' }}"
+                            readonly style="background:#e9ecef;">
                     </div>
                 </div>
-                <input type="hidden" name="bus_id" value="{{ $complaint->bus_id }}">
+                <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id }}">
             </div>
 
             <div class="mb-3">
@@ -531,6 +538,50 @@
                     help.className = 'form-text text-danger';
                 }
             });
+    }
+
+    function getBusByDqn(dqnValue) {
+        const input = document.getElementById('dqn');
+        const routeInput = document.getElementById('route_number');
+        const busIdInput = document.getElementById('bus_id');
+        const kmInput = document.getElementById('km');
+        const help = document.getElementById('dqnHelp');
+
+        const dqn = (dqnValue || '').trim().toUpperCase();
+
+        // Reset
+        routeInput.value = '';
+        busIdInput.value = '';
+        kmInput.value = '';
+        help.textContent = '';
+        help.className = 'form-text';
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!dqn) return;
+
+        fetch('/get-bus-by-dqn/' + encodeURIComponent(dqn), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.found) {
+                routeInput.value = data.route_number || '';
+                busIdInput.value = data.bus_id || '';
+                kmInput.value = data.km || '';
+                input.classList.add('is-valid');
+                help.textContent = '';
+                help.className = 'form-text';
+            } else {
+                input.classList.add('is-invalid');
+                help.textContent = @json(__('messages.complaints.dqn_not_found'));
+                help.className = 'form-text text-danger';
+            }
+        })
+        .catch(err => console.error('Bus search error:', err));
     }
 
     let employeeLookupRequest = 0;
