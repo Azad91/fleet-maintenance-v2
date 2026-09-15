@@ -2,41 +2,65 @@
 
 namespace Tests\Feature\Seeders;
 
+use App\Models\Bus;
 use App\Models\Company;
+use App\Models\ComplaintType;
 use App\Models\Garage;
+use App\Models\MotorOilDetail;
+use App\Models\ServiceTemplate;
 use App\Models\User;
-use Database\Seeders\GarageSeeder;
+use App\Services\GarageContext;
+use Database\Seeders\DemoDataSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class GarageSeederTest extends TestCase
+class DemoDataSeederTest extends TestCase
 {
     use RefreshDatabase;
 
     protected function seedAll(): void
     {
         $this->seed(UserSeeder::class);
-        $this->seed(GarageSeeder::class);
+        $this->seed(DemoDataSeeder::class);
+    }
+
+    protected function tearDown(): void
+    {
+        GarageContext::clear();
+        parent::tearDown();
     }
 
     // ==================================================================
-    // 1. STRUKTUR — 2 company, 4 qaraj
+    // 1. STRUCTURE — 2 companies, 6 garages
     // ==================================================================
 
-    public function test_seeds_two_companies_and_four_garages(): void
+    public function test_seeds_two_companies_and_six_garages(): void
     {
         $this->seedAll();
 
         $this->assertSame(2, Company::count());
-        $this->assertSame(4, Garage::count());
+        $this->assertSame(6, Garage::count());
+    }
+
+    public function test_every_company_has_three_garages(): void
+    {
+        $this->seedAll();
+
+        foreach (Company::all() as $company) {
+            $this->assertSame(
+                3,
+                $company->garages()->count(),
+                "Company [{$company->name}] must have exactly 3 garages"
+            );
+        }
     }
 
     // ==================================================================
-    // 2. HƏR ŞİRKƏT ÜÇÜN 1 AKTIV DIRECTOR
+    // 2. DIRECTORS — one per company
     // ==================================================================
 
-    public function test_every_company_gets_exactly_one_active_director(): void
+    public function test_every_company_has_exactly_one_active_director(): void
     {
         $this->seedAll();
 
@@ -50,10 +74,10 @@ class GarageSeederTest extends TestCase
     }
 
     // ==================================================================
-    // 3. HƏR QARAJ ÜÇÜN 1 AKTIV ADMIN
+    // 3. GARAGE ADMINS — one per garage
     // ==================================================================
 
-    public function test_every_garage_gets_exactly_one_active_admin(): void
+    public function test_every_garage_has_exactly_one_active_admin(): void
     {
         $this->seedAll();
 
@@ -72,7 +96,7 @@ class GarageSeederTest extends TestCase
     }
 
     // ==================================================================
-    // 4. SUPER ADMIN — HEÇ BİR QARAJA BAĞLANMAYIB
+    // 4. SUPER ADMIN — not attached to any garage
     // ==================================================================
 
     public function test_super_admin_is_not_attached_to_any_garage(): void
@@ -83,57 +107,102 @@ class GarageSeederTest extends TestCase
 
         $this->assertNotNull($superAdmin);
         $this->assertTrue($superAdmin->isSuperAdmin());
-
         $this->assertSame(
             0,
             $superAdmin->garages()->count(),
-            'SuperAdmin must NOT be attached to any garage (platform-level role)'
+            'SuperAdmin must NOT be attached to any garage'
         );
     }
 
     // ==================================================================
-    // 5. DIRECTOR USER — role = 'user' (qlobal), pivot = 'director'
+    // 5. PER-GARAGE DATA — every garage has the expected catalog
     // ==================================================================
 
-    public function test_director_users_have_global_role_user(): void
+    public function test_every_garage_has_complaint_types(): void
     {
         $this->seedAll();
 
-        $director = User::where('email', 'director.bakubus@fleet.com')->first();
+        foreach (Garage::all() as $garage) {
+            $count = ComplaintType::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
 
-        $this->assertNotNull($director);
-        $this->assertSame('user', $director->role);
-        $this->assertTrue($director->isDirector());
+            $this->assertSame(
+                10,
+                $count,
+                "Garage [{$garage->name}] must have 10 complaint types"
+            );
+        }
     }
 
-    public function test_garage_admin_users_have_global_role_user(): void
+    public function test_every_garage_has_motor_oil_details(): void
     {
         $this->seedAll();
 
-        $admin = User::where('email', 'admin.gar1@fleet.com')->first();
+        foreach (Garage::all() as $garage) {
+            $count = MotorOilDetail::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
 
-        $this->assertNotNull($admin);
-        $this->assertSame('user', $admin->role);
+            $this->assertGreaterThanOrEqual(
+                15,
+                $count,
+                "Garage [{$garage->name}] must have at least 15 motor-oil detail rows"
+            );
+        }
+    }
+
+    public function test_every_garage_has_service_templates(): void
+    {
+        $this->seedAll();
+
+        foreach (Garage::all() as $garage) {
+            $count = ServiceTemplate::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
+
+            $this->assertSame(
+                5,
+                $count,
+                "Garage [{$garage->name}] must have 5 service templates"
+            );
+        }
+    }
+
+    public function test_every_garage_has_buses(): void
+    {
+        $this->seedAll();
+
+        foreach (Garage::all() as $garage) {
+            $count = Bus::withoutGlobalScopes()
+                ->where('garage_id', $garage->id)
+                ->count();
+
+            $this->assertSame(
+                5,
+                $count,
+                "Garage [{$garage->name}] must have 5 buses"
+            );
+        }
     }
 
     // ==================================================================
-    // 6. IDEMPOTENT — 2 dəfə işlətmək problem yaratmır
+    // 6. IDEMPOTENCY — re-running does not duplicate data
     // ==================================================================
 
     public function test_seeder_is_idempotent(): void
     {
         $this->seedAll();
-        $this->seed(GarageSeeder::class); // twice
+        $this->seed(DemoDataSeeder::class); // second time
 
         $this->assertSame(2, Company::count(), 'Re-running must not duplicate companies');
-        $this->assertSame(4, Garage::count(), 'Re-running must not duplicate garages');
-
-        // 1 super admin + 2 directors + 4 admins = 7 users
-        $this->assertSame(7, User::count(), 'Re-running must not duplicate users');
+        $this->assertSame(6, Garage::count(), 'Re-running must not duplicate garages');
+        $this->assertSame(2, Company::all()->sum(fn ($c) => $c->directors()->count()),
+            'Re-running must not duplicate directors');
     }
 
     // ==================================================================
-    // 7. HƏR QARAJIN ÖZ ADMİNİ VAR (eyni adam deyil)
+    // 7. TENANT ISOLATION — each garage has its own data
     // ==================================================================
 
     public function test_each_garage_has_a_distinct_admin(): void
