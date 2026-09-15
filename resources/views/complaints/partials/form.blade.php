@@ -46,7 +46,7 @@
                 <label>{{ __('messages.buses.route_number') }}</label>
                 <input type="text" class="form-control" id="route_number"
                        value="{{ $complaint->bus?->route_number ?? '' }}"
-                       readonly style="background:#e9ecef;">
+                       readonly>
             </div>
         </div>
         <input type="hidden" name="bus_id" id="bus_id" value="{{ $complaint->bus_id ?? '' }}">
@@ -168,7 +168,7 @@
         <label for="km" class="form-label fw-bold">📊 {{ __('messages.complaints.km') }}</label>
         <input type="number" class="form-control" id="km" name="km"
                value="{{ old('km', $complaint->km ?? '') }}" min="0"
-               readonly style="background:#e9ecef;">
+               readonly>
     </div>
 
     {{-- Reported --}}

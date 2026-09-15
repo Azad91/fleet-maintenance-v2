@@ -2081,3 +2081,17 @@ html[data-fleet-theme="dark"] .fleet-import-report__table td code {
     color: #bfdbfe;
     background: #1e3a8a;
 }
+/* ================================================================
+   READONLY INPUT — Açıq tema + Dark mode dəstəyi
+   ================================================================ */
+.input-readonly {
+    background: #e9ecef !important;
+    color: #1e293b !important;
+    cursor: not-allowed;
+}
+
+html[data-fleet-theme="dark"] .input-readonly {
+    background: #1d2a3d !important;
+    color: #cbd7e7 !important;
+    border-color: #2a394e !important;
+}
