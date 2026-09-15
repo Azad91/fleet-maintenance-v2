@@ -90,19 +90,58 @@ class ComplaintTypeValidationTest extends TestCase
     // 1. STORE — VALIDATION
     // ==================================================================
 
-    public function test_store_accepts_all_three_complaint_types(): void
+    public function test_store_accepts_accident_type(): void
     {
-        foreach (['accident', 'breakdown', 'maintenance'] as $type) {
-            $response = $this->actingAs($this->admin)
-                ->withSession($this->garageSession())
-                ->post(route('complaints.store'), $this->basePayload([
-                    'complaint_type' => $type,
-                ]));
+        $response = $this->actingAs($this->admin)
+            ->withSession($this->garageSession())
+            ->post(route('complaints.store'), $this->basePayload([
+                'complaint_type' => 'accident',
+            ]));
 
-            $response->assertSessionHasNoErrors();
-        }
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals(1, Complaint::count());
+    }
 
-        $this->assertEquals(3, Complaint::count());
+    public function test_store_accepts_breakdown_type(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->withSession($this->garageSession())
+            ->post(route('complaints.store'), $this->basePayload([
+                'complaint_type' => 'breakdown',
+            ]));
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals(1, Complaint::count());
+    }
+
+    public function test_store_accepts_maintenance_type_with_service_km(): void
+    {
+        // Maintenance complaints are tied to a motor-oil interval;
+        // ComplaintStoreRequest requires service_km for this type
+        // (Rule::requiredIf on complaint_type === maintenance).
+        $response = $this->actingAs($this->admin)
+            ->withSession($this->garageSession())
+            ->post(route('complaints.store'), $this->basePayload([
+                'complaint_type' => 'maintenance',
+                'service_km' => 36000,
+            ]));
+
+        $response->assertSessionHasNoErrors();
+        $this->assertEquals(1, Complaint::count());
+    }
+
+    public function test_store_rejects_maintenance_type_without_service_km(): void
+    {
+        // Sanity guard: without service_km a maintenance complaint must
+        // be rejected — otherwise the interval information is lost.
+        $response = $this->actingAs($this->admin)
+            ->withSession($this->garageSession())
+            ->post(route('complaints.store'), $this->basePayload([
+                'complaint_type' => 'maintenance',
+            ]));
+
+        $response->assertSessionHasErrors('service_km');
+        $this->assertEquals(0, Complaint::count());
     }
 
     public function test_store_rejects_invalid_complaint_type(): void

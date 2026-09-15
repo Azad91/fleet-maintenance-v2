@@ -20,11 +20,14 @@ class GarageUpdateRequest extends FormRequest
             'company_id' => ['required', 'integer', 'exists:companies,id'],
             'name' => ['required', 'string', 'max:255'],
             'code' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique('garages', 'code')->ignore($garageId),
-            ],
+            'required',
+            'string',
+            'max:50',
+            // Ignore the current garage AND only check non-deleted rows.
+            Rule::unique('garages', 'code')
+                ->ignore($garageId)
+                ->whereNull('deleted_at'),
+        ],
             'address' => ['nullable', 'string', 'max:1000'],
             'phone' => ['nullable', 'string', 'max:50'],
             'is_active' => ['nullable', 'boolean'],

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\SuperAdmin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CompanyStoreRequest extends FormRequest
 {
@@ -17,12 +18,16 @@ class CompanyStoreRequest extends FormRequest
             // ─── Company fields ───
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
-                'nullable',
-                'string',
-                'max:255',
-                'regex:/^[a-z0-9-]+$/',
-                'unique:companies,slug',
-            ],
+            'nullable',
+            'string',
+            'max:255',
+            'regex:/^[a-z0-9-]+$/',
+            // Only enforce uniqueness against NON-deleted rows, matching
+            // the partial unique index companies_slug_active_unique.
+            // Otherwise a soft-deleted company would permanently reserve
+            // its slug.
+            Rule::unique('companies', 'slug')->whereNull('deleted_at'),
+        ],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:1000'],

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\SuperAdmin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class GarageStoreRequest extends FormRequest
 {
@@ -17,7 +18,14 @@ class GarageStoreRequest extends FormRequest
             // ─── Garage fields ───
             'company_id' => ['required', 'integer', 'exists:companies,id'],
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:50', 'unique:garages,code'],
+            'code' => [
+            'required',
+            'string',
+            'max:50',
+            // Only enforce uniqueness against NON-deleted rows, matching
+            // the partial unique index garages_code_active_unique.
+            Rule::unique('garages', 'code')->whereNull('deleted_at'),
+        ],
             'address' => ['nullable', 'string', 'max:1000'],
             'phone' => ['nullable', 'string', 'max:50'],
             'is_active' => ['nullable', 'boolean'],

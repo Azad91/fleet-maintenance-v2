@@ -61,14 +61,24 @@ class RecurringComplaintsTest extends TestCase
 
     public function test_returns_empty_when_no_garage_context(): void
     {
-        GarageContext::clear();
+        // Setup: create the data WITH a garage context so that
+        // HasGarageScope can populate complaint_items.garage_id.
+        // (Without context, item creation is now blocked by design —
+        // see HasGarageScope and ComplaintItem.)
+        $this->createComplaintWithItem('Test problem');
+        $this->createComplaintWithItem('Test problem');
 
-        $this->createComplaintWithItem('Test problem');
-        $this->createComplaintWithItem('Test problem');
+        // Now clear the context and verify the recurring scope returns
+        // nothing, because HasGarageScope cannot resolve a current garage.
+        GarageContext::clear();
 
         $results = ComplaintItem::recurring(30)->get();
 
-        $this->assertCount(0, $results);
+        $this->assertCount(
+            0,
+            $results,
+            'Recurring scope must return empty when no garage context is set'
+        );
     }
 
     public function test_detects_recurring_issue_when_same_description_appears_twice(): void

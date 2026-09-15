@@ -46,6 +46,16 @@ class ComplaintItem extends Model
      */
     public function scopeRecurring($query, int $days = 30)
     {
+        // Defense-in-depth: this scope has no meaning without a garage
+        // context. HasGarageScope deliberately disables itself in the
+        // console (including PHPUnit), so relying on it alone would let
+        // a missing context return cross-tenant data. We block explicitly.
+        $garageId = \App\Services\GarageContext::resolveGarageId();
+
+        if (! $garageId) {
+            return $query->whereRaw('1 = 0');
+        }
+
         return $query
             ->select(
                 'complaint_items.description',
