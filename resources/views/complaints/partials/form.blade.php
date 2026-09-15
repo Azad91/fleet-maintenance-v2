@@ -5,8 +5,8 @@
     $isCreate = ! ($complaint->exists ?? false);
 
     // ─── Defaults for create ───
-    // Kart açılanda start_date = bugün, start_time = indiki saat.
-    // Validation xətası olduqda isə old() dəyəri qalır.
+    // When creating a card, start_date = today and start_time = now.
+    // When validation fails, the old() value takes precedence.
     $defaultStartDate = $isCreate ? now()->format('Y-m-d') : '';
     $defaultStartTime = $isCreate ? now()->format('H:i') : '';
 
@@ -25,7 +25,7 @@
         $detailsData = [];
     }
 
-    // Yeni detal üçün başlanğıc index — mövcud ən böyük açar + 1
+    // Starting index for a new detail row — the largest existing key + 1
     $detailCount = 1;
     if (! empty($detailsData)) {
         $numericKeys = array_filter(array_keys($detailsData), 'is_numeric');

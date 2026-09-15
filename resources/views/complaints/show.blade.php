@@ -94,7 +94,7 @@
 
         {{-- Service Type (maintenance) OR Complaints list (accident/breakdown) --}}
         @if($isMaintenance)
-            {{-- Maintenance: show Xidmət Növü --}}
+            {{-- Maintenance: show the service type --}}
             <div class="row mb-4">
                 <div class="col-12">
                     <h6 class="complaint-show-card__section-title">

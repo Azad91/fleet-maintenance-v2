@@ -18,11 +18,11 @@
 
     $isMaintenance = $complaint->complaint_type?->value === 'maintenance';
 
-    // Time formatting helper — DB time sütunu HH:MM:SS qaytarır,
-    // PDF-də H:i göstərmək daha yaxşıdır.
+    // Time formatting helper — the DB time column returns HH:MM:SS,
+    // but H:i is preferable in the PDF.
     $fmtTime = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : '';
 
-    // Date formatting helper — DB və Carbon dəyərlərini təhlükəsiz formatla.
+    // Date formatting helper — safely formats both DB and Carbon values.
     $fmtDate = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('d.m.Y') : '';
 @endphp
 <!DOCTYPE html>

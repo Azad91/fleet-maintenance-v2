@@ -3,10 +3,9 @@
 @section('title', __('messages.complaints.edit_title'))
 
 @php
-    // ─── Time formatting helper ───
-    // DB `time` sütunu HH:MM:SS formatında qaytarır; <input type="time">
-    // yalnız HH:MM qəbul edir. Həm old() (validasiya xətasından sonra),
-    // həm DB dəyərini təhlükəsiz şəkildə H:i formatına salırıq.
+    // The DB `time` column returns HH:MM:SS, but <input type="time">
+    // only accepts HH:MM. Safely normalize both old() (after a validation
+    // error) and the raw DB value down to H:i format.
     $fmtTime = fn ($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : '';
 @endphp
 
@@ -67,7 +66,7 @@
                             {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} disabled>
                         <label class="form-check-label text-muted" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
                     </div>
-                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
+                    {{-- Disabled radios are not submitted — send the value via hidden input --}}
                     <input type="hidden" name="yer" value="{{ $complaint->yer?->value }}">
                 </div>
             </div>
@@ -116,7 +115,7 @@
                             {{ $complaint->complaint_type?->value === 'maintenance' ? 'checked' : '' }} disabled>
                         <label class="form-check-label text-muted">🔧 {{ __('enums.complaint_type.maintenance') }}</label>
                     </div>
-                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
+                    {{-- Disabled radios are not submitted — send the value via hidden input --}}
                     <input type="hidden" name="complaint_type" value="{{ $complaint->complaint_type?->value }}">
                 </div>
             </div>
@@ -130,7 +129,7 @@
                            value="{{ $complaint->service_km ? __('messages.complaints.motor_oil_service_label', ['km' => number_format($complaint->service_km, 0, '', '')]) : '—' }}">
                     <input type="hidden" name="service_km" value="{{ $complaint->service_km }}">
 
-                    {{-- Hidden complaints[] — mövcud item-lər saxlanılsın --}}
+                    {{-- Hidden complaints[] — preserve the existing items --}}
                     @foreach($complaint->items as $item)
                         <input type="hidden" name="complaints[]" value="{{ $item->description }}">
                     @endforeach
@@ -658,7 +657,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // LOCATION (Yol / Qaraj → driver visibility)
+    // LOCATION (Road / Garage → driver visibility)
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');

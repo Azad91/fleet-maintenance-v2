@@ -20,8 +20,9 @@
                 <tbody>
                     @forelse($items as $item)
                         @php
-                            // `$item->complaint_type` ComplaintType enum-dur (model cast),
-                            // ancaq bəzi sorğularda string gələ bilər. Hər ikisini dəstəklə.
+                            // `$item->complaint_type` is normally a ComplaintType enum
+                            // (model cast), but some queries return a string.
+                            // Support both forms here.
                             $typeValue = $item->complaint_type instanceof \App\Enums\ComplaintType
                                 ? $item->complaint_type->value
                                 : $item->complaint_type;

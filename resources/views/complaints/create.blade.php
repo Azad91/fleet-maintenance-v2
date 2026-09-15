@@ -200,8 +200,8 @@
     // ═══════════════════════════════════════════════════════════════
     // COMPLAINT TYPE → LOCATION
     //
-    // `resetLocation` — page load zamanı false (old('yer') qorunsun),
-    // istifadəçi radio dəyişəndə true (Yer sıfırlansın).
+    // `resetLocation` — false on page load (so old('yer') survives),
+    // true when the user changes a radio (so the location resets).
     // ═══════════════════════════════════════════════════════════════
     function handleComplaintTypeChange(resetLocation) {
         if (typeof resetLocation === 'undefined') {
@@ -214,7 +214,7 @@
 
         if (!roadRadio || !garageRadio) return;
 
-        // Enable both (əvvəlki maintenance seçimindən qalma disabled ola bilər)
+        // Re-enable both radios (a previous maintenance selection may have left them disabled)
         roadRadio.disabled = false;
         garageRadio.disabled = false;
 
@@ -236,7 +236,7 @@
             document.getElementById('serviceTypeBlock').style.display = 'block';
             document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
 
-            // Dropdown select-lərini disable et — HTML5 validation bloklamasın
+            // Disable the complaint selects so HTML5 validation does not block submit
             document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
                 el.disabled = true;
                 el.required = false;
@@ -443,7 +443,7 @@
     // ═══════════════════════════════════════════════════════════════
     // DETAILS (add / remove)
     // ═══════════════════════════════════════════════════════════════
-    // Server tərəfindən gələn başlanğıc index (old input-da olan max + 1)
+    // Starting index coming from the server (max key in old input + 1)
     let detailCount = parseInt(document.getElementById('detailCountValue')?.value || '1', 10) || 1;
 
     function addDetail() {
@@ -517,8 +517,8 @@
     // INIT
     // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
-        // ⚡ Page load → Yer-i sıfırlama (old('yer') qorunsun).
-        //    İstifadəçi radio dəyişəndə onchange default → reset = true.
+        // ⚡ Page load → do NOT reset the location (so old('yer') survives).
+        //    When the user changes a radio, onchange defaults to reset = true.
         handleComplaintTypeChange(false);
 
         toggleFields();
