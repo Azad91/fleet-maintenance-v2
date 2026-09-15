@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
-use App\Services\GarageContext;
+use App\Models\Traits\Auditable;
+use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class ComplaintItem extends Model
 {
-    protected $fillable = ['complaint_id', 'description', 'type'];
+    use Auditable, HasGarageScope;
+
+    protected $fillable = [
+        'complaint_id',
+        'description',
+        'type',
+        'garage_id',
+        'company_id',
+    ];
 
     // ==================== RELATIONS ====================
 
@@ -28,16 +37,15 @@ class ComplaintItem extends Model
      *  - at least twice,
      *  - and not yet in "completed" status.
      *
+     * The manual `where('complaints.garage_id', ...)` filter has been
+     * removed — HasGarageScope now applies it automatically on the
+     * `complaint_items` table itself. This makes the scope bulletproof
+     * even if a future refactor drops the explicit join condition.
+     *
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeRecurring($query, int $days = 30)
     {
-        $garageId = GarageContext::resolveGarageId();
-
-        if (! $garageId) {
-            return $query->whereRaw('1 = 0');
-        }
-
         return $query
             ->select(
                 'complaint_items.description',
@@ -52,7 +60,6 @@ class ComplaintItem extends Model
                 $q->where('complaints.status', '!=', \App\Enums\ComplaintStatus::Completed->value)
                     ->orWhereNull('complaints.status');
             })
-            ->where('complaints.garage_id', $garageId)
             ->groupBy('complaint_items.description', 'complaints.bus_id')
             ->havingRaw('COUNT(*) >= 2')
             ->orderByDesc('total');

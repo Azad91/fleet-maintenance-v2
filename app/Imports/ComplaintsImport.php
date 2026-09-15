@@ -167,6 +167,8 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
                 $complaint->items()->create([
                     'description' => $rowArray['complaints'],
                     'type' => $rowArray['complaint_type'] ?? null,
+                    'garage_id' => $garageId,
+                    'company_id' => $companyId ?? $bus->company_id,
                 ]);
             }
 
