@@ -19,16 +19,22 @@
                 </thead>
                 <tbody>
                     @forelse($items as $item)
-                        @php $percent = round(($item->total / $max) * 100, 1); @endphp
+                        @php
+                            // `$item->complaint_type` ComplaintType enum-dur (model cast),
+                            // ancaq bəzi sorğularda string gələ bilər. Hər ikisini dəstəklə.
+                            $typeValue = $item->complaint_type instanceof \App\Enums\ComplaintType
+                                ? $item->complaint_type->value
+                                : $item->complaint_type;
+
+                            $typeLabel = $typeValue
+                                ? __('enums.complaint_type.' . $typeValue)
+                                : __('messages.reports.content.unknown_type');
+
+                            $percent = round(($item->total / $max) * 100, 1);
+                        @endphp
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>
-                                <strong>
-                                    {{ $item->complaint_type
-                                        ? __('enums.complaint_type.' . $item->complaint_type)
-                                        : __('messages.reports.content.unknown_type') }}
-                                </strong>
-                            </td>
+                            <td><strong>{{ $typeLabel }}</strong></td>
                             <td>
                                 <div style="height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
                                     <div style="width: {{ $percent }}%; height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
