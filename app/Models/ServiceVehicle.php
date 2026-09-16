@@ -41,4 +41,21 @@ class ServiceVehicle extends Model
     {
         return $query->where('is_active', true);
     }
+    /**
+     * Stock currently held on this service vehicle.
+     * Ordered by name for stable UI presentation.
+     */
+    public function stocks()
+    {
+        return $this->hasMany(ServiceVehicleStock::class)->orderBy('name');
+    }
+
+    /**
+     * Total quantity across every stock row. Useful for the
+     * show-page KPI card.
+     */
+    public function getTotalStockQuantityAttribute(): int
+    {
+        return (int) $this->stocks()->sum('quantity');
+    }
 }

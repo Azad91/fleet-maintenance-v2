@@ -8,6 +8,7 @@ use App\Models\Warehouse;
 use App\Models\WarehouseTransfer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Models\ServiceVehicleStock;
 
 /**
  * Business logic for warehouse transfers.
@@ -450,6 +451,12 @@ class WarehouseTransferService
                 // Route to the correct destination.
                 if ($type->isReturnToQuarantine()) {
                     $this->moveToQuarantine($source, $item['declared_quantity']);
+                } elseif ($type->isToServiceVehicle()) {
+                    $this->moveToServiceVehicle(
+                        $transfer->to_service_vehicle_id,
+                        $source,
+                        $item['declared_quantity']
+                    );
                 }
                 // Note: to_service_vehicle is added in Phase 3.2.
             }
@@ -495,6 +502,40 @@ class WarehouseTransferService
             'minimum_quantity' => 0,
             'price'            => $source->price,
             'supplier'         => $source->supplier,
+        ]);
+    }
+    /**
+     * Move `quantity` units of the given source warehouse item to
+     * the stock of the target service vehicle.
+     *
+     * Matching is by `code`: if the service vehicle already holds
+     * the same code, its quantity is incremented. Otherwise a new
+     * stock row is created, cloning name/unit/price from the source
+     * so the two stay visually aligned.
+     */
+    private function moveToServiceVehicle(int $serviceVehicleId, Warehouse $source, int $quantity): void
+    {
+        $stock = ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $serviceVehicleId)
+            ->where('code', $source->code)
+            ->lockForUpdate()
+            ->first();
+
+        if ($stock) {
+            $stock->increment('quantity', $quantity);
+
+            return;
+        }
+
+        ServiceVehicleStock::withoutGlobalScopes()->create([
+            'service_vehicle_id' => $serviceVehicleId,
+            'garage_id'          => $source->garage_id,
+            'company_id'         => $source->company_id,
+            'code'               => $source->code,
+            'name'               => $source->name,
+            'category'           => $source->category,
+            'unit'               => $source->unit,
+            'quantity'           => $quantity,
         ]);
     }
 }

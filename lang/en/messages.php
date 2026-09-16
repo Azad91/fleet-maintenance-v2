@@ -488,7 +488,9 @@ return [
         'phone_placeholder'         => 'e.g.: +994 50 123 45 67',
         'no_vehicles'               => 'No service vehicles yet.',
         'delete_confirm'            => 'Are you sure you want to delete this service vehicle?',
-    ],
+        'current_stock' => 'Current Stock',
+        'no_stock'      => 'No stock on this service vehicle yet.',
+        ],
 
     // ==================== DRIVERS ====================
     'drivers' => [

@@ -44,7 +44,7 @@ class ServiceVehicleController extends Controller
 
     public function show(int $id): View
     {
-        $vehicle = ServiceVehicle::findOrFail($id);
+        $vehicle = ServiceVehicle::with('stocks')->findOrFail($id);
 
         $this->authorize('view', $vehicle);
 
