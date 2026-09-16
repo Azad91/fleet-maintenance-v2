@@ -55,6 +55,18 @@
                 'worker-activity' => ['label' => __('messages.reports.daily_status.worker_activity'), 'route' => 'reports.daily-status.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::DAILY_STATUS_MANAGER->value, RoleEnum::DAILY_STATUS_WORKER->value]],
             ],
         ],
+            'transfer' => [
+            'title'   => __('messages.transfers.report.title'),
+            'eyebrow' => __('messages.nav.warehouses'),
+            'icon'    => 'fa-arrow-right-arrow-left',
+            'reports' => [
+                'summary'         => ['label' => __('messages.transfers.report.summary'),         'route' => 'reports.transfer.summary',         'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'by-route'        => ['label' => __('messages.transfers.report.by_route'),        'route' => 'reports.transfer.by-route',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'top-items'       => ['label' => __('messages.transfers.report.top_items'),       'route' => 'reports.transfer.top-items',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'worker-activity' => ['label' => __('messages.transfers.report.worker_activity'), 'route' => 'reports.transfer.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::WAREHOUSE_WORKER->value]],
+                'disputed'        => ['label' => __('messages.transfers.report.disputed_tab'),    'route' => 'reports.transfer.disputed',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+            ],
+        ],
     ];
 
     $config = $domainConfig[$domain] ?? null;

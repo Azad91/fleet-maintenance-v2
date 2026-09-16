@@ -133,6 +133,15 @@ Route::middleware(['auth'])
                 Route::get('/changes', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'changes'])->name('changes');
                 Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
             });
+
+            // Transfer reports — company-wide aggregation across all garages
+            Route::prefix('transfer')->name('transfer.')->group(function () {
+                Route::get('/summary',         [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'summary'])->name('summary');
+                Route::get('/by-route',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'byRoute'])->name('by-route');
+                Route::get('/top-items',       [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'topItems'])->name('top-items');
+                Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/disputed',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'disputed'])->name('disputed');
+            });
         });
     });
 
@@ -443,6 +452,20 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
                 Route::get('/distribution', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'distribution'])->name('distribution');
                 Route::get('/changes', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'changes'])->name('changes');
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
+            });
+
+        // Transfer reports — accessible by garage admins and warehouse-domain users
+        Route::prefix('transfer')->name('transfer.')
+            ->middleware(['role:'.implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::warehouseRoles()
+            ))])
+            ->group(function () {
+                Route::get('/summary',         [App\Http\Controllers\Reports\TransferReportController::class, 'summary'])->name('summary');
+                Route::get('/by-route',        [App\Http\Controllers\Reports\TransferReportController::class, 'byRoute'])->name('by-route');
+                Route::get('/top-items',       [App\Http\Controllers\Reports\TransferReportController::class, 'topItems'])->name('top-items');
+                Route::get('/worker-activity', [App\Http\Controllers\Reports\TransferReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/disputed',        [App\Http\Controllers\Reports\TransferReportController::class, 'disputed'])->name('disputed');
             });
     });
 

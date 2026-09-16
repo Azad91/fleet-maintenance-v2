@@ -238,6 +238,9 @@
                         <a href="{{ route('reports.daily-status.distribution') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-status.*') ? 'is-active' : '' }}">
                             <i class="fas fa-clipboard-check"></i><span>{{ __('messages.reports.daily_status.title') }}</span>
                         </a>
+                        <a href="{{ route('reports.transfer.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.transfer.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.report.title') }}</span>
+                    </a>
                     @endif
                 @endif
             </nav>
