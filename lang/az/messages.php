@@ -458,6 +458,8 @@ return [
         'details' => 'İşçi məlumatları',
         'import' => 'Excel-dən idxal et',
         'import_title' => 'Excel-dən İşçiləri İdxal Et',
+        'code' => 'Kod',
+        'code_placeholder' => 'məs.: EMP-001',
         'first_name' => 'Ad',
         'first_name_placeholder' => 'məs.: Elşad',
         'last_name' => 'Soyad',
@@ -471,6 +473,7 @@ return [
         'no_employees' => 'Hələ işçi yoxdur.',
     ],
 
+    // ==================== SERVICE VEHICLES ====================
     'service_vehicles' => [
         'title'                     => 'Servis Maşınları',
         'subtitle'                  => 'Yolda nasaz avtobuslara xidmət edən səyyar ustalar.',
@@ -488,6 +491,8 @@ return [
         'phone_placeholder'         => 'məs.: +994 50 123 45 67',
         'no_vehicles'               => 'Hələ servis maşını yoxdur.',
         'delete_confirm'            => 'Bu servis maşınını silmək istədiyinizə əminsiniz?',
+        'current_stock' => 'Cari Stok',
+        'no_stock'      => 'Bu servis maşınında hələ stok yoxdur.',
     ],
 
     // ==================== DRIVERS ====================
@@ -678,7 +683,6 @@ return [
             'cannot_delete_active_garages' => 'Silmək mümkün deyil: bu şirkətin hələ :count aktiv qarajı var. Əvvəlcə onları passiv edin.',
             'delete_confirm' => 'Bu şirkəti silmək istədiyinizə əminsiniz?',
 
-            // Director section (create form)
             'director_section' => 'Şirkət Direktoru (məcburi)',
             'director_section_hint' => 'Hər şirkət üçün mütləq 1 director təyin edilməlidir. Director yalnız oxuya bilər, yazma edə bilməz.',
             'director_name' => 'Director Adı',
@@ -736,7 +740,6 @@ return [
             'cannot_delete_active_users' => 'Silmək mümkün deyil: bu qarajın hələ :count aktiv istifadəçisi var. Əvvəlcə onları passiv edin.',
             'delete_confirm' => 'Bu qarajı silmək istədiyinizə əminsiniz?',
 
-            // Admin section (create form)
             'admin_section' => 'Qaraj Admini (məcburi)',
             'admin_section_hint' => 'Hər qaraj üçün mütləq 1 admin təyin edilməlidir. Admin öz qarajının bütün idarəetməsini edir.',
             'admin_name' => 'Admin Adı',
@@ -942,7 +945,6 @@ return [
             'event_force_deleted' => 'Tamamilə silindi',
             'event_restored' => 'Bərpa edildi',
 
-            // Şikayət hesabatı
             'opened' => 'Açıldı',
             'closed' => 'Bağlandı',
             'open_now' => 'Açıq',
@@ -962,7 +964,6 @@ return [
             'min' => 'Min',
             'max' => 'Maks',
 
-            // Günlük KM hesabatı
             'missing_hint' => 'Aşağıdaki avtobusların :date tarixində KM qeydi yoxdur.',
             'missing_count' => 'Çatışmayan qeydlər',
             'buses_awaiting' => 'avtobus gözləyir',
@@ -973,7 +974,6 @@ return [
             'entries' => 'Qeydlər',
             'entries_count' => ':count qeyd',
 
-            // Günlük Status hesabatı
             'status' => 'Status',
             'total_statuses' => 'Ümumi statuslar',
             'records_in_period' => 'dövr ərzində qeydlər',
@@ -1033,6 +1033,7 @@ return [
         'unauthenticated' => 'İstifadəçi daxil olmayıb',
     ],
 
+    // ==================== TWO FACTOR ====================
     'two_factor' => [
         'title' => 'İki Faktorlu Təsdiq',
         'subtitle' => 'Telefonunuzdakı tətbiqdən 6 rəqəmli kodu daxil edin.',
@@ -1058,7 +1059,26 @@ return [
         'recovery_codes_gone' => 'Recovery kodları artıq göstərilməyəcək. Yenidən görmək üçün iki faktorlu təsdiqi sıfırlamalısınız.',
     ],
 
-        'transfers' => [
+    // ==================== TRANSFER STATUS ====================
+    'transfer_status' => [
+        'draft'      => 'Qaralama',
+        'dispatched' => 'Göndərildi',
+        'received'   => 'Qəbul edildi',
+        'disputed'   => 'Fərq var',
+        'rejected'   => 'Rədd edildi',
+        'cancelled'  => 'Ləğv edildi',
+        'resolved'   => 'Həll olundu',
+    ],
+
+    // ==================== TRANSFER TYPE ====================
+    'transfer_type' => [
+        'garage_to_garage'    => 'Qarajdan Qaraja',
+        'to_service_vehicle'  => 'Servis Maşınına',
+        'return_to_quarantine' => 'İadə / Karantin',
+    ],
+
+    // ==================== TRANSFERS ====================
+    'transfers' => [
         'title'                  => 'Anbar Transferləri',
         'subtitle'               => 'Detalları qarajlar və servis maşınları arasında köçürün.',
         'new'                    => 'Yeni Transfer',
@@ -1115,21 +1135,46 @@ return [
         'quarantine_hint'        => 'Bu detallar aktiv stokdan çıxarılır və göndərən qarajın karantin bölməsinə köçürülür.',
         'completed'              => 'Transfer tamamlandı.',
         'type_requires_workflow' => 'Bu transfer növü tam göndər → qəbul axını tələb edir.',
+        'dashboard_eyebrow'         => 'DİQQƏT TƏLƏB EDİR',
+        'dashboard_title'           => 'Anbar Transferləri',
+        'inbound_pending_label'     => 'Gələn Transferlər',
+        'inbound_pending_hint'      => 'Qəbulunuzu gözləyir',
+        'outbound_pending_label'    => 'Gedən Transferlər',
+        'outbound_pending_hint'     => 'Digər tərəfi gözləyir',
+        'disputed_label'            => 'Mübahisəli',
+        'disputed_hint'             => 'Həll tələb edir',
+        'items_unit'                => 'detal',
+
+        'report' => [
+            'title'              => 'Transfer Hesabatları',
+            'summary'            => 'İcmal',
+            'by_route'           => 'Marşrut üzrə',
+            'top_items'          => 'Ən çox transfer edilən',
+            'worker_activity'    => 'Worker fəaliyyəti',
+            'disputed_tab'       => 'Mübahisəli',
+            'total_transfers'    => 'Ümumi Transferlər',
+            'in_period'          => 'Dövr ərzində',
+            'items_moved'        => 'Köçürülən Detallar',
+            'disputed'           => 'Mübahisəli',
+            'dispute_rate'       => 'mübahisə nisbəti',
+            'received'           => 'Qəbul Edilən',
+            'successful'         => 'uğurlu',
+            'by_status'          => 'Statusa görə',
+            'by_type'            => 'Növə görə',
+            'outbound'           => 'Gedən',
+            'outbound_hint'      => 'Görünən qarajlardan göndərilən transferlər',
+            'inbound'            => 'Gələn',
+            'inbound_hint'       => 'Görünən qarajlar tərəfindən qəbul edilən transferlər',
+            'times_transferred'  => 'Dəfə',
+            'total_declared'     => 'Bəyan edilən',
+            'total_received'     => 'Qəbul edilən',
+            'no_disputes'        => 'Bu dövrdə mübahisəli transfer yoxdur.',
+        ],
     ],
 
-    'transfer_status' => [
-        'draft'      => 'Qaralama',
-        'dispatched' => 'Göndərildi',
-        'received'   => 'Qəbul edildi',
-        'disputed'   => 'Fərq var',
-        'rejected'   => 'Rədd edildi',
-        'cancelled'  => 'Ləğv edildi',
-        'resolved'   => 'Həll olundu',
-    ],
-
-    'transfer_type' => [
-        'garage_to_garage'    => 'Qarajdan Qaraja',
-        'to_service_vehicle'  => 'Servis Maşınına',
-        'return_to_quarantine' => 'İadə / Karantin',
+    // ==================== STOCK SOURCES ====================
+    'stock_sources' => [
+        'warehouse'       => 'Anbar',
+        'service_vehicle' => 'Servis Maşını',
     ],
 ];

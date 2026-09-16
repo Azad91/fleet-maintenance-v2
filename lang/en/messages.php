@@ -457,6 +457,8 @@ return [
         'details' => 'Employee Details',
         'import' => 'Import from Excel',
         'import_title' => 'Import Employees from Excel',
+        'code' => 'Code',
+        'code_placeholder' => 'e.g.: EMP-001',
         'first_name' => 'First Name',
         'first_name_placeholder' => 'e.g.: Elshad',
         'last_name' => 'Last Name',
@@ -490,7 +492,7 @@ return [
         'delete_confirm'            => 'Are you sure you want to delete this service vehicle?',
         'current_stock' => 'Current Stock',
         'no_stock'      => 'No stock on this service vehicle yet.',
-        ],
+    ],
 
     // ==================== DRIVERS ====================
     'drivers' => [
@@ -541,7 +543,6 @@ return [
         'add_for_bus' => 'Add KM for this Bus',
         'auto_read' => 'auto-read from header',
         'ignored_columns' => 'Other columns (ROUTE, FUEL, etc.) are ignored.',
-        'filter_date_hint' => 'Default: today. Clear to see all dates.',
     ],
 
     // ==================== DAILY STATUS ====================
@@ -682,7 +683,6 @@ return [
             'cannot_delete_active_garages' => 'Cannot delete: this company still has :count active garage(s). Please deactivate them first.',
             'delete_confirm' => 'Are you sure you want to delete this company?',
 
-            // Director section (create form)
             'director_section' => 'Company Director (required)',
             'director_section_hint' => 'Every company must have exactly one director. Directors can only read, not modify.',
             'director_name' => 'Director Name',
@@ -740,7 +740,6 @@ return [
             'cannot_delete_active_users' => 'Cannot delete: this garage still has :count active user(s). Please deactivate them first.',
             'delete_confirm' => 'Are you sure you want to delete this garage?',
 
-            // Admin section (create form)
             'admin_section' => 'Garage Admin (required)',
             'admin_section_hint' => 'Every garage must have exactly one admin. The admin manages all operations within their garage.',
             'admin_name' => 'Admin Name',
@@ -945,7 +944,6 @@ return [
             'event_force_deleted' => 'Force Deleted',
             'event_restored' => 'Restored',
 
-            // Complaint report specific
             'opened' => 'Opened',
             'closed' => 'Closed',
             'open_now' => 'Open Now',
@@ -965,7 +963,6 @@ return [
             'min' => 'Min',
             'max' => 'Max',
 
-            // Daily KM specific
             'missing_hint' => 'Buses below have no KM record on :date.',
             'missing_count' => 'Missing Records',
             'buses_awaiting' => 'buses awaiting entry',
@@ -976,7 +973,6 @@ return [
             'entries' => 'Entries',
             'entries_count' => ':count entries',
 
-            // Daily Status specific
             'status' => 'Status',
             'total_statuses' => 'Total Statuses',
             'records_in_period' => 'records in period',
@@ -1036,6 +1032,7 @@ return [
         'unauthenticated' => 'Unauthenticated',
     ],
 
+    // ==================== TWO FACTOR ====================
     'two_factor' => [
         'title' => 'Two-Factor Authentication',
         'subtitle' => 'Enter the 6-digit code from your authenticator app.',
@@ -1061,6 +1058,7 @@ return [
         'recovery_codes_gone' => 'The recovery codes are no longer visible. Reset two-factor authentication to generate new ones.',
     ],
 
+    // ==================== TRANSFER STATUS ====================
     'transfer_status' => [
         'draft'      => 'Draft',
         'dispatched' => 'Dispatched',
@@ -1069,24 +1067,16 @@ return [
         'rejected'   => 'Rejected',
         'cancelled'  => 'Cancelled',
         'resolved'   => 'Resolved',
-        'draft'      => 'Qaralama',
-        'dispatched' => 'Göndərildi',
-        'received'   => 'Qəbul edildi',
-        'disputed'   => 'Fərq var',
-        'rejected'   => 'Rədd edildi',
-        'cancelled'  => 'Ləğv edildi',
-        'resolved'   => 'Həll olundu',
     ],
 
+    // ==================== TRANSFER TYPE ====================
     'transfer_type' => [
         'garage_to_garage'    => 'Garage to Garage',
         'to_service_vehicle'  => 'To Service Vehicle',
         'return_to_quarantine' => 'Return / Quarantine',
-        'garage_to_garage'     => 'Qarajdan Qaraja',
-        'to_service_vehicle'   => 'Servis Maşınına',
-        'return_to_quarantine' => 'İadə / Karantin',
     ],
 
+    // ==================== TRANSFERS ====================
     'transfers' => [
         'title'                  => 'Warehouse Transfers',
         'subtitle'               => 'Move parts between garages and service vehicles.',
@@ -1153,32 +1143,35 @@ return [
         'disputed_label'            => 'Disputed',
         'disputed_hint'             => 'Need resolution',
         'items_unit'                => 'items',
-            'report' => [
-                'title'              => 'Transfer Reports',
-                'summary'            => 'Summary',
-                'by_route'           => 'By Route',
-                'top_items'          => 'Top Items',
-                'worker_activity'    => 'Worker Activity',
-                'disputed_tab'       => 'Disputed',
-                'total_transfers'    => 'Total Transfers',
-                'in_period'          => 'In period',
-                'items_moved'        => 'Items Moved',
-                'disputed'           => 'Disputed',
-                'dispute_rate'       => 'dispute rate',
-                'received'           => 'Received',
-                'successful'         => 'successful',
-                'by_status'          => 'By Status',
-                'by_type'            => 'By Type',
-                'outbound'           => 'Outbound',
-                'outbound_hint'      => 'Transfers sent from visible garages',
-                'inbound'            => 'Inbound',
-                'inbound_hint'       => 'Transfers received by visible garages',
-                'times_transferred'  => 'Times',
-                'total_declared'     => 'Declared',
-                'total_received'     => 'Received',
-                'no_disputes'        => 'No disputed transfers in this period.',
-            ],
+
+        'report' => [
+            'title'              => 'Transfer Reports',
+            'summary'            => 'Summary',
+            'by_route'           => 'By Route',
+            'top_items'          => 'Top Items',
+            'worker_activity'    => 'Worker Activity',
+            'disputed_tab'       => 'Disputed',
+            'total_transfers'    => 'Total Transfers',
+            'in_period'          => 'In period',
+            'items_moved'        => 'Items Moved',
+            'disputed'           => 'Disputed',
+            'dispute_rate'       => 'dispute rate',
+            'received'           => 'Received',
+            'successful'         => 'successful',
+            'by_status'          => 'By Status',
+            'by_type'            => 'By Type',
+            'outbound'           => 'Outbound',
+            'outbound_hint'      => 'Transfers sent from visible garages',
+            'inbound'            => 'Inbound',
+            'inbound_hint'       => 'Transfers received by visible garages',
+            'times_transferred'  => 'Times',
+            'total_declared'     => 'Declared',
+            'total_received'     => 'Received',
+            'no_disputes'        => 'No disputed transfers in this period.',
         ],
+    ],
+
+    // ==================== STOCK SOURCES ====================
     'stock_sources' => [
         'warehouse'       => 'Warehouse',
         'service_vehicle' => 'Service Vehicle',

@@ -452,6 +452,7 @@ return [
         'no_employees' => 'Henüz çalışan yok.',
     ],
 
+    // ==================== SERVICE VEHICLES ====================
     'service_vehicles' => [
         'title'                     => 'Servis Araçları',
         'subtitle'                  => 'Yolda arızalı otobüslere hizmet veren mobil atölyeler.',
@@ -641,7 +642,6 @@ return [
             'cannot_delete_active_garages' => 'Silinemiyor: bu şirketin hâlâ :count aktif garajı var. Lütfen önce onları pasifleştirin.',
             'delete_confirm' => 'Bu şirketi silmek istediğinize emin misiniz?',
 
-            // Director section (create form)
             'director_section' => 'Şirket Direktörü (zorunlu)',
             'director_section_hint' => 'Her şirketin tam olarak bir direktörü olmalıdır. Direktörler yalnızca okuyabilir, değişiklik yapamaz.',
             'director_name' => 'Direktör Adı',
@@ -699,7 +699,6 @@ return [
             'cannot_delete_active_users' => 'Silinemiyor: bu garajın hâlâ :count aktif kullanıcısı var. Lütfen önce onları pasifleştirin.',
             'delete_confirm' => 'Bu garajı silmek istediğinize emin misiniz?',
 
-            // Admin section (create form)
             'admin_section' => 'Garaj Yöneticisi (zorunlu)',
             'admin_section_hint' => 'Her garajın tam olarak bir yöneticisi olmalıdır. Yönetici, garajındaki tüm işlemleri yönetir.',
             'admin_name' => 'Yönetici Adı',
@@ -827,6 +826,120 @@ return [
         ],
     ],
 
+    // ==================== REPORTS ====================
+    'reports' => [
+        'menu_label' => 'RAPORLAR',
+        'title' => 'Raporlar',
+        'subtitle' => 'Analitik ve operasyonel içgörüler.',
+        'eyebrow' => 'RAPORLAR',
+        'coming_soon' => 'Yakında',
+        'coming_soon_hint' => 'Bu rapor geliştirme aşamasındadır. Kısa süre sonra tekrar kontrol edin.',
+        'no_scope' => 'Bu rapora erişim izniniz yok.',
+
+        'period' => [
+            'label' => 'Dönem',
+            'daily' => 'Bugün',
+            'weekly' => 'Bu hafta',
+            'monthly' => 'Bu ay',
+            'custom' => 'Özel tarih aralığı',
+            'from' => 'Başlangıç',
+            'to' => 'Bitiş',
+            'apply' => 'Uygula',
+        ],
+
+        'warehouse' => [
+            'title' => 'Depo Raporları',
+            'receipt' => 'Girişler',
+            'usage' => 'Kullanım',
+            'worker_activity' => 'Çalışan Aktivitesi',
+            'low_stock' => 'Kritik Stok',
+            'movement' => 'Hareket Geçmişi',
+        ],
+
+        'complaint' => [
+            'title' => 'Şikayet Raporları',
+            'summary' => 'Özet',
+            'top_types' => 'En Çok Türler',
+            'worker_activity' => 'Çalışan Aktivitesi',
+            'by_bus' => 'Otobüse Göre',
+            'avg_close_time' => 'Ort. Kapanma Süresi',
+        ],
+
+        'daily_km' => [
+            'title' => 'Günlük KM Raporları',
+            'missing' => 'Eksik Kayıtlar',
+            'top_buses' => 'En Çok Yol Giden',
+            'worker_activity' => 'Çalışan Aktivitesi',
+        ],
+
+        'daily_status' => [
+            'title' => 'Günlük Durum Raporları',
+            'distribution' => 'Durum Dağılımı',
+            'changes' => 'Durum Değişiklikleri',
+            'worker_activity' => 'Çalışan Aktivitesi',
+        ],
+
+        'content' => [
+            'date' => 'Tarih',
+            'user' => 'Kullanıcı',
+            'event' => 'Olay',
+            'changes' => 'Değişiklikler',
+            'created' => 'Oluşturuldu',
+            'updated' => 'Güncellendi',
+            'deleted' => 'Silindi',
+            'total' => 'Toplam',
+            'times_used' => 'Kullanım Sayısı',
+            'total_used' => 'Toplam Kullanım',
+            'min_quantity' => 'Min. Miktar',
+            'deficit' => 'Eksik',
+            'records_count' => ':count kayıt',
+            'no_data' => 'Bu dönem için veri yok.',
+            'no_low_stock' => 'Tüm ürünler minimum eşiğin üzerinde.',
+            'unknown_user' => 'Bilinmeyen kullanıcı',
+            'low_stock_hint' => 'Bu ürünler minimum miktar eşiğinde veya altında. Stok yenilemeyi düşünün.',
+            'event_created' => 'Oluşturuldu',
+            'event_updated' => 'Güncellendi',
+            'event_deleted' => 'Silindi',
+            'event_force_deleted' => 'Tamamen Silindi',
+            'event_restored' => 'Geri Yüklendi',
+
+            'opened' => 'Açıldı',
+            'closed' => 'Kapatıldı',
+            'open_now' => 'Açık',
+            'in_period' => 'Dönem içinde',
+            'current_state' => 'Mevcut durum',
+            'by_status' => 'Duruma Göre',
+            'distribution' => 'Dağılım',
+            'unknown_type' => 'Bilinmeyen tür',
+            'completed' => 'Tamamlandı',
+            'avg_close_hours' => 'Ort. Kapanma Süresi',
+            'hours' => 'saat',
+            'sample_count' => 'Örnek',
+            'closed_cards' => 'kapatılmış kart',
+            'by_type' => 'Şikayet Türüne Göre',
+            'count' => 'Sayı',
+            'avg' => 'Ort',
+            'min' => 'Min',
+            'max' => 'Maks',
+
+            'missing_hint' => 'Aşağıdaki otobüslerin :date tarihinde KM kaydı yok.',
+            'missing_count' => 'Eksik Kayıtlar',
+            'buses_awaiting' => 'otobüs bekliyor',
+            'all_buses_recorded' => 'Tüm aktif otobüsler için bu günün KM kayıtları var.',
+            'start_km' => 'Başlangıç KM',
+            'end_km' => 'Bitiş KM',
+            'distance' => 'Mesafe',
+            'entries' => 'Kayıtlar',
+            'entries_count' => ':count kayıt',
+
+            'status' => 'Durum',
+            'total_statuses' => 'Toplam Durumlar',
+            'records_in_period' => 'dönem içindeki kayıtlar',
+            'unique_statuses' => 'Benzersiz Durumlar',
+            'distinct_types' => 'farklı türler',
+        ],
+    ],
+
     // ==================== FLASH MESSAGES ====================
     'flash' => [
         'created' => ':Item başarıyla oluşturuldu.',
@@ -875,10 +988,9 @@ return [
     'api' => [
         'garage_header_required' => 'X-Garage-Id başlığı gerekli.',
         'unauthenticated' => 'Kimlik doğrulanmadı',
-        'garage_header_required' => 'X-Garage-Id başlığı gerekli.',
-        'unauthenticated' => 'Kimlik doğrulanmadı',
     ],
 
+    // ==================== TWO FACTOR ====================
     'two_factor' => [
         'title' => 'İki Adımlı Doğrulama',
         'subtitle' => 'Doğrulayıcı uygulamanızdaki 6 haneli kodu girin.',
@@ -903,6 +1015,8 @@ return [
         'saved_codes' => 'Kodları Kaydettim, Devam Et',
         'recovery_codes_gone' => 'Kurtarma kodları artık görünmüyor. Yenilerini oluşturmak için iki adımlı doğrulamayı sıfırlayın.',
     ],
+
+    // ==================== TRANSFER STATUS ====================
     'transfer_status' => [
         'draft'      => 'Taslak',
         'dispatched' => 'Sevk Edildi',
@@ -913,13 +1027,15 @@ return [
         'resolved'   => 'Çözüldü',
     ],
 
+    // ==================== TRANSFER TYPE ====================
     'transfer_type' => [
         'garage_to_garage'    => 'Garajdan Garaja',
         'to_service_vehicle'  => 'Servis Aracına',
         'return_to_quarantine' => 'İade / Karantina',
     ],
 
-        'transfers' => [
+    // ==================== TRANSFERS ====================
+    'transfers' => [
         'title'                  => 'Depo Transferleri',
         'subtitle'               => 'Parçaları garajlar ve servis araçları arasında taşıyın.',
         'new'                    => 'Yeni Transfer',
@@ -976,5 +1092,5 @@ return [
         'quarantine_hint'        => 'Bu ürünler aktif stoktan çıkarılır ve kaynak garajın karantina bölmesine taşınır.',
         'completed'              => 'Transfer tamamlandı.',
         'type_requires_workflow' => 'Bu transfer türü tam gönder → teslim al iş akışını gerektirir.',
-        ],
+    ],
 ];
