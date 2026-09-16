@@ -54,6 +54,126 @@
                 </div>
             </article>
         </section>
+        {{-- ═══════════════════════════════════════════════════ --}}
+        {{-- TRANSFER NOTIFICATIONS                             --}}
+        {{-- ═══════════════════════════════════════════════════ --}}
+        @if($outboundPending + $inboundPending + $disputedCount > 0)
+            <section class="fleet-panel mb-4">
+                <header class="fleet-panel__header">
+                    <div>
+                        <span class="fleet-eyebrow">{{ __('messages.transfers.dashboard_eyebrow') }}</span>
+                        <h2>🔔 {{ __('messages.transfers.dashboard_title') }}</h2>
+                    </div>
+                    <a href="{{ route('warehouse-transfers.index') }}" class="fleet-text-link">
+                        {{ __('messages.dashboard.view_all') }} <i class="fas fa-arrow-right"></i>
+                    </a>
+                </header>
+
+                {{-- Counter badges --}}
+                <div class="row g-3 p-3">
+                    @if($inboundPending > 0)
+                        <div class="col-md-4">
+                            <a href="{{ route('warehouse-transfers.index', ['direction' => 'inbound', 'status' => 'dispatched']) }}"
+                               class="text-decoration-none">
+                                <div class="p-3 rounded-3"
+                                     style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="fas fa-arrow-down text-success"></i>
+                                        <strong class="text-success" style="font-size: 13px;">
+                                            {{ __('messages.transfers.inbound_pending_label') }}
+                                        </strong>
+                                    </div>
+                                    <div class="fw-bold text-success" style="font-size: 28px; letter-spacing: -0.5px;">
+                                        {{ $inboundPending }}
+                                    </div>
+                                    <small class="text-success">
+                                        {{ __('messages.transfers.inbound_pending_hint') }}
+                                    </small>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+
+                    @if($outboundPending > 0)
+                        <div class="col-md-4">
+                            <a href="{{ route('warehouse-transfers.index', ['direction' => 'outbound', 'status' => 'dispatched']) }}"
+                               class="text-decoration-none">
+                                <div class="p-3 rounded-3"
+                                     style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="fas fa-arrow-up text-primary"></i>
+                                        <strong class="text-primary" style="font-size: 13px;">
+                                            {{ __('messages.transfers.outbound_pending_label') }}
+                                        </strong>
+                                    </div>
+                                    <div class="fw-bold text-primary" style="font-size: 28px; letter-spacing: -0.5px;">
+                                        {{ $outboundPending }}
+                                    </div>
+                                    <small class="text-primary">
+                                        {{ __('messages.transfers.outbound_pending_hint') }}
+                                    </small>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+
+                    @if($disputedCount > 0)
+                        <div class="col-md-4">
+                            <a href="{{ route('warehouse-transfers.index', ['status' => 'disputed']) }}"
+                               class="text-decoration-none">
+                                <div class="p-3 rounded-3"
+                                     style="background: #fffbeb; border: 1px solid #fde68a;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="fas fa-triangle-exclamation text-warning"></i>
+                                        <strong class="text-warning" style="font-size: 13px;">
+                                            {{ __('messages.transfers.disputed_label') }}
+                                        </strong>
+                                    </div>
+                                    <div class="fw-bold text-warning" style="font-size: 28px; letter-spacing: -0.5px;">
+                                        {{ $disputedCount }}
+                                    </div>
+                                    <small class="text-warning">
+                                        {{ __('messages.transfers.disputed_hint') }}
+                                    </small>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Recent pending transfers list --}}
+                @if($pendingTransfers->isNotEmpty())
+                    <div class="fleet-list" style="border-top: 1px solid #eef2f7;">
+                        @foreach($pendingTransfers as $transfer)
+                            <a href="{{ route('warehouse-transfers.show', $transfer) }}"
+                               class="fleet-list__item text-decoration-none">
+                                <span class="fleet-list__icon">
+                                    <i class="fas fa-arrow-right-arrow-left"></i>
+                                </span>
+                                <span class="fleet-list__content">
+                                    <strong>
+                                        #{{ $transfer->id }}
+                                        · {{ $transfer->fromGarage?->name ?? '—' }}
+                                        →
+                                        {{ $transfer->destination_label_full }}
+                                    </strong>
+                                    <small>
+                                        {{ $transfer->type->label() }}
+                                        · {{ $transfer->declared_total }}
+                                        {{ __('messages.transfers.items_unit') }}
+                                        · {{ $transfer->created_at?->format('d.m.Y H:i') }}
+                                    </small>
+                                </span>
+                                <span class="fleet-status fleet-status--warning">
+                                    {{ $transfer->status->label() }}
+                                </span>
+                                <i class="fas fa-chevron-right fleet-list__arrow"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+        @endif
 
         <section class="fleet-dashboard-grid">
             <article class="fleet-panel fleet-panel--wide">
