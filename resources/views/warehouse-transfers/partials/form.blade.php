@@ -11,7 +11,6 @@
 
 <div class="row g-3">
 
-    {{-- ─── Transfer Type ─── --}}
     <div class="col-md-12">
         <label class="form-label fw-bold">
             {{ __('messages.transfers.type') }} <span class="text-danger">*</span>
@@ -33,7 +32,6 @@
         </div>
     </div>
 
-    {{-- ─── Destination: Garage ─── --}}
     <div class="col-md-6" id="to_garage_field">
         <label for="to_garage_id" class="form-label fw-bold">
             {{ __('messages.transfers.to_garage') }} <span class="text-danger">*</span>
@@ -49,7 +47,6 @@
         </select>
     </div>
 
-    {{-- ─── Destination: Service Vehicle ─── --}}
     <div class="col-md-6" id="to_service_vehicle_field" style="display:none;">
         <label for="to_service_vehicle_id" class="form-label fw-bold">
             {{ __('messages.transfers.to_service_vehicle') }} <span class="text-danger">*</span>
@@ -72,7 +69,6 @@
         @endif
     </div>
 
-    {{-- ─── Notes ─── --}}
     <div class="col-md-12">
         <label for="notes" class="form-label fw-bold">
             {{ __('messages.transfers.notes') }}
@@ -80,7 +76,6 @@
         <textarea class="form-control" id="notes" name="notes" rows="2" maxlength="2000">{{ old('notes') }}</textarea>
     </div>
 
-    {{-- ─── Items ─── --}}
     <div class="col-md-12">
         <hr class="my-2">
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -100,15 +95,14 @@
                 <table class="table table-sm align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 45%;">{{ __('messages.transfers.item_code') }}</th>
-                            <th style="width: 20%;">{{ __('messages.transfers.available_qty') }}</th>
-                            <th style="width: 20%;">{{ __('messages.transfers.declared_qty') }}</th>
+                            <th style="width: 25%;">{{ __('messages.transfers.item_code') }}</th>
+                            <th style="width: 30%;">{{ __('messages.complaints.part_name') }}</th>
+                            <th style="width: 15%;">{{ __('messages.transfers.available_qty') }}</th>
+                            <th style="width: 15%;">{{ __('messages.transfers.declared_qty') }}</th>
                             <th style="width: 15%;"></th>
                         </tr>
                     </thead>
-                    <tbody id="itemsContainer">
-                        {{-- rows injected by JS --}}
-                    </tbody>
+                    <tbody id="itemsContainer"></tbody>
                 </table>
             </div>
         @endif
@@ -124,67 +118,66 @@
     </a>
 </div>
 
+@php
+    $warehouseItemsPayload = $warehouses->map(function ($w) {
+        return [
+            'id'       => $w->id,
+            'code'     => $w->code,
+            'name'     => $w->name,
+            'quantity' => $w->quantity,
+            'unit'     => $w->unit,
+        ];
+    })->values()->all();
+@endphp
+
 @push('scripts')
 <script>
-    // ─── Items catalog from server ───
-    const WAREHOUSE_ITEMS = @json($warehouses->map(fn($w) => [
-        'id' => $w->id,
-        'code' => $w->code,
-        'name' => $w->name,
-        'quantity' => $w->quantity,
-        'unit' => $w->unit,
-    ]));
+    const WAREHOUSE_ITEMS = @json($warehouseItemsPayload);
 
-    const TRANSLATIONS = {
-        select: @json(__('messages.common.select')),
-        available: @json(__('messages.transfers.available_qty')),
-    };
+    // Build a lookup map for O(1) code matching.
+    const ITEM_BY_CODE = {};
+    WAREHOUSE_ITEMS.forEach(function (item) {
+        ITEM_BY_CODE[String(item.code).toUpperCase()] = item;
+    });
 
     let itemCounter = 0;
 
-    function addItemRow(selectedId = '', declaredQty = '') {
+    function addItemRow() {
         const container = document.getElementById('itemsContainer');
         if (!container) return;
 
         const idx = itemCounter++;
 
-        let optionsHtml = `<option value="">${TRANSLATIONS.select}</option>`;
-        WAREHOUSE_ITEMS.forEach(item => {
-            const selected = String(item.id) === String(selectedId) ? 'selected' : '';
-            optionsHtml += `<option value="${item.id}" data-qty="${item.quantity}" data-name="${item.name}" data-unit="${item.unit ?? ''}" ${selected}>${item.code} — ${item.name}</option>`;
-        });
-
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <select class="form-select form-select-sm item-select"
-                        name="items[${idx}][warehouse_id]"
-                        onchange="onItemSelected(this)"
-                        required>
-                    ${optionsHtml}
-                </select>
-            </td>
-            <td>
-                <span class="text-muted item-available">—</span>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm"
-                       name="items[${idx}][declared_quantity]"
-                       min="1" value="${declaredQty}" required>
-            </td>
-            <td class="text-end">
-                <button type="button" class="btn btn-sm btn-outline-danger"
-                        onclick="removeItemRow(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        `;
+        row.innerHTML =
+            '<td>' +
+                '<input type="text" class="form-control form-control-sm item-code" ' +
+                       'name="items[' + idx + '][code]" ' +
+                       'placeholder="{{ __('messages.warehouse.code_placeholder') }}" ' +
+                       'oninput="onCodeInput(this)" ' +
+                       'autocomplete="off" ' +
+                       'style="text-transform: uppercase;" ' +
+                       'required>' +
+                '<input type="hidden" name="items[' + idx + '][warehouse_id]" class="item-warehouse-id">' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" class="form-control form-control-sm item-name" readonly tabindex="-1" style="background:#e9ecef;">' +
+            '</td>' +
+            '<td>' +
+                '<span class="text-muted item-available">—</span>' +
+            '</td>' +
+            '<td>' +
+                '<input type="number" class="form-control form-control-sm item-qty" ' +
+                       'name="items[' + idx + '][declared_quantity]" ' +
+                       'min="1" required>' +
+            '</td>' +
+            '<td class="text-end">' +
+                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItemRow(this)">' +
+                    '<i class="bi bi-trash"></i>' +
+                '</button>' +
+            '</td>';
 
         container.appendChild(row);
-
-        // Trigger initial "available" display if a value is preselected
-        const sel = row.querySelector('.item-select');
-        if (selectedId) onItemSelected(sel);
     }
 
     function removeItemRow(btn) {
@@ -193,22 +186,44 @@
         btn.closest('tr').remove();
     }
 
-    function onItemSelected(selectEl) {
-        const row = selectEl.closest('tr');
-        const opt = selectEl.options[selectEl.selectedIndex];
-        const available = row.querySelector('.item-available');
+    function onCodeInput(input) {
+        const row = input.closest('tr');
+        const code = String(input.value || '').trim().toUpperCase();
+        const item = ITEM_BY_CODE[code];
 
-        if (! selectEl.value) {
-            available.textContent = '—';
+        const nameEl     = row.querySelector('.item-name');
+        const availableEl = row.querySelector('.item-available');
+        const qtyEl      = row.querySelector('.item-qty');
+        const idEl       = row.querySelector('.item-warehouse-id');
+
+        input.classList.remove('is-valid', 'is-invalid');
+
+        if (!code) {
+            nameEl.value = '';
+            availableEl.textContent = '—';
+            idEl.value = '';
             return;
         }
 
-        const qty = opt.dataset.qty ?? '0';
-        const unit = opt.dataset.unit ?? '';
-        available.innerHTML = `<strong>${qty}</strong> ${unit}`;
+        if (!item) {
+            nameEl.value = '';
+            availableEl.textContent = '—';
+            idEl.value = '';
+            input.classList.add('is-invalid');
+            return;
+        }
+
+        // Match found — autofill name, available, and warehouse id.
+        nameEl.value = item.name;
+        availableEl.innerHTML = '<strong>' + item.quantity + '</strong> ' + (item.unit || '');
+        idEl.value = item.id;
+        input.classList.add('is-valid');
+
+        if (!qtyEl.value) {
+            qtyEl.value = 1;
+        }
     }
 
-    // ─── Type switch ───
     function onTypeChange() {
         const type = document.querySelector('input[name="type"]:checked')?.value;
 
@@ -217,7 +232,6 @@
         const garageSelect  = document.getElementById('to_garage_id');
         const vehicleSelect = document.getElementById('to_service_vehicle_id');
 
-        // Hide both by default
         garageField.style.display   = 'none';
         vehicleField.style.display  = 'none';
         garageSelect.disabled  = true;
@@ -232,13 +246,10 @@
             vehicleField.style.display = 'block';
             vehicleSelect.disabled = false;
         }
-        // return_to_quarantine: both hidden, no destination needed.
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         onTypeChange();
-
-        // Seed one empty row so the form is usable immediately.
         addItemRow();
     });
 </script>

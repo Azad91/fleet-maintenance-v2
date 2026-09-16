@@ -1069,12 +1069,22 @@ return [
         'rejected'   => 'Rejected',
         'cancelled'  => 'Cancelled',
         'resolved'   => 'Resolved',
+        'draft'      => 'Qaralama',
+        'dispatched' => 'Göndərildi',
+        'received'   => 'Qəbul edildi',
+        'disputed'   => 'Fərq var',
+        'rejected'   => 'Rədd edildi',
+        'cancelled'  => 'Ləğv edildi',
+        'resolved'   => 'Həll olundu',
     ],
 
     'transfer_type' => [
         'garage_to_garage'    => 'Garage to Garage',
         'to_service_vehicle'  => 'To Service Vehicle',
         'return_to_quarantine' => 'Return / Quarantine',
+        'garage_to_garage'     => 'Qarajdan Qaraja',
+        'to_service_vehicle'   => 'Servis Maşınına',
+        'return_to_quarantine' => 'İadə / Karantin',
     ],
 
     'transfers' => [
