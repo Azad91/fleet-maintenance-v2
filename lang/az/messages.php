@@ -467,6 +467,25 @@ return [
         'no_employees' => 'Hələ işçi yoxdur.',
     ],
 
+    'service_vehicles' => [
+        'title'                     => 'Servis Maşınları',
+        'subtitle'                  => 'Yolda nasaz avtobuslara xidmət edən səyyar ustalar.',
+        'new'                       => 'Yeni Servis Maşını',
+        'edit'                      => 'Servis Maşınını Redaktə Et',
+        'details'                   => 'Servis Maşını Məlumatları',
+        'name'                      => 'Ad',
+        'name_placeholder'          => 'məs.: Servis Maşını 1',
+        'plate_number'              => 'Dövlət Nömrəsi',
+        'plate_number_placeholder'  => 'məs.: 90-AA-123',
+        'plate_number_hint'         => 'İstəyə bağlı. Bu qarajda unikal olmalıdır.',
+        'driver_name'               => 'Sürücü Adı',
+        'driver_name_placeholder'   => 'məs.: Elşad Məmmədov',
+        'phone'                     => 'Telefon',
+        'phone_placeholder'         => 'məs.: +994 50 123 45 67',
+        'no_vehicles'               => 'Hələ servis maşını yoxdur.',
+        'delete_confirm'            => 'Bu servis maşınını silmək istədiyinizə əminsiniz?',
+    ],
+
     // ==================== DRIVERS ====================
     'drivers' => [
         'title' => 'Sürücülər',

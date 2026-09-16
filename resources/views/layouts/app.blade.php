@@ -204,6 +204,9 @@
                     <a href="{{ route('employees.index') }}" class="fleet-nav__link {{ request()->routeIs('employees.*') ? 'is-active' : '' }}">
                         <i class="fas fa-users"></i><span>{{ __('messages.nav.employees') }}</span>
                     </a>
+                    <a href="{{ route('service-vehicles.index') }}" class="fleet-nav__link {{ request()->routeIs('service-vehicles.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-truck-medical"></i><span>{{ __('messages.service_vehicles.title') }}</span>
+                    </a>
                     <p class="fleet-nav__label">{{ __('messages.nav.administration') }}</p>
                     <a href="{{ route('users.index') }}" class="fleet-nav__link {{ request()->routeIs('users.*') ? 'is-active' : '' }}">
                         <i class="fas fa-user-shield"></i><span>{{ __('messages.nav.users') }}</span>

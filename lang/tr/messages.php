@@ -448,6 +448,25 @@ return [
         'no_employees' => 'Henüz çalışan yok.',
     ],
 
+    'service_vehicles' => [
+        'title'                     => 'Servis Araçları',
+        'subtitle'                  => 'Yolda arızalı otobüslere hizmet veren mobil atölyeler.',
+        'new'                       => 'Yeni Servis Aracı',
+        'edit'                      => 'Servis Aracını Düzenle',
+        'details'                   => 'Servis Aracı Detayları',
+        'name'                      => 'Ad',
+        'name_placeholder'          => 'örn.: Servis Aracı 1',
+        'plate_number'              => 'Plaka Numarası',
+        'plate_number_placeholder'  => 'örn.: 90-AA-123',
+        'plate_number_hint'         => 'İsteğe bağlı. Bu garajda benzersiz olmalıdır.',
+        'driver_name'               => 'Sürücü Adı',
+        'driver_name_placeholder'   => 'örn.: Elshad Mammadov',
+        'phone'                     => 'Telefon',
+        'phone_placeholder'         => 'örn.: +994 50 123 45 67',
+        'no_vehicles'               => 'Henüz servis aracı yok.',
+        'delete_confirm'            => 'Bu servis aracını silmek istediğinize emin misiniz?',
+    ],
+
     // ==================== DRIVERS ====================
     'drivers' => [
         'title' => 'Sürücüler',

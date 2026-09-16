@@ -466,6 +466,26 @@ return [
         'no_employees' => 'No employees yet.',
     ],
 
+    // ==================== SERVICE VEHICLES ====================
+    'service_vehicles' => [
+        'title'                     => 'Service Vehicles',
+        'subtitle'                  => 'Mobile workshops dispatched to repair buses on the road.',
+        'new'                       => 'New Service Vehicle',
+        'edit'                      => 'Edit Service Vehicle',
+        'details'                   => 'Service Vehicle Details',
+        'name'                      => 'Name',
+        'name_placeholder'          => 'e.g.: Service Vehicle 1',
+        'plate_number'              => 'Plate Number',
+        'plate_number_placeholder'  => 'e.g.: 90-AA-123',
+        'plate_number_hint'         => 'Optional. Must be unique within this garage.',
+        'driver_name'               => 'Driver Name',
+        'driver_name_placeholder'   => 'e.g.: Elshad Mammadov',
+        'phone'                     => 'Phone',
+        'phone_placeholder'         => 'e.g.: +994 50 123 45 67',
+        'no_vehicles'               => 'No service vehicles yet.',
+        'delete_confirm'            => 'Are you sure you want to delete this service vehicle?',
+    ],
+
     // ==================== DRIVERS ====================
     'drivers' => [
         'title' => 'Drivers',

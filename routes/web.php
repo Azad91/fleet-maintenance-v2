@@ -308,6 +308,17 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
     });
 
+    // ==================== SERVICE VEHICLES (ADMIN ONLY) ====================
+    Route::prefix('service-vehicles')->name('service-vehicles.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+        Route::get('/create', [\App\Http\Controllers\ServiceVehicleController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\ServiceVehicleController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\ServiceVehicleController::class, 'index'])->name('index');
+        Route::get('/{service_vehicle}/edit', [\App\Http\Controllers\ServiceVehicleController::class, 'edit'])->name('edit');
+        Route::get('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'show'])->name('show');
+        Route::put('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'update'])->name('update');
+        Route::delete('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'destroy'])->name('destroy');
+    });
+
     // ==================== BUS DAILY STATUSES ====================
     $dailyStatusRoles = implode(',', array_merge(
         [RoleEnum::ADMIN->value],
@@ -315,7 +326,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
     ));
 
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->middleware(['role:'.$dailyStatusRoles])->group(function () {
-        Route::get('/export', [BusDailyStatusController::class, 'export'])->name('export');    
+        Route::get('/export', [BusDailyStatusController::class, 'export'])->name('export');
         Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
         Route::post('/import', [BusDailyStatusController::class, 'import'])
             ->middleware('throttle:import')
