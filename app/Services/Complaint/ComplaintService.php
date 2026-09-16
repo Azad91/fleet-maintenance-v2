@@ -24,8 +24,16 @@ class ComplaintService
 
         return DB::transaction(function () use ($data, $detallar, $shikayet) {
             $processedDetails = [];
+
             if (! empty($detallar) && is_array($detallar)) {
-                $processedDetails = $this->stockService->deductStock($detallar);
+                // `yer` may arrive as a Location enum (from a model) or
+                // as a plain string (from a form request). Normalise it
+                // to a string before handing it to the stock service.
+                $location = ($data['yer'] ?? null) instanceof \App\Enums\Location
+                    ? $data['yer']->value
+                    : ($data['yer'] ?? 'garage');
+
+                $processedDetails = $this->stockService->deductStock($detallar, $location);
             }
 
             $complaint = Complaint::create($data);
@@ -55,8 +63,14 @@ class ComplaintService
             $processedDetails = null;
 
             if ($detallar !== null && is_array($detallar)) {
+                // Same normalisation as create(): `yer` may be an enum
+                // or a string depending on the caller.
+                $location = ($data['yer'] ?? null) instanceof \App\Enums\Location
+                    ? $data['yer']->value
+                    : ($data['yer'] ?? 'garage');
+
                 // syncStockDiff restores old stock and deducts new stock atomically
-                $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar);
+                $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar, $location);
             }
 
             $complaint->update($data);

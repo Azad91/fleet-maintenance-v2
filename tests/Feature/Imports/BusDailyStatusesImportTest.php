@@ -104,18 +104,20 @@ class BusDailyStatusesImportTest extends TestCase
     }
 
     // ==================================================================
-    // 2. Full-row integration via model()
+    // 2. Full-row integration via collection()
     // ==================================================================
+    // The import class uses ToCollection (bulk upsert) instead of
+    // ToModel — see the class docblock. Tests must feed rows as an
+    // array of associative arrays, exactly as WithHeadingRow yields
+    // them.
 
-    public function test_model_creates_status_with_provided_date(): void
+    public function test_collection_creates_status_with_provided_date(): void
     {
         $import = $this->makeImport();
 
-        $import->model([
-            'dqn' => 'IMP-001',
-            'date' => '15.09.2026',
-            'status' => 'READY FOR ROUTE',
-        ]);
+        $import->collection(collect([
+            ['dqn' => 'IMP-001', 'date' => '15.09.2026', 'status' => 'READY FOR ROUTE'],
+        ]));
 
         $status = BusDailyStatus::withoutGlobalScopes()
             ->where('bus_id', $this->bus->id)
@@ -126,21 +128,14 @@ class BusDailyStatusesImportTest extends TestCase
         $this->assertSame('READY FOR ROUTE', $status->status);
     }
 
-    public function test_model_creates_status_for_each_day_separately(): void
+    public function test_collection_creates_status_for_each_day_separately(): void
     {
         $import = $this->makeImport();
 
-        $import->model([
-            'dqn' => 'IMP-001',
-            'date' => '15.09.2026',
-            'status' => 'READY FOR ROUTE',
-        ]);
-
-        $import->model([
-            'dqn' => 'IMP-001',
-            'date' => '16.09.2026',
-            'status' => 'IN MAINTENANCE',
-        ]);
+        $import->collection(collect([
+            ['dqn' => 'IMP-001', 'date' => '15.09.2026', 'status' => 'READY FOR ROUTE'],
+            ['dqn' => 'IMP-001', 'date' => '16.09.2026', 'status' => 'IN MAINTENANCE'],
+        ]));
 
         $this->assertSame(
             2,
@@ -148,21 +143,17 @@ class BusDailyStatusesImportTest extends TestCase
         );
     }
 
-    public function test_model_updates_existing_row_on_same_date(): void
+    public function test_collection_updates_existing_row_on_same_date(): void
     {
         $import = $this->makeImport();
 
-        $import->model([
-            'dqn' => 'IMP-001',
-            'date' => '15.09.2026',
-            'status' => 'READY FOR ROUTE',
-        ]);
+        $import->collection(collect([
+            ['dqn' => 'IMP-001', 'date' => '15.09.2026', 'status' => 'READY FOR ROUTE'],
+        ]));
 
-        $import->model([
-            'dqn' => 'IMP-001',
-            'date' => '15.09.2026',
-            'status' => 'IN MAINTENANCE',
-        ]);
+        $import->collection(collect([
+            ['dqn' => 'IMP-001', 'date' => '15.09.2026', 'status' => 'IN MAINTENANCE'],
+        ]));
 
         $this->assertSame(
             1,
@@ -172,6 +163,7 @@ class BusDailyStatusesImportTest extends TestCase
         $status = BusDailyStatus::withoutGlobalScopes()
             ->where('bus_id', $this->bus->id)
             ->first();
+
         $this->assertSame('IN MAINTENANCE', $status->status);
     }
 }

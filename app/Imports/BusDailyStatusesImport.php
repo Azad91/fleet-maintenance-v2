@@ -117,14 +117,19 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
 
         $records = array_values($records);
 
-        // ─── Step 3: replace matching rows atomically ───
+        // ─── Step 3: upsert rows in place ───
         // The partial unique index on (bus_id, date) WHERE deleted_at
-        // IS NULL does not support Laravel's `upsert()`. We therefore
-        // soft-delete the exact pairs first, then bulk-insert.
+        // IS NULL prevents Laravel's `upsert()` from working (upsert
+        // has no WHERE clause support). Instead we:
+        //   a) fetch the rows that already exist for the exact
+        //      (bus_id, date) pairs in this chunk,
+        //   b) split our records into "update" and "insert" sets,
+        //   c) update matching rows in place (IDs preserved, no
+        //      soft-deleted garbage), then bulk-insert the rest.
         //
-        // The whereIn() calls below are a superset of the pairs we
-        // want to remove; we filter the result in PHP by $pairSet so
-        // rows that merely share a bus_id or a date are not touched.
+        // This keeps the table clean and avoids the classic
+        // "soft-delete + insert" pattern that would bloat the table
+        // with tens of thousands of dead rows over a year.
         $busIds = array_values(array_unique(array_column($records, 'bus_id')));
         $dates  = array_values(array_unique(array_column($records, 'date')));
 
@@ -134,22 +139,50 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
         }
 
         DB::transaction(function () use ($busIds, $dates, $pairSet, $records) {
-            $existingIds = BusDailyStatus::withoutGlobalScopes()
+            $existing = BusDailyStatus::withoutGlobalScopes()
                 ->whereIn('bus_id', $busIds)
                 ->whereIn('date', $dates)
                 ->whereNull('deleted_at')
                 ->get(['id', 'bus_id', 'date'])
-                ->filter(fn ($row) => isset($pairSet[$row->bus_id.'|'.$row->date]))
-                ->pluck('id')
-                ->all();
+                ->filter(function ($row) use ($pairSet) {
+                    // The model casts `date` to Carbon, but $pairSet
+                    // was built with raw Y-m-d strings. Normalise both
+                    // sides before comparing.
+                    $dateStr = $row->date instanceof \DateTimeInterface
+                        ? $row->date->format('Y-m-d')
+                        : (string) $row->date;
 
-            if (! empty($existingIds)) {
-                BusDailyStatus::withoutGlobalScopes()
-                    ->whereIn('id', $existingIds)
-                    ->delete();
+                    return isset($pairSet[$row->bus_id.'|'.$dateStr]);
+                })
+                ->keyBy(fn ($row) => $row->bus_id.'|'.(
+                    $row->date instanceof \DateTimeInterface
+                        ? $row->date->format('Y-m-d')
+                        : (string) $row->date
+                ));
+
+            $toInsert = [];
+            $now      = now();
+
+            foreach ($records as $record) {
+                $key = $record['bus_id'].'|'.$record['date'];
+
+                if ($existing->has($key)) {
+                    // Update in place — keep the same ID.
+                    BusDailyStatus::withoutGlobalScopes()
+                        ->where('id', $existing->get($key)->id)
+                        ->update([
+                            'status'     => $record['status'],
+                            'notes'      => $record['notes'],
+                            'updated_at' => $now,
+                        ]);
+                } else {
+                    $toInsert[] = $record;
+                }
             }
 
-            BusDailyStatus::withoutGlobalScopes()->insert($records);
+            if (! empty($toInsert)) {
+                BusDailyStatus::withoutGlobalScopes()->insert($toInsert);
+            }
         });
 
         $this->incrementImported(count($records));

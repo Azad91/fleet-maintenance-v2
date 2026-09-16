@@ -1135,4 +1135,8 @@ return [
         'completed'              => 'Transfer completed.',
         'type_requires_workflow' => 'This transfer type requires the full dispatch → receive workflow.',
     ],
+    'stock_sources' => [
+        'warehouse'       => 'Warehouse',
+        'service_vehicle' => 'Service Vehicle',
+    ],
 ];

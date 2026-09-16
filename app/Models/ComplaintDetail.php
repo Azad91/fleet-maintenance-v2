@@ -30,6 +30,7 @@ class ComplaintDetail extends Model
         'name',
         'stock_quantity',
         'used_quantity',
+        'source_type',
         'employee_id',
         'notes',
         'garage_id',
@@ -44,5 +45,18 @@ class ComplaintDetail extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+    /**
+     * True when the stock for this detail came from a service
+     * vehicle instead of the garage warehouse.
+     */
+    public function isFromServiceVehicle(): bool
+    {
+        return $this->source_type === 'service_vehicle';
+    }
+
+    public function isFromWarehouse(): bool
+    {
+        return $this->source_type === 'warehouse';
     }
 }

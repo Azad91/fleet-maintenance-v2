@@ -251,24 +251,30 @@ class BusDailyKmColumnTest extends TestCase
     {
         $bus = $this->makeBus();
 
-        // 35 records — 30 on page 1, 5 on page 2
+        // 35 records — 30 on page 1, 5 on page 2.
+        // Dates ascend from 34 days ago to today; KM values increase
+        // by 100 per day, so every daily diff must be exactly 100.
         for ($i = 0; $i < 35; $i++) {
             $date = now()->subDays(34 - $i)->toDateString();
             $this->addKm($bus, $date, 100000 + ($i * 100));
         }
 
+        // Request page 1. The LAST item on this page has no sibling
+        // record on the same page, so the controller must fetch its
+        // previous record from page 2 to compute the daily diff.
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
-            ->get(route('buses.show', $bus) . '?km_page=2');
+            ->get(route('buses.show', $bus));
 
         $response->assertOk();
-
-        // The oldest record on page 2 (index 4) must still have a
-        // valid diff, computed from the record on page 1.
         $response->assertViewHas('kmRecords', function ($paginator) {
             $items = $paginator->items();
-            $last = end($items);
-            return $last->daily_km !== null && $last->daily_km >= 0;
+            $last  = end($items);
+
+            // All records grow by 100 per day, so the page-boundary
+            // item must also have a diff of exactly 100 — proving the
+            // controller fetched the previous record from page 2.
+            return $last->daily_km === 100;
         });
     }
 }

@@ -208,24 +208,45 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
         }
 
         DB::transaction(function () use ($busIds, $dates, $pairSet, $records) {
-            $existingIds = DailyKmRecord::withoutGlobalScopes()
+            $existing = DailyKmRecord::withoutGlobalScopes()
                 ->whereIn('bus_id', $busIds)
                 ->whereIn('date', $dates)
                 ->whereNull('deleted_at')
                 ->get(['id', 'bus_id', 'date'])
-                ->filter(fn ($row) => isset($pairSet[$row->bus_id.'|'.$row->date]))
-                ->pluck('id')
-                ->all();
+                ->filter(function ($row) use ($pairSet) {
+                    $dateStr = $row->date instanceof \DateTimeInterface
+                        ? $row->date->format('Y-m-d')
+                        : (string) $row->date;
 
-            if (! empty($existingIds)) {
-                // Soft delete via query builder — no Eloquent events,
-                // which keeps the import fast and audit-log free.
-                DailyKmRecord::withoutGlobalScopes()
-                    ->whereIn('id', $existingIds)
-                    ->delete();
+                    return isset($pairSet[$row->bus_id.'|'.$dateStr]);
+                })
+                ->keyBy(fn ($row) => $row->bus_id.'|'.(
+                    $row->date instanceof \DateTimeInterface
+                        ? $row->date->format('Y-m-d')
+                        : (string) $row->date
+                ));
+
+            $toInsert = [];
+            $now      = now();
+
+            foreach ($records as $record) {
+                $key = $record['bus_id'].'|'.$record['date'];
+
+                if ($existing->has($key)) {
+                    DailyKmRecord::withoutGlobalScopes()
+                        ->where('id', $existing->get($key)->id)
+                        ->update([
+                            'km'         => $record['km'],
+                            'updated_at' => $now,
+                        ]);
+                } else {
+                    $toInsert[] = $record;
+                }
             }
 
-            DailyKmRecord::withoutGlobalScopes()->insert($records);
+            if (! empty($toInsert)) {
+                DailyKmRecord::withoutGlobalScopes()->insert($toInsert);
+            }
         });
 
         $this->incrementImported(count($records));
