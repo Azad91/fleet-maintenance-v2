@@ -116,6 +116,7 @@ class BusController extends Controller
 
         // ─── Monthly status summary (aggregated for the KPI panel) ───
         $monthlySummary = $bus->dailyStatuses()
+            ->reorder()   // ← İşin sehrli açarı: relation-in default `orderBy('date', 'desc')`-ını silir
             ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->select('status', DB::raw('COUNT(*) as days'))
             ->groupBy('status')
