@@ -283,6 +283,19 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->name('destroy');
     });
 
+    // ==================== WAREHOUSE TRANSFERS ====================
+    Route::prefix('warehouse-transfers')->name('warehouse-transfers.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+        Route::get('/create', [\App\Http\Controllers\WarehouseTransferController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\WarehouseTransferController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\WarehouseTransferController::class, 'index'])->name('index');
+        Route::get('/{transfer}', [\App\Http\Controllers\WarehouseTransferController::class, 'show'])->name('show');
+        Route::post('/{transfer}/dispatch', [\App\Http\Controllers\WarehouseTransferController::class, 'dispatch'])->name('dispatch');
+        Route::post('/{transfer}/receive', [\App\Http\Controllers\WarehouseTransferController::class, 'receive'])->name('receive');
+        Route::post('/{transfer}/reject', [\App\Http\Controllers\WarehouseTransferController::class, 'reject'])->name('reject');
+        Route::post('/{transfer}/resolve', [\App\Http\Controllers\WarehouseTransferController::class, 'resolve'])->name('resolve');
+        Route::post('/{transfer}/cancel', [\App\Http\Controllers\WarehouseTransferController::class, 'cancel'])->name('cancel');
+    });
+
     // ==================== MOTOR OIL (ADMIN ONLY) ====================
     Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [MotorOilController::class, 'importForm'])->name('import');

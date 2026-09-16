@@ -18,4 +18,5 @@ return [
         'road' => 'Yol',
         'garage' => 'Qaraj',
     ],
+
 ];

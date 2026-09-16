@@ -22,6 +22,24 @@
         @endcan
     </div>
 </div>
+{{-- ─── View tabs: Active / Quarantine ─── --}}
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {{ ($view ?? 'active') === 'active' ? 'active' : '' }}"
+           href="{{ route('warehouses.index', ['view' => 'active']) }}">
+            <i class="bi bi-box-seam"></i> {{ __('messages.warehouse.active_stock') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ ($view ?? '') === 'quarantine' ? 'active' : '' }}"
+           href="{{ route('warehouses.index', ['view' => 'quarantine']) }}">
+            <i class="bi bi-shield-exclamation"></i> {{ __('messages.warehouse.quarantine') }}
+            @if(($quarantineCount ?? 0) > 0)
+                <span class="badge bg-warning text-dark ms-1">{{ $quarantineCount }}</span>
+            @endif
+        </a>
+    </li>
+</ul>
 
 {{-- Search --}}
 <div class="card mb-4">
@@ -31,9 +49,10 @@
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                     <input type="text" class="form-control" id="searchInput"
-                           placeholder="{{ __('messages.warehouse.search_placeholder') }}"
-                           value="{{ $search ?? '' }}"
-                           oninput="liveSearch(this.value)">
+                        placeholder="{{ __('messages.warehouse.search_placeholder') }}"
+                        value="{{ $search ?? '' }}"
+                        oninput="liveSearch(this.value)">
+                    <input type="hidden" id="viewInput" value="{{ $view ?? 'active' }}">
                     <button class="btn btn-secondary" type="button"
                             onclick="document.getElementById('searchInput').value=''; liveSearch('');">
                         <i class="bi bi-x-circle"></i> {{ __('messages.common.clear') }}
@@ -60,10 +79,10 @@
     function liveSearch(query) {
         const params = new URLSearchParams();
         const search = (query ?? '').trim();
+        const view = document.getElementById('viewInput')?.value ?? 'active';
 
-        if (search) {
-            params.set('search', search);
-        }
+        if (search) params.set('search', search);
+        params.set('view', view);
 
         fetch('{{ url('/warehouses/search') }}?' + params.toString(), {
             headers: {
@@ -72,20 +91,13 @@
             },
             credentials: 'same-origin',
         })
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error('Search failed: HTTP ' + response.status);
-                }
-                return response.text();
-            })
-            .then(html => {
-                document.getElementById('searchResults').innerHTML = html;
-                const count = document.querySelector('#searchResults .total-count');
-                if (count) {
-                    document.getElementById('totalCount').textContent = count.dataset.count || '0';
-                }
-            })
-            .catch(error => console.error('Warehouse search error:', error));
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById('searchResults').innerHTML = html;
+            const count = document.querySelector('#searchResults .total-count');
+            if (count) document.getElementById('totalCount').textContent = count.dataset.count || '0';
+        })
+        .catch(e => console.error('Warehouse search error:', e));
     }
 </script>
 @endsection

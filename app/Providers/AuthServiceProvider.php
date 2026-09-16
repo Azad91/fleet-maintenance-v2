@@ -26,6 +26,8 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use App\Models\ServiceVehicle;
 use App\Policies\ServiceVehiclePolicy;
+use App\Models\WarehouseTransfer;
+use App\Policies\WarehouseTransferPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -40,7 +42,8 @@ class AuthServiceProvider extends ServiceProvider
             DailyKmRecord::class => DailyKmRecordPolicy::class,
             MotorOilDetail::class => MotorOilPolicy::class,
             ComplaintType::class => ComplaintTypePolicy::class,
-            ServiceVehicle::class => ServiceVehiclePolicy::class,   // ← YENİ
+            ServiceVehicle::class => ServiceVehiclePolicy::class,
+            WarehouseTransfer::class => WarehouseTransferPolicy::class,   // ← YENİ
         ];
 
     public function boot(): void

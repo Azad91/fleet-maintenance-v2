@@ -172,6 +172,9 @@
                         <a href="{{ route('warehouses.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouses.*') ? 'is-active' : '' }}">
                             <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.nav.warehouses') }}</span>
                         </a>
+                        <a href="{{ route('warehouse-transfers.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouse-transfers.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.title') }}</span>
+                        </a>
                     @endif
                     @if($canViewMotorOil)
                         <a href="{{ route('motor-oil.index') }}" class="fleet-nav__link {{ request()->routeIs('motor-oil.*') ? 'is-active' : '' }}">

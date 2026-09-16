@@ -19,11 +19,28 @@ class WarehouseController extends Controller
         $this->authorize('viewAny', Warehouse::class);
 
         $search = $request->search;
-        $warehouses = $this->applySearch(Warehouse::query(), $search)
+        $view   = $request->input('view', 'active');
+
+        $query = Warehouse::query();
+
+        // Quarantine is a separate view — never shown alongside
+        // active stock, because the two are conceptually different
+        // (usable vs defective).
+        if ($view === 'quarantine') {
+            $query->quarantine();
+        } elseif ($view === 'all') {
+            // no filter
+        } else {
+            $query->activeStock();
+        }
+
+        $warehouses = $this->applySearch($query, $search)
             ->orderBy('id', 'desc')
             ->paginate(config('settings.pagination', 15));
 
-        return view('warehouses.index', compact('warehouses', 'search'));
+        $quarantineCount = Warehouse::query()->quarantine()->count();
+
+        return view('warehouses.index', compact('warehouses', 'search', 'view', 'quarantineCount'));
     }
 
     public function search(Request $request): View
@@ -31,11 +48,21 @@ class WarehouseController extends Controller
         $this->authorize('viewAny', Warehouse::class);
 
         $search = $request->search;
-        $warehouses = $this->applySearch(Warehouse::query(), $search)
+        $view   = $request->input('view', 'active');
+
+        $query = Warehouse::query();
+
+        if ($view === 'quarantine') {
+            $query->quarantine();
+        } elseif ($view !== 'all') {
+            $query->activeStock();
+        }
+
+        $warehouses = $this->applySearch($query, $search)
             ->orderBy('id', 'desc')
             ->paginate(config('settings.pagination', 15));
 
-        return view('warehouses.partials.table', compact('warehouses', 'search'));
+        return view('warehouses.partials.table', compact('warehouses', 'search', 'view'));
     }
 
     public function create(): View

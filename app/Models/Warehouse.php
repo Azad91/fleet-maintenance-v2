@@ -20,6 +20,7 @@ class Warehouse extends Model
         'name',
         'category',
         'unit',
+        'is_quarantine',
         'quantity',
         'minimum_quantity',
         'price',
@@ -31,5 +32,16 @@ class Warehouse extends Model
         'quantity' => 'integer',
         'minimum_quantity' => 'integer',
         'price' => 'decimal:2',
+        'is_quarantine' => 'boolean',
     ];
+
+        public function scopeActiveStock($query)
+    {
+        return $query->where('is_quarantine', false);
+    }
+
+    public function scopeQuarantine($query)
+    {
+        return $query->where('is_quarantine', true);
+    }
 }
