@@ -222,6 +222,9 @@ return [
         'tab_km_history' => 'KM History',
         'tab_status_history' => 'Status History',
         'no_status_records' => 'No status records for this bus.',
+        'current_status' => 'Current Status',
+        'status_month'   => 'Month',
+        'status_summary' => 'Monthly Summary',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -529,6 +532,7 @@ return [
         'notes' => 'Notes',
         'notes_placeholder' => 'Additional notes...',
         'no_records' => 'No status data yet.',
+        'import_date_hint' => 'Supported formats: d.m.Y (15.09.2026), Y-m-d (2026-09-15), or Excel serial. If left empty, today\'s date is used.',
     ],
 
     // ==================== MOTOR OIL ====================

@@ -205,6 +205,9 @@ return [
         'tab_km_history' => 'KM Geçmişi',
         'tab_status_history' => 'Durum Geçmişi',
         'no_status_records' => 'Bu otobüs için durum kaydı yok.',
+        'current_status' => 'Güncel Durum',
+        'status_month'   => 'Ay',
+        'status_summary' => 'Aylık Özet',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -511,6 +514,7 @@ return [
         'notes' => 'Not',
         'notes_placeholder' => 'Ek notlar...',
         'no_records' => 'Henüz durum verisi yok.',
+        'import_date_hint' => 'Desteklenen formatlar: d.m.Y (15.09.2026), Y-m-d (2026-09-15) veya Excel seri. Boş bırakılırsa bugünün tarihi kullanılır.',
     ],
 
     // ==================== MOTOR OIL ====================

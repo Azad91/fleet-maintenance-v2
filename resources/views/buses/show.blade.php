@@ -211,6 +211,73 @@
         {{-- TAB 3: Status history                              --}}
         {{-- ═══════════════════════════════════════════════════ --}}
         <div class="tab-pane fade" id="status-pane" role="tabpanel">
+
+            {{-- ─── KPI: Current Status ─── --}}
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center justify-content-center rounded-3"
+                                style="width: 52px; height: 52px; background: #eaf1ff; color: #2563eb;">
+                                <i class="bi bi-flag" style="font-size: 24px;"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted" style="font-size: 12px; font-weight: 600;">
+                                    {{ __('messages.buses.current_status') }}
+                                </div>
+                                <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.3px;">
+                                    @if($bus->latestDailyStatus)
+                                        {{ $bus->latestDailyStatus->status }}
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </div>
+                                @if($bus->latestDailyStatus)
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        {{ $bus->latestDailyStatus->date->format('d.m.Y') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ─── Month filter + Monthly summary ─── --}}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-3 align-items-start">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-calendar-month"></i> {{ __('messages.buses.status_month') }}
+                            </label>
+                            <input type="month"
+                                class="form-control"
+                                value="{{ $statusMonth }}"
+                                onchange="location.href='{{ route('buses.show', $bus) }}?status_month=' + this.value + '#status';">
+                        </div>
+
+                        <div class="col-md-8">
+                            @if($monthlySummary->isNotEmpty())
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-bar-chart"></i> {{ __('messages.buses.status_summary') }}
+                                </label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($monthlySummary as $row)
+                                        <span class="badge bg-secondary"
+                                            style="font-size: 13px; padding: 6px 12px; font-weight: 600;">
+                                            {{ $row->status }}:&nbsp;
+                                            <strong>{{ $row->days }} {{ __('messages.common.days') }}</strong>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ─── Status history table ─── --}}
             <div class="card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -229,7 +296,8 @@
                                         <td>{{ $statusRecords->firstItem() + $index }}</td>
                                         <td>{{ $record->date ? \Carbon\Carbon::parse($record->date)->format('d.m.Y') : '—' }}</td>
                                         <td>
-                                            <span class="badge bg-secondary text-white" style="font-size: 13px; padding: 6px 12px; border-radius: 6px;">
+                                            <span class="badge bg-secondary text-white"
+                                                style="font-size: 13px; padding: 6px 12px; border-radius: 6px;">
                                                 {{ $record->status }}
                                             </span>
                                         </td>

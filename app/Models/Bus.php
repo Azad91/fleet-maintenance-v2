@@ -52,6 +52,16 @@ class Bus extends Model
         return $this->hasOne(DailyKmRecord::class)->latestOfMany('date');
     }
 
+    /**
+     * The most recent daily status for this bus, ordered by date.
+     * Used on the bus show page to display the "Current Status" KPI
+     * card without an extra query per request.
+     */
+    public function latestDailyStatus()
+    {
+        return $this->hasOne(BusDailyStatus::class)->latestOfMany('date');
+    }
+
     public function getLatestKmAttribute()
     {
         return $this->latestKmRecord?->km;

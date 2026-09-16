@@ -223,6 +223,9 @@ return [
         'tab_km_history' => 'KM tarixçəsi',
         'tab_status_history' => 'Status tarixçəsi',
         'no_status_records' => 'Bu avtobus üçün status qeydi yoxdur.',
+        'current_status' => 'Cari Status',
+        'status_month'   => 'Ay',
+        'status_summary' => 'Aylıq Xülasə',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -528,6 +531,7 @@ return [
         'notes' => 'Qeyd',
         'notes_placeholder' => 'Əlavə qeydlər...',
         'no_records' => 'Hələ status məlumatı yoxdur.',
+        'import_date_hint' => 'Dəstəklənən formatlar: d.m.Y (15.09.2026), Y-m-d (2026-09-15) və ya Excel serial. Boş buraxılsa, bugünün tarixi istifadə olunur.',
     ],
 
     // ==================== MOTOR OIL ====================

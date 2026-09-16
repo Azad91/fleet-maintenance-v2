@@ -72,18 +72,32 @@ class BusDailyStatusesImport extends AbstractImport implements ToModel, WithChun
             return Carbon::instance($value)->toDateString();
         }
 
-        // Excel serial number
+        // Excel serial number (e.g. 45000)
         if (is_numeric($value) && (float) $value > 20000 && (float) $value < 100000) {
             try {
                 return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value))->toDateString();
             } catch (\Throwable $e) {
-                // Fall through to today
+                // Fall through
             }
         }
 
         if (is_string($value) && trim($value) !== '') {
+            $value = trim($value);
+
+            // Explicit day-first formats: d.m.Y, d/m/Y, d-m-Y.
+            // Guarantees that "15.09.2026" always parses as 15 September
+            // 2026 regardless of the PHP default locale or Carbon config.
+            if (preg_match('/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/', $value, $m)) {
+                try {
+                    return Carbon::createFromDate((int) $m[3], (int) $m[2], (int) $m[1])->toDateString();
+                } catch (\Throwable $e) {
+                    // Fall through to generic parse
+                }
+            }
+
+            // Generic parse (ISO, English, etc.)
             try {
-                return Carbon::parse(trim($value))->toDateString();
+                return Carbon::parse($value)->toDateString();
             } catch (\Throwable $e) {
                 // Fall through to today
             }
