@@ -1058,24 +1058,6 @@ return [
         'recovery_codes_gone' => 'The recovery codes are no longer visible. Reset two-factor authentication to generate new ones.',
     ],
 
-    // ==================== TRANSFER STATUS ====================
-    'transfer_status' => [
-        'draft'      => 'Draft',
-        'dispatched' => 'Dispatched',
-        'received'   => 'Received',
-        'disputed'   => 'Disputed',
-        'rejected'   => 'Rejected',
-        'cancelled'  => 'Cancelled',
-        'resolved'   => 'Resolved',
-    ],
-
-    // ==================== TRANSFER TYPE ====================
-    'transfer_type' => [
-        'garage_to_garage'    => 'Garage to Garage',
-        'to_service_vehicle'  => 'To Service Vehicle',
-        'return_to_quarantine' => 'Return / Quarantine',
-    ],
-
     // ==================== TRANSFERS ====================
     'transfers' => [
         'title'                  => 'Warehouse Transfers',

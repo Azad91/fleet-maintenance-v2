@@ -18,4 +18,20 @@ return [
         'road' => 'Road',
         'garage' => 'Garage',
     ],
+
+    'transfer_status' => [
+        'draft'      => 'Draft',
+        'dispatched' => 'Dispatched',
+        'received'   => 'Received',
+        'disputed'   => 'Disputed',
+        'rejected'   => 'Rejected',
+        'cancelled'  => 'Cancelled',
+        'resolved'   => 'Resolved',
+    ],
+
+    'transfer_type' => [
+        'garage_to_garage'    => 'Garage to Garage',
+        'to_service_vehicle'  => 'To Service Vehicle',
+        'return_to_quarantine' => 'Return / Quarantine',
+    ],
 ];

@@ -1059,24 +1059,6 @@ return [
         'recovery_codes_gone' => 'Recovery kodları artıq göstərilməyəcək. Yenidən görmək üçün iki faktorlu təsdiqi sıfırlamalısınız.',
     ],
 
-    // ==================== TRANSFER STATUS ====================
-    'transfer_status' => [
-        'draft'      => 'Qaralama',
-        'dispatched' => 'Göndərildi',
-        'received'   => 'Qəbul edildi',
-        'disputed'   => 'Fərq var',
-        'rejected'   => 'Rədd edildi',
-        'cancelled'  => 'Ləğv edildi',
-        'resolved'   => 'Həll olundu',
-    ],
-
-    // ==================== TRANSFER TYPE ====================
-    'transfer_type' => [
-        'garage_to_garage'    => 'Qarajdan Qaraja',
-        'to_service_vehicle'  => 'Servis Maşınına',
-        'return_to_quarantine' => 'İadə / Karantin',
-    ],
-
     // ==================== TRANSFERS ====================
     'transfers' => [
         'title'                  => 'Anbar Transferləri',

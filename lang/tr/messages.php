@@ -1016,24 +1016,6 @@ return [
         'recovery_codes_gone' => 'Kurtarma kodları artık görünmüyor. Yenilerini oluşturmak için iki adımlı doğrulamayı sıfırlayın.',
     ],
 
-    // ==================== TRANSFER STATUS ====================
-    'transfer_status' => [
-        'draft'      => 'Taslak',
-        'dispatched' => 'Sevk Edildi',
-        'received'   => 'Teslim Alındı',
-        'disputed'   => 'İhtilaflı',
-        'rejected'   => 'Reddedildi',
-        'cancelled'  => 'İptal Edildi',
-        'resolved'   => 'Çözüldü',
-    ],
-
-    // ==================== TRANSFER TYPE ====================
-    'transfer_type' => [
-        'garage_to_garage'    => 'Garajdan Garaja',
-        'to_service_vehicle'  => 'Servis Aracına',
-        'return_to_quarantine' => 'İade / Karantina',
-    ],
-
     // ==================== TRANSFERS ====================
     'transfers' => [
         'title'                  => 'Depo Transferleri',
