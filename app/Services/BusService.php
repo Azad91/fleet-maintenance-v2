@@ -9,7 +9,10 @@ class BusService
 {
     public function getPaginatedBuses(?string $search = null, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Bus::with('latestKmRecord');
+        $query = Bus::with([
+            'latestKmRecord',
+            'dailyKmRecords' => fn ($q) => $q->limit(2),
+        ]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -22,20 +25,15 @@ class BusService
         return $query->orderBy('id', 'desc')->paginate($perPage);
     }
 
-    /**
-     * @param  array<string, mixed>  $filters
-     */
     public function advancedSearch(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Bus::with('latestKmRecord');
+        $query = Bus::with([
+            'latestKmRecord',
+            'dailyKmRecords' => fn ($q) => $q->limit(2),
+        ]);
 
         $searchableFields = [
-            'bus_project',
-            'vin',
-            'uzunluq',
-            'route_number',
-            'dqn',
-            'engine_number',
+            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
         ];
 
         foreach ($searchableFields as $field) {

@@ -170,6 +170,8 @@ return [
         'col_dqn' => 'DQN',
         'col_engine' => 'MOTOR No',
         'col_latest_km' => 'Son KM',
+        'col_daily_km' => 'Günlük KM',
+        'current_km'   => 'Güncel KM',
         'filter_project' => 'Proje...',
         'filter_vin' => 'Şasi...',
         'filter_length' => 'Uzunluk...',

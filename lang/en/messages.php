@@ -187,6 +187,8 @@ return [
         'col_dqn' => 'DQN',
         'col_engine' => 'ENGINE No',
         'col_latest_km' => 'Latest KM',
+        'col_daily_km' => 'Daily KM',
+        'current_km'   => 'Current KM',
         'filter_project' => 'Project...',
         'filter_vin' => 'Chassis...',
         'filter_length' => 'Length...',

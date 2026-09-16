@@ -73,6 +73,29 @@ class BusController extends Controller
             ->paginate(30, ['*'], 'km_page')
             ->withQueryString();
 
+        // Compute the daily distance for every record on this page.
+        // To compute the diff for the OLDEST record shown on the page,
+        // we need the record just before it — which may live on a
+        // previous page. Fetch it explicitly (1 extra query per page).
+        $items = $kmRecords->items();
+        $oldestOnPage = ! empty($items) ? $items[count($items) - 1] : null;
+
+        $previousOfOldest = $oldestOnPage
+            ? $bus->dailyKmRecords()
+                ->where('date', '<', $oldestOnPage->date)
+                ->first()
+            : null;
+
+        foreach ($items as $index => $record) {
+            $previous = $items[$index + 1] ?? $previousOfOldest;
+
+            $record->daily_km = $previous !== null
+                ? max(0, $record->km - $previous->km)
+                : null;
+        }
+
+        $kmRecords->setCollection(collect($items));
+
         $statusRecords = $bus->dailyStatuses()
             ->paginate(30, ['*'], 'status_page')
             ->withQueryString();

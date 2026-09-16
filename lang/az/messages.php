@@ -188,6 +188,8 @@ return [
         'col_dqn' => 'DQN',
         'col_engine' => 'MÜHƏRRİK №',
         'col_latest_km' => 'Son KM',
+        'col_daily_km' => 'Günlük KM',
+        'current_km'   => 'Cari KM',
         'filter_project' => 'Layihə...',
         'filter_vin' => 'Şassi...',
         'filter_length' => 'Uzunluq...',

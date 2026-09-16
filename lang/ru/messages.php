@@ -170,6 +170,8 @@ return [
         'col_dqn' => 'DQN',
         'col_engine' => 'ДВИГАТЕЛЬ',
         'col_latest_km' => 'Последний КМ',
+        'col_daily_km' => 'Дневной пробег',
+        'current_km'   => 'Текущий пробег',
         'filter_project' => 'Проект...',
         'filter_vin' => 'Шасси...',
         'filter_length' => 'Длина...',

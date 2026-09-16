@@ -14,8 +14,7 @@
                         <th>{{ __('messages.buses.col_route') }}</th>
                         <th>{{ __('messages.buses.col_dqn') }}</th>
                         <th>{{ __('messages.buses.col_engine') }}</th>
-                        <th style="width: 150px; text-align: center;">📊 {{ __('messages.buses.col_latest_km') }}</th>
-                        <th style="width: 150px; text-align: center;">{{ __('messages.common.actions') }}</th>
+                        <th style="width: 150px; text-align: center;">📊 {{ __('messages.buses.col_daily_km') }}</th>                        <th style="width: 150px; text-align: center;">{{ __('messages.common.actions') }}</th>
                     </tr>
                     <tr id="busTableFilter" style="background-color: #f8f9fa;">
                         <th></th>
@@ -69,7 +68,13 @@
                         <td>{{ $bus->engine_number ?? '-' }}</td>
                         <td style="text-align: center;">
                             @if($bus->latestKmRecord)
-                                <strong>{{ number_format($bus->latestKmRecord->km, 0, ',', '.') }} km</strong>
+                                <strong>
+                                    @if($bus->daily_km !== null)
+                                        {{ number_format($bus->daily_km, 0, ',', '.') }} km
+                                    @else
+                                        —
+                                    @endif
+                                </strong>
                                 <br>
                                 <small class="text-muted">{{ $bus->latestKmRecord->date->format('d.m.Y') }}</small>
                             @else
