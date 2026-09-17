@@ -16,13 +16,13 @@
             'eyebrow' => __('messages.nav.warehouses'),
             'icon'    => 'fa-boxes-stacked',
             'reports' => [
-                'receipt'         => ['label' => __('messages.reports.warehouse.receipt'),         'route' => 'reports.warehouse.receipt',         'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'usage'           => ['label' => __('messages.reports.warehouse.usage'),           'route' => 'reports.warehouse.usage',           'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'worker-activity' => ['label' => __('messages.reports.warehouse.worker_activity'), 'route' => 'reports.warehouse.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'low-stock'       => ['label' => __('messages.reports.warehouse.low_stock'),       'route' => 'reports.warehouse.low-stock',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::WAREHOUSE_WORKER->value]],
-                'movement'        => ['label' => __('messages.reports.warehouse.movement'),        'route' => 'reports.warehouse.movement',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'receipt'               => ['label' => __('messages.reports.warehouse.receipt'),               'route' => 'reports.warehouse.receipt',               'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'usage'                 => ['label' => __('messages.reports.warehouse.usage'),                 'route' => 'reports.warehouse.usage',                 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'worker-activity'       => ['label' => __('messages.reports.warehouse.worker_activity'),       'route' => 'reports.warehouse.worker-activity',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'low-stock'             => ['label' => __('messages.reports.warehouse.low_stock'),             'route' => 'reports.warehouse.low-stock',             'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::WAREHOUSE_WORKER->value]],
+                'movement'              => ['label' => __('messages.reports.warehouse.movement'),              'route' => 'reports.warehouse.movement',              'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'service-vehicle-usage' => ['label' => __('messages.reports.warehouse.service_vehicle_usage'), 'route' => 'reports.warehouse.service-vehicle-usage', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                ],
+            ],
         ],
         'complaint' => [
             'title'   => __('messages.reports.complaint.title'),
@@ -30,7 +30,6 @@
             'icon'    => 'fa-screwdriver-wrench',
             'reports' => [
                 'summary'         => ['label' => __('messages.reports.complaint.summary'),         'route' => 'reports.complaint.summary',         'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'detailed'        => ['label' => __('messages.transfers.report.detailed'), 'route' => 'reports.transfer.detailed', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'top-types'       => ['label' => __('messages.reports.complaint.top_types'),       'route' => 'reports.complaint.top-types',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
                 'worker-activity' => ['label' => __('messages.reports.complaint.worker_activity'), 'route' => 'reports.complaint.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
                 'by-bus'          => ['label' => __('messages.reports.complaint.by_bus'),          'route' => 'reports.complaint.by-bus',          'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
@@ -57,12 +56,13 @@
                 'worker-activity' => ['label' => __('messages.reports.daily_status.worker_activity'), 'route' => 'reports.daily-status.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::DAILY_STATUS_MANAGER->value, RoleEnum::DAILY_STATUS_WORKER->value]],
             ],
         ],
-            'transfer' => [
+        'transfer' => [
             'title'   => __('messages.transfers.report.title'),
             'eyebrow' => __('messages.nav.warehouses'),
             'icon'    => 'fa-arrow-right-arrow-left',
             'reports' => [
                 'summary'         => ['label' => __('messages.transfers.report.summary'),         'route' => 'reports.transfer.summary',         'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'detailed'        => ['label' => __('messages.transfers.report.detailed'),        'route' => 'reports.transfer.detailed',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'by-route'        => ['label' => __('messages.transfers.report.by_route'),        'route' => 'reports.transfer.by-route',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'top-items'       => ['label' => __('messages.transfers.report.top_items'),       'route' => 'reports.transfer.top-items',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'worker-activity' => ['label' => __('messages.transfers.report.worker_activity'), 'route' => 'reports.transfer.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::WAREHOUSE_WORKER->value]],
