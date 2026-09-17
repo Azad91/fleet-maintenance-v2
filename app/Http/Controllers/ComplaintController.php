@@ -16,6 +16,7 @@ use App\Models\ServiceVehicle;
 use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
 use App\Services\GarageContext;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,35 +31,41 @@ class ComplaintController extends Controller
         protected CloseComplaintAction $closeComplaintAction,
     ) {}
 
+    /**
+     * List complaints with optional filters.
+     */
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Complaint::class);
 
-        $query = Complaint::with(['bus', 'items', 'details', 'serviceVehicle']);
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('complaint_type')) {
-            $query->where('complaint_type', $request->complaint_type);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('bus', function ($bq) use ($search) {
-                    $bq->where('dqn', 'ILIKE', "%{$search}%")
-                        ->orWhere('route_number', 'ILIKE', "%{$search}%");
-                })->orWhereHas('items', function ($iq) use ($search) {
-                    $iq->where('description', 'ILIKE', "%{$search}%");
-                });
-            });
-        }
-
-        $complaints = $query->orderBy('id', 'desc')
+        $complaints = $this->buildFilteredQuery($request)
+            ->orderBy('id', 'desc')
             ->paginate(config('settings.pagination', 15))
             ->withQueryString();
+
+        return view('complaints.index', compact('complaints'));
+    }
+
+    /**
+     * Live search / filter — used by the AJAX search panel.
+     *
+     * Returns the partial view when the request comes from the
+     * front-end (X-Requested-With: XMLHttpRequest), and falls back
+     * to the full index view otherwise. This makes the same route
+     * work for both AJAX calls and direct URL visits.
+     */
+    public function search(Request $request): View|string
+    {
+        $this->authorize('viewAny', Complaint::class);
+
+        $complaints = $this->buildFilteredQuery($request)
+            ->orderBy('id', 'desc')
+            ->paginate(config('settings.pagination', 15))
+            ->withQueryString();
+
+        if ($this->isAjaxRequest($request)) {
+            return view('complaints.partials.table', compact('complaints'))->render();
+        }
 
         return view('complaints.index', compact('complaints'));
     }
@@ -240,8 +247,6 @@ class ComplaintController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        // Garage context must be resolved BEFORE authorization — see the
-        // class docblock for the full rationale.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -257,10 +262,6 @@ class ComplaintController extends Controller
             'historical' => 'nullable|boolean',
         ]);
 
-        // When the operator ticks the "historical" checkbox, we import the
-        // data for reference only — no stock deduction, no restore on
-        // later delete/update. Details are stored with source_type =
-        // 'historical'.
         $deductStock = ! $request->boolean('historical');
 
         try {
@@ -299,5 +300,76 @@ class ComplaintController extends Controller
             return redirect()->route('complaints.index')
                 ->with('error', __('messages.flash.import_error'));
         }
+    }
+
+    // ==================== HELPERS ====================
+
+    /**
+     * Build the complaint query with every filter applied.
+     *
+     * Shared between index() and search() so that the filter rules
+     * stay in sync no matter how the list is requested.
+     */
+    private function buildFilteredQuery(Request $request): Builder
+    {
+        $query = Complaint::with(['bus', 'items', 'details', 'serviceVehicle']);
+
+        // ─── Free-text search ───
+        // Matches bus DQN, bus route, or any complaint item description.
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('bus', function ($bq) use ($search) {
+                    $bq->where('dqn', 'ILIKE', "%{$search}%")
+                        ->orWhere('route_number', 'ILIKE', "%{$search}%");
+                })->orWhereHas('items', function ($iq) use ($search) {
+                    $iq->where('description', 'ILIKE', "%{$search}%");
+                });
+            });
+        }
+
+        // ─── Status ───
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // ─── Complaint type ───
+        if ($request->filled('complaint_type')) {
+            $query->where('complaint_type', $request->complaint_type);
+        }
+
+        // ─── Location (road / garage) ───
+        if ($request->filled('yer')) {
+            $query->where('yer', $request->yer);
+        }
+
+        // ─── Date range ───
+        // Prefer the operator-supplied work date. Falls back to
+        // start_date, then created_at, using COALESCE at the SQL level
+        // so the fallback is evaluated per row.
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $effectiveDate = 'COALESCE(reported_date, start_date, created_at::date)';
+
+            if ($request->filled('date_from')) {
+                $query->whereRaw("{$effectiveDate} >= ?", [$request->date_from]);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->whereRaw("{$effectiveDate} <= ?", [$request->date_to]);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * True when the request should receive a partial view instead of
+     * the full page.
+     */
+    private function isAjaxRequest(Request $request): bool
+    {
+        return $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->boolean('_ajax');
     }
 }

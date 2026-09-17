@@ -2,6 +2,12 @@
 
 @section('title', __('messages.complaints.title'))
 
+@php
+    use App\Enums\ComplaintStatus;
+    use App\Enums\ComplaintType;
+    use App\Enums\Location;
+@endphp
+
 @section('content')
 <div class="page-header">
     <h1>📋 {{ __('messages.complaints.title') }}</h1>
@@ -24,159 +30,254 @@
             <i class="bi bi-tags"></i> {{ __('messages.complaint_types.title') }}
         </a>
     </div>
-    <span class="badge bg-primary rounded-pill">
-        {{ __('messages.common.total') }}: {{ $complaints->total() }} {{ __('messages.complaints.total_label') }}
+    <span class="badge bg-primary rounded-pill" id="totalBadge">
+        {{ __('messages.common.total') }}: <span id="totalCount">{{ $complaints->total() }}</span>
+        {{ __('messages.complaints.total_label') }}
     </span>
 </div>
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>{{ __('messages.complaints.bus') }}</th>
-                        <th>{{ __('messages.complaints.complaint') }}</th>
-                        <th>{{ __('messages.complaints.complaint_type') }}</th>
-                        <th>{{ __('messages.common.status') }}</th>
-                        <th>{{ __('messages.complaints.col_date') }}</th>
-                        <th>{{ __('messages.common.actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($complaints as $complaint)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>
-                            <strong>{{ $complaint->bus->dqn ?? '-' }}</strong>
-                            <br>
-                            <small class="text-muted">{{ $complaint->bus->route_number ?? '-' }}</small>
-                        </td>
-                        <td>
-                            {{ Str::limit($complaint->items->first()->description ?? '-', 30) }}
-                        </td>
-                        <td>
-                            @if($complaint->complaint_type)
-                                <span class="badge bg-{{ $complaint->complaint_type->bootstrapColor() }}">
-                                    {{ $complaint->complaint_type->label() }}
-                                </span>
-                            @else
-                                <span class="badge bg-secondary">-</span>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ $complaint->status->bootstrapColor() }}">
-                                {{ $complaint->status->label() }}
-                            </span>
-                        </td>
-                        <td>{{ $complaint->created_at ? $complaint->created_at->format('d.m.Y') : '-' }}</td>
-                        <td>
-                            <div class="d-flex gap-1 flex-wrap">
-                                @can('view', $complaint)
-                                    <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                @endcan
+{{-- ─── Filter panel ─── --}}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('complaints.index') }}" id="complaintFilterForm" autocomplete="off">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="search" class="form-label fw-bold">
+                        <i class="bi bi-search"></i> {{ __('messages.common.search') }}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" id="search" class="form-control"
+                               value="{{ request('search') }}"
+                               placeholder="{{ __('messages.complaints.search_placeholder') }}">
+                        <button type="button" class="btn btn-secondary" id="clearSearch" title="{{ __('messages.common.clear') }}">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        {{ __('messages.complaints.search_hint') }}
+                    </small>
+                </div>
 
-                                @can('update', $complaint)
-                                    @if(! $complaint->status->isCompleted())
-                                        <a href="{{ route('complaints.edit', $complaint) }}" class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                    @endif
-                                @endcan
+                <div class="col-md-2">
+                    <label for="status" class="form-label fw-bold">
+                        <i class="bi bi-flag"></i> {{ __('messages.common.status') }}
+                    </label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">{{ __('messages.super_admin.garages.all_statuses') }}</option>
+                        @foreach(ComplaintStatus::cases() as $s)
+                            <option value="{{ $s->value }}" @selected(request('status') === $s->value)>
+                                {{ $s->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                                @can('close', $complaint)
-                                    @if(! $complaint->status->isCompleted())
-                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#closeModal{{ $complaint->id }}">
-                                            <i class="bi bi-check-circle"></i> {{ __('messages.complaints.close_button') }}
-                                        </button>
-                                    @endif
-                                @endcan
+                <div class="col-md-2">
+                    <label for="complaint_type" class="form-label fw-bold">
+                        <i class="bi bi-tag"></i> {{ __('messages.complaints.complaint_type') }}
+                    </label>
+                    <select name="complaint_type" id="complaint_type" class="form-select">
+                        <option value="">{{ __('messages.super_admin.users.all_roles') }}</option>
+                        @foreach(ComplaintType::cases() as $t)
+                            <option value="{{ $t->value }}" @selected(request('complaint_type') === $t->value)>
+                                {{ $t->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                                @can('delete', $complaint)
-                                    <form action="{{ route('complaints.destroy', $complaint) }}" method="POST" style="display:inline;" onsubmit="return confirm('{{ __('messages.complaints.delete_confirm') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                @endcan
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
-                            {{ __('messages.complaints.no_cards') }}
-                            <br>
-                            @can('create', App\Models\Complaint::class)
-                                <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm mt-2">
-                                    {{ __('messages.complaints.new') }}
-                                </a>
-                            @endcan
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                <div class="col-md-2">
+                    <label for="yer" class="form-label fw-bold">
+                        <i class="bi bi-geo-alt"></i> {{ __('messages.complaints.location') }}
+                    </label>
+                    <select name="yer" id="yer" class="form-select">
+                        <option value="">{{ __('messages.super_admin.garages.all_statuses') }}</option>
+                        @foreach(Location::cases() as $loc)
+                            <option value="{{ $loc->value }}" @selected(request('yer') === $loc->value)>
+                                {{ $loc->icon() }} {{ $loc->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-calendar-range"></i>
+                        {{ __('messages.reports.period.from') }} / {{ __('messages.reports.period.to') }}
+                    </label>
+                    <div class="input-group">
+                        <input type="date" name="date_from" class="form-control"
+                               value="{{ request('date_from') }}">
+                        <span class="input-group-text">—</span>
+                        <input type="date" name="date_to" class="form-control"
+                               value="{{ request('date_to') }}">
+                    </div>
+                </div>
+
+                <div class="col-md-12 d-flex gap-2">
+                    <a href="{{ route('complaints.index') }}" class="btn btn-secondary" id="resetButton">
+                        <i class="bi bi-x-circle"></i> {{ __('messages.common.reset') }}
+                    </a>
+                    <span class="badge bg-info text-dark align-self-center" id="activeFilterBadge" style="display: none;">
+                        <i class="bi bi-funnel-fill"></i> <span id="activeFilterCount">0</span>
+                    </span>
+                    <span class="text-muted small align-self-center ms-auto" id="searchStatus" style="display: none;">
+                        <i class="bi bi-arrow-repeat"></i> {{ __('messages.common.loading') }}
+                    </span>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
-<div class="pagination-wrapper d-flex justify-content-center mt-4">
-    {{ $complaints->withQueryString()->links() }}
+{{-- ─── Results ─── --}}
+<div id="searchResults">
+    @include('complaints.partials.table', ['complaints' => $complaints])
 </div>
+@endsection
 
-{{-- Close Modals --}}
-@foreach($complaints as $complaint)
-    @if(! $complaint->status->isCompleted() && auth()->user()->can('close', $complaint))
-        <div class="modal fade" id="closeModal{{ $complaint->id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="{{ route('complaints.close', $complaint) }}" method="POST">
-                        @csrf
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="bi bi-lock"></i> {{ __('messages.complaints.close_modal_title') }}
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="alert alert-info">
-                                <strong>🚌 {{ __('messages.complaints.bus') }}:</strong> {{ $complaint->bus->dqn ?? '-' }}
-                                ({{ $complaint->bus->route_number ?? '-' }})
-                            </div>
+@section('scripts')
+<script>
+(function () {
+    'use strict';
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ __('messages.complaints.end_date') }} <span class="text-danger">*</span></label>
-                                <input type="date" name="end_date" class="form-control" required value="{{ date('Y-m-d') }}">
-                            </div>
+    const form = document.getElementById('complaintFilterForm');
+    const results = document.getElementById('searchResults');
+    const totalCount = document.getElementById('totalCount');
+    const searchStatus = document.getElementById('searchStatus');
+    const activeFilterBadge = document.getElementById('activeFilterBadge');
+    const activeFilterCount = document.getElementById('activeFilterCount');
+    const clearSearch = document.getElementById('clearSearch');
+    const resetButton = document.getElementById('resetButton');
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ __('messages.complaints.end_time') }} <span class="text-danger">*</span></label>
-                                <input type="time" name="end_time" class="form-control" required value="{{ date('H:i') }}">
-                            </div>
+    if (!form || !results) return;
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ __('messages.complaints.work_done') }} <span class="text-danger">*</span></label>
-                                <textarea name="work_done" class="form-control" rows="3" placeholder="{{ __('messages.complaints.work_done_placeholder') }}" required></textarea>
-                                <small class="text-muted">{{ __('messages.complaints.work_done_hint') }}</small>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.common.cancel') }}</button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> {{ __('messages.complaints.close_button') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
-@endforeach
+    let searchTimeout = null;
+    let currentRequest = 0;
+
+    const FILTER_KEYS = ['search', 'status', 'complaint_type', 'yer', 'date_from', 'date_to'];
+
+    function collectFilters() {
+        const params = new URLSearchParams();
+
+        FILTER_KEYS.forEach(key => {
+            const el = form.querySelector(`[name="${key}"]`);
+            if (!el) return;
+
+            const value = (el.value || '').trim();
+            if (value !== '') {
+                params.set(key, value);
+            }
+        });
+
+        return params;
+    }
+
+    function updateFilterBadge(params) {
+        const count = params.toString() ? Array.from(params.keys()).length : 0;
+
+        if (count > 0) {
+            activeFilterCount.textContent = count;
+            activeFilterBadge.style.display = 'inline-block';
+        } else {
+            activeFilterBadge.style.display = 'none';
+        }
+    }
+
+    function performSearch() {
+        const params = collectFilters();
+        const queryString = params.toString();
+        const requestId = ++currentRequest;
+
+        // Show loading state
+        searchStatus.style.display = 'inline-block';
+
+        const fetchUrl = "{{ route('complaints.search') }}"
+            + (queryString ? '?' + queryString : '');
+
+        const browserUrl = "{{ route('complaints.index') }}"
+            + (queryString ? '?' + queryString : '');
+
+        fetch(fetchUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Search failed: HTTP ' + response.status);
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Ignore stale responses (fast typing race condition).
+            if (requestId !== currentRequest) return;
+
+            results.innerHTML = html;
+
+            // Update the total counter from the freshly-rendered partial.
+            const counter = results.querySelector('.total-count');
+            if (counter && totalCount) {
+                totalCount.textContent = counter.dataset.count || '0';
+            }
+
+            // Update the browser URL so that refresh / share keeps
+            // the current filters.
+            history.replaceState(null, '', browserUrl);
+
+            updateFilterBadge(params);
+        })
+        .catch(error => {
+            console.error('Complaint search error:', error);
+        })
+        .finally(() => {
+            if (requestId === currentRequest) {
+                searchStatus.style.display = 'none';
+            }
+        });
+    }
+
+    function scheduleSearch(delay) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, delay);
+    }
+
+    // ─── Bind filter inputs ───
+    // Text input → debounce 300ms (avoid a request on every keystroke).
+    // Selects and dates → fire immediately.
+    const textInput = form.querySelector('input[name="search"]');
+    if (textInput) {
+        textInput.addEventListener('input', () => scheduleSearch(300));
+    }
+
+    form.querySelectorAll('select[name], input[type="date"]').forEach(el => {
+        el.addEventListener('change', () => scheduleSearch(0));
+    });
+
+    // ─── Clear search only ───
+    if (clearSearch) {
+        clearSearch.addEventListener('click', () => {
+            if (textInput) textInput.value = '';
+            clearTimeout(searchTimeout);
+            performSearch();
+        });
+    }
+
+    // ─── Reset all filters — let the normal link navigation handle it
+    // (goes to the plain /complaints URL, clearing the query string).
+
+    // ─── Submit → intercept and route through AJAX ───
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        clearTimeout(searchTimeout);
+        performSearch();
+    });
+
+    // ─── Initial badge state (when the page loads with filters) ───
+    updateFilterBadge(collectFilters());
+})();
+</script>
 @endsection

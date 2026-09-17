@@ -322,6 +322,10 @@ return [
         'pdf_footer' => 'This document was generated automatically on :date · Fleet Control · ID #:id',
         'inspection_badge' => 'Inspection / Repair',
         'inspection_qty_label' => 'Inspected (0)',
+        'search_placeholder' => 'Search by bus, route, or complaint...',
+        'search_hint' => 'Matches bus DQN, route number, or complaint description.',
+        'search_placeholder' => 'Bus DQN, route, or complaint...',
+        'search_hint' => 'Live search — results update as you type.',
     ],
 
     // ==================== COMPLAINT TYPES ====================

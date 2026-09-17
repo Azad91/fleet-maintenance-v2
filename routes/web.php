@@ -256,6 +256,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
             ->middleware('throttle:import')
             ->name('import.store');
         Route::get('/create', [ComplaintController::class, 'create'])->name('create');
+        Route::get('/search', [ComplaintController::class, 'search'])->name('search');   // ← YENİ
 
         // Dynamic routes
         Route::get('/', [ComplaintController::class, 'index'])->name('index');
