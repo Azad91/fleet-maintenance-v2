@@ -177,6 +177,51 @@ class TransferReportService
             ->get();
     }
 
+    /**
+     * Flat, line-level transfer report:
+     *   from → to, item code, item name, declared qty, received qty.
+     *
+     * One row per warehouse_transfer_items line, so the reader sees the
+     * EXACT granularity of the shipment — not an aggregated total.
+     */
+    public function detailed(ReportPeriod $period, ReportScope $scope): Collection
+    {
+        $transferIds = $this->baseQuery($period, $scope)->pluck('id');
+
+        if ($transferIds->isEmpty()) {
+            return collect();
+        }
+
+        return WarehouseTransferItem::query()
+            ->whereIn('warehouse_transfer_items.transfer_id', $transferIds)
+            ->join('warehouse_transfers', 'warehouse_transfers.id', '=', 'warehouse_transfer_items.transfer_id')
+            ->join('warehouses', 'warehouses.id', '=', 'warehouse_transfer_items.warehouse_id')
+            ->leftJoin('garages as from_g', 'from_g.id', '=', 'warehouse_transfers.from_garage_id')
+            ->leftJoin('garages as to_g', 'to_g.id', '=', 'warehouse_transfers.to_garage_id')
+            ->leftJoin('service_vehicles', 'service_vehicles.id', '=', 'warehouse_transfers.to_service_vehicle_id')
+            ->select(
+                'warehouse_transfers.id as transfer_id',
+                'warehouse_transfers.type',
+                'warehouse_transfers.status',
+                'warehouse_transfers.created_at',
+                'warehouse_transfers.to_garage_id',
+                'warehouse_transfers.to_service_vehicle_id',
+                'from_g.name as from_garage_name',
+                'from_g.code as from_garage_code',
+                'to_g.name as to_garage_name',
+                'to_g.code as to_garage_code',
+                'service_vehicles.name as to_vehicle_name',
+                'warehouses.code',
+                'warehouses.name as part_name',
+                'warehouses.unit',
+                'warehouse_transfer_items.declared_quantity',
+                'warehouse_transfer_items.received_quantity',
+            )
+            ->orderByDesc('warehouse_transfers.created_at')
+            ->orderBy('warehouse_transfers.id')
+            ->limit(1000)
+            ->get();
+    }
     // ==================== PRIVATE ====================
 
     /**

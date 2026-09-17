@@ -22,7 +22,6 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -110,6 +109,7 @@ Route::middleware(['auth'])
                 Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'workerActivity'])->name('worker-activity');
                 Route::get('/low-stock', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'lowStock'])->name('low-stock');
                 Route::get('/movement', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'movement'])->name('movement');
+                Route::get('/service-vehicle-usage', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'serviceVehicleUsage'])->name('service-vehicle-usage');
             });
 
             // Complaint reports
@@ -138,6 +138,7 @@ Route::middleware(['auth'])
             // Transfer reports — company-wide aggregation across all garages
             Route::prefix('transfer')->name('transfer.')->group(function () {
                 Route::get('/summary',         [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'summary'])->name('summary');
+                Route::get('/detailed',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'detailed'])->name('detailed');
                 Route::get('/by-route',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'byRoute'])->name('by-route');
                 Route::get('/top-items',       [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'topItems'])->name('top-items');
                 Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'workerActivity'])->name('worker-activity');
@@ -335,6 +336,8 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
     Route::prefix('service-vehicles')->name('service-vehicles.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/create', [\App\Http\Controllers\ServiceVehicleController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\ServiceVehicleController::class, 'store'])->name('store');
+        // Static '/stocks' must come BEFORE the dynamic '/{service_vehicle}' route.
+        Route::get('/stocks', [\App\Http\Controllers\ServiceVehicleController::class, 'stocks'])->name('stocks');
         Route::get('/', [\App\Http\Controllers\ServiceVehicleController::class, 'index'])->name('index');
         Route::get('/{service_vehicle}/edit', [\App\Http\Controllers\ServiceVehicleController::class, 'edit'])->name('edit');
         Route::get('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'show'])->name('show');
@@ -415,6 +418,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\WarehouseReportController::class, 'workerActivity'])->name('worker-activity');
                 Route::get('/low-stock', [App\Http\Controllers\Reports\WarehouseReportController::class, 'lowStock'])->name('low-stock');
                 Route::get('/movement', [App\Http\Controllers\Reports\WarehouseReportController::class, 'movement'])->name('movement');
+                Route::get('/service-vehicle-usage', [App\Http\Controllers\Reports\WarehouseReportController::class, 'serviceVehicleUsage'])->name('service-vehicle-usage');
             });
 
         // Complaint reports
@@ -463,6 +467,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
             ))])
             ->group(function () {
                 Route::get('/summary',         [App\Http\Controllers\Reports\TransferReportController::class, 'summary'])->name('summary');
+                Route::get('/detailed',        [App\Http\Controllers\Reports\TransferReportController::class, 'detailed'])->name('detailed');
                 Route::get('/by-route',        [App\Http\Controllers\Reports\TransferReportController::class, 'byRoute'])->name('by-route');
                 Route::get('/top-items',       [App\Http\Controllers\Reports\TransferReportController::class, 'topItems'])->name('top-items');
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\TransferReportController::class, 'workerActivity'])->name('worker-activity');

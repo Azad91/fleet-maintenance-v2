@@ -497,6 +497,10 @@ return [
         'delete_confirm'            => 'Are you sure you want to delete this service vehicle?',
         'current_stock' => 'Current Stock',
         'no_stock'      => 'No stock on this service vehicle yet.',
+        'stocks_title'                => 'Service Vehicle Stocks',
+        'stocks_subtitle'             => 'Overview of every part currently loaded on each service vehicle.',
+        'stocks_search_placeholder'   => 'Search by part code or name...',
+        'stocks_all_vehicles'         => 'All vehicles',
     ],
 
     // ==================== DRIVERS ====================
@@ -900,6 +904,7 @@ return [
             'worker_activity' => 'Worker Activity',
             'low_stock' => 'Critical Stock',
             'movement' => 'Movement History',
+            'service_vehicle_usage' => 'Service Vehicle Usage',
         ],
 
         'complaint' => [
@@ -1159,6 +1164,7 @@ return [
             'total_declared'     => 'Declared',
             'total_received'     => 'Received',
             'no_disputes'        => 'No disputed transfers in this period.',
+            'detailed' => 'Detailed View',
         ],
     ],
 

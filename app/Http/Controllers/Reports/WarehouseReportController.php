@@ -62,6 +62,16 @@ class WarehouseReportController extends ReportController
         ]);
     }
 
+    public function serviceVehicleUsage(Request $request): View
+    {
+        $period = $this->period($request);
+        $scope = $this->scope('warehouse');
+
+        return $this->render('service-vehicle-usage', $period, $scope, [
+            'rows' => $this->service->serviceVehicleUsage($period, $scope),
+        ]);
+    }
+
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.warehouse.{$view}", array_merge($data, [

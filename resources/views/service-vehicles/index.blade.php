@@ -9,9 +9,14 @@
         <h1 class="mb-1">🚐 {{ __('messages.service_vehicles.title') }}</h1>
         <p class="text-muted mb-0">{{ __('messages.service_vehicles.subtitle') }}</p>
     </div>
-    <a href="{{ route('service-vehicles.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> {{ __('messages.service_vehicles.new') }}
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('service-vehicles.stocks') }}" class="btn btn-info">
+            <i class="bi bi-boxes"></i> {{ __('messages.service_vehicles.stocks_title') }}
+        </a>
+        <a href="{{ route('service-vehicles.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> {{ __('messages.service_vehicles.new') }}
+        </a>
+    </div>
 </div>
 
 @if(session('success'))

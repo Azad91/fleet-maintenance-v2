@@ -21,7 +21,8 @@
                 'worker-activity' => ['label' => __('messages.reports.warehouse.worker_activity'), 'route' => 'reports.warehouse.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'low-stock'       => ['label' => __('messages.reports.warehouse.low_stock'),       'route' => 'reports.warehouse.low-stock',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::WAREHOUSE_WORKER->value]],
                 'movement'        => ['label' => __('messages.reports.warehouse.movement'),        'route' => 'reports.warehouse.movement',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-            ],
+                'service-vehicle-usage' => ['label' => __('messages.reports.warehouse.service_vehicle_usage'), 'route' => 'reports.warehouse.service-vehicle-usage', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                ],
         ],
         'complaint' => [
             'title'   => __('messages.reports.complaint.title'),
@@ -29,6 +30,7 @@
             'icon'    => 'fa-screwdriver-wrench',
             'reports' => [
                 'summary'         => ['label' => __('messages.reports.complaint.summary'),         'route' => 'reports.complaint.summary',         'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'detailed'        => ['label' => __('messages.transfers.report.detailed'), 'route' => 'reports.transfer.detailed', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
                 'top-types'       => ['label' => __('messages.reports.complaint.top_types'),       'route' => 'reports.complaint.top-types',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
                 'worker-activity' => ['label' => __('messages.reports.complaint.worker_activity'), 'route' => 'reports.complaint.worker-activity', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
                 'by-bus'          => ['label' => __('messages.reports.complaint.by_bus'),          'route' => 'reports.complaint.by-bus',          'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],

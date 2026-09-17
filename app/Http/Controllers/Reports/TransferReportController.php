@@ -62,6 +62,16 @@ class TransferReportController extends ReportController
         ]);
     }
 
+    public function detailed(Request $request): View
+    {
+        $period = $this->period($request);
+        $scope  = $this->scope('transfer');
+
+        return $this->render('detailed', $period, $scope, [
+            'rows' => $this->service->detailed($period, $scope),
+        ]);
+    }
+
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.transfer.{$view}", array_merge($data, [
