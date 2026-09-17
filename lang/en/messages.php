@@ -320,17 +320,15 @@ return [
         'pdf_sig_approved' => 'Approved By',
         'pdf_sig_approved_role' => 'Garage Manager',
         'pdf_footer' => 'This document was generated automatically on :date · Fleet Control · ID #:id',
-        'inspection_badge' => 'Inspection / Repair',
-        'inspection_qty_label' => 'Inspected (0)',
-        'search_placeholder' => 'Search by bus, route, or complaint...',
-        'search_hint' => 'Matches bus DQN, route number, or complaint description.',
         'search_placeholder' => 'Bus DQN, route, or complaint...',
         'search_hint' => 'Live search — results update as you type.',
+        'inspection_badge' => 'Inspection / Repair',
+        'inspection_qty_label' => 'Inspected (0)',
         'bulk_delete' => 'Delete Selected',
         'bulk_delete_confirm' => 'Are you sure you want to DELETE :count card(s)? Stock will be restored. This cannot be undone!',
         'bulk_delete_all' => 'Delete all matching',
-        'bulk_delete_all_confirm' => 'Are you sure you want to DELETE ALL :count card(s) matching the current filter? Stock will be restored for every card. This cannot be undone!', 
-        ],
+        'bulk_delete_all_confirm' => 'Are you sure you want to DELETE ALL :count card(s) matching the current filter? Stock will be restored for every card. This cannot be undone!',
+    ],
 
     // ==================== COMPLAINT TYPES ====================
     'complaint_types' => [

@@ -79,7 +79,6 @@ return [
         'app_name' => 'Fleet Maintenance',
         'super_admin' => 'Super Admin Paneli',
         'super_admin_menu' => 'SUPER ADMIN',
-        'filter_date_hint' => 'Standart: bugün. Hamısını görmək üçün təmizləyin.',
     ],
 
     // ==================== AUTH ====================
@@ -313,6 +312,14 @@ return [
         'pdf_sig_approved' => 'Təsdiq Edən',
         'pdf_sig_approved_role' => 'Qaraj Rəhbəri',
         'pdf_footer' => 'Bu sənəd :date tarixində avtomatik yaradıldı · Fleet Control · ID #:id',
+        'search_placeholder' => 'Avtobus DQN, xətt və ya şikayət...',
+        'search_hint' => 'Yazdıqca nəticələr avtomatik yenilənir.',
+        'inspection_badge' => 'Yoxlama / Təmir',
+        'inspection_qty_label' => 'Yoxlanıldı (0)',
+        'bulk_delete' => 'Seçilmişləri sil',
+        'bulk_delete_confirm' => ':count kartı SİLMƏK istədiyinizə əminsiniz? Stok geri qaytarılacaq. Bu geri alına bilməz!',
+        'bulk_delete_all' => 'Filter üzrə hamısını sil',
+        'bulk_delete_all_confirm' => 'Cari filter-ə uyğun BÜTÜN :count kartı SİLMƏK istədiyinizə əminsiniz? Hər kart üçün stok geri qaytarılacaq. Bu geri alına bilməz!',
     ],
 
     // ==================== COMPLAINT TYPES ====================
