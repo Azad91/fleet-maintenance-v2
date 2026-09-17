@@ -25,36 +25,24 @@ class ServiceVehicleController extends Controller
     }
 
     /**
-     * Overview of every stock row across all service vehicles.
+     * Landing page for the "service vehicle stocks" section.
      *
-     * Lets the warehouse officer answer: "which vehicle carries part X?"
-     * and "what's currently loaded on vehicle Y?" — without having to
-     * open each vehicle one by one.
+     * Shows the list of vehicles with a summary of what each one holds.
+     * Clicking a card opens the vehicle's `show` page, which renders the
+     * full item list for that specific vehicle — the warehouse-style flow
+     * the operators are used to.
      */
-    public function stocks(Request $request): View
+    public function stocks(): View
     {
         $this->authorize('viewAny', ServiceVehicle::class);
 
-        $search    = trim((string) $request->input('search', ''));
-        $vehicleId = $request->integer('vehicle_id');
+        $vehicles = ServiceVehicle::withCount('stocks')
+            ->withSum('stocks', 'quantity')
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->get();
 
-        $stocks = ServiceVehicleStock::with('serviceVehicle')
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($qq) use ($search) {
-                    $qq->where('code', 'ILIKE', "%{$search}%")
-                    ->orWhere('name', 'ILIKE', "%{$search}%");
-                });
-            })
-            ->when($vehicleId > 0, fn ($q) => $q->where('service_vehicle_id', $vehicleId))
-            ->orderBy('service_vehicle_id')
-            ->orderBy('code')
-            ->paginate(50)
-            ->withQueryString();
-
-        // Include inactive vehicles — they may still hold stock.
-        $vehicles = ServiceVehicle::orderBy('name')->get();
-
-        return view('service-vehicles.stocks', compact('stocks', 'vehicles', 'search', 'vehicleId'));
+        return view('service-vehicles.stocks', compact('vehicles'));
     }
 
     public function create(): View
