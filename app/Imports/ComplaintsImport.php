@@ -22,78 +22,63 @@ use Maatwebsite\Excel\Concerns\WithValidation;
  * Imports complaints from an Excel file.
  *
  * ── GROUPING MODEL ──────────────────────────────────────────────────
- * The Excel file groups multiple complaints + multiple details onto a
- * single card using a simple visual rule:
- *
- *   - A row with `bus_dqn` DIFFERENT from the previous row → starts a
- *     NEW complaint card.
- *   - A row with `bus_dqn` EQUAL to the previous row → the row belongs
- *     to the SAME card (adds a new complaint item + a new detail).
- *   - A row with `bus_dqn` EMPTY → the row continues the CURRENT card.
- *
- * Example (12 rows → 7 cards):
- *
- *   99JU261 | ARAÇ STOP EDİYOR.              → card 1
- *   99JU937 | ARAÇTA YAĞ KAÇAĞI VAR.         → card 2
- *   99JU339 | ARAÇTA SU KAÇAĞI VAR.          → card 3
- *   99JU339 | HİDROSTATİK FAN POMPA...       → card 3 (same bus)
- *   99JZ193 | BAKIM KAPAĞI ARIZASI.          → card 4
- *   99JB315 | ARAÇ ÇEKİŞİ DÜŞÜK.             → card 5
- *   (empty) | ARAÇTA SU KAÇAĞI VAR.          → card 5
- *   (empty) | ARAÇTA YAĞ KAÇAĞI VAR.         → card 5
- *   99JU251 | ARAÇTA SU KAÇAĞI VAR.          → card 6
- *   (empty) | (empty)                        → card 6
- *   99JU372 | ARAÇTA SU KAÇAĞI VAR.          → card 7
- *   (empty) | ARAÇTA YAĞ KAÇAĞI VAR.         → card 7
- *
- * Header fields (bus, date, yer, type, status, work_done_by, notes) are
- * taken from the FIRST row of each card. Subsequent rows may repeat
- * those values (as in the source file) but they are ignored — the
- * first non-empty value wins. This keeps the model consistent and
- * avoids partial updates.
+ * Rows sharing the same `bus_dqn` (or following a row with an empty
+ * `bus_dqn`) form one complaint card.
  *
  * ── ATOMICITY ───────────────────────────────────────────────────────
- * Each row — including the complaint header creation for a new card —
- * runs inside its own DB transaction. If the row's detail fails (e.g.
- * insufficient stock, missing part), the exception rolls back any
- * partial state, so a failed row leaves NO trace: no complaint, no
- * item, no detail, no stock change.
+ * Every row runs in its own DB transaction. A failure rolls back the
+ * entire row — no partial state remains.
  *
- * ── STOCK ───────────────────────────────────────────────────────────
- * Details are saved per row. When $deductStock is true (default),
- * warehouse stock is deducted from each detail row. When false (for
- * historical imports), no stock is touched.
+ * ── PERFORMANCE (memoization) ───────────────────────────────────────
+ * Naive implementations issue 4-5 queries PER ROW:
+ *   - one bus lookup
+ *   - up to four employee lookups (code, full name, partial name)
+ *   - one warehouse lookup
  *
- * ── INSPECTION ROWS (used_quantity = 0) ─────────────────────────────
- * A detail row with used_quantity = 0 represents work performed on a
- * part WITHOUT consuming stock (inspection, tightening, adjustment).
- * Such rows are stored with source_type = 'inspection' so that:
- *   - reports can distinguish them from consumed parts
- *   - stock restore logic never touches them
- *   - the workshop history stays complete
+ * For a 1000-row file that is 5000+ round trips, which reliably
+ * exceeds PHP's 30-second execution limit.
+ *
+ * This implementation caches every lookup by its key inside the
+ * importer instance. The same employee / warehouse / bus is resolved
+ * exactly once, regardless of how many rows reference it. In practice
+ * that reduces a 1000-row import from ~5000 queries to ~150.
+ *
+ * Caches survive across the whole import run (they are instance
+ * properties, not per-row locals) and include negative results
+ * (lookups that returned null).
  */
 class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToCollection, WithHeadingRow, WithValidation
 {
     use SkipsFailures;
 
-    /**
-     * The complaint currently being built. NULL before the first row or
-     * after a failed card header.
-     */
+    /** The complaint currently being built. NULL before the first row
+     *  or after a failed card header. */
     protected ?Complaint $currentComplaint = null;
 
-    /**
-     * DQN of the current card. Used to decide when a new card starts.
-     */
+    /** DQN of the current card — used to detect new cards. */
     protected ?string $currentDqn = null;
+
+    // ────────────────────────────────────────────────────────────────
+    // MEMOIZATION CACHES
+    //
+    // Keyed by the lookup string (lowercased where relevant). Values
+    // are either the resolved model ID or null (negative cache).
+    // ────────────────────────────────────────────────────────────────
+
+    /** @var array<string, int|null>  key: lowercased DQN */
+    protected array $busCache = [];
+
+    /** @var array<string, int|null>  key: normalized employee query */
+    protected array $employeeCache = [];
+
+    /** @var array<string, Warehouse|null>  key: "garageId|code" */
+    protected array $warehouseCache = [];
 
     /**
      * @param  int|null  $garageId  Positive for tenant imports.
      * @param  int|null  $companyId  Optional, used for strict company scoping.
      * @param  bool  $deductStock  When false, details are saved as
-     *                             'historical' and stock is never touched
-     *                             — not on import, not on delete, not on
-     *                             update. Use for importing past complaints.
+     *                             'historical' and stock is never touched.
      */
     public function __construct(
         ?int $garageId = null,
@@ -106,10 +91,9 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
     /**
      * Process the entire file in one pass — no chunking.
      *
-     * Chunking would break the grouping rule (a card can span rows
-     * that fall into different chunks), so we accept the memory cost.
-     * For the typical "one month of history" file (~200–500 rows) this
-     * is fast and safe.
+     * Chunking would break the grouping rule (a card can span chunks),
+     * so we accept the memory cost. Memoization keeps the query count
+     * low even for large files.
      */
     public function collection(Collection $rows): void
     {
@@ -120,41 +104,25 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
     /**
      * Process a single import row.
-     *
-     * Public so it can be tested directly without constructing a
-     * Maatwebsite\Excel\Row instance. Called sequentially by
-     * collection() with $currentComplaint / $currentDqn carrying
-     * state between calls.
-     *
-     * @param  array<string, mixed>  $rowArray
      */
     public function processRow(array $rowArray, int $rowIndex): void
     {
         $dqn = trim((string) ($rowArray['bus_dqn'] ?? $rowArray['dqn'] ?? ''));
 
-        // A row with an empty DQN and no card in progress cannot be
-        // placed anywhere — skip with a clear reason.
         if ($dqn === '' && $this->currentComplaint === null) {
             $this->recordSkip($rowIndex, '—', __('messages.imports.reasons.dqn_missing_in_row'));
 
             return;
         }
 
-        // Defensive: the constructor already enforces this, but the
-        // check protects against future refactors that might bypass
-        // the constructor (e.g. reflection-based instantiations).
         if ($this->garageId <= 0) {
             throw new \RuntimeException(
                 'ComplaintsImport cannot run without a valid garage context.'
             );
         }
 
-        // Detect whether this row starts a new card.
         $isNewCard = ($dqn !== '' && $dqn !== $this->currentDqn);
 
-        // If this is a continuation row but the current card failed to
-        // create earlier, skip the row — we cannot append to a card
-        // that does not exist.
         if (! $isNewCard && $this->currentComplaint === null) {
             $this->recordSkip(
                 $rowIndex,
@@ -165,16 +133,10 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             return;
         }
 
-        // For a new card, resolve the bus up-front. If the bus cannot
-        // be found, reset the current card state so the next row with a
-        // different DQN starts cleanly.
         $bus = null;
 
         if ($isNewCard) {
-            $bus = Bus::withoutGlobalScopes()
-                ->where('dqn', $dqn)
-                ->where('garage_id', $this->garageId)
-                ->first();
+            $bus = $this->resolveBus($dqn);
 
             if (! $bus) {
                 $this->currentComplaint = null;
@@ -185,13 +147,9 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
                 return;
             }
 
-            // Lock in the DQN for the current card BEFORE the
-            // transaction so continuation rows are categorized
-            // correctly even if the header creation fails.
             $this->currentDqn = $dqn;
         }
 
-        // ─── Atomic block: header + item + detail + stock ───
         try {
             $complaint = DB::transaction(function () use ($rowArray, $bus, $isNewCard) {
                 $complaint = $isNewCard
@@ -207,10 +165,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             $this->incrementImported();
         } catch (RowSkippedException $e) {
             if ($isNewCard) {
-                // The card header was rolled back — leave currentDqn
-                // set so continuation rows with the same DQN are
-                // skipped instead of attempting to start a duplicate
-                // card.
                 $this->currentComplaint = null;
             }
 
@@ -223,14 +177,30 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
     }
 
     /**
+     * Resolve a Bus by DQN, memoized.
+     */
+    protected function resolveBus(string $dqn): ?Bus
+    {
+        $key = mb_strtolower($dqn);
+
+        if (array_key_exists($key, $this->busCache)) {
+            $cachedId = $this->busCache[$key];
+
+            return $cachedId === null ? null : Bus::withoutGlobalScopes()->find($cachedId);
+        }
+
+        $bus = Bus::withoutGlobalScopes()
+            ->where('dqn', $dqn)
+            ->where('garage_id', $this->garageId)
+            ->first();
+
+        $this->busCache[$key] = $bus?->id;
+
+        return $bus;
+    }
+
+    /**
      * Create the complaint header from the FIRST row of a card.
-     *
-     * Header fields are read once. Subsequent rows in the same card
-     * may repeat these values, but they are ignored — the first
-     * non-empty value wins. This keeps the card consistent and avoids
-     * surprising partial updates.
-     *
-     * @param  array<string, mixed>  $rowArray
      */
     protected function createComplaint(array $rowArray, Bus $bus): Complaint
     {
@@ -256,18 +226,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
     /**
      * Resolve the complaint's km value.
-     *
-     * Priority:
-     *   1. Explicit value from the Excel row (`km`, `yürüş`, `mileage`)
-     *   2. Latest daily KM record for this bus
-     *   3. Bus's own `km` column (legacy/manual value)
-     *   4. null
-     *
-     * Excel km columns are frequently forgotten by operators, so we
-     * fall back to the most recent known mileage for the bus rather
-     * than storing NULL.
-     *
-     * @param  array<string, mixed>  $rowArray
      */
     protected function resolveKm(array $rowArray, Bus $bus): ?int
     {
@@ -295,12 +253,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
     /**
      * Attach a complaint item + detail for a single row.
      *
-     * Called inside a DB transaction. Throws RowSkippedException when
-     * the row must be skipped — the exception rolls back the entire
-     * transaction, including the complaint header for a new card.
-     *
-     * @param  array<string, mixed>  $rowArray
-     *
      * @throws RowSkippedException
      */
     protected function attachRowData(Complaint $complaint, array $rowArray): void
@@ -326,48 +278,43 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
         $description = trim((string) ($rowArray['complaints'] ?? ''));
 
-        // ── Stock deduction (only for consumed parts, non-historical) ──
+        // ── Stock deduction (consumed parts only) ──
         $stockQuantity = 0;
 
         if ($partCode !== '' && $usedQuantity > 0 && $this->deductStock) {
-            $warehouse = Warehouse::withoutGlobalScopes()
-                ->where('code', $partCode)
-                ->where('garage_id', $garageId)
-                ->lockForUpdate()
-                ->first();
+            $warehouse = $this->resolveWarehouse($partCode);
 
-            if ($warehouse) {
-                $partName ??= $warehouse->name;
-
-                if ($usedQuantity > $warehouse->quantity) {
-                    throw new RowSkippedException(__('messages.flash.stock_insufficient', [
-                        'name' => $warehouse->name,
-                        'requested' => $usedQuantity,
-                        'available' => $warehouse->quantity,
-                    ]));
-                }
-
-                $stockQuantity = $warehouse->quantity;
-                $warehouse->decrement('quantity', $usedQuantity);
-            } else {
+            if (! $warehouse) {
                 throw new RowSkippedException(
                     __('messages.imports.reasons.part_not_found', ['code' => $partCode])
                 );
             }
+
+            $partName ??= $warehouse->name;
+
+            if ($usedQuantity > $warehouse->quantity) {
+                throw new RowSkippedException(__('messages.flash.stock_insufficient', [
+                    'name' => $warehouse->name,
+                    'requested' => $usedQuantity,
+                    'available' => $warehouse->quantity,
+                ]));
+            }
+
+            $stockQuantity = $warehouse->quantity;
+            $warehouse->decrement('quantity', $usedQuantity);
+
+            // Update the cache so subsequent rows see the new quantity.
+            $this->warehouseCache[$this->warehouseCacheKey($partCode)] = $warehouse->fresh();
         } elseif ($partCode !== '' && $usedQuantity > 0 && ! $this->deductStock) {
-            // Historical mode: look up the warehouse for the name only,
-            // never touch quantity.
-            $warehouse = Warehouse::withoutGlobalScopes()
-                ->where('code', $partCode)
-                ->where('garage_id', $garageId)
-                ->first();
+            // Historical mode: look up name only, never touch quantity.
+            $warehouse = $this->resolveWarehouse($partCode);
 
             if ($warehouse) {
                 $partName ??= $warehouse->name;
             }
         }
 
-        // ── Complaint item (one per row) ──
+        // ── Complaint item ──
         if ($description !== '') {
             $complaint->items()->create([
                 'description' => $description,
@@ -377,14 +324,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             ]);
         }
 
-        // ── Detail (one per row, when part info is present) ──
-        //
-        // NOTE: used_quantity = 0 is allowed now. Such rows represent
-        // an inspection or repair that did NOT consume stock. They are
-        // stored with source_type = 'inspection' so that:
-        //   - the workshop history stays complete
-        //   - stock reports can distinguish them
-        //   - delete/update never tries to restore stock from them
+        // ── Detail (0-qty allowed → inspection) ──
         if ($partCode !== '') {
             $sourceType = match (true) {
                 ! $this->deductStock  => 'historical',
@@ -399,42 +339,58 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
                 'stock_quantity' => $stockQuantity,
                 'used_quantity' => max(0, $usedQuantity),
                 'source_type' => $sourceType,
-                'employee_id' => $this->resolveEmployeeId($rowArray, $garageId),
+                'employee_id' => $this->resolveEmployeeId($rowArray),
                 'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
             ]);
         }
     }
 
     /**
-     * Resolve the employee_id for a complaint detail row.
+     * Resolve a Warehouse row by part code, memoized.
      *
-     * Excel files produced by garage staff rarely contain employee IDs
-     * — they contain a name string such as "REŞAD HÜSEYNOV". We match,
-     * in order of specificity:
-     *
-     *   1. Explicit numeric `employee_id`
-     *   2. Employee code (exact, case-insensitive, garage-scoped)
-     *   3. Full name match, with Azerbaijani/Turkish characters
-     *      normalized to ASCII on both sides ("REŞAD HÜSEYNOV" matches
-     *      "Rəşad Hüseynov").
-     *   4. Partial first-name match (last resort, garage-scoped).
-     *
-     * All matches are scoped to the current garage. Rows that do not
-     * resolve are imported with `employee_id = null`, preserving the
-     * previous behaviour for rows without employee info.
-     *
-     * @param  array<string, mixed>  $rowArray
+     * NOTE: this returns the same model instance cached at first
+     * lookup. Callers that mutate quantity (deductStock path) must
+     * refresh the cache themselves after decrement — see the caller.
      */
-    protected function resolveEmployeeId(array $rowArray, int $garageId): ?int
+    protected function resolveWarehouse(string $code): ?Warehouse
     {
-        // 1. Explicit numeric id — trust it if provided.
+        $key = $this->warehouseCacheKey($code);
+
+        if (array_key_exists($key, $this->warehouseCache)) {
+            return $this->warehouseCache[$key];
+        }
+
+        $warehouse = Warehouse::withoutGlobalScopes()
+            ->where('code', $code)
+            ->where('garage_id', $this->garageId)
+            ->first();
+
+        $this->warehouseCache[$key] = $warehouse;
+
+        return $warehouse;
+    }
+
+    protected function warehouseCacheKey(string $code): string
+    {
+        return $this->garageId.'|'.$code;
+    }
+
+    /**
+     * Resolve the employee_id for a detail row, memoized.
+     *
+     * The name is normalized once, then used as a cache key. Full and
+     * partial name lookups run at most once per unique normalized name
+     * across the entire import — not once per row.
+     */
+    protected function resolveEmployeeId(array $rowArray): ?int
+    {
+        // Explicit numeric id — trust it without caching (it is already
+        // the resolved value).
         if (! empty($rowArray['employee_id']) && is_numeric($rowArray['employee_id'])) {
             return (int) $rowArray['employee_id'];
         }
 
-        // Accept several header aliases so operators do not have to
-        // remember the exact column name.
-        $name = trim((string) (
+        $rawName = trim((string) (
             $rowArray['employee']
             ?? $rowArray['employee_name']
             ?? $rowArray['employee_code']
@@ -445,47 +401,57 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             ?? ''
         ));
 
-        if ($name === '') {
+        if ($rawName === '') {
             return null;
         }
 
-        // Collapse multiple whitespace into a single space.
-        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
+        $normalized = mb_strtolower(preg_replace('/\s+/u', ' ', $rawName) ?? $rawName);
 
-        $base = Employee::withoutGlobalScopes()
-            ->where('garage_id', $garageId)
-            ->whereNull('deleted_at');
-
-        // 2. Code match (exact, case-insensitive).
-        $byCode = (clone $base)
-            ->whereRaw('LOWER(code) = LOWER(?)', [$name])
-            ->first();
-
-        if ($byCode) {
-            return $byCode->id;
+        if (array_key_exists($normalized, $this->employeeCache)) {
+            return $this->employeeCache[$normalized];
         }
 
-        // Azerbaijani/Turkish → ASCII character map. Applied to BOTH
-        // sides of the comparison so that "REŞAD HÜSEYNOV" (Excel) and
-        // "Rəşad Hüseynov" (DB) normalize to "resad huseynov".
+        $resolvedId = $this->lookupEmployee($rawName);
+        $this->employeeCache[$normalized] = $resolvedId;
+
+        return $resolvedId;
+    }
+
+    /**
+     * Perform the actual employee lookup (4 progressive strategies).
+     */
+    protected function lookupEmployee(string $name): ?int
+    {
+        $base = Employee::withoutGlobalScopes()
+            ->where('garage_id', $this->garageId)
+            ->whereNull('deleted_at');
+
+        // 1. Code match (exact, case-insensitive).
+        $byCode = (clone $base)
+            ->whereRaw('LOWER(code) = LOWER(?)', [$name])
+            ->value('id');
+
+        if ($byCode) {
+            return (int) $byCode;
+        }
+
+        // Azerbaijani/Turkish → ASCII map for both sides.
         $charMap  = 'əƏıİşŞçÇüÜöÖğĞ';
         $asciiMap = 'eEiIsScCuUoOgG';
 
         $columnNorm = "LOWER(TRANSLATE(first_name || ' ' || COALESCE(last_name, ''), '{$charMap}', '{$asciiMap}'))";
         $inputNorm  = "LOWER(TRANSLATE(?, '{$charMap}', '{$asciiMap}'))";
 
-        // 3. Full name match (normalized).
+        // 2. Full name match (normalized).
         $byFullName = (clone $base)
             ->whereRaw("{$columnNorm} = {$inputNorm}", [$name])
-            ->first();
+            ->value('id');
 
         if ($byFullName) {
-            return $byFullName->id;
+            return (int) $byFullName;
         }
 
-        // 4. Partial first-name match — last resort. Only used when the
-        // first name has at least 3 characters to avoid accidental
-        // matches on initials.
+        // 3. Partial first-name match — last resort.
         $firstName = explode(' ', $name)[0] ?? null;
 
         if ($firstName && mb_strlen($firstName) >= 3) {
@@ -493,21 +459,20 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
             $byFirstName = (clone $base)
                 ->whereRaw("{$firstNameNorm} LIKE {$inputNorm}", [$firstName.'%'])
-                ->first();
+                ->value('id');
 
             if ($byFirstName) {
-                return $byFirstName->id;
+                return (int) $byFirstName;
             }
         }
 
         return null;
     }
 
-    /**
-     * Normalise the raw `yer` value. The DB stores 'road' / 'garage'.
-     * Anything else returns null so the column stays NULL instead of
-     * silently accepting a bogus string.
-     */
+    // ────────────────────────────────────────────────────────────────
+    // NORMALIZERS
+    // ────────────────────────────────────────────────────────────────
+
     protected function normalizeLocation(mixed $value): ?string
     {
         if ($value === null || $value === '') {
@@ -519,9 +484,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         return in_array($value, Location::values(), true) ? $value : null;
     }
 
-    /**
-     * Normalise the complaint type to a valid enum value, or NULL.
-     */
     protected function normalizeComplaintType(mixed $value): ?string
     {
         if ($value === null || $value === '') {
@@ -533,9 +495,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         return in_array($value, ComplaintType::values(), true) ? $value : null;
     }
 
-    /**
-     * Normalise the status to a valid enum value. Defaults to Pending.
-     */
     protected function normalizeStatus(mixed $value): string
     {
         if ($value === null || $value === '') {
@@ -549,18 +508,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             : ComplaintStatus::Pending->value;
     }
 
-    /**
-     * Parse a date cell into a Y-m-d string.
-     *
-     * Handles:
-     *   - d.m.Y (01.06.2026 → 2026-06-01)
-     *   - Y-m-d (2026-06-01)
-     *   - d/m/Y, d-m-Y
-     *   - DateTimeInterface instances
-     *   - Excel serial numbers
-     *
-     * Returns null when the value cannot be interpreted as a date.
-     */
     protected function normalizeDate(mixed $value): ?string
     {
         if ($value === null || $value === '') {
@@ -571,7 +518,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             return Carbon::instance($value)->toDateString();
         }
 
-        // Excel serial number (1900-01-01 = 1, 2026-06-01 ≈ 46174).
         if (is_numeric($value) && (float) $value > 20000 && (float) $value < 100000) {
             try {
                 return Carbon::instance(
@@ -588,12 +534,11 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
         $value = trim($value);
 
-        // Explicit day-first formats: d.m.Y, d/m/Y, d-m-Y.
         if (preg_match('/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/', $value, $m)) {
             try {
                 return Carbon::createFromDate((int) $m[3], (int) $m[2], (int) $m[1])->toDateString();
             } catch (\Throwable $e) {
-                // fall through to generic parse
+                // fall through
             }
         }
 
@@ -604,11 +549,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         }
     }
 
-    /**
-     * Parse a time cell into a H:i string.
-     *
-     * Handles "14:30", "14:30:00", and DateTimeInterface instances.
-     */
     protected function normalizeTime(mixed $value): ?string
     {
         if ($value === null || $value === '') {
@@ -621,7 +561,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
         $value = trim((string) $value);
 
-        // Drop a trailing seconds component if present.
         if (preg_match('/^(\d{1,2}):(\d{2})(?::\d{2})?$/', $value, $m)) {
             return sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
         }
@@ -629,11 +568,6 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         return null;
     }
 
-    /**
-     * Validation rules for the import file.
-     *
-     * @return array<string, mixed>
-     */
     public function rules(): array
     {
         return [

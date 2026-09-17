@@ -26,9 +26,6 @@ class ComplaintService
             $processedDetails = [];
 
             if (! empty($detallar) && is_array($detallar)) {
-                // `yer` may arrive as a Location enum (from a model) or
-                // as a plain string (from a form request). Normalise it
-                // to a string before handing it to the stock service.
                 $location = ($data['yer'] ?? null) instanceof Location
                     ? $data['yer']->value
                     : ($data['yer'] ?? 'garage');
@@ -141,6 +138,40 @@ class ComplaintService
     }
 
     /**
+     * Bulk soft-delete multiple complaints.
+     *
+     * Each complaint is deleted through the existing delete() method
+     * so that stock restoration, detail cascades, and per-row audit
+     * logging all run exactly as they do for single-row deletes.
+     *
+     * The whole batch runs inside a single DB transaction: if any
+     * single delete fails (e.g. a stock restore throws), the entire
+     * batch rolls back and no complaint is removed.
+     *
+     * @param  array<int>  $ids
+     * @return int  Number of complaints actually deleted
+     */
+    public function bulkDelete(array $ids): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $deleted = 0;
+
+        DB::transaction(function () use ($ids, &$deleted) {
+            $complaints = Complaint::whereIn('id', $ids)->get();
+
+            foreach ($complaints as $complaint) {
+                $this->delete($complaint);
+                $deleted++;
+            }
+        });
+
+        return $deleted;
+    }
+
+    /**
      * Normalise the driver + service vehicle fields based on the location.
      *
      * Rules:
@@ -176,11 +207,6 @@ class ComplaintService
      *
      * Rows are matched by their `code` value and updated in place (IDs preserved).
      * New codes are inserted, removed codes are soft-deleted.
-     *
-     * Benefits of code-based matching:
-     *   - Position changes do not create/delete rows
-     *   - Audit history stays clean (only real changes are logged)
-     *   - IDs are stable for external references
      *
      * @param  array<int, array<string, mixed>>  $processedDetails
      */
