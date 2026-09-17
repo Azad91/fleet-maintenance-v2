@@ -197,6 +197,33 @@ class ComplaintController extends Controller
             ->route('complaints.index')
             ->with('success', __('messages.flash.deleted', ['Item' => 'Card']));
     }
+    /**
+     * Bulk soft-delete selected complaints.
+     *
+     * Deletion goes through ComplaintService::bulkDelete() which
+     * restores warehouse/service-vehicle stock for every consumed
+     * detail, cascades to items and details, and writes one audit
+     * row per complaint.
+     */
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', Complaint::class);
+
+        $ids = $this->normalizeIds($request->input('ids', []));
+
+        if (empty($ids)) {
+            return back()->with('error', __('messages.flash.none_selected'));
+        }
+
+        $count = $this->complaintService->bulkDelete($ids);
+
+        return redirect()
+            ->route('complaints.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => $count,
+                'items' => 'cards',
+            ]));
+    }
 
     public function close(ComplaintCloseRequest $request, int $id): RedirectResponse
     {
@@ -371,5 +398,29 @@ class ComplaintController extends Controller
     {
         return $request->header('X-Requested-With') === 'XMLHttpRequest'
             || $request->boolean('_ajax');
+    }
+
+    /**
+     * Normalize an array of IDs coming from the bulk-selection form.
+     *
+     * Handles both JSON strings (submitted by the browser) and plain
+     * arrays, and strips anything that is not a positive integer.
+     *
+     * @return array<int>
+     */
+    private function normalizeIds(mixed $ids): array
+    {
+        if (is_string($ids)) {
+            $ids = json_decode($ids, true) ?? [];
+        }
+
+        if (! is_array($ids)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map('intval', $ids),
+            fn (int $id) => $id > 0
+        ));
     }
 }

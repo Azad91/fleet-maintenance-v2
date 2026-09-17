@@ -326,6 +326,8 @@ return [
         'search_hint' => 'Matches bus DQN, route number, or complaint description.',
         'search_placeholder' => 'Bus DQN, route, or complaint...',
         'search_hint' => 'Live search — results update as you type.',
+        'bulk_delete' => 'Delete Selected',
+        'bulk_delete_confirm' => 'Are you sure you want to DELETE :count card(s)? Stock will be restored. This cannot be undone!',
     ],
 
     // ==================== COMPLAINT TYPES ====================

@@ -14,7 +14,8 @@
     <p class="text-muted">{{ __('messages.complaints.subtitle') }}</p>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+{{-- ─── Actions row ─── --}}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div class="d-flex gap-2 flex-wrap">
         @can('create', App\Models\Complaint::class)
             <a href="{{ route('complaints.create') }}" class="btn btn-primary">
@@ -26,6 +27,14 @@
                 <i class="bi bi-upload"></i> {{ __('messages.complaints.import') }}
             </a>
         @endcan
+
+        {{-- ─── Bulk delete button ─── --}}
+        @can('delete', App\Models\Complaint::class)
+            <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
+                <i class="bi bi-trash"></i> {{ __('messages.complaints.bulk_delete') }}
+            </button>
+        @endcan
+
         <a href="{{ route('complaint-types.index') }}" class="btn btn-outline-info">
             <i class="bi bi-tags"></i> {{ __('messages.complaint_types.title') }}
         </a>
@@ -35,6 +44,13 @@
         {{ __('messages.complaints.total_label') }}
     </span>
 </div>
+
+{{-- Hidden form used to submit the bulk-delete request --}}
+<form id="bulkDeleteForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="ids" id="bulkSelectedIds" value="">
+</form>
 
 {{-- ─── Filter panel ─── --}}
 <div class="card mb-4">
@@ -142,21 +158,30 @@
 (function () {
     'use strict';
 
-    const form = document.getElementById('complaintFilterForm');
-    const results = document.getElementById('searchResults');
-    const totalCount = document.getElementById('totalCount');
-    const searchStatus = document.getElementById('searchStatus');
+    const form            = document.getElementById('complaintFilterForm');
+    const results         = document.getElementById('searchResults');
+    const totalCount      = document.getElementById('totalCount');
+    const searchStatus    = document.getElementById('searchStatus');
     const activeFilterBadge = document.getElementById('activeFilterBadge');
     const activeFilterCount = document.getElementById('activeFilterCount');
-    const clearSearch = document.getElementById('clearSearch');
-    const resetButton = document.getElementById('resetButton');
+    const clearSearch     = document.getElementById('clearSearch');
+    const bulkDeleteBtn   = document.getElementById('bulkDeleteBtn');
+    const bulkDeleteForm  = document.getElementById('bulkDeleteForm');
+    const bulkSelectedIds = document.getElementById('bulkSelectedIds');
 
     if (!form || !results) return;
+
+    // ─── Selected IDs — kept in a Set so it survives pagination ───
+    const selectedIds = new Set();
 
     let searchTimeout = null;
     let currentRequest = 0;
 
     const FILTER_KEYS = ['search', 'status', 'complaint_type', 'yer', 'date_from', 'date_to'];
+
+    // ════════════════════════════════════════════════════════════════
+    // SEARCH
+    // ════════════════════════════════════════════════════════════════
 
     function collectFilters() {
         const params = new URLSearchParams();
@@ -190,7 +215,6 @@
         const queryString = params.toString();
         const requestId = ++currentRequest;
 
-        // Show loading state
         searchStatus.style.display = 'inline-block';
 
         const fetchUrl = "{{ route('complaints.search') }}"
@@ -213,22 +237,21 @@
             return response.text();
         })
         .then(html => {
-            // Ignore stale responses (fast typing race condition).
             if (requestId !== currentRequest) return;
 
             results.innerHTML = html;
 
-            // Update the total counter from the freshly-rendered partial.
             const counter = results.querySelector('.total-count');
             if (counter && totalCount) {
                 totalCount.textContent = counter.dataset.count || '0';
             }
 
-            // Update the browser URL so that refresh / share keeps
-            // the current filters.
             history.replaceState(null, '', browserUrl);
 
             updateFilterBadge(params);
+
+            // Re-sync checkbox state after the table is re-rendered.
+            syncCheckboxState();
         })
         .catch(error => {
             console.error('Complaint search error:', error);
@@ -245,9 +268,100 @@
         searchTimeout = setTimeout(performSearch, delay);
     }
 
-    // ─── Bind filter inputs ───
-    // Text input → debounce 300ms (avoid a request on every keystroke).
-    // Selects and dates → fire immediately.
+    // ════════════════════════════════════════════════════════════════
+    // BULK SELECTION
+    // ════════════════════════════════════════════════════════════════
+
+    function updateBulkButton() {
+        if (!bulkDeleteBtn) return;
+
+        const count = selectedIds.size;
+
+        bulkDeleteBtn.disabled = count === 0;
+        bulkDeleteBtn.innerHTML =
+            '<i class="bi bi-trash"></i> '
+            + @json(__('messages.complaints.bulk_delete'))
+            + ' (' + count + ')';
+    }
+
+    /**
+     * Restore the checked state on the freshly-rendered table.
+     * Called after every AJAX search so that selections survive
+     * pagination and filter changes.
+     */
+    function syncCheckboxState() {
+        const checkboxes = results.querySelectorAll('.complaint-checkbox');
+
+        checkboxes.forEach(cb => {
+            const id = parseInt(cb.value, 10);
+            cb.checked = selectedIds.has(id);
+        });
+
+        // Update the "select all" header checkbox.
+        const selectAll = document.getElementById('selectAllComplaints');
+        if (selectAll) {
+            selectAll.checked = checkboxes.length > 0
+                && Array.from(checkboxes).every(cb => cb.checked);
+        }
+
+        updateBulkButton();
+    }
+
+    // Delegated events — survive table re-renders.
+    results.addEventListener('change', (e) => {
+        if (e.target.matches('.complaint-checkbox')) {
+            const id = parseInt(e.target.value, 10);
+
+            if (e.target.checked) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+
+            syncCheckboxState();
+            return;
+        }
+
+        if (e.target.matches('#selectAllComplaints')) {
+            const checkboxes = results.querySelectorAll('.complaint-checkbox');
+
+            checkboxes.forEach(cb => {
+                const id = parseInt(cb.value, 10);
+
+                if (e.target.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+            });
+
+            syncCheckboxState();
+        }
+    });
+
+    // ─── Bulk delete submit ───
+    if (bulkDeleteBtn && bulkDeleteForm && bulkSelectedIds) {
+        bulkDeleteBtn.addEventListener('click', () => {
+            if (selectedIds.size === 0) return;
+
+            const message = @json(__('messages.complaints.bulk_delete_confirm'))
+                .replace(':count', selectedIds.size);
+
+            if (! confirm(message)) return;
+
+            bulkSelectedIds.value = JSON.stringify(Array.from(selectedIds));
+
+            // IMPORTANT: the form already contains _method=DELETE,
+            // so no need to inject it here.
+            bulkDeleteForm.action = "{{ route('complaints.bulk.delete') }}";
+            bulkDeleteForm.submit();
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FILTER BINDINGS
+    // ════════════════════════════════════════════════════════════════
+
     const textInput = form.querySelector('input[name="search"]');
     if (textInput) {
         textInput.addEventListener('input', () => scheduleSearch(300));
@@ -257,7 +371,6 @@
         el.addEventListener('change', () => scheduleSearch(0));
     });
 
-    // ─── Clear search only ───
     if (clearSearch) {
         clearSearch.addEventListener('click', () => {
             if (textInput) textInput.value = '';
@@ -266,18 +379,18 @@
         });
     }
 
-    // ─── Reset all filters — let the normal link navigation handle it
-    // (goes to the plain /complaints URL, clearing the query string).
-
-    // ─── Submit → intercept and route through AJAX ───
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         clearTimeout(searchTimeout);
         performSearch();
     });
 
-    // ─── Initial badge state (when the page loads with filters) ───
+    // ════════════════════════════════════════════════════════════════
+    // INIT
+    // ════════════════════════════════════════════════════════════════
+
     updateFilterBadge(collectFilters());
+    syncCheckboxState();
 })();
 </script>
 @endsection

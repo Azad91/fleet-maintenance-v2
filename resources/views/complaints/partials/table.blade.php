@@ -9,6 +9,9 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAllComplaints" title="{{ __('messages.common.select') }}">
+                        </th>
                         <th>#</th>
                         <th>{{ __('messages.complaints.bus') }}</th>
                         <th>{{ __('messages.complaints.complaint') }}</th>
@@ -30,6 +33,11 @@
                             ?? $complaint->created_at;
                     @endphp
                     <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="complaint-checkbox"
+                                   value="{{ $complaint->id }}">
+                        </td>
                         <td>{{ $complaints->firstItem() + $loop->index }}</td>
                         <td>
                             <strong>{{ $complaint->bus->dqn ?? '-' }}</strong>
@@ -110,7 +118,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-5">
+                        <td colspan="10" class="text-center text-muted py-5">
                             <i class="bi bi-clipboard" style="font-size: 40px; display: block; margin-bottom: 10px; opacity: .3;"></i>
                             @if(request()->hasAny(['search', 'status', 'complaint_type', 'yer', 'date_from', 'date_to']))
                                 {{ __('messages.common.no_data') }}
