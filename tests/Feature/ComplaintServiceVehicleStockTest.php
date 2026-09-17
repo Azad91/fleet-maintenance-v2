@@ -9,7 +9,6 @@ use App\Models\Employee;
 use App\Models\Garage;
 use App\Models\ServiceVehicle;
 use App\Models\ServiceVehicleStock;
-use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\Complaint\ComplaintItemService;
 use App\Services\Complaint\ComplaintService;
@@ -28,7 +27,8 @@ class ComplaintServiceVehicleStockTest extends TestCase
     protected Garage $garage;
     protected Bus $bus;
     protected Employee $employee;
-    protected ServiceVehicle $vehicle;
+    protected ServiceVehicle $vehicleA;
+    protected ServiceVehicle $vehicleB;
     protected ComplaintService $service;
 
     protected function setUp(): void
@@ -50,10 +50,17 @@ class ComplaintServiceVehicleStockTest extends TestCase
             'company_id' => $this->company->id,
         ]);
 
-        $this->vehicle = ServiceVehicle::withoutGlobalScopes()->create([
+        $this->vehicleA = ServiceVehicle::withoutGlobalScopes()->create([
             'garage_id'  => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Service Vehicle 1',
+            'name'       => 'Service A',
+            'is_active'  => true,
+        ]);
+
+        $this->vehicleB = ServiceVehicle::withoutGlobalScopes()->create([
+            'garage_id'  => $this->garage->id,
+            'company_id' => $this->company->id,
+            'name'       => 'Service B',
             'is_active'  => true,
         ]);
 
@@ -81,10 +88,10 @@ class ComplaintServiceVehicleStockTest extends TestCase
         ]);
     }
 
-    protected function makeServiceStock(string $code, int $qty): ServiceVehicleStock
+    protected function makeVehicleStock(ServiceVehicle $vehicle, string $code, int $qty): ServiceVehicleStock
     {
         return ServiceVehicleStock::withoutGlobalScopes()->create([
-            'service_vehicle_id' => $this->vehicle->id,
+            'service_vehicle_id' => $vehicle->id,
             'garage_id'          => $this->garage->id,
             'company_id'         => $this->company->id,
             'code'               => $code,
@@ -94,15 +101,27 @@ class ComplaintServiceVehicleStockTest extends TestCase
         ]);
     }
 
-    protected function baseData(string $location = 'garage'): array
+    protected function baseData(string $location = 'garage', ?int $vehicleId = null): array
     {
-        return [
+        $data = [
             'bus_id'         => $this->bus->id,
             'yer'            => $location,
             'status'         => 'pending',
             'complaint_type' => 'breakdown',
             'km'             => 1000,
         ];
+
+        if ($location === 'road') {
+            $data['driver_name']   = 'Test Driver';
+            $data['reported_date'] = now()->toDateString();
+            $data['reported_time'] = now()->format('H:i');
+        }
+
+        if ($vehicleId !== null) {
+            $data['service_vehicle_id'] = $vehicleId;
+        }
+
+        return $data;
     }
 
     protected function detail(string $code, int $qty): array
@@ -117,13 +136,12 @@ class ComplaintServiceVehicleStockTest extends TestCase
     }
 
     // ==================================================================
-    // 1. GARAGE LOCATION — ALWAYS USES WAREHOUSE
+    // 1. GARAGE LOCATION — WAREHOUSE ONLY
     // ==================================================================
 
-    public function test_garage_location_uses_warehouse_even_when_service_vehicle_has_stock(): void
+    public function test_garage_location_uses_warehouse(): void
     {
         $warehouse = $this->makeWarehouse('FILTER-001', 20);
-        $this->makeServiceStock('FILTER-001', 50);
 
         $complaint = $this->service->create(
             $this->baseData('garage'),
@@ -131,186 +149,218 @@ class ComplaintServiceVehicleStockTest extends TestCase
             ['Test']
         );
 
-        // Warehouse was decremented
         $this->assertSame(15, $warehouse->fresh()->quantity);
-
-        // Service vehicle stock untouched
-        $this->assertSame(50, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('code', 'FILTER-001')->sum('quantity'));
-
-        // Detail marked as warehouse
         $this->assertSame('warehouse', $complaint->details->first()->source_type);
+        $this->assertNull($complaint->service_vehicle_id);
     }
 
-    // ==================================================================
-    // 2. ROAD LOCATION — USES SERVICE VEHICLE FIRST
-    // ==================================================================
-
-    public function test_road_location_prefers_service_vehicle_stock(): void
+    public function test_garage_location_ignores_service_vehicle_stock(): void
     {
         $warehouse = $this->makeWarehouse('FILTER-001', 20);
-        $this->makeServiceStock('FILTER-001', 10);
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 50);
 
         $complaint = $this->service->create(
-            $this->baseData('road'),
+            $this->baseData('garage'),
             [$this->detail('FILTER-001', 5)],
             ['Test']
         );
 
-        // Warehouse untouched
-        $this->assertSame(20, $warehouse->fresh()->quantity);
+        $this->assertSame(15, $warehouse->fresh()->quantity);
+        $this->assertSame(50, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)
+            ->sum('quantity'));
 
-        // Service vehicle decremented
-        $this->assertSame(5, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('code', 'FILTER-001')->sum('quantity'));
-
-        // Detail marked as service_vehicle
-        $this->assertSame('service_vehicle', $complaint->details->first()->source_type);
+        $this->assertSame('warehouse', $complaint->details->first()->source_type);
     }
 
     // ==================================================================
-    // 3. ROAD + INSUFFICIENT SERVICE VEHICLE — FALLBACK TO WAREHOUSE
+    // 2. ROAD LOCATION — SPECIFIC VEHICLE ONLY (NO FALLBACK)
     // ==================================================================
 
-    public function test_road_location_falls_back_to_warehouse_when_service_vehicle_insufficient(): void
+    public function test_road_location_deducts_from_selected_vehicle(): void
     {
         $warehouse = $this->makeWarehouse('FILTER-001', 20);
-        $this->makeServiceStock('FILTER-001', 3);
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 10);
+        $this->makeVehicleStock($this->vehicleB, 'FILTER-001', 30);
 
         $complaint = $this->service->create(
-            $this->baseData('road'),
+            $this->baseData('road', $this->vehicleB->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+
+        // Only vehicle B was debited — vehicle A untouched, warehouse untouched.
+        $this->assertSame(10, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)
+            ->sum('quantity'));
+
+        $this->assertSame(25, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleB->id)
+            ->sum('quantity'));
+
+        $this->assertSame(20, $warehouse->fresh()->quantity, 'Warehouse must not be touched');
+
+        $this->assertSame('service_vehicle', $complaint->details->first()->source_type);
+        $this->assertSame($this->vehicleB->id, $complaint->service_vehicle_id);
+    }
+
+    public function test_road_location_does_not_fallback_to_warehouse(): void
+    {
+        $warehouse = $this->makeWarehouse('FILTER-001', 100);
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 3);
+
+        // Vehicle A only has 3, request 10 — must fail, NOT fall back.
+        $this->expectException(ValidationException::class);
+
+        $this->service->create(
+            $this->baseData('road', $this->vehicleA->id),
             [$this->detail('FILTER-001', 10)],
             ['Test']
         );
-
-        // Service vehicle untouched (fallback, not partial)
-        $this->assertSame(3, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('code', 'FILTER-001')->sum('quantity'));
-
-        // Warehouse fully used
-        $this->assertSame(10, $warehouse->fresh()->quantity);
-
-        // Detail marked as warehouse
-        $this->assertSame('warehouse', $complaint->details->first()->source_type);
     }
 
-    public function test_road_location_falls_back_when_no_service_vehicle_stock_exists(): void
+    public function test_road_location_requires_service_vehicle_id(): void
     {
-        $warehouse = $this->makeWarehouse('FILTER-001', 20);
-
-        $complaint = $this->service->create(
-            $this->baseData('road'),
-            [$this->detail('FILTER-001', 5)],
-            ['Test']
-        );
-
-        $this->assertSame(15, $warehouse->fresh()->quantity);
-        $this->assertSame('warehouse', $complaint->details->first()->source_type);
-    }
-
-    // ==================================================================
-    // 4. MULTIPLE SERVICE VEHICLES — DRAIN LARGEST FIRST
-    // ==================================================================
-
-    public function test_road_location_drains_multiple_service_vehicles_largest_first(): void
-    {
-        $vehicle2 = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
-            'company_id' => $this->company->id,
-            'name'       => 'Service Vehicle 2',
-            'is_active'  => true,
-        ]);
-
-        // Vehicle 1 has 3, Vehicle 2 has 10
-        ServiceVehicleStock::withoutGlobalScopes()->create([
-            'service_vehicle_id' => $this->vehicle->id,
-            'garage_id'          => $this->garage->id,
-            'company_id'         => $this->company->id,
-            'code'               => 'FILTER-001',
-            'name'               => 'Filter',
-            'quantity'           => 3,
-        ]);
-
-        ServiceVehicleStock::withoutGlobalScopes()->create([
-            'service_vehicle_id' => $vehicle2->id,
-            'garage_id'          => $this->garage->id,
-            'company_id'         => $this->company->id,
-            'code'               => 'FILTER-001',
-            'name'               => 'Filter',
-            'quantity'           => 10,
-        ]);
-
-        $this->service->create(
-            $this->baseData('road'),
-            [$this->detail('FILTER-001', 8)],
-            ['Test']
-        );
-
-        // Largest drained first: vehicle2 (10) is fully consumed
-        // down to 2; vehicle1 (3) stays untouched.
-        // Need 8 → take 8 from the largest stack (vehicle2 10 → 2).
-        $this->assertSame(3, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('service_vehicle_id', $this->vehicle->id)->sum('quantity'));
-        $this->assertSame(2, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('service_vehicle_id', $vehicle2->id)->sum('quantity'));
-    }
-
-    // ==================================================================
-    // 5. RESTORE ON DELETE
-    // ==================================================================
-
-    public function test_restore_returns_stock_to_service_vehicle(): void
-    {
-        $this->makeServiceStock('FILTER-001', 10);
-
-        $complaint = $this->service->create(
-            $this->baseData('road'),
-            [$this->detail('FILTER-001', 4)],
-            ['Test']
-        );
-
-        $this->assertSame(6, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('code', 'FILTER-001')->sum('quantity'));
-
-        // Delete → restore
-        $this->service->delete($complaint);
-
-        $this->assertSame(10, ServiceVehicleStock::withoutGlobalScopes()
-            ->where('code', 'FILTER-001')->sum('quantity'));
-    }
-
-    public function test_restore_returns_stock_to_warehouse_when_fallback_used(): void
-    {
-        $warehouse = $this->makeWarehouse('FILTER-001', 20);
-
-        $complaint = $this->service->create(
-            $this->baseData('road'),
-            [$this->detail('FILTER-001', 5)],
-            ['Test']
-        );
-
-        $this->assertSame(15, $warehouse->fresh()->quantity);
-
-        $this->service->delete($complaint);
-
-        $this->assertSame(20, $warehouse->fresh()->quantity);
-    }
-
-    // ==================================================================
-    // 6. INSUFFICIENT EVERYWHERE
-    // ==================================================================
-
-    public function test_road_location_fails_when_neither_source_has_enough(): void
-    {
-        $this->makeWarehouse('FILTER-001', 3);
-        $this->makeServiceStock('FILTER-001', 2);
+        $this->makeWarehouse('FILTER-001', 100);
 
         $this->expectException(ValidationException::class);
 
         $this->service->create(
-            $this->baseData('road'),
-            [$this->detail('FILTER-001', 10)],
+            $this->baseData('road'),   // ← no service_vehicle_id
+            [$this->detail('FILTER-001', 5)],
             ['Test']
         );
+    }
+
+    public function test_road_location_fails_when_part_missing_on_vehicle(): void
+    {
+        $this->makeWarehouse('FILTER-001', 100);
+        $this->makeVehicleStock($this->vehicleA, 'OTHER-PART', 10);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->create(
+            $this->baseData('road', $this->vehicleA->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+    }
+
+    // ==================================================================
+    // 3. RESTORE BEHAVIOR
+    // ==================================================================
+
+    public function test_delete_restores_to_the_specific_vehicle(): void
+    {
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 10);
+        $this->makeVehicleStock($this->vehicleB, 'FILTER-001', 30);
+
+        $complaint = $this->service->create(
+            $this->baseData('road', $this->vehicleB->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+
+        $this->assertSame(25, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleB->id)->sum('quantity'));
+
+        // Delete → restore
+        $this->service->delete($complaint);
+
+        // Vehicle B restored, vehicle A untouched.
+        $this->assertSame(30, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleB->id)->sum('quantity'));
+
+        $this->assertSame(10, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)->sum('quantity'));
+    }
+
+    public function test_update_restores_old_and_deducts_new_from_same_vehicle(): void
+    {
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 20);
+
+        $complaint = $this->service->create(
+            $this->baseData('road', $this->vehicleA->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+
+        $this->assertSame(15, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)->sum('quantity'));
+
+        // Update quantity 5 → 8
+        $this->service->update(
+            $complaint,
+            $this->baseData('road', $this->vehicleA->id),
+            [$this->detail('FILTER-001', 8)],
+            ['Test']
+        );
+
+        // 20 - 8 = 12
+        $this->assertSame(12, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)->sum('quantity'));
+    }
+
+    public function test_restore_recreates_row_when_it_was_fully_depleted(): void
+    {
+        $this->makeWarehouse('FILTER-001', 100);
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 5);
+
+        $complaint = $this->service->create(
+            $this->baseData('road', $this->vehicleA->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+
+        // Vehicle stock is now 0
+        $this->assertSame(0, ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)->sum('quantity'));
+
+        // Force-remove the stock row to simulate cleanup
+        ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)
+            ->delete();
+
+        // Delete complaint → restore should recreate the row
+        $this->service->delete($complaint);
+
+        $restored = ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $this->vehicleA->id)
+            ->where('code', 'FILTER-001')
+            ->first();
+
+        $this->assertNotNull($restored, 'Stock row should be recreated');
+        $this->assertSame(5, $restored->quantity);
+    }
+
+    // ==================================================================
+    // 4. LEGACY ROAD COMPLAINTS (no service_vehicle_id) — GRACEFUL
+    // ==================================================================
+
+    public function test_delete_legacy_road_complaint_does_not_crash(): void
+    {
+        $complaint = Complaint::create([
+            'bus_id'         => $this->bus->id,
+            'garage_id'      => $this->garage->id,
+            'company_id'     => $this->company->id,
+            'yer'            => 'road',
+            'status'         => 'pending',
+            'complaint_type' => 'breakdown',
+        ]);
+
+        $complaint->details()->create([
+            'code'            => 'LEGACY-001',
+            'name'            => 'Legacy Part',
+            'stock_quantity'  => 10,
+            'used_quantity'   => 3,
+            'source_type'     => 'service_vehicle',
+            'garage_id'       => $this->garage->id,
+            'company_id'      => $this->company->id,
+        ]);
+
+        // Must not throw. The warning is logged, the delete succeeds.
+        $this->service->delete($complaint);
+
+        $this->assertSoftDeleted('complaints', ['id' => $complaint->id]);
     }
 }

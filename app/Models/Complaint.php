@@ -19,6 +19,7 @@ class Complaint extends Model
         'company_id',
         'bus_id',
         'driver_id',
+        'service_vehicle_id',
         'yer',
         'driver_name',
         'complaint_type',
@@ -40,15 +41,6 @@ class Complaint extends Model
         'created_by',
     ];
 
-    /**
-     * Enum casts. `status`, `complaint_type`, and `yer` are backed
-     * enums so that reads return strongly-typed cases and views can
-     * use `->label()` / `->bootstrapColor()` instead of concatenating
-     * raw strings into translation keys.
-     *
-     * Writes may pass either the enum case or its ->value; Laravel
-     * normalizes both.
-     */
     protected $casts = [
         'status' => ComplaintStatus::class,
         'complaint_type' => ComplaintType::class,
@@ -74,6 +66,17 @@ class Complaint extends Model
     public function driver()
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    /**
+     * The specific service vehicle that performed the work on the road.
+     *
+     * Only populated when `yer = 'road'`. Garage complaints have no
+     * service vehicle — their stock is sourced from the warehouse.
+     */
+    public function serviceVehicle()
+    {
+        return $this->belongsTo(ServiceVehicle::class, 'service_vehicle_id');
     }
 
     public function serviceTemplate()
@@ -148,5 +151,14 @@ class Complaint extends Model
         }
 
         return '-';
+    }
+
+    /**
+     * True when the complaint is being worked on the road and must be
+     * tied to a specific service vehicle.
+     */
+    public function requiresServiceVehicle(): bool
+    {
+        return $this->yer instanceof Location && $this->yer->isRoad();
     }
 }

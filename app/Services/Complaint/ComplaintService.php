@@ -18,7 +18,7 @@ class ComplaintService
 
     public function create(array $data, ?array $detallar = null, array $shikayet = []): Complaint
     {
-        $this->applyDriverContext($data);
+        $this->applyLocationContext($data);
 
         $data['created_by'] = auth()->id();
 
@@ -29,11 +29,15 @@ class ComplaintService
                 // `yer` may arrive as a Location enum (from a model) or
                 // as a plain string (from a form request). Normalise it
                 // to a string before handing it to the stock service.
-                $location = ($data['yer'] ?? null) instanceof \App\Enums\Location
+                $location = ($data['yer'] ?? null) instanceof Location
                     ? $data['yer']->value
                     : ($data['yer'] ?? 'garage');
 
-                $processedDetails = $this->stockService->deductStock($detallar, $location);
+                $processedDetails = $this->stockService->deductStock(
+                    $detallar,
+                    $location,
+                    $data['service_vehicle_id'] ?? null
+                );
             }
 
             $complaint = Complaint::create($data);
@@ -54,7 +58,7 @@ class ComplaintService
             $this->transitionService->validateTransition($complaint, $data['status']);
         }
 
-        $this->applyDriverContext($data);
+        $this->applyLocationContext($data);
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
             // Snapshot old details for stock diff calculation
@@ -65,12 +69,20 @@ class ComplaintService
             if ($detallar !== null && is_array($detallar)) {
                 // Same normalisation as create(): `yer` may be an enum
                 // or a string depending on the caller.
-                $location = ($data['yer'] ?? null) instanceof \App\Enums\Location
+                $location = ($data['yer'] ?? null) instanceof Location
                     ? $data['yer']->value
                     : ($data['yer'] ?? 'garage');
 
-                // syncStockDiff restores old stock and deducts new stock atomically
-                $processedDetails = $this->stockService->syncStockDiff($oldDetails, $detallar, $location);
+                // syncStockDiff restores old stock and deducts new stock atomically.
+                // The OLD vehicle id is passed separately so that a vehicle
+                // change on edit still restores to the original source.
+                $processedDetails = $this->stockService->syncStockDiff(
+                    $oldDetails,
+                    $detallar,
+                    $location,
+                    $data['service_vehicle_id'] ?? null,
+                    $complaint->service_vehicle_id
+                );
             }
 
             $complaint->update($data);
@@ -108,9 +120,14 @@ class ComplaintService
     public function delete(Complaint $complaint): void
     {
         DB::transaction(function () use ($complaint) {
-            // Restore stock for all details
+            // Restore stock for all details. For road complaints, the
+            // stock goes back to the specific service vehicle that was
+            // linked to this complaint.
             if ($complaint->details->isNotEmpty()) {
-                $this->stockService->restoreStock($complaint->details->toArray());
+                $this->stockService->restoreStock(
+                    $complaint->details->toArray(),
+                    $complaint->service_vehicle_id
+                );
             }
 
             // Soft-delete details
@@ -122,21 +139,34 @@ class ComplaintService
     }
 
     /**
-     * Resolve the driver_name from driver_id when the complaint origin is 'road'.
+     * Normalise the driver + service vehicle fields based on the location.
      *
-     * The database stores 'road' (English), not 'yol' (legacy Azerbaijani).
-     * When the origin is 'garage' or the driver_id is missing, the driver
-     * fields are explicitly cleared to prevent stale data.
+     * Rules:
+     *   yer = road   → driver_id required (from form), driver_name filled
+     *                  from the driver's full name; service_vehicle_id kept
+     *                  exactly as the operator selected it (NEVER inferred)
+     *   yer = garage → driver + service vehicle both cleared
      */
-    private function applyDriverContext(array &$data): void
+    private function applyLocationContext(array &$data): void
     {
-        if (($data['yer'] ?? null) === Location::Road->value && ! empty($data['driver_id'])) {
-            $driver = Driver::active()->findOrFail($data['driver_id']);
-            $data['driver_name'] = $driver->full_name;
-        } else {
-            $data['driver_id'] = null;
-            $data['driver_name'] = null;
+        $location = $data['yer'] ?? null;
+
+        $isRoad = $location === Location::Road->value
+            || ($location instanceof Location && $location->isRoad());
+
+        if ($isRoad) {
+            if (! empty($data['driver_id'])) {
+                $driver = Driver::active()->findOrFail($data['driver_id']);
+                $data['driver_name'] = $driver->full_name;
+            }
+
+            return;
         }
+
+        // Garage complaints have no driver and no service vehicle.
+        $data['driver_id'] = null;
+        $data['driver_name'] = null;
+        $data['service_vehicle_id'] = null;
     }
 
     /**
@@ -155,13 +185,11 @@ class ComplaintService
     private function syncDetails(Complaint $complaint, array $processedDetails): void
     {
         // ==================== 0. PREPARE ====================
-        // Index existing details by `code`
         $existingByCode = $complaint->details()
             ->orderBy('id')
             ->get()
             ->keyBy('code');
 
-        // Index new details by `code`
         $newByCode = [];
         foreach ($processedDetails as $detail) {
             $code = $detail['code'] ?? null;
@@ -180,7 +208,6 @@ class ComplaintService
             $detail = $existingByCode[$code];
             $payload = $newByCode[$code];
 
-            // Laravel's update() only saves changed fields.
             $detail->update($payload);
         }
 
@@ -199,7 +226,7 @@ class ComplaintService
         foreach ($codesToDelete as $code) {
             /** @var \App\Models\ComplaintDetail $detail */
             $detail = $existingByCode[$code];
-            $detail->delete();  // Triggers Auditable 'deleted' event
+            $detail->delete();
         }
     }
 }

@@ -96,6 +96,20 @@
                 <td class="label">{{ __('messages.complaints.complaint_type') }}</td>
                 <td>{{ $typeLabel }}</td>
             </tr>
+
+            {{-- NEW: Service Vehicle row --}}
+            @if($complaint->serviceVehicle)
+                <tr>
+                    <td class="label">{{ __('messages.complaints.service_vehicle') }}</td>
+                    <td colspan="3">
+                        {{ $complaint->serviceVehicle->name }}
+                        @if($complaint->serviceVehicle->plate_number)
+                            · {{ $complaint->serviceVehicle->plate_number }}
+                        @endif
+                    </td>
+                </tr>
+            @endif
+
             <tr>
                 <td class="label">{{ __('messages.common.status') }}</td>
                 <td colspan="3"><span class="badge {{ $statusClass }}">{{ $statusLabel }}</span></td>

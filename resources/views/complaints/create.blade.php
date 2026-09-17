@@ -199,9 +199,6 @@
 
     // ═══════════════════════════════════════════════════════════════
     // COMPLAINT TYPE → LOCATION
-    //
-    // `resetLocation` — page load zamanı false (old('yer') qorunsun),
-    // istifadəçi radio dəyişəndə true (Yer sıfırlansın).
     // ═══════════════════════════════════════════════════════════════
     function handleComplaintTypeChange(resetLocation) {
         if (typeof resetLocation === 'undefined') {
@@ -214,7 +211,6 @@
 
         if (!roadRadio || !garageRadio) return;
 
-        // Enable both (əvvəlki maintenance seçimindən qalma disabled ola bilər)
         roadRadio.disabled = false;
         garageRadio.disabled = false;
 
@@ -236,7 +232,6 @@
             document.getElementById('serviceTypeBlock').style.display = 'block';
             document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
 
-            // Dropdown select-lərini disable et — HTML5 validation bloklamasın
             document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
                 el.disabled = true;
                 el.required = false;
@@ -443,7 +438,6 @@
     // ═══════════════════════════════════════════════════════════════
     // DETAILS (add / remove)
     // ═══════════════════════════════════════════════════════════════
-    // Server tərəfindən gələn başlanğıc index (old input-da olan max + 1)
     let detailCount = parseInt(document.getElementById('detailCountValue')?.value || '1', 10) || 1;
 
     function addDetail() {
@@ -491,25 +485,43 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // LOCATION
+    // LOCATION → toggle driver / report / service vehicle
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');
         const driverField = document.getElementById('surucuField');
         const reportFields = document.getElementById('bildirilmeFields');
+        const vehicleField = document.getElementById('serviceVehicleField');
+        const vehicleSelect = document.getElementById('service_vehicle_id');
 
         if (!yer) {
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
+            if (vehicleField) vehicleField.style.display = 'none';
+            if (vehicleSelect) {
+                vehicleSelect.disabled = true;
+                vehicleSelect.required = false;
+            }
             return;
         }
 
         if (yer.value === 'garage') {
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
+            if (vehicleField) vehicleField.style.display = 'none';
+            if (vehicleSelect) {
+                vehicleSelect.disabled = true;
+                vehicleSelect.required = false;
+                vehicleSelect.value = '';
+            }
         } else {
             if (driverField) driverField.style.display = 'block';
             if (reportFields) reportFields.style.display = 'block';
+            if (vehicleField) vehicleField.style.display = 'block';
+            if (vehicleSelect) {
+                vehicleSelect.disabled = false;
+                vehicleSelect.required = true;
+            }
         }
     }
 
@@ -517,10 +529,7 @@
     // INIT
     // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
-        // ⚡ Page load → Yer-i sıfırlama (old('yer') qorunsun).
-        //    İstifadəçi radio dəyişəndə onchange default → reset = true.
         handleComplaintTypeChange(false);
-
         toggleFields();
     });
 </script>

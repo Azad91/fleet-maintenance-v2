@@ -12,6 +12,7 @@ use App\Models\Complaint;
 use App\Models\ComplaintType;
 use App\Models\Driver;
 use App\Models\Employee;
+use App\Models\ServiceVehicle;
 use App\Services\Complaint\ComplaintPdfService;
 use App\Services\Complaint\ComplaintService;
 use App\Services\GarageContext;
@@ -33,19 +34,16 @@ class ComplaintController extends Controller
     {
         $this->authorize('viewAny', Complaint::class);
 
-        $query = Complaint::with(['bus', 'items', 'details']);
+        $query = Complaint::with(['bus', 'items', 'details', 'serviceVehicle']);
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by complaint type
         if ($request->filled('complaint_type')) {
             $query->where('complaint_type', $request->complaint_type);
         }
 
-        // Search by bus DQN, route number, or description
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -73,6 +71,7 @@ class ComplaintController extends Controller
         $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
+        $serviceVehicles = ServiceVehicle::active()->orderBy('name')->get();
 
         $complaint = new Complaint;
 
@@ -81,6 +80,7 @@ class ComplaintController extends Controller
             'complaintTypes',
             'employees',
             'drivers',
+            'serviceVehicles',
             'complaint'
         ));
     }
@@ -104,7 +104,8 @@ class ComplaintController extends Controller
 
     public function show(int $id): View
     {
-        $complaint = Complaint::with(['bus', 'items', 'details.employee'])->findOrFail($id);
+        $complaint = Complaint::with(['bus', 'items', 'details.employee', 'serviceVehicle'])
+            ->findOrFail($id);
 
         $this->authorize('view', $complaint);
 
@@ -118,7 +119,8 @@ class ComplaintController extends Controller
 
     public function edit(int $id): View
     {
-        $complaint = Complaint::with(['items', 'details.employee'])->findOrFail($id);
+        $complaint = Complaint::with(['items', 'details.employee', 'serviceVehicle'])
+            ->findOrFail($id);
 
         $this->authorize('update', $complaint);
 
@@ -126,6 +128,7 @@ class ComplaintController extends Controller
         $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
+        $serviceVehicles = ServiceVehicle::active()->orderBy('name')->get();
 
         $details = $complaint->details->map(function ($detail) {
             return [
@@ -150,6 +153,7 @@ class ComplaintController extends Controller
             'details',
             'employees',
             'drivers',
+            'serviceVehicles',
             'complaints'
         ));
     }
@@ -206,7 +210,8 @@ class ComplaintController extends Controller
 
     public function downloadPdf(int $id): BinaryFileResponse
     {
-        $complaint = Complaint::with(['bus', 'details.employee'])->findOrFail($id);
+        $complaint = Complaint::with(['bus', 'details.employee', 'serviceVehicle'])
+            ->findOrFail($id);
 
         $this->authorize('view', $complaint);
 
@@ -235,11 +240,6 @@ class ComplaintController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        // Garage context must be resolved BEFORE authorization. The
-        // ComplaintPolicy reads the current garage id via hasGarageRole(),
-        // so without a garage the policy would return false and the user
-        // would see a confusing 403 instead of being sent to garage
-        // selection. Resolving first makes the failure mode clear.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {

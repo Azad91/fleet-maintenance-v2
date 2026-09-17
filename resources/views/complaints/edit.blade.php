@@ -67,10 +67,31 @@
                             {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} disabled>
                         <label class="form-check-label text-muted" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
                     </div>
-                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
+                    {{-- Disabled radio-lar submit olunmaz — dəyəri hidden ilə göndər --}}
                     <input type="hidden" name="yer" value="{{ $complaint->yer?->value }}">
                 </div>
             </div>
+
+            {{-- Service Vehicle — only shown when yer = road --}}
+            @if($complaint->yer?->value === 'road')
+                <div class="mb-3" id="serviceVehicleField">
+                    <label for="service_vehicle_id" class="form-label fw-bold">
+                        🚐 {{ __('messages.complaints.service_vehicle') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="service_vehicle_id" name="service_vehicle_id" required>
+                        <option value="">{{ __('messages.complaints.service_vehicle_placeholder') }}</option>
+                        @foreach($serviceVehicles ?? [] as $vehicle)
+                            <option value="{{ $vehicle->id }}"
+                                {{ old('service_vehicle_id', $complaint->service_vehicle_id) == $vehicle->id ? 'selected' : '' }}>
+                                {{ $vehicle->name }}
+                                @if($vehicle->plate_number) · {{ $vehicle->plate_number }} @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">{{ __('messages.complaints.service_vehicle_hint') }}</div>
+                </div>
+            @endif
 
             {{-- Driver --}}
             <div class="mb-3" id="surucuField">
@@ -515,7 +536,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PART (warehouse)
+    // PART
     // ═══════════════════════════════════════════════════════════════
     function getPartByCode(input) {
         const code = input.value;
@@ -658,25 +679,37 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // LOCATION (Yol / Qaraj → driver visibility)
+    // LOCATION → toggle service vehicle field
+    //
+    // On edit, `yer` is disabled in the form (see the blade markup),
+    // so `toggleFields()` only controls the visibility of the service
+    // vehicle selector. Its value is always submitted via a hidden
+    // input for road complaints.
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');
         const driverField = document.getElementById('surucuField');
         const reportFields = document.getElementById('bildirilmeFields');
+        const vehicleField = document.getElementById('serviceVehicleField');
+        const vehicleSelect = document.getElementById('service_vehicle_id');
 
         if (!yer) {
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
+            if (vehicleField) vehicleField.style.display = 'none';
             return;
         }
 
         if (yer.value === 'garage') {
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
+            if (vehicleField) vehicleField.style.display = 'none';
+            if (vehicleSelect) vehicleSelect.disabled = true;
         } else {
             if (driverField) driverField.style.display = 'block';
             if (reportFields) reportFields.style.display = 'block';
+            if (vehicleField) vehicleField.style.display = 'block';
+            if (vehicleSelect) vehicleSelect.disabled = false;
         }
     }
 
