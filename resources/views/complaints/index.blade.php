@@ -28,10 +28,18 @@
             </a>
         @endcan
 
-        {{-- ─── Bulk delete button ─── --}}
+        {{-- ─── Bulk delete selected (checkbox) ─── --}}
         @can('delete', App\Models\Complaint::class)
             <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
                 <i class="bi bi-trash"></i> {{ __('messages.complaints.bulk_delete') }}
+            </button>
+
+            {{-- ─── Bulk delete ALL matching filter ─── --}}
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteAllBtn"
+                    data-total="{{ $complaints->total() }}"
+                    {{ $complaints->total() === 0 ? 'disabled' : '' }}>
+                <i class="bi bi-trash-fill"></i>
+                {{ __('messages.complaints.bulk_delete_all') }} ({{ $complaints->total() }})
             </button>
         @endcan
 
@@ -45,11 +53,18 @@
     </span>
 </div>
 
-{{-- Hidden form used to submit the bulk-delete request --}}
 <form id="bulkDeleteForm" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
     <input type="hidden" name="ids" id="bulkSelectedIds" value="">
+</form>
+
+{{-- Hidden form for the "delete all matching filter" action.
+     Filter params are injected by JS at submit time. --}}
+<form id="bulkDeleteAllForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <div id="bulkDeleteAllFilters"></div>
 </form>
 
 {{-- ─── Filter panel ─── --}}
@@ -243,7 +258,18 @@
 
             const counter = results.querySelector('.total-count');
             if (counter && totalCount) {
-                totalCount.textContent = counter.dataset.count || '0';
+                const newTotal = counter.dataset.count || '0';
+                totalCount.textContent = newTotal;
+
+                // Keep the "delete all" button in sync with the
+                // freshly-filtered total.
+                if (bulkDeleteAllBtn) {
+                    bulkDeleteAllBtn.dataset.total = newTotal;
+                    bulkDeleteAllBtn.disabled = newTotal === '0';
+                    bulkDeleteAllBtn.innerHTML =
+                        '<i class="bi bi-trash-fill"></i> '
+                        + DELETE_ALL_LABEL + ' (' + newTotal + ')';
+                }
             }
 
             history.replaceState(null, '', browserUrl);
@@ -305,6 +331,41 @@
         }
 
         updateBulkButton();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // BULK DELETE ALL MATCHING FILTER
+    // ════════════════════════════════════════════════════════════════
+
+    const bulkDeleteAllBtn     = document.getElementById('bulkDeleteAllBtn');
+    const bulkDeleteAllForm    = document.getElementById('bulkDeleteAllForm');
+    const bulkDeleteAllFilters = document.getElementById('bulkDeleteAllFilters');
+    const DELETE_ALL_LABEL     = @json(__('messages.complaints.bulk_delete_all'));
+
+    if (bulkDeleteAllBtn && bulkDeleteAllForm && bulkDeleteAllFilters) {
+        bulkDeleteAllBtn.addEventListener('click', () => {
+            const total = parseInt(bulkDeleteAllBtn.dataset.total, 10) || 0;
+
+            if (total === 0) return;
+
+            const message = @json(__('messages.complaints.bulk_delete_all_confirm'))
+                .replace(':count', total);
+
+            if (! confirm(message)) return;
+
+            // Inject the current filter params into the hidden form.
+            bulkDeleteAllFilters.innerHTML = '';
+            collectFilters().forEach((value, key) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                bulkDeleteAllFilters.appendChild(input);
+            });
+
+            bulkDeleteAllForm.action = "{{ route('complaints.bulk.delete-all') }}";
+            bulkDeleteAllForm.submit();
+        });
     }
 
     // Delegated events — survive table re-renders.

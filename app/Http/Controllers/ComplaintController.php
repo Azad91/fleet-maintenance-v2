@@ -198,21 +198,35 @@ class ComplaintController extends Controller
             ->with('success', __('messages.flash.deleted', ['Item' => 'Card']));
     }
     /**
-     * Bulk soft-delete selected complaints.
+     * Bulk soft-delete ALL complaints matching the current filter.
      *
-     * Deletion goes through ComplaintService::bulkDelete() which
-     * restores warehouse/service-vehicle stock for every consumed
-     * detail, cascades to items and details, and writes one audit
-     * row per complaint.
+     * Unlike bulkDelete() which operates on an explicit list of IDs
+     * submitted by the browser, this method rebuilds the exact same
+     * query the list page uses (buildFilteredQuery), extracts every
+     * matching ID, and deletes them in one go.
+     *
+     * Use case: "I filtered Yer=Yol and I want to remove all 2187
+     * results, not just the 25 visible on page 1."
+     *
+     * The time limit is raised because a 2000+ row delete, even
+     * chunked, can exceed PHP's default 30-second cap when each
+     * complaint has several details to restore stock for.
      */
-    public function bulkDelete(Request $request): RedirectResponse
+    public function bulkDeleteAll(Request $request): RedirectResponse
     {
         $this->authorize('delete', Complaint::class);
 
-        $ids = $this->normalizeIds($request->input('ids', []));
+        // Raise the ceiling for large batches. Chunking in
+        // ComplaintService keeps individual transactions short, but
+        // the sum of all chunks can still exceed 30 seconds.
+        @set_time_limit(300);
+
+        $ids = $this->buildFilteredQuery($request)->pluck('id')->all();
 
         if (empty($ids)) {
-            return back()->with('error', __('messages.flash.none_selected'));
+            return redirect()
+                ->route('complaints.index')
+                ->with('error', __('messages.flash.none_selected'));
         }
 
         $count = $this->complaintService->bulkDelete($ids);

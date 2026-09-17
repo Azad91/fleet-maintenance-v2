@@ -257,7 +257,9 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
             ->name('import.store');
         Route::get('/create', [ComplaintController::class, 'create'])->name('create');
         Route::get('/search', [ComplaintController::class, 'search'])->name('search');
+
         Route::delete('/bulk-delete', [ComplaintController::class, 'bulkDelete'])->name('bulk.delete');
+        Route::delete('/bulk-delete-all', [ComplaintController::class, 'bulkDeleteAll'])->name('bulk.delete-all');  // ← YENİ
 
         // Dynamic routes
         Route::get('/', [ComplaintController::class, 'index'])->name('index');

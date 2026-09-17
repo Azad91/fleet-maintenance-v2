@@ -144,14 +144,28 @@ class ComplaintService
      * so that stock restoration, detail cascades, and per-row audit
      * logging all run exactly as they do for single-row deletes.
      *
-     * The whole batch runs inside a single DB transaction: if any
-     * single delete fails (e.g. a stock restore throws), the entire
-     * batch rolls back and no complaint is removed.
+     * The IDs are processed in CHUNKS, each chunk inside its own
+     * transaction. This is a deliberate trade-off:
+     *
+     *   - One giant transaction over 2000+ rows holds table locks
+     *     for too long, blocks other users, and risks PHP timeouts
+     *     if anything slows down.
+     *   - One transaction per row would be correct but slow (2000+
+     *     transaction boundaries).
+     *
+     * Chunking gives us atomicity at a reasonable granularity while
+     * keeping each transaction short. If a chunk fails, earlier
+     * chunks stay committed — the operator sees a partial-success
+     * count and can retry the remainder.
+     *
+     * Eager-loads `details` on every chunk to avoid an N+1 query
+     * inside delete()->restoreStock().
      *
      * @param  array<int>  $ids
+     * @param  int  $chunkSize
      * @return int  Number of complaints actually deleted
      */
-    public function bulkDelete(array $ids): int
+    public function bulkDelete(array $ids, int $chunkSize = 100): int
     {
         if (empty($ids)) {
             return 0;
@@ -159,14 +173,18 @@ class ComplaintService
 
         $deleted = 0;
 
-        DB::transaction(function () use ($ids, &$deleted) {
-            $complaints = Complaint::whereIn('id', $ids)->get();
+        foreach (array_chunk($ids, $chunkSize) as $chunk) {
+            DB::transaction(function () use ($chunk, &$deleted) {
+                $complaints = Complaint::with('details')
+                    ->whereIn('id', $chunk)
+                    ->get();
 
-            foreach ($complaints as $complaint) {
-                $this->delete($complaint);
-                $deleted++;
-            }
-        });
+                foreach ($complaints as $complaint) {
+                    $this->delete($complaint);
+                    $deleted++;
+                }
+            });
+        }
 
         return $deleted;
     }

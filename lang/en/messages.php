@@ -328,7 +328,9 @@ return [
         'search_hint' => 'Live search — results update as you type.',
         'bulk_delete' => 'Delete Selected',
         'bulk_delete_confirm' => 'Are you sure you want to DELETE :count card(s)? Stock will be restored. This cannot be undone!',
-    ],
+        'bulk_delete_all' => 'Delete all matching',
+        'bulk_delete_all_confirm' => 'Are you sure you want to DELETE ALL :count card(s) matching the current filter? Stock will be restored for every card. This cannot be undone!', 
+        ],
 
     // ==================== COMPLAINT TYPES ====================
     'complaint_types' => [
