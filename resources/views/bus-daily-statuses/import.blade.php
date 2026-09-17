@@ -17,7 +17,13 @@
                 <ul class="mt-2 mb-0">
                     <li><strong>Route No</strong> – {{ __('messages.buses.route_number') }}</li>
                     <li><strong>DQN</strong> – {{ __('messages.daily_status.bus') }} <span class="text-danger">*</span></li>
+                    <li>
+                        <strong>Date</strong> – {{ __('messages.daily_status.date') }}
+                        <br>
+                        <small class="text-muted">{{ __('messages.daily_status.import_date_hint') }}</small>
+                    </li>
                     <li><strong>Status</strong> – {{ __('messages.daily_status.status') }} <span class="text-danger">*</span></li>
+                    <li><strong>Notes</strong> – {{ __('messages.daily_status.notes') }}</li>
                 </ul>
             </div>
 

@@ -52,9 +52,44 @@ class Bus extends Model
         return $this->hasOne(DailyKmRecord::class)->latestOfMany('date');
     }
 
+    /**
+     * The most recent daily status for this bus, ordered by date.
+     * Used on the bus show page to display the "Current Status" KPI
+     * card without an extra query per request.
+     */
+    public function latestDailyStatus()
+    {
+        return $this->hasOne(BusDailyStatus::class)->latestOfMany('date');
+    }
+
     public function getLatestKmAttribute()
     {
         return $this->latestKmRecord?->km;
+    }
+
+    /**
+     * Daily distance driven — the difference between the two most
+     * recent KM records for this bus.
+     *
+     * Returns null when there are fewer than 2 records (no baseline
+     * for comparison). The value is clamped at 0 because a stationary
+     * bus logs the same KM on consecutive days, which must render as
+     * "0 km", never as a negative number.
+     *
+     * IMPORTANT: callers should eager-load the `dailyKmRecords`
+     * relation with `->limit(2)` to avoid an N+1 query on list pages.
+     */
+    public function getDailyKmAttribute(): ?int
+    {
+        $records = $this->relationLoaded('dailyKmRecords')
+            ? $this->dailyKmRecords->take(2)
+            : $this->dailyKmRecords()->take(2)->get();
+
+        if ($records->count() < 2) {
+            return null;
+        }
+
+        return max(0, $records[0]->km - $records[1]->km);
     }
 
     public function scopeActive($query)

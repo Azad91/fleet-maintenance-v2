@@ -86,7 +86,6 @@
 
                     // ---- Admin-only sections ----
                     $canManage = $isAdmin;
-
                     // ---- Reports ----
                     $canViewWarehouseReports = $isSuperAdmin || $isAdmin
                         || ($currentUser?->hasGarageRole(array_merge(
@@ -107,6 +106,10 @@
                         || ($currentUser?->hasGarageRole(array_merge(
                             [RoleEnum::DAILY_STATUS_MANAGER->value],
                             [RoleEnum::DAILY_STATUS_WORKER->value]
+                        )) ?? false);
+                    $canViewTransferReports = $isSuperAdmin || $isAdmin
+                        || ($currentUser?->hasGarageRole(array_merge(
+                            RoleEnum::warehouseRoles()
                         )) ?? false);
                 @endphp
 
@@ -153,6 +156,9 @@
                     <a href="{{ route('director.reports.daily-status.distribution') }}" class="fleet-nav__link {{ request()->routeIs('director.reports.daily-status.*') ? 'is-active' : '' }}">
                         <i class="fas fa-clipboard-check"></i><span>{{ __('messages.reports.daily_status.title') }}</span>
                     </a>
+                    <a href="{{ route('director.reports.transfer.summary') }}" class="fleet-nav__link {{ request()->routeIs('director.reports.transfer.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.report.title') }}</span>
+                    </a>
                 @endif
 
                 {{-- ==================== OPERATIONS (garage users only) ==================== --}}
@@ -171,6 +177,9 @@
                     @if($canViewWarehouse)
                         <a href="{{ route('warehouses.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouses.*') ? 'is-active' : '' }}">
                             <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.nav.warehouses') }}</span>
+                        </a>
+                        <a href="{{ route('warehouse-transfers.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouse-transfers.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.title') }}</span>
                         </a>
                     @endif
                     @if($canViewMotorOil)
@@ -204,6 +213,9 @@
                     <a href="{{ route('employees.index') }}" class="fleet-nav__link {{ request()->routeIs('employees.*') ? 'is-active' : '' }}">
                         <i class="fas fa-users"></i><span>{{ __('messages.nav.employees') }}</span>
                     </a>
+                    <a href="{{ route('service-vehicles.index') }}" class="fleet-nav__link {{ request()->routeIs('service-vehicles.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-truck-medical"></i><span>{{ __('messages.service_vehicles.title') }}</span>
+                    </a>
                     <p class="fleet-nav__label">{{ __('messages.nav.administration') }}</p>
                     <a href="{{ route('users.index') }}" class="fleet-nav__link {{ request()->routeIs('users.*') ? 'is-active' : '' }}">
                         <i class="fas fa-user-shield"></i><span>{{ __('messages.nav.users') }}</span>
@@ -211,29 +223,34 @@
                 @endif
 
                 {{-- ==================== REPORTS ==================== --}}
-                @if(! $isDirector && ($canViewWarehouseReports || $canViewComplaintReports || $canViewDailyKmReports || $canViewDailyStatusReports))
-                    <p class="fleet-nav__label">{{ __('messages.reports.menu_label') }}</p>
-                    @if($canViewWarehouseReports)
-                        <a href="{{ route('reports.warehouse.receipt') }}" class="fleet-nav__link {{ request()->routeIs('reports.warehouse.*') ? 'is-active' : '' }}">
-                            <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.reports.warehouse.title') }}</span>
-                        </a>
-                    @endif
-                    @if($canViewComplaintReports)
-                        <a href="{{ route('reports.complaint.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.complaint.*') ? 'is-active' : '' }}">
-                            <i class="fas fa-screwdriver-wrench"></i><span>{{ __('messages.reports.complaint.title') }}</span>
-                        </a>
-                    @endif
-                    @if($canViewDailyKmReports)
-                        <a href="{{ route('reports.daily-km.missing') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-km.*') ? 'is-active' : '' }}">
-                            <i class="fas fa-gauge-high"></i><span>{{ __('messages.reports.daily_km.title') }}</span>
-                        </a>
-                    @endif
-                    @if($canViewDailyStatusReports)
-                        <a href="{{ route('reports.daily-status.distribution') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-status.*') ? 'is-active' : '' }}">
-                            <i class="fas fa-clipboard-check"></i><span>{{ __('messages.reports.daily_status.title') }}</span>
-                        </a>
-                    @endif
+                @if(! $isDirector && ($canViewWarehouseReports || $canViewComplaintReports || $canViewDailyKmReports || $canViewDailyStatusReports || $canViewTransferReports))
+                <p class="fleet-nav__label">{{ __('messages.reports.menu_label') }}</p>
+                @if($canViewWarehouseReports)
+                    <a href="{{ route('reports.warehouse.receipt') }}" class="fleet-nav__link {{ request()->routeIs('reports.warehouse.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.reports.warehouse.title') }}</span>
+                    </a>
                 @endif
+                @if($canViewComplaintReports)
+                    <a href="{{ route('reports.complaint.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.complaint.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-screwdriver-wrench"></i><span>{{ __('messages.reports.complaint.title') }}</span>
+                    </a>
+                @endif
+                @if($canViewDailyKmReports)
+                    <a href="{{ route('reports.daily-km.missing') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-km.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-gauge-high"></i><span>{{ __('messages.reports.daily_km.title') }}</span>
+                    </a>
+                @endif
+                @if($canViewDailyStatusReports)
+                    <a href="{{ route('reports.daily-status.distribution') }}" class="fleet-nav__link {{ request()->routeIs('reports.daily-status.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-clipboard-check"></i><span>{{ __('messages.reports.daily_status.title') }}</span>
+                    </a>
+                @endif
+                @if($canViewTransferReports)
+                    <a href="{{ route('reports.transfer.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.transfer.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.report.title') }}</span>
+                    </a>
+                @endif
+            @endif
             </nav>
 
             <div class="fleet-sidebar__bottom">

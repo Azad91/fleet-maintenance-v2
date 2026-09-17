@@ -177,31 +177,100 @@
     // PART
     // ═══════════════════════════════════════════════════════════════
     function getPartByCode(input) {
-        const code = input.value;
+        const code = input.value.trim();
         const item = input.closest('.detail-item');
         const nameInput = item.querySelector('input[name*="[name]"]');
         const stockInput = item.querySelector('input[name*="[stock_quantity]"]');
+        const helpEl = item.querySelector('.part-help');
 
-        if (!code) {
-            nameInput.value = '';
-            stockInput.value = '';
+        // Reset state
+        nameInput.value = '';
+        stockInput.value = '';
+        input.classList.remove('is-valid', 'is-invalid');
+        if (helpEl) {
+            helpEl.textContent = '';
+            helpEl.className = 'form-text part-help';
+        }
+
+        if (!code) return;
+
+        const yer = document.querySelector('input[name="yer"]:checked')?.value;
+
+        // ─── ROAD: source is the selected service vehicle ───
+        if (yer === 'road') {
+            const vehicleId = document.getElementById('service_vehicle_id')?.value;
+
+            if (!vehicleId) {
+                input.classList.add('is-invalid');
+                if (helpEl) {
+                    helpEl.textContent = @json(__('messages.complaints.select_vehicle_first'));
+                    helpEl.className = 'form-text text-danger part-help';
+                }
+                return;
+            }
+
+            fetch('/get-service-vehicle-part-by-code?service_vehicle_id='
+                    + encodeURIComponent(vehicleId)
+                    + '&code=' + encodeURIComponent(code), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.found) {
+                    nameInput.value = data.part_name || '';
+                    stockInput.value = data.stock_quantity ?? 0;
+                    input.classList.add('is-valid');
+                    if (helpEl) {
+                        helpEl.textContent = @json(__('messages.complaints.service_vehicle')) + ': ' + (data.unit || '');
+                        helpEl.className = 'form-text text-success part-help';
+                    }
+                } else {
+                    input.classList.add('is-invalid');
+                    if (helpEl) {
+                        helpEl.textContent = @json(__('messages.complaints.part_not_on_vehicle'));
+                        helpEl.className = 'form-text text-danger part-help';
+                    }
+                }
+            })
+            .catch(err => console.error('Service vehicle part lookup error:', err));
+
             return;
         }
 
+        // ─── GARAGE: source is the warehouse ───
         fetch('/get-detal-by-kod/' + encodeURIComponent(code))
             .then(response => response.json())
             .then(data => {
                 nameInput.value = data.detallar_name || '';
                 stockInput.value = data.stock_quantity || '';
+                if (data.detallar_name) {
+                    input.classList.add('is-valid');
+                }
             })
             .catch(error => console.error('Part lookup error:', error));
     }
 
+    /**
+     * Re-run part lookup for every filled part row when the service
+     * vehicle changes — so the stock display reflects the new vehicle.
+     */
+    function onServiceVehicleChange() {
+        document.querySelectorAll('#detailsContainer input[name*="[code]"]').forEach(input => {
+            if (input.value.trim()) {
+                getPartByCode(input);
+            }
+        });
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // COMPLAINT TYPE → LOCATION
+<<<<<<< HEAD
     //
     // `resetLocation` — false on page load (so old('yer') survives),
     // true when the user changes a radio (so the location resets).
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     // ═══════════════════════════════════════════════════════════════
     function handleComplaintTypeChange(resetLocation) {
         if (typeof resetLocation === 'undefined') {
@@ -214,7 +283,10 @@
 
         if (!roadRadio || !garageRadio) return;
 
+<<<<<<< HEAD
         // Re-enable both radios (a previous maintenance selection may have left them disabled)
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
         roadRadio.disabled = false;
         garageRadio.disabled = false;
 
@@ -236,7 +308,10 @@
             document.getElementById('serviceTypeBlock').style.display = 'block';
             document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
 
+<<<<<<< HEAD
             // Disable the complaint selects so HTML5 validation does not block submit
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
             document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
                 el.disabled = true;
                 el.required = false;
@@ -443,7 +518,10 @@
     // ═══════════════════════════════════════════════════════════════
     // DETAILS (add / remove)
     // ═══════════════════════════════════════════════════════════════
+<<<<<<< HEAD
     // Starting index coming from the server (max key in old input + 1)
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     let detailCount = parseInt(document.getElementById('detailCountValue')?.value || '1', 10) || 1;
 
     function addDetail() {
@@ -491,36 +569,74 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // LOCATION
+    // LOCATION → toggle driver / report / service vehicle
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');
         const driverField = document.getElementById('surucuField');
         const reportFields = document.getElementById('bildirilmeFields');
+        const vehicleField = document.getElementById('serviceVehicleField');
+        const vehicleSelect = document.getElementById('service_vehicle_id');
 
         if (!yer) {
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
+            if (vehicleField) vehicleField.style.display = 'none';
+            if (vehicleSelect) {
+                vehicleSelect.disabled = true;
+                vehicleSelect.required = false;
+            }
             return;
         }
 
         if (yer.value === 'garage') {
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
+            if (vehicleField) vehicleField.style.display = 'none';
+            if (vehicleSelect) {
+                vehicleSelect.disabled = true;
+                vehicleSelect.required = false;
+                vehicleSelect.value = '';
+            }
         } else {
             if (driverField) driverField.style.display = 'block';
             if (reportFields) reportFields.style.display = 'block';
+            if (vehicleField) vehicleField.style.display = 'block';
+            if (vehicleSelect) {
+                vehicleSelect.disabled = false;
+                vehicleSelect.required = true;
+            }
         }
+            // ─── Re-lookup filled part codes when the source changes ───
+            // (warehouse ↔ vehicle). This also runs on initial page load,
+            // so pre-filled rows on the edit page show the correct stock.
+            document.querySelectorAll('#detailsContainer input[name*="[code]"]').forEach(input => {
+                if (input.value.trim()) {
+                    getPartByCode(input);
+                }
+            });
+
+            // ─── Update the stock label so the operator knows the source ───
+            const label = yer.value === 'road'
+                ? @json(__('messages.complaints.service_vehicle'))
+                : @json(__('messages.warehouse.quantity'));
+
+            document.querySelectorAll('.stock-source-label').forEach(el => {
+                el.textContent = label;
+            });
     }
+
 
     // ═══════════════════════════════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
+<<<<<<< HEAD
         // ⚡ Page load → do NOT reset the location (so old('yer') survives).
         //    When the user changes a radio, onchange defaults to reset = true.
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
         handleComplaintTypeChange(false);
-
         toggleFields();
     });
 </script>

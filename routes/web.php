@@ -109,6 +109,7 @@ Route::middleware(['auth'])
                 Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'workerActivity'])->name('worker-activity');
                 Route::get('/low-stock', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'lowStock'])->name('low-stock');
                 Route::get('/movement', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'movement'])->name('movement');
+                Route::get('/service-vehicle-usage', [App\Http\Controllers\Director\Reports\DirectorWarehouseReportController::class, 'serviceVehicleUsage'])->name('service-vehicle-usage');
             });
 
             // Complaint reports
@@ -132,6 +133,16 @@ Route::middleware(['auth'])
                 Route::get('/distribution', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'distribution'])->name('distribution');
                 Route::get('/changes', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'changes'])->name('changes');
                 Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorDailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
+            });
+
+            // Transfer reports — company-wide aggregation across all garages
+            Route::prefix('transfer')->name('transfer.')->group(function () {
+                Route::get('/summary',         [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'summary'])->name('summary');
+                Route::get('/detailed',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'detailed'])->name('detailed');
+                Route::get('/by-route',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'byRoute'])->name('by-route');
+                Route::get('/top-items',       [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'topItems'])->name('top-items');
+                Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/disputed',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'disputed'])->name('disputed');
             });
         });
     });
@@ -283,6 +294,19 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::delete('/{warehouse}', [WarehouseController::class, 'destroy'])->name('destroy');
     });
 
+    // ==================== WAREHOUSE TRANSFERS ====================
+    Route::prefix('warehouse-transfers')->name('warehouse-transfers.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+        Route::get('/create', [\App\Http\Controllers\WarehouseTransferController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\WarehouseTransferController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\WarehouseTransferController::class, 'index'])->name('index');
+        Route::get('/{transfer}', [\App\Http\Controllers\WarehouseTransferController::class, 'show'])->name('show');
+        Route::post('/{transfer}/dispatch', [\App\Http\Controllers\WarehouseTransferController::class, 'dispatch'])->name('dispatch');
+        Route::post('/{transfer}/receive', [\App\Http\Controllers\WarehouseTransferController::class, 'receive'])->name('receive');
+        Route::post('/{transfer}/reject', [\App\Http\Controllers\WarehouseTransferController::class, 'reject'])->name('reject');
+        Route::post('/{transfer}/resolve', [\App\Http\Controllers\WarehouseTransferController::class, 'resolve'])->name('resolve');
+        Route::post('/{transfer}/cancel', [\App\Http\Controllers\WarehouseTransferController::class, 'cancel'])->name('cancel');
+    });
+
     // ==================== MOTOR OIL (ADMIN ONLY) ====================
     Route::prefix('motor-oil')->name('motor-oil.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [MotorOilController::class, 'importForm'])->name('import');
@@ -308,6 +332,19 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
     });
 
+    // ==================== SERVICE VEHICLES (ADMIN ONLY) ====================
+    Route::prefix('service-vehicles')->name('service-vehicles.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+        Route::get('/create', [\App\Http\Controllers\ServiceVehicleController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\ServiceVehicleController::class, 'store'])->name('store');
+        // Static '/stocks' must come BEFORE the dynamic '/{service_vehicle}' route.
+        Route::get('/stocks', [\App\Http\Controllers\ServiceVehicleController::class, 'stocks'])->name('stocks');
+        Route::get('/', [\App\Http\Controllers\ServiceVehicleController::class, 'index'])->name('index');
+        Route::get('/{service_vehicle}/edit', [\App\Http\Controllers\ServiceVehicleController::class, 'edit'])->name('edit');
+        Route::get('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'show'])->name('show');
+        Route::put('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'update'])->name('update');
+        Route::delete('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'destroy'])->name('destroy');
+    });
+
     // ==================== BUS DAILY STATUSES ====================
     $dailyStatusRoles = implode(',', array_merge(
         [RoleEnum::ADMIN->value],
@@ -315,7 +352,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
     ));
 
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->middleware(['role:'.$dailyStatusRoles])->group(function () {
-        Route::get('/export', [BusDailyStatusController::class, 'export'])->name('export');    
+        Route::get('/export', [BusDailyStatusController::class, 'export'])->name('export');
         Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
         Route::post('/import', [BusDailyStatusController::class, 'import'])
             ->middleware('throttle:import')
@@ -381,6 +418,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\WarehouseReportController::class, 'workerActivity'])->name('worker-activity');
                 Route::get('/low-stock', [App\Http\Controllers\Reports\WarehouseReportController::class, 'lowStock'])->name('low-stock');
                 Route::get('/movement', [App\Http\Controllers\Reports\WarehouseReportController::class, 'movement'])->name('movement');
+                Route::get('/service-vehicle-usage', [App\Http\Controllers\Reports\WarehouseReportController::class, 'serviceVehicleUsage'])->name('service-vehicle-usage');
             });
 
         // Complaint reports
@@ -420,6 +458,21 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
                 Route::get('/changes', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'changes'])->name('changes');
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\DailyStatusReportController::class, 'workerActivity'])->name('worker-activity');
             });
+
+        // Transfer reports — accessible by garage admins and warehouse-domain users
+        Route::prefix('transfer')->name('transfer.')
+            ->middleware(['role:'.implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::warehouseRoles()
+            ))])
+            ->group(function () {
+                Route::get('/summary',         [App\Http\Controllers\Reports\TransferReportController::class, 'summary'])->name('summary');
+                Route::get('/detailed',        [App\Http\Controllers\Reports\TransferReportController::class, 'detailed'])->name('detailed');
+                Route::get('/by-route',        [App\Http\Controllers\Reports\TransferReportController::class, 'byRoute'])->name('by-route');
+                Route::get('/top-items',       [App\Http\Controllers\Reports\TransferReportController::class, 'topItems'])->name('top-items');
+                Route::get('/worker-activity', [App\Http\Controllers\Reports\TransferReportController::class, 'workerActivity'])->name('worker-activity');
+                Route::get('/disputed',        [App\Http\Controllers\Reports\TransferReportController::class, 'disputed'])->name('disputed');
+            });
     });
 
     // ==================== API JSON (Garage Data) ====================
@@ -434,6 +487,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::get('get-bus-by-dqn/{dqn}', [GarageDataController::class, 'busByDqn'])->name('get.bus.by.dqn');
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
         Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
+        Route::get('get-service-vehicle-part-by-code', [GarageDataController::class, 'serviceVehiclePartByCode'])->name('get.service.vehicle.part.by.code');
         Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
         Route::get('get-employee-by-kod/{kod}', [GarageDataController::class, 'employeeByCode'])->name('get.employee.by.kod');
         Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');

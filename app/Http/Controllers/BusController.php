@@ -12,6 +12,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BusController extends Controller
 {
@@ -63,21 +65,73 @@ class BusController extends Controller
 
     public function show(Request $request, int $id): View
     {
-        $bus = Bus::findOrFail($id);
+        $bus = Bus::with('latestDailyStatus')->findOrFail($id);
         $this->authorize('view', $bus);
 
-        // Two independent paginators on one page. Laravel lets each
-        // paginator use its own page-name so the tabs don't fight for
-        // the same `?page=` query parameter.
+        // ─── KM records (paginated) ───
         $kmRecords = $bus->dailyKmRecords()
             ->paginate(30, ['*'], 'km_page')
             ->withQueryString();
 
+        // Compute daily distance for every record on this page.
+        // To compute the diff for the OLDEST record shown, we need the
+        // record just before it — which may live on a previous page.
+        // Fetch it explicitly (1 extra query per page).
+        $kmItems = $kmRecords->items();
+        $oldestOnPage = ! empty($kmItems) ? $kmItems[count($kmItems) - 1] : null;
+        $previousOfOldest = $oldestOnPage
+            ? $bus->dailyKmRecords()->where('date', '<', $oldestOnPage->date)->first()
+            : null;
+
+        foreach ($kmItems as $index => $record) {
+            $previous = $kmItems[$index + 1] ?? $previousOfOldest;
+            $record->daily_km = $previous !== null
+                ? max(0, $record->km - $previous->km)
+                : null;
+        }
+        $kmRecords->setCollection(collect($kmItems));
+
+        // ─── Status records — filtered by month ───
+        // Defaults to the current month. The user navigates to earlier
+        // months via the ?status_month=YYYY-MM query string.
+        $statusMonth = $request->input('status_month');
+
+        if (! is_string($statusMonth) || ! preg_match('/^\d{4}-\d{2}$/', $statusMonth)) {
+            $statusMonth = now()->format('Y-m');
+        }
+
+        try {
+            $monthStart = Carbon::parse($statusMonth . '-01')->startOfMonth();
+        } catch (\Throwable $e) {
+            $statusMonth = now()->format('Y-m');
+            $monthStart = now()->startOfMonth();
+        }
+
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
         $statusRecords = $bus->dailyStatuses()
-            ->paginate(30, ['*'], 'status_page')
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->paginate(31, ['*'], 'status_page')
             ->withQueryString();
 
-        return view('buses.show', compact('bus', 'kmRecords', 'statusRecords'));
+        // ─── Monthly status summary (aggregated for the KPI panel) ───
+        $monthlySummary = $bus->dailyStatuses()
+            ->reorder()   // ← İşin sehrli açarı: relation-in default `orderBy('date', 'desc')`-ını silir
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->select('status', DB::raw('COUNT(*) as days'))
+            ->groupBy('status')
+            ->orderByDesc('days')
+            ->get();
+
+        return view('buses.show', compact(
+            'bus',
+            'kmRecords',
+            'statusRecords',
+            'statusMonth',
+            'monthStart',
+            'monthEnd',
+            'monthlySummary',
+        ));
     }
 
     public function create(): View

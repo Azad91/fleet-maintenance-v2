@@ -13,7 +13,7 @@ class ComplaintPdfService
 
     public function generate(Complaint $complaint): \Barryvdh\DomPDF\PDF
     {
-        $complaint->loadMissing(['details.employee', 'bus', 'creator', 'closer']);
+        $complaint->loadMissing(['details.employee', 'bus', 'creator', 'closer', 'serviceVehicle']);
 
         // Collect every related employee id — both from details and
         // from the top-level employee_id field.

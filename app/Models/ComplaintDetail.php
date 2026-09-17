@@ -30,6 +30,7 @@ class ComplaintDetail extends Model
         'name',
         'stock_quantity',
         'used_quantity',
+        'source_type',
         'employee_id',
         'notes',
         'garage_id',
@@ -44,5 +45,50 @@ class ComplaintDetail extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    /**
+     * True when the stock for this detail came from a service
+     * vehicle instead of the garage warehouse.
+     */
+    public function isFromServiceVehicle(): bool
+    {
+        return $this->source_type === 'service_vehicle';
+    }
+
+    public function isFromWarehouse(): bool
+    {
+        return $this->source_type === 'warehouse';
+    }
+
+    /**
+     * True when this detail was imported as historical data — it never
+     * touched stock, and delete/update operations must leave stock
+     * untouched.
+     */
+    public function isHistorical(): bool
+    {
+        return $this->source_type === 'historical';
+    }
+
+    /**
+     * True when this detail represents an inspection or repair that
+     * did NOT consume any stock (used_quantity = 0). The row is kept
+     * for documentation so future operators can see that the part was
+     * looked at, without polluting the stock ledger.
+     */
+    public function isInspection(): bool
+    {
+        return $this->source_type === 'inspection';
+    }
+
+    /**
+     * True when this detail actually consumed stock. Used by report
+     * queries that need to exclude inspection/historical rows.
+     */
+    public function consumedStock(): bool
+    {
+        return in_array($this->source_type, ['warehouse', 'service_vehicle'], true)
+            && $this->used_quantity > 0;
     }
 }

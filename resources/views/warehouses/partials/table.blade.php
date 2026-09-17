@@ -27,7 +27,14 @@
                     @forelse($warehouses as $item)
                     <tr>
                         <td>{{ $item->id }}</td>
-                        <td><strong>{{ $item->code }}</strong></td>
+                        <td>
+                            <strong>{{ $item->code }}</strong>
+                            @if($item->is_quarantine)
+                                <span class="badge bg-warning text-dark ms-1">
+                                    <i class="bi bi-shield-exclamation"></i> {{ __('messages.warehouse.quarantine_short') }}
+                                </span>
+                            @endif
+                        </td>
                         <td>{{ $item->name }}</td>
                         <td>
                             {{ $item->quantity }}

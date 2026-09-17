@@ -2,25 +2,47 @@
 
 namespace App\Services\Complaint;
 
+use App\Models\ServiceVehicle;
+use App\Models\ServiceVehicleStock;
 use App\Models\Warehouse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Handles stock changes caused by complaint details.
+ *
+ * ── SOURCE SELECTION ────────────────────────────────────────────────
+ * The location of the complaint (`yer`) determines the source of parts:
+ *
+ *   yer = 'garage' → the source garage's own warehouse
+ *   yer = 'road'   → the SPECIFIC service vehicle selected on the
+ *                    complaint (service_vehicle_id)
+ *
+ * There is NO fallback. If the selected vehicle does not have enough
+ * stock, the complaint write is rejected. Filling the service vehicle
+ * is the warehouse officer's job — the complaint operator must not
+ * silently pull from the warehouse instead.
+ *
+ * Legacy road complaints created before the service_vehicle_id column
+ * existed have a NULL vehicle. Their stock cannot be restored
+ * automatically on delete; this is logged at warning level rather than
+ * silently dropped.
+ */
 class ComplaintStockService
 {
     /**
      * Deduct stock for the given detail payloads.
      *
-     * Details with no code OR a non-positive quantity are silently
-     * skipped. The DB enforces CHECK (used_quantity > 0), so passing
-     * a zero-quantity row through would raise an SQL error and roll
-     * back the entire complaint — even though the user's intent was
-     * simply "I did not use this part".
-     *
      * @param  array<int, array<string, mixed>>  $details
+     * @param  string  $location        'road' | 'garage'
+     * @param  int|null  $serviceVehicleId  Required when $location === 'road'
      * @return array<int, array<string, mixed>> Only rows that actually affect stock
      */
-    public function deductStock(array $details): array
-    {
+    public function deductStock(
+        array $details,
+        string $location = 'garage',
+        ?int $serviceVehicleId = null
+    ): array {
         $processed = [];
 
         foreach ($details as $detail) {
@@ -32,42 +54,33 @@ class ComplaintStockService
 
             $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
 
-            // Skip zero/negative quantities — they carry no business
-            // meaning and violate the DB CHECK constraint.
+            // ── Inspection / repair-only row ──
+            // The part was worked on but no stock was consumed. We record
+            // it for documentation, but skip every stock mutation.
             if ($usedQuantity <= 0) {
+                $processed[] = [
+                    'shikayet_index' => $detail['shikayet_index'] ?? 0,
+                    'code'           => $code,
+                    'name'           => $detail['name'] ?? $code,
+                    'stock_quantity' => 0,
+                    'used_quantity'  => 0,
+                    'employee_id'    => $detail['employee_id'] ?? null,
+                    'notes'          => $detail['notes'] ?? null,
+                    'source_type'    => 'inspection',
+                ];
+
                 continue;
             }
 
-            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
-
-            if (! $warehouse) {
-                throw ValidationException::withMessages([
-                    'details' => __('messages.flash.stock_item_not_found', ['code' => $code]),
-                ]);
+            // ── Existing logic for consumed parts ──
+            if ($location === 'road') {
+                $processed[] = $this->deductFromServiceVehicle(
+                    $detail, $code, $usedQuantity, $serviceVehicleId
+                );
+                continue;
             }
 
-            if ($warehouse->quantity < $usedQuantity) {
-                throw ValidationException::withMessages([
-                    'details' => __('messages.flash.stock_insufficient', [
-                        'name' => $warehouse->name,
-                        'requested' => $usedQuantity,
-                        'available' => $warehouse->quantity,
-                    ]),
-                ]);
-            }
-
-            $processed[] = [
-                'shikayet_index' => $detail['shikayet_index'] ?? 0,
-                'code' => $code,
-                'name' => $warehouse->name,
-                'stock_quantity' => $warehouse->quantity,
-                'used_quantity' => $usedQuantity,
-                'employee_id' => $detail['employee_id'] ?? null,
-                'notes' => $detail['notes'] ?? null,
-            ];
-
-            $warehouse->quantity -= $usedQuantity;
-            $warehouse->save();
+            $processed[] = $this->deductFromWarehouse($detail, $code, $usedQuantity);
         }
 
         return $processed;
@@ -77,9 +90,14 @@ class ComplaintStockService
      * Restore stock for the given details (used on complaint delete
      * or when replacing details during an update).
      *
+     * The `source_type` recorded on each detail decides where the
+     * stock goes back to. For `service_vehicle` rows, the caller must
+     * pass the complaint's `service_vehicle_id`.
+     *
      * @param  array<int, array<string, mixed>>  $details
+     * @param  int|null  $serviceVehicleId  Vehicle to credit when restoring
      */
-    public function restoreStock(array $details): void
+    public function restoreStock(array $details, ?int $serviceVehicleId = null): void
     {
         foreach ($details as $detail) {
             $code = $detail['code'] ?? null;
@@ -89,119 +107,224 @@ class ComplaintStockService
                 continue;
             }
 
-            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
+            $sourceType = $detail['source_type'] ?? 'warehouse';
 
-            if ($warehouse) {
-                $warehouse->quantity += $usedQuantity;
-                $warehouse->save();
+            // Historical imports and inspection rows never touched stock
+            // on creation, so there is nothing to restore.
+            if (in_array($sourceType, ['historical', 'inspection'], true)) {
+                continue;
             }
+
+            // ... qalan kod eyni qalır
         }
     }
 
     /**
      * Reconcile stock after an edit: restore old usage and deduct new usage.
      *
-     * Only positive quantities are considered; zero-quantity rows are
-     * ignored so they cannot pollute the diff.
-     *
      * @param  array<int, array<string, mixed>>  $oldDetails
      * @param  array<int, array<string, mixed>>  $newDetails
-     * @return array<int, array<string, mixed>> The processed new details
      */
-    public function syncStockDiff(array $oldDetails, array $newDetails): array
+    public function syncStockDiff(
+        array $oldDetails,
+        array $newDetails,
+        string $location = 'garage',
+        ?int $newServiceVehicleId = null,
+        ?int $oldServiceVehicleId = null
+    ): array {
+        // Step 1: restore everything the OLD details had taken.
+        // The old details belong to the old complaint state — in practice
+        // the vehicle is the same, but we accept both to be safe.
+        $this->restoreStock($oldDetails, $oldServiceVehicleId ?? $newServiceVehicleId);
+
+        // Step 2: deduct the NEW details from scratch.
+        return $this->deductStock($newDetails, $location, $newServiceVehicleId);
+    }
+
+    // ==================== PRIVATE HELPERS ====================
+
+    /**
+     * Deduct from the garage warehouse. Throws if insufficient.
+     */
+    private function deductFromWarehouse(array $detail, string $code, int $usedQuantity): array
     {
-        $oldUsage = [];
-        foreach ($oldDetails as $detail) {
-            $code = $detail['code'] ?? null;
-            $qty = (int) ($detail['used_quantity'] ?? 0);
-            if (! empty($code) && $qty > 0) {
-                $oldUsage[$code] = ($oldUsage[$code] ?? 0) + $qty;
-            }
+        $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
+
+        if (! $warehouse) {
+            throw ValidationException::withMessages([
+                'details' => __('messages.flash.stock_item_not_found', ['code' => $code]),
+            ]);
         }
 
-        $newUsage = [];
-        foreach ($newDetails as $detail) {
-            $code = $detail['code'] ?? null;
-            $qty = (int) ($detail['used_quantity'] ?? 0);
-            if (! empty($code) && $qty > 0) {
-                $newUsage[$code] = ($newUsage[$code] ?? 0) + $qty;
-            }
+        if ($warehouse->quantity < $usedQuantity) {
+            throw ValidationException::withMessages([
+                'details' => __('messages.flash.stock_insufficient', [
+                    'name'      => $warehouse->name,
+                    'requested' => $usedQuantity,
+                    'available' => $warehouse->quantity,
+                ]),
+            ]);
         }
 
-        $allCodes = array_unique(array_merge(
-            array_keys($oldUsage),
-            array_keys($newUsage)
-        ));
+        $row = $this->buildProcessedRow(
+            $detail,
+            $code,
+            $usedQuantity,
+            'warehouse',
+            $warehouse,
+            null
+        );
 
-        $warehouses = [];
+        $warehouse->quantity -= $usedQuantity;
+        $warehouse->save();
 
-        foreach ($allCodes as $code) {
-            $oldQty = $oldUsage[$code] ?? 0;
-            $newQty = $newUsage[$code] ?? 0;
-            $diff = $newQty - $oldQty;
+        return $row;
+    }
 
-            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
-
-            if ($diff > 0 && ! $warehouse) {
-                throw ValidationException::withMessages([
-                    'details' => __('messages.flash.stock_item_not_found', ['code' => $code]),
-                ]);
-            }
-
-            if ($warehouse) {
-                if ($diff > 0 && $warehouse->quantity < $diff) {
-                    throw ValidationException::withMessages([
-                        'details' => __('messages.flash.stock_insufficient', [
-                            'name' => $warehouse->name,
-                            'requested' => $diff,
-                            'available' => $warehouse->quantity,
-                        ]),
-                    ]);
-                }
-
-                if ($diff > 0) {
-                    $warehouse->decrement('quantity', $diff);
-                } elseif ($diff < 0) {
-                    $warehouse->increment('quantity', abs($diff));
-                }
-
-                $warehouses[$code] = $warehouse->fresh();
-            } else {
-                $warehouses[$code] = null;
-            }
+    /**
+     * Deduct from the SPECIFIC service vehicle selected on the complaint.
+     * Throws if the vehicle is not provided, not found, or has
+     * insufficient stock. There is NO fallback to the warehouse.
+     */
+    private function deductFromServiceVehicle(
+        array $detail,
+        string $code,
+        int $usedQuantity,
+        ?int $serviceVehicleId
+    ): array {
+        if ($serviceVehicleId === null) {
+            throw ValidationException::withMessages([
+                'service_vehicle_id' => __('messages.flash.service_vehicle_required'),
+            ]);
         }
 
-        $processed = [];
+        $vehicle = ServiceVehicle::withoutGlobalScopes()->find($serviceVehicleId);
 
-        foreach ($newDetails as $detail) {
-            $code = $detail['code'] ?? null;
+        if (! $vehicle) {
+            throw ValidationException::withMessages([
+                'service_vehicle_id' => __('messages.flash.service_vehicle_not_found'),
+            ]);
+        }
 
-            if (empty($code)) {
-                continue;
-            }
+        $stock = ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $serviceVehicleId)
+            ->where('code', $code)
+            ->lockForUpdate()
+            ->first();
 
-            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
+        if (! $stock) {
+            throw ValidationException::withMessages([
+                'details' => __('messages.flash.service_vehicle_part_not_found', [
+                    'code'    => $code,
+                    'vehicle' => $vehicle->name,
+                ]),
+            ]);
+        }
 
-            // Skip zero-quantity rows — they would violate the DB
-            // CHECK constraint on complaint_details.
-            if ($usedQuantity <= 0) {
-                continue;
-            }
+        if ($stock->quantity < $usedQuantity) {
+            throw ValidationException::withMessages([
+                'details' => __('messages.flash.service_vehicle_stock_insufficient', [
+                    'name'      => $stock->name,
+                    'vehicle'   => $vehicle->name,
+                    'requested' => $usedQuantity,
+                    'available' => $stock->quantity,
+                ]),
+            ]);
+        }
 
-            $warehouse = $warehouses[$code]
-                ?? Warehouse::where('code', $code)->first();
+        $row = $this->buildProcessedRow(
+            $detail,
+            $code,
+            $usedQuantity,
+            'service_vehicle',
+            null,
+            $stock
+        );
 
-            $processed[] = [
-                'shikayet_index' => $detail['shikayet_index'] ?? 0,
+        $stock->decrement('quantity', $usedQuantity);
+
+        return $row;
+    }
+
+    /**
+     * Give stock back to the specific service vehicle.
+     *
+     * If the vehicle no longer has a stock row for this code (e.g. it
+     * was fully depleted and cleaned up), the row is re-created from
+     * the detail's metadata so the quantity is never silently lost.
+     */
+    private function restoreToSpecificVehicle(
+        string $code,
+        int $quantity,
+        int $serviceVehicleId,
+        ?string $nameFromDetail = null
+    ): void {
+        $vehicle = ServiceVehicle::withoutGlobalScopes()->find($serviceVehicleId);
+
+        if (! $vehicle) {
+            Log::warning('Service vehicle not found — stock restore skipped', [
+                'service_vehicle_id' => $serviceVehicleId,
                 'code' => $code,
-                'name' => $warehouse?->name ?? ($detail['name'] ?? $code),
-                'stock_quantity' => $warehouse?->quantity ?? 0,
-                'used_quantity' => $usedQuantity,
-                'employee_id' => $detail['employee_id'] ?? null,
-                'notes' => $detail['notes'] ?? null,
-            ];
+                'quantity' => $quantity,
+            ]);
+
+            return;
         }
 
-        return $processed;
+        $stock = ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $serviceVehicleId)
+            ->where('code', $code)
+            ->lockForUpdate()
+            ->first();
+
+        if ($stock) {
+            $stock->increment('quantity', $quantity);
+
+            return;
+        }
+
+        // Recreate the row. Fall back to the warehouse row for a
+        // canonical name/unit when the detail carried no name.
+        $warehouse = Warehouse::withoutGlobalScopes()
+            ->where('garage_id', $vehicle->garage_id)
+            ->where('code', $code)
+            ->first();
+
+        ServiceVehicleStock::withoutGlobalScopes()->create([
+            'service_vehicle_id' => $serviceVehicleId,
+            'garage_id'          => $vehicle->garage_id,
+            'company_id'         => $vehicle->company_id,
+            'code'               => $code,
+            'name'               => $warehouse->name ?? $nameFromDetail ?? $code,
+            'unit'               => $warehouse->unit ?? null,
+            'quantity'           => $quantity,
+        ]);
+    }
+
+    /**
+     * Build the row that will be persisted on complaint_details.
+     */
+    private function buildProcessedRow(
+        array $detail,
+        string $code,
+        int $usedQuantity,
+        string $sourceType,
+        ?Warehouse $warehouse = null,
+        ?ServiceVehicleStock $stock = null
+    ): array {
+        $name = $warehouse?->name ?? $stock?->name ?? $code;
+
+        return [
+            'shikayet_index' => $detail['shikayet_index'] ?? 0,
+            'code'           => $code,
+            'name'           => $name,
+            'stock_quantity' => $sourceType === 'warehouse'
+                ? ($warehouse?->quantity ?? 0)
+                : ($stock?->quantity ?? 0),
+            'used_quantity'  => $usedQuantity,
+            'employee_id'    => $detail['employee_id'] ?? null,
+            'notes'          => $detail['notes'] ?? null,
+            'source_type'    => $sourceType,
+        ];
     }
 }

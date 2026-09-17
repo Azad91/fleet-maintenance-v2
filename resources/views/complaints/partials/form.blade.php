@@ -5,8 +5,11 @@
     $isCreate = ! ($complaint->exists ?? false);
 
     // ─── Defaults for create ───
+<<<<<<< HEAD
     // When creating a card, start_date = today and start_time = now.
     // When validation fails, the old() value takes precedence.
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     $defaultStartDate = $isCreate ? now()->format('Y-m-d') : '';
     $defaultStartTime = $isCreate ? now()->format('H:i') : '';
 
@@ -25,7 +28,10 @@
         $detailsData = [];
     }
 
+<<<<<<< HEAD
     // Starting index for a new detail row — the largest existing key + 1
+=======
+>>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     $detailCount = 1;
     if (! empty($detailsData)) {
         $numericKeys = array_filter(array_keys($detailsData), 'is_numeric');
@@ -133,6 +139,33 @@
                        value="{{ old('driver_id', $complaint->driver_id ?? '') }}">
             </div>
         </div>
+    </div>
+
+    {{-- Service Vehicle (visible only when yer = road) --}}
+    <div class="col-md-12 mb-3" id="serviceVehicleField">
+        <label for="service_vehicle_id" class="form-label fw-bold">
+            🚐 {{ __('messages.complaints.service_vehicle') }}
+            <span class="text-danger">*</span>
+        </label>
+        <select class="form-select" id="service_vehicle_id" name="service_vehicle_id"
+                onchange="onServiceVehicleChange()">
+            <option value="">{{ __('messages.complaints.service_vehicle_placeholder') }}</option>
+            @foreach($serviceVehicles ?? [] as $vehicle)
+                <option value="{{ $vehicle->id }}"
+                    {{ old('service_vehicle_id', $complaint->service_vehicle_id ?? null) == $vehicle->id ? 'selected' : '' }}>
+                    {{ $vehicle->name }}
+                    @if($vehicle->plate_number) · {{ $vehicle->plate_number }} @endif
+                </option>
+            @endforeach
+        </select>
+        <div class="form-text">{{ __('messages.complaints.service_vehicle_hint') }}</div>
+        @if(($serviceVehicles ?? collect())->isEmpty())
+            <div class="alert alert-warning mt-2 mb-0">
+                <i class="bi bi-exclamation-triangle"></i>
+                {{ __('messages.service_vehicles.no_vehicles') }}
+                — <a href="{{ route('service-vehicles.create') }}">{{ __('messages.service_vehicles.new') }}</a>
+            </div>
+        @endif
     </div>
 
     {{-- Complaints / Service Type --}}
@@ -288,10 +321,11 @@
                                        value="{{ $detail['name'] ?? '' }}" readonly>
                             </div>
                             <div class="col-md-1">
-                                <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
+                                <label class="form-label fw-bold stock-source-label">{{ __('messages.complaints.stock_qty') }}</label>
                                 <input type="text" class="form-control input-disabled"
                                        name="details[{{ $index }}][stock_quantity]"
                                        value="{{ $detail['stock_quantity'] ?? '' }}" readonly>
+                                <div class="form-text part-help"></div>
                             </div>
                             <div class="col-md-1">
                                 <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
@@ -352,8 +386,9 @@
                             <input type="text" class="form-control input-disabled" name="details[0][name]" readonly>
                         </div>
                         <div class="col-md-1">
-                            <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
+                            <label class="form-label fw-bold stock-source-label">{{ __('messages.complaints.stock_qty') }}</label>
                             <input type="text" class="form-control input-disabled" name="details[0][stock_quantity]" readonly>
+                            <div class="form-text part-help"></div>
                         </div>
                         <div class="col-md-1">
                             <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>

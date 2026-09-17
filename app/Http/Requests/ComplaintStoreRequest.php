@@ -29,11 +29,21 @@ class ComplaintStoreRequest extends FormRequest
             ->where('is_active', true)
             ->whereNull('deleted_at'));
 
+        $serviceVehicleRule = Rule::exists('service_vehicles', 'id')->where(fn ($query) => $query
+            ->where('garage_id', $garageId)
+            ->where('is_active', true)
+            ->whereNull('deleted_at'));
+
         return [
             'bus_id' => ['required', $busRule],
             'yer' => ['required', Rule::in(Location::values())],
             'driver_name' => 'nullable|string|max:255',
             'driver_id' => ['nullable', 'required_if:yer,road', $driverRule],
+
+            // Required for road complaints. The stock service rejects the
+            // write if the selected vehicle does not have enough stock —
+            // there is no fallback to the warehouse.
+            'service_vehicle_id' => ['nullable', 'required_if:yer,road', $serviceVehicleRule],
 
             'complaint_type' => ['nullable', Rule::in(ComplaintType::values())],
 

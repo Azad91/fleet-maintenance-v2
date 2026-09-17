@@ -22,54 +22,69 @@
         </div>
     </div>
     <div class="card-body complaint-show-card__body">
-        {{-- Bus info --}}
-        <div class="row mb-4">
-            <div class="col-12">
-                <h6 class="complaint-show-card__section-title">
-                    <i class="bi bi-bus-front me-2"></i>{{ __('messages.complaints.bus_info') }}
-                </h6>
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="complaint-show-card__item">
-                            <small>{{ __('messages.buses.dqn') }}</small>
-                            <strong>{{ $complaint->bus->dqn ?? '-' }}</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="complaint-show-card__item">
-                            <small>{{ __('messages.buses.route_number') }}</small>
-                            <strong>{{ $complaint->bus->route_number ?? '-' }}</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="complaint-show-card__item">
-                            <small>{{ __('messages.complaints.location') }}</small>
-                            <strong>
-                                @if($complaint->yer?->isRoad())
-                                    🛣️ {{ $complaint->yer->label() }}
-                                @elseif($complaint->yer?->isGarage())
-                                    🏠 {{ $complaint->yer->label() }}
-                                @else
-                                    -
-                                @endif
-                            </strong>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="complaint-show-card__item">
-                            <small>🧑‍✈️ {{ __('messages.complaints.driver') }}</small>
-                            <strong>
-                                @if($complaint->driver)
-                                    {{ $complaint->driver->full_name }} ({{ $complaint->driver->code }})
-                                @else
-                                    {{ $complaint->driver_name ?? '-' }}
-                                @endif
-                            </strong>
-                        </div>
+    {{-- Bus info --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="complaint-show-card__section-title">
+                <i class="bi bi-bus-front me-2"></i>{{ __('messages.complaints.bus_info') }}
+            </h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="complaint-show-card__item">
+                        <small>{{ __('messages.buses.dqn') }}</small>
+                        <strong>{{ $complaint->bus->dqn ?? '-' }}</strong>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="complaint-show-card__item">
+                        <small>{{ __('messages.buses.route_number') }}</small>
+                        <strong>{{ $complaint->bus->route_number ?? '-' }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="complaint-show-card__item">
+                        <small>{{ __('messages.complaints.location') }}</small>
+                        <strong>
+                            @if($complaint->yer?->isRoad())
+                                🛣️ {{ $complaint->yer->label() }}
+                            @elseif($complaint->yer?->isGarage())
+                                🏠 {{ $complaint->yer->label() }}
+                            @else
+                                -
+                            @endif
+                        </strong>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="complaint-show-card__item">
+                        <small>🧑‍✈️ {{ __('messages.complaints.driver') }}</small>
+                        <strong>
+                            @if($complaint->driver)
+                                {{ $complaint->driver->full_name }} ({{ $complaint->driver->code }})
+                            @else
+                                {{ $complaint->driver_name ?? '-' }}
+                            @endif
+                        </strong>
+                    </div>
+                </div>
+
+                {{-- Service Vehicle (only for road complaints) --}}
+                @if($complaint->serviceVehicle)
+                    <div class="col-md-3">
+                        <div class="complaint-show-card__item">
+                            <small>🚐 {{ __('messages.complaints.service_vehicle') }}</small>
+                            <strong>
+                                {{ $complaint->serviceVehicle->name }}
+                                @if($complaint->serviceVehicle->plate_number)
+                                    · {{ $complaint->serviceVehicle->plate_number }}
+                                @endif
+                            </strong>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
+    </div>
 
         {{-- Complaint Type --}}
         @if($complaint->complaint_type)
@@ -94,7 +109,6 @@
 
         {{-- Service Type (maintenance) OR Complaints list (accident/breakdown) --}}
         @if($isMaintenance)
-            {{-- Maintenance: show the service type --}}
             <div class="row mb-4">
                 <div class="col-12">
                     <h6 class="complaint-show-card__section-title">
@@ -114,7 +128,6 @@
                 </div>
             </div>
         @else
-            {{-- Accident/Breakdown: show Complaints List --}}
             <div class="row mb-4">
                 <div class="col-12">
                     <h6 class="complaint-show-card__section-title">
@@ -209,8 +222,18 @@
                             $employee = $detail->employee_id
                                 ? ($employeesById[$detail->employee_id] ?? null)
                                 : null;
+                            $isInspection = $detail->isInspection();
                         @endphp
-                        <div class="complaint-show-card__detail">
+                        <div class="complaint-show-card__detail {{ $isInspection ? 'complaint-show-card__detail--inspection' : '' }}">
+                            @if($isInspection)
+                                <div class="mb-2">
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-tools"></i>
+                                        {{ __('messages.complaints.inspection_badge') }}
+                                    </span>
+                                </div>
+                            @endif
+
                             <div class="row g-3">
                                 @unless($isMaintenance)
                                     <div class="col-md-3">
@@ -232,7 +255,15 @@
                                 </div>
                                 <div class="col-md-3">
                                     <small>{{ __('messages.complaints.used_qty') }}</small>
-                                    <strong class="complaint-show-card__danger">{{ $detail->used_quantity ?? '-' }}</strong>
+                                    <strong class="complaint-show-card__danger">
+                                        @if($isInspection)
+                                            <span class="text-muted">
+                                                {{ __('messages.complaints.inspection_qty_label') }}
+                                            </span>
+                                        @else
+                                            {{ $detail->used_quantity ?? '-' }}
+                                        @endif
+                                    </strong>
                                 </div>
                                 <div class="col-md-3">
                                     <small>👤 {{ __('messages.complaints.employee') }}</small>

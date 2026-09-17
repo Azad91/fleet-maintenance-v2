@@ -5,66 +5,202 @@ namespace App\Imports;
 use App\Models\Bus;
 use App\Models\BusDailyStatus;
 use Carbon\Carbon;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
-class BusDailyStatusesImport extends AbstractImport implements ToModel, WithChunkReading, WithHeadingRow
+/**
+ * Imports daily bus statuses from an Excel file.
+ *
+ * Expected columns (heading row, case-insensitive):
+ *   - DQN      (required) — bus identifier within the current garage
+ *   - Date     (optional) — d.m.Y, Y-m-d, or Excel serial.
+ *                           Defaults to today when omitted.
+ *   - Status   (optional) — free-text label. Defaults to "NO DATA".
+ *   - Notes    (optional)
+ *
+ * PERFORMANCE NOTE
+ * ----------------
+ * The previous implementation used the ToModel contract: every row
+ * triggered one bus lookup and one updateOrCreate (SELECT + write).
+ * For a 500-bus daily sheet that is ~1500 round-trips — a few
+ * seconds per file, and the cost compounds when importing a month
+ * of historical data in a single sheet.
+ *
+ * This version mirrors DailyKmRecordsImport:
+ *   1. Loads all referenced buses in ONE query per chunk.
+ *   2. Accumulates every status row in memory, keyed by
+ *      (bus_id, date) so duplicate rows in the same chunk cannot
+ *      violate the partial unique index.
+ *   3. Soft-deletes the exact (bus_id, date) pairs already stored
+ *      in this chunk, then bulk-inserts the new rows.
+ *   4. Wraps the delete + insert in a transaction so a failure
+ *      rolls back cleanly.
+ *
+ * TRADE-OFF: bulk insert/delete bypasses Eloquent events, so no
+ * per-row audit entries are written for imports. Manual edits keep
+ * their full audit trail.
+ */
+class BusDailyStatusesImport extends AbstractImport implements ToCollection, WithChunkReading, WithHeadingRow
 {
-    public function model(array $row)
+    public function collection(Collection $rows): void
     {
-        $currentRow = $this->nextRowIndex();
-
-        $dqn = trim((string) ($row['dqn'] ?? ''));
-        $status = $row['status'] ?? null;
-
-        if (empty($dqn)) {
-            $this->recordSkip($currentRow, '—', __('messages.imports.reasons.dqn_empty'));
-
-            return null;
+        if ($rows->isEmpty()) {
+            return;
         }
 
-        // Resolve the date: prefer explicit 'date' column, fall back to today.
-        $date = $this->resolveDate($row['date'] ?? $row['tarix'] ?? null);
+        // ─── Step 1: preload every bus referenced in this chunk ───
+        // ONE query for the whole chunk instead of one per row.
+        $dqnList = $rows
+            ->pluck('dqn')
+            ->map(fn ($v) => trim((string) $v))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
-        $bus = Bus::withoutGlobalScopes()
-            ->where('dqn', $dqn)
+        $buses = Bus::withoutGlobalScopes()
+            ->whereIn('dqn', $dqnList)
             ->where('garage_id', $this->garageId)
-            ->first();
+            ->get()
+            ->keyBy('dqn');
 
-        if (! $bus) {
-            $this->recordSkip($currentRow, $dqn, __('messages.imports.reasons.dqn_not_found'));
+        // ─── Step 2: build the batch of status rows ───
+        // Rows are keyed by "bus_id|date" so that if the Excel file
+        // repeats the same (bus, date) inside one chunk, the last
+        // value wins instead of triggering a unique-constraint error.
+        $records = [];
+        $now     = now();
 
-            return null;
+        foreach ($rows as $row) {
+            $currentRow = $this->nextRowIndex();
+
+            $dqn    = trim((string) ($row['dqn'] ?? ''));
+            $status = $row['status'] ?? null;
+
+            if ($dqn === '') {
+                $this->recordSkip($currentRow, '—', __('messages.imports.reasons.dqn_empty'));
+
+                continue;
+            }
+
+            $bus = $buses->get($dqn);
+
+            if (! $bus) {
+                $this->recordSkip($currentRow, $dqn, __('messages.imports.reasons.dqn_not_found'));
+
+                continue;
+            }
+
+            $date = $this->resolveDate($row['date'] ?? $row['tarix'] ?? null);
+
+            $key = $bus->id.'|'.$date;
+
+            $records[$key] = [
+                'bus_id'     => $bus->id,
+                'garage_id'  => $bus->garage_id  ?? $this->garageId,
+                'company_id' => $bus->company_id ?? $this->companyId,
+                'date'       => $date,
+                'status'     => $status ?? 'NO DATA',
+                'notes'      => $row['notes'] ?? $row['qeyd'] ?? null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
-        $record = BusDailyStatus::withoutGlobalScopes()->updateOrCreate(
-            [
-                'bus_id' => $bus->id,
-                'date' => $date,
-            ],
-            [
-                'garage_id' => $bus->garage_id ?? $this->garageId,
-                'company_id' => $bus->company_id ?? $this->companyId,
-                'status' => $status ?? 'NO DATA',
-                'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
-            ]
-        );
+        if (empty($records)) {
+            return;
+        }
 
-        $this->incrementImported();
+        $records = array_values($records);
 
-        return $record;
+        // ─── Step 3: upsert rows in place ───
+        // The partial unique index on (bus_id, date) WHERE deleted_at
+        // IS NULL prevents Laravel's `upsert()` from working (upsert
+        // has no WHERE clause support). Instead we:
+        //   a) fetch the rows that already exist for the exact
+        //      (bus_id, date) pairs in this chunk,
+        //   b) split our records into "update" and "insert" sets,
+        //   c) update matching rows in place (IDs preserved, no
+        //      soft-deleted garbage), then bulk-insert the rest.
+        //
+        // This keeps the table clean and avoids the classic
+        // "soft-delete + insert" pattern that would bloat the table
+        // with tens of thousands of dead rows over a year.
+        $busIds = array_values(array_unique(array_column($records, 'bus_id')));
+        $dates  = array_values(array_unique(array_column($records, 'date')));
+
+        $pairSet = [];
+        foreach ($records as $r) {
+            $pairSet[$r['bus_id'].'|'.$r['date']] = true;
+        }
+
+        DB::transaction(function () use ($busIds, $dates, $pairSet, $records) {
+            $existing = BusDailyStatus::withoutGlobalScopes()
+                ->whereIn('bus_id', $busIds)
+                ->whereIn('date', $dates)
+                ->whereNull('deleted_at')
+                ->get(['id', 'bus_id', 'date'])
+                ->filter(function ($row) use ($pairSet) {
+                    // The model casts `date` to Carbon, but $pairSet
+                    // was built with raw Y-m-d strings. Normalise both
+                    // sides before comparing.
+                    $dateStr = $row->date instanceof \DateTimeInterface
+                        ? $row->date->format('Y-m-d')
+                        : (string) $row->date;
+
+                    return isset($pairSet[$row->bus_id.'|'.$dateStr]);
+                })
+                ->keyBy(fn ($row) => $row->bus_id.'|'.(
+                    $row->date instanceof \DateTimeInterface
+                        ? $row->date->format('Y-m-d')
+                        : (string) $row->date
+                ));
+
+            $toInsert = [];
+            $now      = now();
+
+            foreach ($records as $record) {
+                $key = $record['bus_id'].'|'.$record['date'];
+
+                if ($existing->has($key)) {
+                    // Update in place — keep the same ID.
+                    BusDailyStatus::withoutGlobalScopes()
+                        ->where('id', $existing->get($key)->id)
+                        ->update([
+                            'status'     => $record['status'],
+                            'notes'      => $record['notes'],
+                            'updated_at' => $now,
+                        ]);
+                } else {
+                    $toInsert[] = $record;
+                }
+            }
+
+            if (! empty($toInsert)) {
+                BusDailyStatus::withoutGlobalScopes()->insert($toInsert);
+            }
+        });
+
+        $this->incrementImported(count($records));
     }
 
     /**
-     * Convert the incoming date value to a Y-m-d string.
+     * Convert an Excel cell value into a Y-m-d string.
      *
      * Handles:
+     *   - DateTimeInterface instances (PhpSpreadsheet already parsed)
      *   - Excel serial numbers (e.g. 45000)
-     *   - DateTimeInterface instances
-     *   - ISO / local date strings (e.g. "2026-09-11", "11.09.2026")
-     *   - Empty / invalid values → today
+     *   - Day-first strings ("15.09.2026", "15/09/2026", "15-09-2026")
+     *   - ISO date strings ("2026-09-15")
+     *   - Anything else → today's date (never fails the whole import)
+     *
+     * The explicit day-first regex guarantees that "15.09.2026" is
+     * always parsed as 15 September 2026, independent of the PHP
+     * locale or Carbon's default parsing rules.
      */
     private function resolveDate(mixed $value): string
     {
@@ -72,18 +208,36 @@ class BusDailyStatusesImport extends AbstractImport implements ToModel, WithChun
             return Carbon::instance($value)->toDateString();
         }
 
-        // Excel serial number
+        // Excel serial numbers for dates fall in the 20000-100000
+        // range (1900-01-01 = 1, 2026-09-15 ≈ 46260).
         if (is_numeric($value) && (float) $value > 20000 && (float) $value < 100000) {
             try {
-                return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value))->toDateString();
+                return Carbon::instance(
+                    ExcelDate::excelToDateTimeObject((float) $value)
+                )->toDateString();
             } catch (\Throwable $e) {
                 // Fall through to today
             }
         }
 
         if (is_string($value) && trim($value) !== '') {
+            $value = trim($value);
+
+            // Explicit day-first formats: d.m.Y, d/m/Y, d-m-Y.
+            if (preg_match('/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/', $value, $m)) {
+                try {
+                    return Carbon::createFromDate(
+                        (int) $m[3],
+                        (int) $m[2],
+                        (int) $m[1]
+                    )->toDateString();
+                } catch (\Throwable $e) {
+                    // Fall through to generic parse
+                }
+            }
+
             try {
-                return Carbon::parse(trim($value))->toDateString();
+                return Carbon::parse($value)->toDateString();
             } catch (\Throwable $e) {
                 // Fall through to today
             }

@@ -6,6 +6,9 @@ use App\Models\Bus;
 use App\Models\Complaint;
 use App\Models\ComplaintItem;
 use App\Models\Warehouse;
+use App\Enums\TransferStatus;
+use App\Models\WarehouseTransfer;
+use App\Services\GarageContext;
 
 class DashboardController extends Controller
 {
@@ -53,6 +56,40 @@ class DashboardController extends Controller
 
         $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();
 
+        // ─── Transfer notifications ───
+        // Three counters that the dashboard surfaces as a "requires
+        // attention" panel. All queries are scoped to the current
+        // garage (either as source or as destination).
+        $garageId = GarageContext::getGarageId();
+
+        $outboundPending = WarehouseTransfer::query()
+            ->visibleToGarage($garageId)
+            ->outbound($garageId)
+            ->where('status', TransferStatus::Dispatched->value)
+            ->count();
+
+        $inboundPending = WarehouseTransfer::query()
+            ->visibleToGarage($garageId)
+            ->inbound($garageId)
+            ->where('status', TransferStatus::Dispatched->value)
+            ->count();
+
+        $disputedCount = WarehouseTransfer::query()
+            ->visibleToGarage($garageId)
+            ->where('status', TransferStatus::Disputed->value)
+            ->count();
+
+        // Only fetch the pending list when there is something to show.
+        $pendingTransfers = ($outboundPending + $inboundPending + $disputedCount) > 0
+            ? WarehouseTransfer::query()
+                ->visibleToGarage($garageId)
+                ->with(['fromGarage', 'toGarage', 'toServiceVehicle'])
+                ->pending()
+                ->orderByDesc('id')
+                ->limit(5)
+                ->get()
+            : collect();
+
         return view('dashboard', compact(
             'totalBuses',
             'activeBuses',
@@ -63,7 +100,11 @@ class DashboardController extends Controller
             'recentComplaints',
             'recurringIssues',
             'busesWithoutKmToday',
-            'busesWithoutKmTodayCount'
+            'busesWithoutKmTodayCount',
+            'outboundPending',
+            'inboundPending',
+            'disputedCount',
+            'pendingTransfers',
         ));
     }
 }

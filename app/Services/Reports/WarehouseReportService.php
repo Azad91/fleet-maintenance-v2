@@ -116,4 +116,45 @@ class WarehouseReportService
             ->limit(200)
             ->get();
     }
+    /**
+     * Per-vehicle part usage — "which service vehicle consumed how many
+     * parts, and which parts specifically".
+     *
+     * Only counts complaint_details rows whose source_type is
+     * 'service_vehicle' (i.e. parts that came off a service vehicle, not
+     * off the warehouse). The complaint must have a linked vehicle;
+     * legacy rows without one are ignored here.
+     */
+    public function serviceVehicleUsage(ReportPeriod $period, ReportScope $scope): Collection
+    {
+        return ComplaintDetail::withoutGlobalScope('garage')
+            ->whereIn('complaint_details.garage_id', $scope->garageIds)
+            ->whereNull('complaint_details.deleted_at')
+            ->where('complaint_details.source_type', 'service_vehicle')
+            ->whereHas('complaint', function ($q) use ($period) {
+                $q->whereBetween('complaints.created_at', [$period->from, $period->to])
+                ->whereNull('complaints.deleted_at')
+                ->whereNotNull('complaints.service_vehicle_id');
+            })
+            ->join('complaints', 'complaints.id', '=', 'complaint_details.complaint_id')
+            ->join('service_vehicles', 'service_vehicles.id', '=', 'complaints.service_vehicle_id')
+            ->select(
+                'service_vehicles.id as service_vehicle_id',
+                'service_vehicles.name as service_vehicle_name',
+                'service_vehicles.plate_number as service_vehicle_plate',
+                'complaint_details.code',
+                DB::raw('MAX(complaint_details.name) as part_name'),
+                DB::raw('SUM(complaint_details.used_quantity) as total_used'),
+                DB::raw('COUNT(DISTINCT complaint_details.complaint_id) as times_used')
+            )
+            ->groupBy(
+                'service_vehicles.id',
+                'service_vehicles.name',
+                'service_vehicles.plate_number',
+                'complaint_details.code'
+            )
+            ->orderBy('service_vehicles.name')
+            ->orderByDesc('total_used')
+            ->get();
+    }
 }

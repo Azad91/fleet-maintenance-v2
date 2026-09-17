@@ -2095,3 +2095,16 @@ html[data-fleet-theme="dark"] .input-readonly {
     color: #cbd7e7 !important;
     border-color: #2a394e !important;
 }
+/* ================================================================
+   INSPECTION / REPAIR DETAIL — used_quantity = 0
+   ================================================================ */
+.complaint-show-card__detail--inspection {
+    border-left: 3px solid #0dcaf0;
+    background: #f0f9ff;
+    padding-left: 14px;
+}
+
+html[data-fleet-theme="dark"] .complaint-show-card__detail--inspection {
+    background: #0d2a3a;
+    border-left-color: #0dcaf0;
+}
