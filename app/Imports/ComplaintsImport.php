@@ -11,13 +11,11 @@ use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Row;
 
 /**
  * Imports complaints from an Excel file.
@@ -43,7 +41,7 @@ use Maatwebsite\Excel\Row;
  *   (empty) | ARAÇTA SU KAÇAĞI VAR.          → card 5
  *   (empty) | ARAÇTA YAĞ KAÇAĞI VAR.         → card 5
  *   99JU251 | ARAÇTA SU KAÇAĞI VAR.          → card 6
- *   (empty) | (empty) | (empty)              → card 6
+ *   (empty) | (empty)                        → card 6
  *   99JU372 | ARAÇTA SU KAÇAĞI VAR.          → card 7
  *   (empty) | ARAÇTA YAĞ KAÇAĞI VAR.         → card 7
  *
@@ -53,17 +51,25 @@ use Maatwebsite\Excel\Row;
  * first non-empty value wins. This keeps the model consistent and
  * avoids partial updates.
  *
+ * ── ATOMICITY ───────────────────────────────────────────────────────
+ * Each row — including the complaint header creation for a new card —
+ * runs inside its own DB transaction. If the row's detail fails (e.g.
+ * insufficient stock, missing part), the exception rolls back any
+ * partial state, so a failed row leaves NO trace: no complaint, no
+ * item, no detail, no stock change.
+ *
  * ── STOCK ───────────────────────────────────────────────────────────
  * Details are saved per row. When $deductStock is true (default),
  * warehouse stock is deducted from each detail row. When false (for
  * historical imports), no stock is touched.
  */
-class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToCollection, WithHeadingRow
+class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToCollection, WithHeadingRow, WithValidation
 {
     use SkipsFailures;
 
     /**
-     * The complaint currently being built. NULL before the first row.
+     * The complaint currently being built. NULL before the first row or
+     * after a failed card header.
      */
     protected ?Complaint $currentComplaint = null;
 
@@ -115,163 +121,96 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
      */
     public function processRow(array $rowArray, int $rowIndex): void
     {
-        // ─── 1. Resolve the bus_dqn (may be empty → continue current) ───
         $dqn = trim((string) ($rowArray['bus_dqn'] ?? $rowArray['dqn'] ?? ''));
 
-        // Detect whether this row starts a new card.
-        $isNewCard = false;
+        // A row with an empty DQN and no card in progress cannot be
+        // placed anywhere — skip with a clear reason.
+        if ($dqn === '' && $this->currentComplaint === null) {
+            $this->recordSkip($rowIndex, '—', __('messages.imports.reasons.dqn_missing_in_row'));
 
-        if ($dqn !== '') {
-            // A non-empty DQN that differs from the current one starts
-            // a new card. A repeated DQN (same bus, same card) is
-            // treated as a continuation.
-            if ($dqn !== $this->currentDqn) {
-                $isNewCard = true;
-                $this->currentDqn = $dqn;
-            }
-        } else {
-            // Empty DQN continues the current card. If there is no
-            // current card yet, the row cannot be placed anywhere.
-            if ($this->currentComplaint === null) {
-                $this->recordSkip($rowIndex, '—', __('messages.imports.reasons.dqn_missing_in_row'));
-
-                return;
-            }
+            return;
         }
 
-        // Defensive: the constructor enforces this, but the check
-        // protects against future refactors that bypass it.
+        // Defensive: the constructor already enforces this, but the
+        // check protects against future refactors that might bypass
+        // the constructor (e.g. reflection-based instantiations).
         if ($this->garageId <= 0) {
             throw new \RuntimeException(
                 'ComplaintsImport cannot run without a valid garage context.'
             );
         }
 
-        $garageId = $this->garageId;
-        $companyId = $this->companyId;
+        // Detect whether this row starts a new card.
+        $isNewCard = ($dqn !== '' && $dqn !== $this->currentDqn);
 
-        // ─── 2. Resolve the bus (only when starting a new card) ───
-        if ($isNewCard) {
-            $bus = Bus::withoutGlobalScopes()
-                ->where('dqn', $dqn)
-                ->where('garage_id', $garageId)
-                ->first();
-
-            if (! $bus) {
-                $this->recordSkip($rowIndex, $dqn, __('messages.imports.reasons.dqn_not_found'));
-
-                // Reset state so the NEXT row with a different DQN
-                // starts a fresh card instead of appending to a card
-                // that was never created.
-                $this->currentComplaint = null;
-                $this->currentDqn = null;
-
-                return;
-            }
-
-            // Create the card header from this row's data.
-            $this->currentComplaint = $this->createComplaint($rowArray, $bus);
-        }
-
-        // From this point on, we KNOW we have a valid $currentComplaint.
-        /** @var Complaint $complaint */
-        $complaint = $this->currentComplaint;
-
-        // ─── 3. Extract the detail data ───
-        $partCode = trim((string) (
-            $rowArray['part_code']
-            ?? $rowArray['code']
-            ?? ''
-        ));
-
-        $usedQuantity = (int) (
-            $rowArray['used_quantity']
-            ?? $rowArray['quantity']
-            ?? 0
-        );
-
-        $partName = $rowArray['part_name']
-            ?? $rowArray['name']
-            ?? null;
-
-        $sourceType = $this->deductStock ? 'warehouse' : 'historical';
-
-        // ─── 4. ATOMIC BLOCK: item + detail + stock ───
-        $skipReason = DB::transaction(function () use (
-            $rowArray,
-            $complaint,
-            $garageId,
-            $companyId,
-            $partCode,
-            $usedQuantity,
-            $sourceType,
-            &$partName
-        ) {
-            $stockQuantity = 0;
-
-            // 4a. Stock deduction (skipped in historical mode)
-            if ($partCode !== '' && $usedQuantity > 0) {
-                $warehouse = Warehouse::withoutGlobalScopes()
-                    ->where('code', $partCode)
-                    ->where('garage_id', $garageId)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($warehouse) {
-                    $partName ??= $warehouse->name;
-
-                    if ($this->deductStock) {
-                        if ($usedQuantity > $warehouse->quantity) {
-                            return __('messages.flash.stock_insufficient', [
-                                'name' => $warehouse->name,
-                                'requested' => $usedQuantity,
-                                'available' => $warehouse->quantity,
-                            ]);
-                        }
-
-                        $stockQuantity = $warehouse->quantity;
-                        $warehouse->decrement('quantity', $usedQuantity);
-                    }
-                } elseif ($this->deductStock) {
-                    return __('messages.imports.reasons.part_not_found', ['code' => $partCode]);
-                }
-            }
-
-            // 4b. Complaint item (one per row)
-            $description = trim((string) ($rowArray['complaints'] ?? ''));
-
-            if ($description !== '') {
-                $complaint->items()->create([
-                    'description' => $description,
-                    'type' => $rowArray['complaint_type'] ?? null,
-                    'garage_id' => $garageId,
-                    'company_id' => $companyId,
-                ]);
-            }
-
-            // 4c. Detail (one per row, only when part info is present)
-            if ($partCode !== '' && $usedQuantity > 0) {
-                $complaint->details()->create([
-                    'shikayet_index' => 0,
-                    'code' => $partCode,
-                    'name' => $partName ?? $partCode,
-                    'stock_quantity' => $stockQuantity,
-                    'used_quantity' => $usedQuantity,
-                    'source_type' => $sourceType,
-                    'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
-                ]);
-            }
-
-            return null;
-        });
-
-        if ($skipReason !== null) {
-            $this->recordSkip($rowIndex, $dqn ?: $this->currentDqn ?: '—', $skipReason);
+        // If this is a continuation row but the current card failed to
+        // create earlier, skip the row — we cannot append to a card
+        // that does not exist.
+        if (! $isNewCard && $this->currentComplaint === null) {
+            $this->recordSkip(
+                $rowIndex,
+                $dqn ?: ($this->currentDqn ?? '—'),
+                __('messages.imports.reasons.previous_row_failed')
+            );
 
             return;
         }
 
-        $this->incrementImported();
+        // For a new card, resolve the bus up-front. If the bus cannot
+        // be found, reset the current card state so the next row with a
+        // different DQN starts cleanly.
+        $bus = null;
+
+        if ($isNewCard) {
+            $bus = Bus::withoutGlobalScopes()
+                ->where('dqn', $dqn)
+                ->where('garage_id', $this->garageId)
+                ->first();
+
+            if (! $bus) {
+                $this->currentComplaint = null;
+                $this->currentDqn = null;
+
+                $this->recordSkip($rowIndex, $dqn, __('messages.imports.reasons.dqn_not_found'));
+
+                return;
+            }
+
+            // Lock in the DQN for the current card BEFORE the
+            // transaction so continuation rows are categorized
+            // correctly even if the header creation fails.
+            $this->currentDqn = $dqn;
+        }
+
+        // ─── Atomic block: header + item + detail + stock ───
+        try {
+            $complaint = DB::transaction(function () use ($rowArray, $bus, $isNewCard) {
+                $complaint = $isNewCard
+                    ? $this->createComplaint($rowArray, $bus)
+                    : $this->currentComplaint;
+
+                $this->attachRowData($complaint, $rowArray);
+
+                return $complaint;
+            });
+
+            $this->currentComplaint = $complaint;
+            $this->incrementImported();
+        } catch (RowSkippedException $e) {
+            if ($isNewCard) {
+                // The card header was rolled back — leave currentDqn
+                // set so continuation rows with the same DQN are
+                // skipped instead of attempting to start a duplicate
+                // card.
+                $this->currentComplaint = null;
+            }
+
+            $this->recordSkip(
+                $rowIndex,
+                $dqn ?: ($this->currentDqn ?? '—'),
+                $e->getMessage()
+            );
+        }
     }
 
     /**
@@ -304,6 +243,97 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             'work_done_by' => $rowArray['work_done_by'] ?? null,
             'notes' => $rowArray['notes'] ?? null,
         ]);
+    }
+
+    /**
+     * Attach a complaint item + detail for a single row.
+     *
+     * Called inside a DB transaction. Throws RowSkippedException when
+     * the row must be skipped — the exception rolls back the entire
+     * transaction, including the complaint header for a new card.
+     *
+     * @param  array<string, mixed>  $rowArray
+     *
+     * @throws RowSkippedException
+     */
+    protected function attachRowData(Complaint $complaint, array $rowArray): void
+    {
+        $garageId = $this->garageId;
+        $companyId = $this->companyId;
+
+        $partCode = trim((string) (
+            $rowArray['part_code']
+            ?? $rowArray['code']
+            ?? ''
+        ));
+
+        $usedQuantity = (int) (
+            $rowArray['used_quantity']
+            ?? $rowArray['quantity']
+            ?? 0
+        );
+
+        $partName = $rowArray['part_name']
+            ?? $rowArray['name']
+            ?? null;
+
+        $description = trim((string) ($rowArray['complaints'] ?? ''));
+
+        $sourceType = $this->deductStock ? 'warehouse' : 'historical';
+        $stockQuantity = 0;
+
+        // ── Stock deduction (skipped in historical mode) ──
+        if ($partCode !== '' && $usedQuantity > 0) {
+            $warehouse = Warehouse::withoutGlobalScopes()
+                ->where('code', $partCode)
+                ->where('garage_id', $garageId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($warehouse) {
+                $partName ??= $warehouse->name;
+
+                if ($this->deductStock) {
+                    if ($usedQuantity > $warehouse->quantity) {
+                        throw new RowSkippedException(__('messages.flash.stock_insufficient', [
+                            'name' => $warehouse->name,
+                            'requested' => $usedQuantity,
+                            'available' => $warehouse->quantity,
+                        ]));
+                    }
+
+                    $stockQuantity = $warehouse->quantity;
+                    $warehouse->decrement('quantity', $usedQuantity);
+                }
+            } elseif ($this->deductStock) {
+                throw new RowSkippedException(
+                    __('messages.imports.reasons.part_not_found', ['code' => $partCode])
+                );
+            }
+        }
+
+        // ── Complaint item (one per row) ──
+        if ($description !== '') {
+            $complaint->items()->create([
+                'description' => $description,
+                'type' => $rowArray['complaint_type'] ?? null,
+                'garage_id' => $garageId,
+                'company_id' => $companyId,
+            ]);
+        }
+
+        // ── Detail (one per row, only when part info is present) ──
+        if ($partCode !== '' && $usedQuantity > 0) {
+            $complaint->details()->create([
+                'shikayet_index' => 0,
+                'code' => $partCode,
+                'name' => $partName ?? $partCode,
+                'stock_quantity' => $stockQuantity,
+                'used_quantity' => $usedQuantity,
+                'source_type' => $sourceType,
+                'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
+            ]);
+        }
     }
 
     /**

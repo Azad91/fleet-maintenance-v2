@@ -667,6 +667,7 @@ return [
             'part_not_found' => 'Part (:code) not found in warehouse',
             'no_km_columns' => 'No KM column has quantity > 0',
             'employee_code_empty' => 'Employee code is empty',
+            'previous_row_failed' => 'A previous row in this card failed — the card was not created.',
         ],
     ],
 
