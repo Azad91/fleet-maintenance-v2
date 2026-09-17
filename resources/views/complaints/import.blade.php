@@ -30,7 +30,14 @@
                     <li><strong>part_code</strong> – {{ __('messages.complaints.part_code') }}</li>
                     <li><strong>part_name</strong> – {{ __('messages.complaints.part_name') }}</li>
                     <li><strong>used_quantity</strong> – {{ __('messages.complaints.used_qty') }}</li>
-                    <li><strong>km</strong> – {{ __('messages.buses.km') }}</li>
+                    <li>
+                        <strong>employee</strong> – {{ __('messages.complaints.employee') }}
+                        <small class="text-muted">(işçi kodu və ya tam adı — avtomatik uyğunlaşdırılır)</small>
+                    </li>
+                    <li>
+                        <strong>km</strong> – {{ __('messages.buses.km') }}
+                        <small class="text-muted">(istəyə bağlı — boş buraxılarsa avtobusun son KM-ı götürülür)</small>
+                    </li>
                     <li><strong>notes</strong> – {{ __('messages.common.notes') }}</li>
                     <li><strong>work_done_by</strong> – {{ __('messages.complaints.employee') }}</li>
                 </ul>

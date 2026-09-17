@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use App\Models\Employee;
 
 /**
  * Imports complaints from an Excel file.
@@ -239,10 +240,48 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             'end_date' => $this->normalizeDate($rowArray['end_date'] ?? null),
             'end_time' => $this->normalizeTime($rowArray['end_time'] ?? null),
             'status' => $this->normalizeStatus($rowArray['status'] ?? null),
-            'km' => isset($rowArray['km']) && $rowArray['km'] !== '' ? (int) $rowArray['km'] : null,
+            'km' => $this->resolveKm($rowArray, $bus),   // ← DƏYİŞDİ
             'work_done_by' => $rowArray['work_done_by'] ?? null,
             'notes' => $rowArray['notes'] ?? null,
         ]);
+    }
+    /**
+     * Resolve the complaint's km value.
+     *
+     * Priority:
+     *   1. Explicit value from the Excel row (`km`, `yürüş`, `mileage`)
+     *   2. Latest daily KM record for this bus
+     *   3. Bus's own `km` column (legacy/manual value)
+     *   4. null
+     *
+     * Excel km columns are frequently forgotten by operators, so we
+     * fall back to the most recent known mileage for the bus rather
+     * than storing NULL.
+     *
+     * @param  array<string, mixed>  $rowArray
+     */
+    protected function resolveKm(array $rowArray, Bus $bus): ?int
+    {
+        $raw = $rowArray['km']
+            ?? $rowArray['yürüş']
+            ?? $rowArray['yurus']
+            ?? $rowArray['mileage']
+            ?? null;
+
+        if ($raw !== null && $raw !== '') {
+            return (int) $raw;
+        }
+
+        // Fallback: latest daily KM record for this bus.
+        $latestDailyKm = $bus->dailyKmRecords()
+            ->orderByDesc('date')
+            ->value('km');
+
+        if ($latestDailyKm !== null) {
+            return (int) $latestDailyKm;
+        }
+
+        return $bus->km !== null ? (int) $bus->km : null;
     }
 
     /**
@@ -331,9 +370,108 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
                 'stock_quantity' => $stockQuantity,
                 'used_quantity' => $usedQuantity,
                 'source_type' => $sourceType,
+                'employee_id' => $this->resolveEmployeeId($rowArray, $garageId),  // ← YENİ
                 'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
             ]);
         }
+    }
+
+    /**
+     * Resolve the employee_id for a complaint detail row.
+     *
+     * Excel files produced by garage staff rarely contain employee IDs
+     * — they contain a name string such as "REŞAD HÜSEYNOV". We match,
+     * in order of specificity:
+     *
+     *   1. Explicit numeric `employee_id`
+     *   2. Employee code (exact, case-insensitive, garage-scoped)
+     *   3. Full name match, with Azerbaijani/Turkish characters
+     *      normalized to ASCII on both sides ("REŞAD HÜSEYNOV" matches
+     *      "Rəşad Hüseynov").
+     *   4. Partial first-name match (last resort, garage-scoped).
+     *
+     * All matches are scoped to the current garage. Rows that do not
+     * resolve are imported with `employee_id = null`, preserving the
+     * previous behaviour for rows without employee info.
+     *
+     * @param  array<string, mixed>  $rowArray
+     */
+    protected function resolveEmployeeId(array $rowArray, int $garageId): ?int
+    {
+        // 1. Explicit numeric id — trust it if provided.
+        if (! empty($rowArray['employee_id']) && is_numeric($rowArray['employee_id'])) {
+            return (int) $rowArray['employee_id'];
+        }
+
+        // Accept several header aliases so operators do not have to
+        // remember the exact column name.
+        $name = trim((string) (
+            $rowArray['employee']
+            ?? $rowArray['employee_name']
+            ?? $rowArray['employee_code']
+            ?? $rowArray['işçi']
+            ?? $rowArray['isci']
+            ?? $rowArray['usta']
+            ?? $rowArray['worker']
+            ?? ''
+        ));
+
+        if ($name === '') {
+            return null;
+        }
+
+        // Collapse multiple whitespace into a single space.
+        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
+
+        $base = Employee::withoutGlobalScopes()
+            ->where('garage_id', $garageId)
+            ->whereNull('deleted_at');
+
+        // 2. Code match (exact, case-insensitive).
+        $byCode = (clone $base)
+            ->whereRaw('LOWER(code) = LOWER(?)', [$name])
+            ->first();
+
+        if ($byCode) {
+            return $byCode->id;
+        }
+
+        // Azerbaijani/Turkish → ASCII character map. Applied to BOTH
+        // sides of the comparison so that "REŞAD HÜSEYNOV" (Excel) and
+        // "Rəşad Hüseynov" (DB) normalize to "resad huseynov".
+        $charMap  = 'əƏıİşŞçÇüÜöÖğĞ';
+        $asciiMap = 'eEiIsScCuUoOgG';
+
+        $columnNorm = "LOWER(TRANSLATE(first_name || ' ' || COALESCE(last_name, ''), '{$charMap}', '{$asciiMap}'))";
+        $inputNorm  = "LOWER(TRANSLATE(?, '{$charMap}', '{$asciiMap}'))";
+
+        // 3. Full name match (normalized).
+        $byFullName = (clone $base)
+            ->whereRaw("{$columnNorm} = {$inputNorm}", [$name])
+            ->first();
+
+        if ($byFullName) {
+            return $byFullName->id;
+        }
+
+        // 4. Partial first-name match — last resort. Only used when the
+        // first name has at least 3 characters to avoid accidental
+        // matches on initials.
+        $firstName = explode(' ', $name)[0] ?? null;
+
+        if ($firstName && mb_strlen($firstName) >= 3) {
+            $firstNameNorm = "LOWER(TRANSLATE(first_name, '{$charMap}', '{$asciiMap}'))";
+
+            $byFirstName = (clone $base)
+                ->whereRaw("{$firstNameNorm} LIKE {$inputNorm}", [$firstName.'%'])
+                ->first();
+
+            if ($byFirstName) {
+                return $byFirstName->id;
+            }
+        }
+
+        return null;
     }
 
     /**
