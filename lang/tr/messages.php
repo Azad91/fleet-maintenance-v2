@@ -295,6 +295,14 @@ return [
         'pdf_sig_approved' => 'Onaylayan',
         'pdf_sig_approved_role' => 'Garaj Yöneticisi',
         'pdf_footer' => 'Bu belge :date tarihinde otomatik olarak oluşturuldu · Fleet Control · ID #:id',
+        'search_placeholder' => 'Otobüs DQN, hat veya şikayet...',
+        'search_hint' => 'Yazdıkça sonuçlar otomatik güncellenir.',
+        'inspection_badge' => 'Kontrol / Onarım',
+        'inspection_qty_label' => 'Kontrol edildi (0)',
+        'bulk_delete' => 'Seçilenleri sil',
+        'bulk_delete_confirm' => ':count kartı SİLMEK istediğinize emin misiniz? Stok geri yüklenecek. Bu geri alınamaz!',
+        'bulk_delete_all' => 'Filtreye uyan tümünü sil',
+        'bulk_delete_all_confirm' => 'Mevcut filtreye uyan TÜM :count kartı SİLMEK istediğinize emin misiniz? Her kart için stok geri yüklenecek. Bu geri alınamaz!',
     ],
 
     // ==================== COMPLAINT TYPES ====================
