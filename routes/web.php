@@ -22,6 +22,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -481,6 +482,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::get('get-bus-by-dqn/{dqn}', [GarageDataController::class, 'busByDqn'])->name('get.bus.by.dqn');
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');
         Route::get('get-detal-by-kod/{kod}', [GarageDataController::class, 'detailByCode'])->name('get.detal.by.kod');
+        Route::get('get-service-vehicle-part-by-code', [GarageDataController::class, 'serviceVehiclePartByCode'])->name('get.service.vehicle.part.by.code');
         Route::get('get-driver-by-kod/{kod}', [GarageDataController::class, 'driverByCode'])->name('get.driver.by.kod');
         Route::get('get-employee-by-kod/{kod}', [GarageDataController::class, 'employeeByCode'])->name('get.employee.by.kod');
         Route::get('get-service-templates/{bus_id}', [GarageDataController::class, 'serviceTemplates'])->name('get.service.templates');

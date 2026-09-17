@@ -177,24 +177,90 @@
     // PART
     // ═══════════════════════════════════════════════════════════════
     function getPartByCode(input) {
-        const code = input.value;
+        const code = input.value.trim();
         const item = input.closest('.detail-item');
         const nameInput = item.querySelector('input[name*="[name]"]');
         const stockInput = item.querySelector('input[name*="[stock_quantity]"]');
+        const helpEl = item.querySelector('.part-help');
 
-        if (!code) {
-            nameInput.value = '';
-            stockInput.value = '';
+        // Reset state
+        nameInput.value = '';
+        stockInput.value = '';
+        input.classList.remove('is-valid', 'is-invalid');
+        if (helpEl) {
+            helpEl.textContent = '';
+            helpEl.className = 'form-text part-help';
+        }
+
+        if (!code) return;
+
+        const yer = document.querySelector('input[name="yer"]:checked')?.value;
+
+        // ─── ROAD: source is the selected service vehicle ───
+        if (yer === 'road') {
+            const vehicleId = document.getElementById('service_vehicle_id')?.value;
+
+            if (!vehicleId) {
+                input.classList.add('is-invalid');
+                if (helpEl) {
+                    helpEl.textContent = @json(__('messages.complaints.select_vehicle_first'));
+                    helpEl.className = 'form-text text-danger part-help';
+                }
+                return;
+            }
+
+            fetch('/get-service-vehicle-part-by-code?service_vehicle_id='
+                    + encodeURIComponent(vehicleId)
+                    + '&code=' + encodeURIComponent(code), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.found) {
+                    nameInput.value = data.part_name || '';
+                    stockInput.value = data.stock_quantity ?? 0;
+                    input.classList.add('is-valid');
+                    if (helpEl) {
+                        helpEl.textContent = @json(__('messages.complaints.service_vehicle')) + ': ' + (data.unit || '');
+                        helpEl.className = 'form-text text-success part-help';
+                    }
+                } else {
+                    input.classList.add('is-invalid');
+                    if (helpEl) {
+                        helpEl.textContent = @json(__('messages.complaints.part_not_on_vehicle'));
+                        helpEl.className = 'form-text text-danger part-help';
+                    }
+                }
+            })
+            .catch(err => console.error('Service vehicle part lookup error:', err));
+
             return;
         }
 
+        // ─── GARAGE: source is the warehouse ───
         fetch('/get-detal-by-kod/' + encodeURIComponent(code))
             .then(response => response.json())
             .then(data => {
                 nameInput.value = data.detallar_name || '';
                 stockInput.value = data.stock_quantity || '';
+                if (data.detallar_name) {
+                    input.classList.add('is-valid');
+                }
             })
             .catch(error => console.error('Part lookup error:', error));
+    }
+
+    /**
+     * Re-run part lookup for every filled part row when the service
+     * vehicle changes — so the stock display reflects the new vehicle.
+     */
+    function onServiceVehicleChange() {
+        document.querySelectorAll('#detailsContainer input[name*="[code]"]').forEach(input => {
+            if (input.value.trim()) {
+                getPartByCode(input);
+            }
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -523,7 +589,25 @@
                 vehicleSelect.required = true;
             }
         }
+            // ─── Re-lookup filled part codes when the source changes ───
+            // (warehouse ↔ vehicle). This also runs on initial page load,
+            // so pre-filled rows on the edit page show the correct stock.
+            document.querySelectorAll('#detailsContainer input[name*="[code]"]').forEach(input => {
+                if (input.value.trim()) {
+                    getPartByCode(input);
+                }
+            });
+
+            // ─── Update the stock label so the operator knows the source ───
+            const label = yer.value === 'road'
+                ? @json(__('messages.complaints.service_vehicle'))
+                : @json(__('messages.warehouse.quantity'));
+
+            document.querySelectorAll('.stock-source-label').forEach(el => {
+                el.textContent = label;
+            });
     }
+
 
     // ═══════════════════════════════════════════════════════════════
     // INIT

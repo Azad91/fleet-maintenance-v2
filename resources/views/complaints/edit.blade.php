@@ -67,31 +67,10 @@
                             {{ $complaint->yer?->value === 'garage' ? 'checked' : '' }} disabled>
                         <label class="form-check-label text-muted" for="yer_garage">🏠 {{ __('enums.location.garage') }}</label>
                     </div>
-                    {{-- Disabled radio-lar submit olunmaz — dəyəri hidden ilə göndər --}}
+                    {{-- Disabled radio-lar submit olunmur — dəyəri hidden ilə göndər --}}
                     <input type="hidden" name="yer" value="{{ $complaint->yer?->value }}">
                 </div>
             </div>
-
-            {{-- Service Vehicle — only shown when yer = road --}}
-            @if($complaint->yer?->value === 'road')
-                <div class="mb-3" id="serviceVehicleField">
-                    <label for="service_vehicle_id" class="form-label fw-bold">
-                        🚐 {{ __('messages.complaints.service_vehicle') }}
-                        <span class="text-danger">*</span>
-                    </label>
-                    <select class="form-select" id="service_vehicle_id" name="service_vehicle_id" required>
-                        <option value="">{{ __('messages.complaints.service_vehicle_placeholder') }}</option>
-                        @foreach($serviceVehicles ?? [] as $vehicle)
-                            <option value="{{ $vehicle->id }}"
-                                {{ old('service_vehicle_id', $complaint->service_vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                {{ $vehicle->name }}
-                                @if($vehicle->plate_number) · {{ $vehicle->plate_number }} @endif
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="form-text">{{ __('messages.complaints.service_vehicle_hint') }}</div>
-                </div>
-            @endif
 
             {{-- Driver --}}
             <div class="mb-3" id="surucuField">
@@ -117,6 +96,28 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Service Vehicle (visible only when yer = road) --}}
+            @if($complaint->yer?->value === 'road')
+                <div class="mb-3" id="serviceVehicleField">
+                    <label for="service_vehicle_id" class="form-label fw-bold">
+                        🚐 {{ __('messages.complaints.service_vehicle') }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="service_vehicle_id" name="service_vehicle_id"
+                            onchange="onServiceVehicleChange()" required>
+                        <option value="">{{ __('messages.complaints.service_vehicle_placeholder') }}</option>
+                        @foreach($serviceVehicles ?? [] as $vehicle)
+                            <option value="{{ $vehicle->id }}"
+                                {{ old('service_vehicle_id', $complaint->service_vehicle_id) == $vehicle->id ? 'selected' : '' }}>
+                                {{ $vehicle->name }}
+                                @if($vehicle->plate_number) · {{ $vehicle->plate_number }} @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">{{ __('messages.complaints.service_vehicle_hint') }}</div>
+                </div>
+            @endif
 
             {{-- Complaint Type (disabled) --}}
             <div class="mb-3">
@@ -292,9 +293,10 @@
                                                value="{{ $detail['name'] ?? '' }}" readonly>
                                     </div>
                                     <div class="col-md-1">
-                                        <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
+                                        <label class="form-label fw-bold stock-source-label">{{ __('messages.complaints.stock_qty') }}</label>
                                         <input type="text" class="form-control input-disabled" name="details[{{ $index }}][stock_quantity]"
                                                value="{{ $detail['stock_quantity'] ?? '' }}" readonly>
+                                        <div class="form-text part-help"></div>
                                     </div>
                                     <div class="col-md-1">
                                         <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
@@ -352,8 +354,9 @@
                                     <input type="text" class="form-control input-disabled" name="details[0][name]" readonly>
                                 </div>
                                 <div class="col-md-1">
-                                    <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
+                                    <label class="form-label fw-bold stock-source-label">{{ __('messages.complaints.stock_qty') }}</label>
                                     <input type="text" class="form-control input-disabled" name="details[0][stock_quantity]" readonly>
+                                    <div class="form-text part-help"></div>
                                 </div>
                                 <div class="col-md-1">
                                     <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
@@ -536,27 +539,92 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PART
+    // PART (context-aware: warehouse vs service vehicle)
     // ═══════════════════════════════════════════════════════════════
     function getPartByCode(input) {
-        const code = input.value;
+        const code = input.value.trim();
         const item = input.closest('.detail-item');
         const nameInput = item.querySelector('input[name*="[name]"]');
         const stockInput = item.querySelector('input[name*="[stock_quantity]"]');
+        const helpEl = item.querySelector('.part-help');
 
-        if (!code) {
-            nameInput.value = '';
-            stockInput.value = '';
+        nameInput.value = '';
+        stockInput.value = '';
+        input.classList.remove('is-valid', 'is-invalid');
+        if (helpEl) {
+            helpEl.textContent = '';
+            helpEl.className = 'form-text part-help';
+        }
+
+        if (!code) return;
+
+        const yer = document.querySelector('input[name="yer"]:checked')?.value;
+
+        // ─── ROAD: source is the selected service vehicle ───
+        if (yer === 'road') {
+            const vehicleId = document.getElementById('service_vehicle_id')?.value;
+
+            if (!vehicleId) {
+                input.classList.add('is-invalid');
+                if (helpEl) {
+                    helpEl.textContent = @json(__('messages.complaints.select_vehicle_first'));
+                    helpEl.className = 'form-text text-danger part-help';
+                }
+                return;
+            }
+
+            fetch('/get-service-vehicle-part-by-code?service_vehicle_id='
+                    + encodeURIComponent(vehicleId)
+                    + '&code=' + encodeURIComponent(code), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.found) {
+                    nameInput.value = data.part_name || '';
+                    stockInput.value = data.stock_quantity ?? 0;
+                    input.classList.add('is-valid');
+                    if (helpEl) {
+                        helpEl.textContent = @json(__('messages.complaints.service_vehicle')) + ': ' + (data.unit || '');
+                        helpEl.className = 'form-text text-success part-help';
+                    }
+                } else {
+                    input.classList.add('is-invalid');
+                    if (helpEl) {
+                        helpEl.textContent = @json(__('messages.complaints.part_not_on_vehicle'));
+                        helpEl.className = 'form-text text-danger part-help';
+                    }
+                }
+            })
+            .catch(err => console.error('Service vehicle part lookup error:', err));
+
             return;
         }
 
+        // ─── GARAGE: source is the warehouse ───
         fetch('/get-detal-by-kod/' + encodeURIComponent(code))
             .then(response => response.json())
             .then(data => {
                 nameInput.value = data.detallar_name || '';
                 stockInput.value = data.stock_quantity || '';
+                if (data.detallar_name) {
+                    input.classList.add('is-valid');
+                }
             })
             .catch(error => console.error('Part lookup error:', error));
+    }
+
+    /**
+     * Re-run part lookup for every filled part row when the service
+     * vehicle changes — so the stock display reflects the new vehicle.
+     */
+    function onServiceVehicleChange() {
+        document.querySelectorAll('#detailsContainer input[name*="[code]"]').forEach(input => {
+            if (input.value.trim()) {
+                getPartByCode(input);
+            }
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -625,8 +693,9 @@
                     <input type="text" class="form-control input-disabled" name="details[${detailCount}][name]" readonly>
                 </div>
                 <div class="col-md-1">
-                    <label class="form-label fw-bold">{{ __('messages.complaints.stock_qty') }}</label>
+                    <label class="form-label fw-bold stock-source-label">{{ __('messages.complaints.stock_qty') }}</label>
                     <input type="text" class="form-control input-disabled" name="details[${detailCount}][stock_quantity]" readonly>
+                    <div class="form-text part-help"></div>
                 </div>
                 <div class="col-md-1">
                     <label class="form-label fw-bold">{{ __('messages.complaints.used_qty') }}</label>
@@ -679,19 +748,16 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // LOCATION → toggle service vehicle field
+    // LOCATION → update stock label source
     //
-    // On edit, `yer` is disabled in the form (see the blade markup),
-    // so `toggleFields()` only controls the visibility of the service
-    // vehicle selector. Its value is always submitted via a hidden
-    // input for road complaints.
+    // On edit, `yer` is disabled in the form, so we only need to
+    // update the "Stock Qty" label to reflect the correct source.
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');
         const driverField = document.getElementById('surucuField');
         const reportFields = document.getElementById('bildirilmeFields');
         const vehicleField = document.getElementById('serviceVehicleField');
-        const vehicleSelect = document.getElementById('service_vehicle_id');
 
         if (!yer) {
             if (driverField) driverField.style.display = 'none';
@@ -704,13 +770,20 @@
             if (driverField) driverField.style.display = 'none';
             if (reportFields) reportFields.style.display = 'none';
             if (vehicleField) vehicleField.style.display = 'none';
-            if (vehicleSelect) vehicleSelect.disabled = true;
         } else {
             if (driverField) driverField.style.display = 'block';
             if (reportFields) reportFields.style.display = 'block';
             if (vehicleField) vehicleField.style.display = 'block';
-            if (vehicleSelect) vehicleSelect.disabled = false;
         }
+
+        // ─── Update the stock label so the operator knows the source ───
+        const label = yer.value === 'road'
+            ? @json(__('messages.complaints.service_vehicle'))
+            : @json(__('messages.warehouse.quantity'));
+
+        document.querySelectorAll('.stock-source-label').forEach(el => {
+            el.textContent = label;
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -718,6 +791,14 @@
     // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
         toggleFields();
+
+        // Re-lookup prefilled parts so the stock display reflects the
+        // correct source (warehouse vs vehicle) on edit page load.
+        document.querySelectorAll('#detailsContainer input[name*="[code]"]').forEach(input => {
+            if (input.value.trim()) {
+                getPartByCode(input);
+            }
+        });
     });
 </script>
 @endsection

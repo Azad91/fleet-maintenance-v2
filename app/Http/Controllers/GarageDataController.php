@@ -231,6 +231,33 @@ class GarageDataController extends Controller
         ]);
     }
 
+    /**
+     * Return the stock of a part ON A SPECIFIC SERVICE VEHICLE.
+     *
+     * Used by the complaint form when location = 'road', so the operator
+     * sees the vehicle's stock — not the warehouse's stock.
+     */
+    public function serviceVehiclePartByCode(Request $request)
+    {
+        $request->validate([
+            'service_vehicle_id' => 'required|integer',
+            'code'               => 'required|string',
+        ]);
+
+        $stock = \App\Models\ServiceVehicleStock::withoutGlobalScopes()
+            ->where('service_vehicle_id', $request->integer('service_vehicle_id'))
+            ->where('code', $request->string('code'))
+            ->first();
+
+        return response()->json([
+            'found'          => (bool) $stock,
+            'part_code'      => $stock?->code,
+            'part_name'      => $stock?->name,
+            'stock_quantity' => $stock?->quantity ?? 0,
+            'unit'           => $stock?->unit,
+        ]);
+    }
+
     public function employeeByCode(string $kod)
     {
         $employee = Employee::active()

@@ -252,6 +252,8 @@ return [
         'service_vehicle'             => 'Service Vehicle',
         'service_vehicle_placeholder' => 'Select service vehicle...',
         'service_vehicle_hint'        => 'Parts will be deducted from this vehicle\'s stock.',
+        'part_not_on_vehicle'  => 'Part not found on the selected service vehicle.',
+        'select_vehicle_first' => 'Please select a service vehicle first.',
         'driver_placeholder' => 'e.g. D-001',
         'driver_help_default' => 'Driver name auto-fills when code is selected.',
         'driver_searching' => 'Searching for driver...',
