@@ -98,10 +98,14 @@ class ComplaintStockService
 
             $sourceType = $detail['source_type'] ?? 'warehouse';
 
+            // Historical imports never deducted stock — restoring would
+            // create inventory out of thin air.
+            if ($sourceType === 'historical') {
+                continue;
+            }
+
             if ($sourceType === 'service_vehicle') {
                 if ($serviceVehicleId === null) {
-                    // Legacy road complaint without a linked vehicle.
-                    // We cannot infer which vehicle to credit.
                     Log::warning('Cannot restore service vehicle stock — no linked vehicle', [
                         'code' => $code,
                         'quantity' => $usedQuantity,

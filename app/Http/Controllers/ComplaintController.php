@@ -240,6 +240,8 @@ class ComplaintController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
+        // Garage context must be resolved BEFORE authorization — see the
+        // class docblock for the full rationale.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -249,12 +251,23 @@ class ComplaintController extends Controller
         }
 
         $this->authorize('import', Complaint::class);
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'historical' => 'nullable|boolean',
+        ]);
+
+        // When the operator ticks the "historical" checkbox, we import the
+        // data for reference only — no stock deduction, no restore on
+        // later delete/update. Details are stored with source_type =
+        // 'historical'.
+        $deductStock = ! $request->boolean('historical');
 
         try {
             $import = new ComplaintsImport(
                 $garageId,
                 GarageContext::resolveCompanyId(),
+                deductStock: $deductStock,
             );
 
             Excel::import($import, $request->file('file'));
@@ -264,11 +277,16 @@ class ComplaintController extends Controller
             $imported = $import->importedCount;
 
             if (empty($skipped) && $failures->isEmpty()) {
-                return redirect()->route('complaints.index')
-                    ->with('success', __('messages.flash.import_success', [
+                $message = $deductStock
+                    ? __('messages.flash.import_success', [
                         'count' => $imported,
                         'items' => 'cards',
-                    ]));
+                    ])
+                    : __('messages.complaints.import_success_historical', [
+                        'count' => $imported,
+                    ]);
+
+                return redirect()->route('complaints.index')->with('success', $message);
             }
 
             return redirect()->route('complaints.index')

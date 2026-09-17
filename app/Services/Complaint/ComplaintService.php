@@ -61,21 +61,23 @@ class ComplaintService
         $this->applyLocationContext($data);
 
         return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-            // Snapshot old details for stock diff calculation
             $oldDetails = $complaint->details()->orderBy('id')->get()->toArray();
+
+            // Historical complaints (imported for archival) must never
+            // trigger a stock diff — their details were saved without
+            // stock deduction, so "restoring" and "re-deducting" would
+            // either corrupt inventory or double-count.
+            $hasHistoricalDetails = collect($oldDetails)->contains(
+                fn ($d) => ($d['source_type'] ?? '') === 'historical'
+            );
 
             $processedDetails = null;
 
-            if ($detallar !== null && is_array($detallar)) {
-                // Same normalisation as create(): `yer` may be an enum
-                // or a string depending on the caller.
+            if (! $hasHistoricalDetails && $detallar !== null && is_array($detallar)) {
                 $location = ($data['yer'] ?? null) instanceof Location
                     ? $data['yer']->value
                     : ($data['yer'] ?? 'garage');
 
-                // syncStockDiff restores old stock and deducts new stock atomically.
-                // The OLD vehicle id is passed separately so that a vehicle
-                // change on edit still restores to the original source.
                 $processedDetails = $this->stockService->syncStockDiff(
                     $oldDetails,
                     $detallar,
@@ -87,11 +89,11 @@ class ComplaintService
 
             $complaint->update($data);
 
+            // Historical complaints keep their original details untouched.
             if ($processedDetails !== null) {
                 $this->syncDetails($complaint, $processedDetails);
             }
 
-            // Sync complaints (items) — always in-place
             $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
 
             return $complaint->fresh(['details', 'items']);

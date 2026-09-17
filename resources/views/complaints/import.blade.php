@@ -26,7 +26,7 @@
                     <li><strong>start_time</strong> – {{ __('messages.complaints.start_time') }} (H:i)</li>
                     <li><strong>end_date</strong> – {{ __('messages.complaints.end_date') }} (Y-m-d)</li>
                     <li><strong>end_time</strong> – {{ __('messages.complaints.end_time') }} (H:i)</li>
-                    <li><strong>status</strong> – {{ __('messages.common.status') }} (pending / in_progress / completed)</li>
+                    <li><strong>status</strong> – {{ __('messages.common.status') }} (pending / in_progress / completed / cancelled)</li>
                     <li><strong>part_code</strong> – {{ __('messages.complaints.part_code') }}</li>
                     <li><strong>part_name</strong> – {{ __('messages.complaints.part_name') }}</li>
                     <li><strong>used_quantity</strong> – {{ __('messages.complaints.used_qty') }}</li>
@@ -34,10 +34,24 @@
                     <li><strong>notes</strong> – {{ __('messages.common.notes') }}</li>
                     <li><strong>work_done_by</strong> – {{ __('messages.complaints.employee') }}</li>
                 </ul>
-                <p class="mt-2 mb-0 text-danger">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>stock_quantity</strong> – {{ __('messages.buses.import_note_auto') }}
-                </p>
+            </div>
+
+            {{-- ─── Historical import toggle ─── --}}
+            <div class="card mb-3" style="border: 1px solid #fde68a; background: #fffbeb;">
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               name="historical" id="historical" value="1"
+                               {{ old('historical') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="historical">
+                            <strong>📜 {{ __('messages.complaints.import_historical_label') }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ __('messages.complaints.import_historical_hint') }}
+                            </small>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div class="mb-3">

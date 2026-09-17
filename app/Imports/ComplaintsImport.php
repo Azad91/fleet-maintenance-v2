@@ -34,6 +34,22 @@ use Maatwebsite\Excel\Row;
  */
 class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailure, WithChunkReading, WithHeadingRow, WithValidation
 {
+    /**
+     * @param  int|null  $garageId  Positive for tenant imports.
+     * @param  int|null  $companyId  Optional, used for strict company scoping.
+     * @param  bool  $deductStock  When false, details are saved as
+     *                             'historical' and stock is never touched
+     *                             — not on import, not on delete, not on
+     *                             update. Use for importing past complaints.
+     */
+    public function __construct(
+        ?int $garageId = null,
+        ?int $companyId = null,
+        public readonly bool $deductStock = true,
+    ) {
+        parent::__construct($garageId, $companyId);
+    }
+
     use SkipsFailures;
 
     public function onRow(Row $row): void
@@ -61,9 +77,6 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
             return;
         }
 
-        // Defensive: the constructor already enforces this, but the
-        // check protects against future refactors that might bypass
-        // the constructor (e.g. reflection-based instantiations).
         if ($this->garageId <= 0) {
             throw new \RuntimeException(
                 'ComplaintsImport cannot run without a valid garage context.'
@@ -102,9 +115,13 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
             ?? $rowArray['name']
             ?? null;
 
+        // Source type is decided ONCE per row, based on the import mode.
+        // Historical imports never touch stock, so the source type must
+        // reflect that — otherwise a later delete/update would attempt to
+        // "restore" stock that was never deducted.
+        $sourceType = $this->deductStock ? 'warehouse' : 'historical';
+
         // ---------- 3. ATOMIC BLOCK ----------
-        // Every mutation happens inside this transaction. If any step
-        // throws, PostgreSQL rolls back the whole row — no partial state.
 
         $skipReason = DB::transaction(function () use (
             $rowArray,
@@ -113,11 +130,15 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
             $companyId,
             $partCode,
             $usedQuantity,
+            $sourceType,
             &$partName
         ) {
             $stockQuantity = 0;
 
-            // 3a. Stock deduction (row lock held for the duration)
+            // 3a. Stock deduction — ONLY when not in historical mode.
+            //     In historical mode we still resolve the part name so the
+            //     detail row shows a friendly label, but we do NOT touch
+            //     warehouse quantities.
             if ($partCode !== '' && $usedQuantity > 0) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('code', $partCode)
@@ -125,21 +146,28 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
                     ->lockForUpdate()
                     ->first();
 
-                if (! $warehouse) {
+                if ($warehouse) {
+                    // Name is always resolved from the catalog.
+                    $partName ??= $warehouse->name;
+
+                    // Only enforce stock rules and deduct when we actually
+                    // manage stock. Historical imports skip both.
+                    if ($this->deductStock) {
+                        if ($usedQuantity > $warehouse->quantity) {
+                            return __('messages.flash.stock_insufficient', [
+                                'name' => $warehouse->name,
+                                'requested' => $usedQuantity,
+                                'available' => $warehouse->quantity,
+                            ]);
+                        }
+
+                        $stockQuantity = $warehouse->quantity;
+                        $warehouse->decrement('quantity', $usedQuantity);
+                    }
+                } elseif ($this->deductStock) {
+                    // Only fail the row when stock mode is active.
                     return __('messages.imports.reasons.part_not_found', ['code' => $partCode]);
                 }
-
-                if ($usedQuantity > $warehouse->quantity) {
-                    return __('messages.flash.stock_insufficient', [
-                        'name' => $warehouse->name,
-                        'requested' => $usedQuantity,
-                        'available' => $warehouse->quantity,
-                    ]);
-                }
-
-                $stockQuantity = $warehouse->quantity;
-                $warehouse->decrement('quantity', $usedQuantity);
-                $partName ??= $warehouse->name;
             }
 
             // 3b. Complaint header
@@ -172,7 +200,8 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
                 ]);
             }
 
-            // 3d. Complaint detail(s)
+            // 3d. Complaint detail(s) — always saved, with the source type
+            //     that reflects the import mode.
             if ($partCode !== '' && $usedQuantity > 0) {
                 $complaint->details()->create([
                     'shikayet_index' => 0,
@@ -180,11 +209,11 @@ class ComplaintsImport extends AbstractImport implements OnEachRow, SkipsOnFailu
                     'name' => $partName ?? $partCode,
                     'stock_quantity' => $stockQuantity,
                     'used_quantity' => $usedQuantity,
+                    'source_type' => $sourceType,
                     'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
                 ]);
             }
 
-            // null = success
             return null;
         });
 
