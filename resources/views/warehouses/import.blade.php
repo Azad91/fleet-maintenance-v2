@@ -23,6 +23,44 @@
                 </ul>
             </div>
 
+            {{-- ─── Import mode ─── --}}
+            <div class="card mb-3" style="border: 1px solid #e5eaf1;">
+                <div class="card-body">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-sliders"></i> {{ __('messages.warehouse.import_mode_label') }}
+                    </label>
+                    <p class="text-muted small mb-3">
+                        {{ __('messages.warehouse.import_mode_hint') }}
+                    </p>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="mode" id="mode_overwrite"
+                               value="overwrite"
+                               {{ old('mode', 'overwrite') === 'overwrite' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="mode_overwrite">
+                            <strong>{{ __('messages.warehouse.import_mode_overwrite') }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ __('messages.warehouse.import_mode_overwrite_hint') }}
+                            </small>
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="mode" id="mode_add"
+                               value="add"
+                               {{ old('mode') === 'add' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="mode_add">
+                            <strong>{{ __('messages.warehouse.import_mode_add') }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                {{ __('messages.warehouse.import_mode_add_hint') }}
+                            </small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div class="mb-3">
                 <label for="file" class="form-label fw-bold">{{ __('messages.buses.import_select_file') }}</label>
                 <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls,.csv" required>

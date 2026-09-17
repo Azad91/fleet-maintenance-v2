@@ -147,13 +147,19 @@ class WarehouseController extends Controller
 
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'mode' => 'nullable|in:overwrite,add',
         ]);
+
+        // Default to OVERWRITE so the historical behaviour is preserved
+        // for any client that does not send the mode field.
+        $mode = $request->input('mode', \App\Imports\WarehouseImport::MODE_OVERWRITE);
 
         try {
             Excel::import(
                 new WarehouseImport(
                     $garageId,
                     GarageContext::resolveCompanyId(),
+                    $mode,
                 ),
                 $request->file('file')
             );

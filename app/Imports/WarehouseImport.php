@@ -10,14 +10,58 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 /**
  * Imports warehouse items from an Excel file.
  *
- * Uses ToCollection (not ToModel) because rows are updated in place
- * by code. The base AbstractImport still provides:
- *   - garage/company context + constructor guard
- *   - skip tracking via recordSkip()
- *   - import counter via incrementImported()
+ * TWO MODES
+ * ---------
+ * The caller chooses how an EXISTING item's quantity is handled when the
+ * same (garage_id, code) pair appears in the spreadsheet:
+ *
+ *   - OVERWRITE (default): the new quantity REPLACES the stored one.
+ *     Use this when the Excel file represents the garage's current,
+ *     authoritative inventory snapshot.
+ *
+ *   - ADD: the new quantity is ADDED to the stored one.
+ *     Use this when the Excel file contains newly received parts and
+ *     the warehouse already holds some units of the same code.
+ *     Example: 500 L in stock + 2000 L arriving → 2500 L total.
+ *
+ * In both modes, name/unit/price/supplier are updated to the Excel
+ * values when the row exists — the operator's latest catalog metadata
+ * always wins.
+ *
+ * Duplicate codes INSIDE the same file are handled correctly: the
+ * second occurrence of a code updates the in-memory result of the
+ * first (via the DB), so both modes behave consistently.
  */
 class WarehouseImport extends AbstractImport implements ToCollection, WithHeadingRow
 {
+    /**
+     * How to treat the quantity of an existing item.
+     */
+    public const MODE_OVERWRITE = 'overwrite';
+    public const MODE_ADD       = 'add';
+
+    /**
+     * @param  int|null  $garageId   Positive for tenant imports.
+     * @param  int|null  $companyId  Optional, used for strict company scoping.
+     * @param  string  $mode  One of MODE_OVERWRITE or MODE_ADD.
+     */
+    public function __construct(
+        ?int $garageId = null,
+        ?int $companyId = null,
+        public readonly string $mode = self::MODE_OVERWRITE,
+    ) {
+        parent::__construct($garageId, $companyId);
+
+        if (! in_array($mode, [self::MODE_OVERWRITE, self::MODE_ADD], true)) {
+            throw new \InvalidArgumentException(sprintf(
+                'WarehouseImport: unknown mode [%s]. Expected [%s] or [%s].',
+                $mode,
+                self::MODE_OVERWRITE,
+                self::MODE_ADD,
+            ));
+        }
+    }
+
     public function collection(Collection $rows): void
     {
         foreach ($rows as $row) {
@@ -47,20 +91,27 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
                 ->first();
 
             if ($warehouse) {
+                // Existing item — update catalog fields, and combine
+                // the quantity according to the selected mode.
+                $newQuantity = $this->mode === self::MODE_ADD
+                    ? $warehouse->quantity + $quantity
+                    : $quantity;
+
                 $warehouse->update([
-                    'name' => $name,
-                    'quantity' => $quantity,
-                    'unit' => $unit,
-                    'price' => $price,
+                    'name'     => $name,
+                    'quantity' => $newQuantity,
+                    'unit'     => $unit,
+                    'price'    => $price,
                 ]);
             } else {
+                // New item — always created with the Excel quantity.
                 Warehouse::create([
-                    'code' => $code,
-                    'name' => $name,
-                    'quantity' => $quantity,
-                    'unit' => $unit,
-                    'price' => $price,
-                    'garage_id' => $this->garageId,
+                    'code'       => $code,
+                    'name'       => $name,
+                    'quantity'   => $quantity,
+                    'unit'       => $unit,
+                    'price'      => $price,
+                    'garage_id'  => $this->garageId,
                     'company_id' => $this->companyId,
                 ]);
             }
