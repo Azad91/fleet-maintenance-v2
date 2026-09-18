@@ -15,6 +15,7 @@ class Bus extends Model
     protected $fillable = [
         'garage_id',
         'company_id',
+        'brand_id',
         'bus_project',
         'vin',
         'uzunluq',
@@ -31,6 +32,11 @@ class Bus extends Model
         'date' => 'date',
         'km' => 'integer',
     ];
+
+    public function brand()
+    {
+        return $this->belongsTo(BusBrand::class, 'brand_id');
+    }
 
     public function complaints()
     {

@@ -7,13 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Service templates — now garage-scoped.
+ * Service templates — garage- AND brand-scoped.
  *
  * A template represents a service interval (e.g. "Motor Oil Change
- * (36000 km)") and the list of parts consumed at that interval.
+ * (36 000 km)") and the list of parts consumed at that interval.
  * Templates are derived from MotorOilDetail, so when the motor oil
- * catalog became garage-scoped, templates had to follow — otherwise
- * one garage's service schedule would leak into another garage.
+ * catalog became brand-scoped, templates had to follow.
  *
  * The HasGarageScope trait:
  *   - filters every query by the current garage context
@@ -27,6 +26,7 @@ class ServiceTemplate extends Model
     protected $fillable = [
         'garage_id',
         'company_id',
+        'brand_id',
         'name',
         'default_km_interval',
         'details',
@@ -35,6 +35,11 @@ class ServiceTemplate extends Model
     protected $casts = [
         'details' => 'array',
     ];
+
+    public function brand()
+    {
+        return $this->belongsTo(BusBrand::class, 'brand_id');
+    }
 
     public function busIntervals()
     {
