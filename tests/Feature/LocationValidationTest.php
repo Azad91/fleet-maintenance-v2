@@ -9,6 +9,7 @@ use App\Models\Complaint;
 use App\Models\ComplaintType as ComplaintTypeModel;
 use App\Models\Driver;
 use App\Models\Garage;
+use App\Models\ServiceVehicle;
 use App\Models\User;
 use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,6 +26,8 @@ class LocationValidationTest extends TestCase
     protected Bus $bus;
 
     protected Driver $driver;
+
+    protected ServiceVehicle $serviceVehicle;
 
     protected User $admin;
 
@@ -56,6 +59,13 @@ class LocationValidationTest extends TestCase
             'code' => 'DRV-001',
             'first_name' => 'Test',
             'last_name' => 'Driver',
+            'is_active' => true,
+        ]);
+
+        $this->serviceVehicle = ServiceVehicle::withoutGlobalScopes()->create([
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'name' => 'Service Vehicle 1',
             'is_active' => true,
         ]);
 
@@ -117,6 +127,7 @@ class LocationValidationTest extends TestCase
                 'bus_id' => $this->bus->id,
                 'yer' => 'road',
                 'driver_id' => $this->driver->id,
+                'service_vehicle_id' => $this->serviceVehicle->id,
                 'status' => 'pending',
                 'complaint_type' => 'breakdown',
                 'complaints' => [$this->validDescription],
@@ -130,6 +141,7 @@ class LocationValidationTest extends TestCase
         $this->assertNotNull($complaint);
         $this->assertSame(Location::Road, $complaint->yer);
         $this->assertSame($this->driver->id, $complaint->driver_id);
+        $this->assertSame($this->serviceVehicle->id, $complaint->service_vehicle_id);
         $this->assertSame($this->driver->full_name, $complaint->driver_name);
     }
 
@@ -141,6 +153,7 @@ class LocationValidationTest extends TestCase
                 'bus_id' => $this->bus->id,
                 'yer' => 'road',
                 'driver_id' => $this->driver->id,
+                'service_vehicle_id' => $this->serviceVehicle->id,
                 'status' => 'pending',
                 'complaint_type' => 'breakdown',
                 'complaints' => [$this->validDescription],
@@ -157,6 +170,7 @@ class LocationValidationTest extends TestCase
             ->post(route('complaints.store'), [
                 'bus_id' => $this->bus->id,
                 'yer' => 'road',
+                'service_vehicle_id' => $this->serviceVehicle->id,
                 'status' => 'pending',
                 'complaint_type' => 'breakdown',
                 'complaints' => [$this->validDescription],
@@ -166,6 +180,25 @@ class LocationValidationTest extends TestCase
             ]);
 
         $response->assertSessionHasErrors('driver_id');
+    }
+
+    public function test_road_location_requires_service_vehicle(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->withSession($this->garageSession())
+            ->post(route('complaints.store'), [
+                'bus_id' => $this->bus->id,
+                'yer' => 'road',
+                'driver_id' => $this->driver->id,
+                'status' => 'pending',
+                'complaint_type' => 'breakdown',
+                'complaints' => [$this->validDescription],
+                'reported_date' => now()->toDateString(),
+                'reported_time' => now()->format('H:i'),
+                // service_vehicle_id yoxdur
+            ]);
+
+        $response->assertSessionHasErrors('service_vehicle_id');
     }
 
     // ==================================================================
@@ -219,6 +252,7 @@ class LocationValidationTest extends TestCase
             'yer' => 'road',
             'driver_id' => $this->driver->id,
             'driver_name' => $this->driver->full_name,
+            'service_vehicle_id' => $this->serviceVehicle->id,
             'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
@@ -239,5 +273,6 @@ class LocationValidationTest extends TestCase
         $this->assertSame(Location::Garage, $fresh->yer);
         $this->assertNull($fresh->driver_id);
         $this->assertNull($fresh->driver_name);
+        $this->assertNull($fresh->service_vehicle_id);
     }
 }

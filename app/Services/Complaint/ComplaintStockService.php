@@ -109,35 +109,6 @@ class ComplaintStockService
 
             $sourceType = $detail['source_type'] ?? 'warehouse';
 
-            // Historical imports and inspection rows never touched stock
-            // on creation, so there is nothing to restore.
-            if (in_array($sourceType, ['historical', 'inspection'], true)) {
-                continue;
-            }
-
-    /**
-     * Restore stock for the given details (used on complaint delete
-     * or when replacing details during an update).
-     *
-     * The `source_type` recorded on each detail decides where the
-     * stock goes back to. For `service_vehicle` rows, the caller must
-     * pass the complaint's `service_vehicle_id`.
-     *
-     * @param  array<int, array<string, mixed>>  $details
-     * @param  int|null  $serviceVehicleId  Vehicle to credit when restoring
-     */
-    public function restoreStock(array $details, ?int $serviceVehicleId = null): void
-    {
-        foreach ($details as $detail) {
-            $code = $detail['code'] ?? null;
-            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
-
-            if (empty($code) || $usedQuantity <= 0) {
-                continue;
-            }
-
-            $sourceType = $detail['source_type'] ?? 'warehouse';
-
             // Historical imports and inspection rows never touched
             // stock on creation, so there is nothing to restore.
             if (in_array($sourceType, ['historical', 'inspection'], true)) {
