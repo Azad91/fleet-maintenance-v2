@@ -8,9 +8,25 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
 
+/**
+ * Imports the motor oil catalog for a single brand.
+ *
+ * The operator selects the brand on the import form — every row
+ * written by this importer inherits that brand_id. This guarantees
+ * that the "BMC 15 000 km" schedule never mixes with the
+ * "Yutong 20 000 km" one.
+ */
 class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReading, WithHeadingRow
 {
     protected array $kmColumns = [];
+
+    public function __construct(
+        ?int $garageId = null,
+        ?int $companyId = null,
+        public readonly ?int $brandId = null,
+    ) {
+        parent::__construct($garageId, $companyId);
+    }
 
     public function onRow(Row $row): void
     {
@@ -45,6 +61,7 @@ class MotorOilImport extends AbstractImport implements OnEachRow, WithChunkReadi
                 MotorOilDetail::create([
                     'garage_id' => $this->garageId,
                     'company_id' => $this->companyId,
+                    'brand_id' => $this->brandId,
                     'part_code' => $partCode,
                     'part_name' => $partName,
                     'unit' => $unit,

@@ -20,6 +20,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th style="width: 60px; text-align: center;">#</th>
+                            <th style="width: 130px;">{{ __('messages.motor_oil.brand') }}</th>
                             <th style="width: 150px;">{{ __('messages.motor_oil.part_code') }}</th>
                             <th>{{ __('messages.motor_oil.part_name') }}</th>
                             <th style="width: 100px; text-align: center;">{{ __('messages.motor_oil.unit') }}</th>
@@ -30,6 +31,13 @@
                         @foreach($items as $index => $item)
                         <tr>
                             <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td>
+                                @if($item->brand)
+                                    <span class="badge bg-info text-dark">{{ $item->brand->name }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td><strong>{{ $item->part_code }}</strong></td>
                             <td>{{ $item->part_name }}</td>
                             <td style="text-align: center;">{{ $item->unit ?? '-' }}</td>

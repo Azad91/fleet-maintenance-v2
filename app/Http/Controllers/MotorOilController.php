@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\MotorOilImport;
+use App\Models\BusBrand;
 use App\Models\MotorOilDetail;
 use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
@@ -11,33 +12,52 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class MotorOilController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', MotorOilDetail::class);
 
-        $details = MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
+        $brandId = $request->input('brand_id');
+        $brands = BusBrand::active()->orderBy('name')->get();
+
+        $query = MotorOilDetail::with('brand');
+
+        if ($brandId) {
+            $query->where('brand_id', $brandId);
+        }
+
+        $details = $query->orderBy('km')->orderBy('part_name')->get();
         $grouped = $details->groupBy('km');
 
-        return view('motor-oil.index', compact('grouped'));
+        return view('motor-oil.index', compact('grouped', 'brands', 'brandId'));
     }
 
     public function search(Request $request)
     {
         $this->authorize('viewAny', MotorOilDetail::class);
 
+        $brandId = $request->input('brand_id');
         $search = preg_replace('/[^\d]/', '', (string) $request->search);
 
-        $details = MotorOilDetail::when($search, function ($query, $search) {
-            return $query->where('km', (int) $search);
-        })
+        $query = MotorOilDetail::with('brand');
+
+        if ($brandId) {
+            $query->where('brand_id', $brandId);
+        }
+
+        if ($search) {
+            $query->where('km', (int) $search);
+        }
+
+        $details = $query
             ->orderBy('km')
             ->orderBy('part_name')
             ->get();
 
         $grouped = $details->groupBy('km');
+        $brands = BusBrand::active()->orderBy('name')->get();
 
         if (! $request->ajax() && ! $request->wantsJson()) {
-            return view('motor-oil.index', compact('grouped', 'search'));
+            return view('motor-oil.index', compact('grouped', 'search', 'brands', 'brandId'));
         }
 
         return view('motor-oil.partials.table', compact('grouped', 'search'));
@@ -47,14 +67,14 @@ class MotorOilController extends Controller
     {
         $this->authorize('import', MotorOilDetail::class);
 
-        return view('motor-oil.import');
+        $brands = BusBrand::active()->orderBy('name')->get();
+
+        return view('motor-oil.import', compact('brands'));
     }
 
     public function import(Request $request): RedirectResponse
     {
-        // Resolve garage context BEFORE authorization, matching every
-        // other import controller. Without it the MotorOilDetail model
-        // would throw MissingGarageContextException during the import.
+        // Resolve garage context BEFORE authorization.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -64,12 +84,22 @@ class MotorOilController extends Controller
         }
 
         $this->authorize('import', MotorOilDetail::class);
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'brand_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('bus_brands', 'id')->where('garage_id', $garageId),
+            ],
+        ], [
+            'brand_id.required' => __('messages.motor_oil.import_brand_required'),
+        ]);
 
         try {
             $import = new MotorOilImport(
                 $garageId,
                 GarageContext::resolveCompanyId(),
+                (int) $request->input('brand_id'),
             );
 
             Excel::import($import, $request->file('file'));
@@ -98,11 +128,10 @@ class MotorOilController extends Controller
     }
 
     /**
-     * Bulk delete ALL motor oil details matching the current search filter.
+     * Bulk delete ALL motor oil details matching the current filter.
      *
-     * The Motor Oil catalog is a flat catalog (no soft-delete on the
-     * model), so the rows are removed permanently. The import can
-     * re-add them at any time.
+     * The Motor Oil catalog has no soft-delete — rows are removed
+     * permanently. The import can re-add them at any time.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
@@ -110,15 +139,18 @@ class MotorOilController extends Controller
 
         @set_time_limit(300);
 
+        $brandId = $request->input('brand_id');
         $search = $request->input('search');
 
-        // Normalize the search input the same way search() does — the
-        // filter is a KM value that may contain dots/spaces.
         $normalizedKm = $search !== null
             ? preg_replace('/[^\d]/', '', (string) $search)
             : null;
 
         $query = MotorOilDetail::query();
+
+        if ($brandId) {
+            $query->where('brand_id', $brandId);
+        }
 
         if ($normalizedKm !== null && $normalizedKm !== '') {
             $query->where('km', (int) $normalizedKm);

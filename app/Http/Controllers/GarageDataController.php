@@ -59,9 +59,6 @@ class GarageDataController extends Controller
             ]);
         }
 
-        // The dailyKmRecords() relation already applies
-        // `orderBy('date', 'desc')`, so `value('km')` returns the most
-        // recent record.
         $latestKm = $bus->dailyKmRecords()->value('km') ?? $bus->km;
 
         return response()->json([
@@ -77,14 +74,16 @@ class GarageDataController extends Controller
     {
         $bus = Bus::findOrFail($busId);
 
-        // Cache key MUST include the garage id — otherwise the first
-        // garage's template list would be served to every other garage
-        // for the next hour. The global scope only filters the query;
-        // it does not partition the cache.
-        $cacheKey = 'service_templates:garage:'.$bus->garage_id;
+        // Cache key MUST include garage_id AND brand_id — otherwise
+        // the first brand's template list would be served to every
+        // other brand in the same garage for the next hour.
+        $brandKey = $bus->brand_id ?? 'none';
+        $cacheKey = "service_templates:garage:{$bus->garage_id}:brand:{$brandKey}";
 
-        $templates = Cache::remember($cacheKey, 3600, function () {
-            return ServiceTemplate::orderBy('default_km_interval')->get();
+        $templates = Cache::remember($cacheKey, 3600, function () use ($bus) {
+            return ServiceTemplate::where('brand_id', $bus->brand_id)
+                ->orderBy('default_km_interval')
+                ->get();
         });
 
         $intervals = BusServiceInterval::where('bus_id', $bus->id)
@@ -105,12 +104,15 @@ class GarageDataController extends Controller
         $bus = Bus::findOrFail($busId);
         $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;
 
-        // Cache key MUST include the garage id — same reasoning as
-        // serviceTemplates() above.
-        $cacheKey = 'motor_oil_details:garage:'.$bus->garage_id;
+        // Cache key MUST include brand_id — same reasoning as above.
+        $brandKey = $bus->brand_id ?? 'none';
+        $cacheKey = "motor_oil_details:garage:{$bus->garage_id}:brand:{$brandKey}";
 
-        $motorOils = Cache::remember($cacheKey, 3600, function () {
-            return MotorOilDetail::orderBy('km')->orderBy('part_name')->get();
+        $motorOils = Cache::remember($cacheKey, 3600, function () use ($bus) {
+            return MotorOilDetail::where('brand_id', $bus->brand_id)
+                ->orderBy('km')
+                ->orderBy('part_name')
+                ->get();
         });
 
         return response()->json(
@@ -133,12 +135,10 @@ class GarageDataController extends Controller
     {
         $bus = Bus::findOrFail($busId);
 
-        // Current KM — prefer the latest daily record, fall back to the
-        // bus's own km field.
         $currentKm = (int) ($bus->dailyKmRecords()->value('km') ?? $bus->km ?? 0);
 
-        // Fetch every distinct interval, sorted ascending.
-        $intervals = MotorOilDetail::query()
+        // Filter intervals by the bus's brand — see class docblock.
+        $intervals = MotorOilDetail::where('brand_id', $bus->brand_id)
             ->select('km')
             ->distinct()
             ->orderBy('km')
@@ -196,13 +196,15 @@ class GarageDataController extends Controller
             return response()->json(['parts' => []]);
         }
 
-        $parts = MotorOilDetail::where('km', $km)
+        // Filter parts by the bus's brand.
+        $parts = MotorOilDetail::where('brand_id', $bus->brand_id)
+            ->where('km', $km)
             ->orderBy('part_name')
             ->get()
-            ->map(function (MotorOilDetail $part) {
+            ->map(function (MotorOilDetail $part) use ($bus) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('code', $part->part_code)
-                    ->where('garage_id', $part->garage_id)
+                    ->where('garage_id', $bus->garage_id)
                     ->whereNull('deleted_at')
                     ->first();
 
@@ -231,12 +233,6 @@ class GarageDataController extends Controller
         ]);
     }
 
-    /**
-     * Return the stock of a part ON A SPECIFIC SERVICE VEHICLE.
-     *
-     * Used by the complaint form when location = 'road', so the operator
-     * sees the vehicle's stock — not the warehouse's stock.
-     */
     public function serviceVehiclePartByCode(Request $request)
     {
         $request->validate([

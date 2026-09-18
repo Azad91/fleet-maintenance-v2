@@ -618,6 +618,11 @@ return [
         'no_results' => 'No results found for KM ":search".',
         'no_details' => 'No motor oil details added yet.',
         'km_columns' => 'KM columns (number of times to change)',
+        'brand' => 'Brand',
+        'filter_all_brands' => 'All brands',
+        'import_brand_required' => 'Select a brand — motor oil schedules are brand-specific.',
+        'import_brand_hint' => 'Pick the brand this file belongs to. Every row will inherit it.',
+        'no_brands_hint' => 'No brands yet. Create one first.',
     ],
 
     // ==================== PROFILE ====================

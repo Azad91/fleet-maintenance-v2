@@ -21,18 +21,28 @@
     </div>
 </div>
 
-{{-- Hidden form for "delete all matching filter" --}}
 <form id="bulkDeleteAllForm" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
-    <input type="hidden" name="search" id="bulkDeleteAllSearch" value="{{ request('search') }}">
+    <div id="bulkDeleteAllFilters"></div>
 </form>
 
 <div class="card">
     <div class="card-body">
         <div class="mb-3">
             <div class="row g-2 align-items-end">
-                <div class="col-md-8">
+                <div class="col-md-3">
+                    <label for="brandFilter" class="form-label fw-bold">{{ __('messages.motor_oil.brand') }}</label>
+                    <select id="brandFilter" class="form-select">
+                        <option value="">{{ __('messages.motor_oil.filter_all_brands') }}</option>
+                        @foreach($brands as $brand)
+                            <option value="{{ $brand->id }}" @selected($brandId == $brand->id)>
+                                {{ $brand->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
                     <label for="motorOilSearchInput" class="form-label fw-bold">{{ __('messages.motor_oil.search_label') }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -47,7 +57,7 @@
                     </div>
                     <small class="text-muted mt-2 d-block">{{ __('messages.motor_oil.search_hint') }}</small>
                 </div>
-                <div class="col-md-4 text-md-end">
+                <div class="col-md-3 text-md-end">
                     <small class="text-muted">
                         {{ __('messages.common.total') }}: <span id="totalCount">0</span> {{ __('messages.motor_oil.parts') }}
                     </small>
@@ -66,10 +76,10 @@
 <script>
     let motorOilSearchTimeout = null;
 
-    function liveSearch(query) {
+    function liveSearch() {
         clearTimeout(motorOilSearchTimeout);
         motorOilSearchTimeout = setTimeout(() => {
-            performMotorOilSearch(query);
+            performMotorOilSearch();
         }, 300);
     }
 
@@ -79,16 +89,24 @@
             input.value = '';
         }
         clearTimeout(motorOilSearchTimeout);
-        performMotorOilSearch('');
+        performMotorOilSearch();
     }
 
-    function performMotorOilSearch(query) {
-        const params = new URLSearchParams();
-        const normalized = String(query ?? '').replace(/[.,\s]/g, '');
+    function collectMotorOilFilters() {
+        const filters = {};
+        const brand = document.getElementById('brandFilter')?.value || '';
+        const search = String(document.getElementById('motorOilSearchInput')?.value || '')
+            .replace(/[.,\s]/g, '');
 
-        if (normalized) {
-            params.set('search', normalized);
-        }
+        if (brand) filters.brand_id = brand;
+        if (search) filters.search = search;
+
+        return filters;
+    }
+
+    function performMotorOilSearch() {
+        const filters = collectMotorOilFilters();
+        const params = new URLSearchParams(filters);
 
         const url = '{{ route('motor-oil.search') }}'
             + (params.toString() ? '?' + params.toString() : '');
@@ -121,6 +139,10 @@
             }
 
             syncBulkDeleteAllButton(newTotal);
+
+            const browserUrl = '{{ route('motor-oil.index') }}'
+                + (params.toString() ? '?' + params.toString() : '');
+            history.replaceState(null, '', browserUrl);
         })
         .catch(error => {
             console.error('Motor oil search error:', error);
@@ -146,9 +168,9 @@
     (function () {
         const btn       = document.getElementById('bulkDeleteAllBtn');
         const form      = document.getElementById('bulkDeleteAllForm');
-        const searchEl  = document.getElementById('bulkDeleteAllSearch');
+        const container = document.getElementById('bulkDeleteAllFilters');
 
-        if (! btn || ! form || ! searchEl) return;
+        if (! btn || ! form || ! container) return;
 
         btn.addEventListener('click', () => {
             const total = parseInt(btn.dataset.total, 10) || 0;
@@ -160,14 +182,25 @@
 
             if (! confirm(message)) return;
 
-            const currentSearch = document.getElementById('motorOilSearchInput')?.value ?? '';
-            const normalized = String(currentSearch).replace(/[.,\s]/g, '');
+            container.innerHTML = '';
+            Object.entries(collectMotorOilFilters()).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                container.appendChild(input);
+            });
 
-            searchEl.value = normalized;
             form.action = "{{ route('motor-oil.bulk.delete-all') }}";
             form.submit();
         });
     })();
+
+    // Brand filter triggers a fresh search.
+    document.getElementById('brandFilter')?.addEventListener('change', () => {
+        clearTimeout(motorOilSearchTimeout);
+        performMotorOilSearch();
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         const counter = document.querySelector('#motorOilResults .total-count');
