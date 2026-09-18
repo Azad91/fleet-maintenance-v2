@@ -207,6 +207,9 @@
                 {{-- ==================== ADMIN-ONLY (garage admin) ==================== --}}
                 @if(! $isDirector && $canManage)
                     <p class="fleet-nav__label">{{ __('messages.nav.data') }}</p>
+                    <a href="{{ route('bus-brands.index') }}" class="fleet-nav__link {{ request()->routeIs('bus-brands.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-tags"></i><span>{{ __('messages.bus_brands.title') }}</span>
+                    </a>
                     <a href="{{ route('drivers.index') }}" class="fleet-nav__link {{ request()->routeIs('drivers.*') ? 'is-active' : '' }}">
                         <i class="fas fa-id-card"></i><span>{{ __('messages.nav.drivers') }}</span>
                     </a>

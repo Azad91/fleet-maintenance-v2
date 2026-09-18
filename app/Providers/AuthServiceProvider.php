@@ -28,12 +28,15 @@ use App\Models\ServiceVehicle;
 use App\Policies\ServiceVehiclePolicy;
 use App\Models\WarehouseTransfer;
 use App\Policies\WarehouseTransferPolicy;
+use App\Models\BusBrand;
+use App\Policies\BusBrandPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
         protected $policies = [
             Complaint::class => ComplaintPolicy::class,
             Bus::class => BusPolicy::class,
+            BusBrand::class => BusBrandPolicy::class,
             Warehouse::class => WarehousePolicy::class,
             Driver::class => DriverPolicy::class,
             Employee::class => EmployeePolicy::class,
@@ -43,7 +46,7 @@ class AuthServiceProvider extends ServiceProvider
             MotorOilDetail::class => MotorOilPolicy::class,
             ComplaintType::class => ComplaintTypePolicy::class,
             ServiceVehicle::class => ServiceVehiclePolicy::class,
-            WarehouseTransfer::class => WarehouseTransferPolicy::class,   // ← YENİ
+            WarehouseTransfer::class => WarehouseTransferPolicy::class,
         ];
 
     public function boot(): void

@@ -21,6 +21,7 @@ use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BusBrandController;
 
 /*
 |--------------------------------------------------------------------------
@@ -242,6 +243,16 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::get('/{bus}', [BusController::class, 'show'])->name('show');
         Route::put('/{bus}', [BusController::class, 'update'])->name('update');
         Route::delete('/{bus}', [BusController::class, 'destroy'])->name('destroy');
+    });
+
+    // ==================== BUS BRANDS (ADMIN ONLY) ====================
+    Route::prefix('bus-brands')->name('bus-brands.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+        Route::get('/', [BusBrandController::class, 'index'])->name('index');
+        Route::get('/create', [BusBrandController::class, 'create'])->name('create');
+        Route::post('/', [BusBrandController::class, 'store'])->name('store');
+        Route::get('/{busBrand}/edit', [BusBrandController::class, 'edit'])->name('edit');
+        Route::put('/{busBrand}', [BusBrandController::class, 'update'])->name('update');
+        Route::delete('/{busBrand}', [BusBrandController::class, 'destroy'])->name('destroy');
     });
 
     // ==================== COMPLAINTS ====================

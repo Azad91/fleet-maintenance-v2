@@ -75,7 +75,7 @@ return [
         'main_menu' => 'MAIN MENU',
         'operations' => 'OPERATIONS',
         'daily_records' => 'DAILY RECORDS',
-        'data' => 'DATA',
+        'data' => 'DATA' , 'bus_brands' => 'Bus Brands',
         'administration' => 'ADMINISTRATION',
         'main_navigation' => 'Main navigation',
         'app_name' => 'Fleet Maintenance',
@@ -1196,5 +1196,25 @@ return [
     'stock_sources' => [
         'warehouse'       => 'Warehouse',
         'service_vehicle' => 'Service Vehicle',
+    ],
+
+    // ==================== BUS BRANDS ====================
+    'bus_brands' => [
+        'title' => 'Bus Brands',
+        'subtitle' => 'Manufacturer catalog for your garage.',
+        'new' => 'New Brand',
+        'create_title' => 'Add Bus Brand',
+        'edit_title' => 'Edit Bus Brand',
+        'name' => 'Name',
+        'name_placeholder' => 'e.g.: BMC',
+        'code' => 'Code',
+        'code_placeholder' => 'e.g.: BMC',
+        'code_hint' => 'Short identifier — will be used in imports and reports.',
+        'is_active' => 'Active',
+        'buses_count' => 'Buses',
+        'no_brands' => 'No brands yet. Create your first one to get started.',
+        'delete_confirm' => 'Are you sure you want to delete this brand?',
+        'cannot_delete_has_buses' => 'Cannot delete: this brand has buses assigned to it. Reassign or remove them first.',
+        'cannot_delete_has_motor_oil' => 'Cannot delete: this brand has motor oil details assigned to it.',
     ],
 ];
