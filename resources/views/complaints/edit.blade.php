@@ -747,14 +747,11 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-    // LOCATION (Road / Garage → driver visibility)
-=======
-    // LOCATION → update stock label source
+    // LOCATION (Road / Garage → driver visibility AND stock label)
     //
     // On edit, `yer` is disabled in the form, so we only need to
-    // update the "Stock Qty" label to reflect the correct source.
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
+    // update the "Stock Qty" label to reflect the correct source
+    // (warehouse vs service vehicle).
     // ═══════════════════════════════════════════════════════════════
     function toggleFields() {
         const yer = document.querySelector('input[name="yer"]:checked');

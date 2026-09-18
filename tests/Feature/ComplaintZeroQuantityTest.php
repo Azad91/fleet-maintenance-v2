@@ -17,6 +17,15 @@ use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Zero-quantity complaint details are treated as "inspection" rows.
+ *
+ * Behavior (see migration 2026_09_17_174409):
+ *   - used_quantity > 0  → warehouse or service_vehicle deduction
+ *   - used_quantity <= 0 → inspection row (source_type='inspection'),
+ *                          no stock mutation
+ *   - DB CHECK constraint: used_quantity >= 0
+ */
 class ComplaintZeroQuantityTest extends TestCase
 {
     use RefreshDatabase;
@@ -89,44 +98,48 @@ class ComplaintZeroQuantityTest extends TestCase
     }
 
     // ==================================================================
-    // 1. ZERO QUANTITY SKIP — SERVICE LEVEL
+    // 1. ZERO QUANTITY → INSPECTION ROW (SERVICE LEVEL)
     // ==================================================================
 
-    public function test_deduct_stock_skips_zero_quantity_details(): void
+    public function test_deduct_stock_creates_inspection_row_for_zero_quantity(): void
     {
         $warehouse = $this->makeWarehouse('D-001', 10);
 
         $processed = $this->stockService->deductStock([
             [
                 'code' => 'D-001',
-                'used_quantity' => 0,  // ← Skip olmalı
+                'used_quantity' => 0,
                 'employee_id' => $this->employee->id,
                 'notes' => 'Test',
             ],
         ]);
 
-        $this->assertEmpty($processed, 'Zero-quantity details must be skipped');
+        $this->assertCount(1, $processed, 'Zero-quantity row must produce one inspection row');
+        $this->assertSame('inspection', $processed[0]['source_type']);
+        $this->assertSame(0, $processed[0]['used_quantity']);
         $this->assertEquals(10, $warehouse->fresh()->quantity, 'Stock must not change');
     }
 
-    public function test_deduct_stock_skips_negative_quantity_details(): void
+    public function test_deduct_stock_normalizes_negative_quantity_to_inspection(): void
     {
         $warehouse = $this->makeWarehouse('D-002', 10);
 
         $processed = $this->stockService->deductStock([
             [
                 'code' => 'D-002',
-                'used_quantity' => -5,  // ← Skip olmalı
+                'used_quantity' => -5,
                 'employee_id' => $this->employee->id,
                 'notes' => 'Test',
             ],
         ]);
 
-        $this->assertEmpty($processed);
+        $this->assertCount(1, $processed);
+        $this->assertSame('inspection', $processed[0]['source_type']);
+        $this->assertSame(0, $processed[0]['used_quantity']);
         $this->assertEquals(10, $warehouse->fresh()->quantity);
     }
 
-    public function test_deduct_stock_skips_details_without_quantity_key(): void
+    public function test_deduct_stock_treats_missing_quantity_as_inspection(): void
     {
         $warehouse = $this->makeWarehouse('D-003', 10);
 
@@ -139,11 +152,13 @@ class ComplaintZeroQuantityTest extends TestCase
             ],
         ]);
 
-        $this->assertEmpty($processed);
+        $this->assertCount(1, $processed);
+        $this->assertSame('inspection', $processed[0]['source_type']);
+        $this->assertSame(0, $processed[0]['used_quantity']);
         $this->assertEquals(10, $warehouse->fresh()->quantity);
     }
 
-    public function test_deduct_stock_processes_only_positive_quantities(): void
+    public function test_deduct_stock_mixes_inspection_and_warehouse_rows(): void
     {
         $warehouseA = $this->makeWarehouse('D-A', 10);
         $warehouseB = $this->makeWarehouse('D-B', 20);
@@ -151,21 +166,23 @@ class ComplaintZeroQuantityTest extends TestCase
         $processed = $this->stockService->deductStock([
             [
                 'code' => 'D-A',
-                'used_quantity' => 0,   // skip
+                'used_quantity' => 0,
                 'employee_id' => $this->employee->id,
                 'notes' => 'Zero',
             ],
             [
                 'code' => 'D-B',
-                'used_quantity' => 5,   // process
+                'used_quantity' => 5,
                 'employee_id' => $this->employee->id,
                 'notes' => 'Five',
             ],
         ]);
 
-        $this->assertCount(1, $processed);
-        $this->assertEquals('D-B', $processed[0]['code']);
-        $this->assertEquals(5, $processed[0]['used_quantity']);
+        $this->assertCount(2, $processed);
+
+        $byCode = collect($processed)->keyBy('code');
+        $this->assertSame('inspection', $byCode['D-A']['source_type']);
+        $this->assertSame('warehouse',  $byCode['D-B']['source_type']);
 
         $this->assertEquals(10, $warehouseA->fresh()->quantity, 'Zero-qty part must be untouched');
         $this->assertEquals(15, $warehouseB->fresh()->quantity, 'Positive-qty part was deducted');
@@ -185,13 +202,13 @@ class ComplaintZeroQuantityTest extends TestCase
             [
                 [
                     'code' => 'MIX-1',
-                    'used_quantity' => 0,  // skip
+                    'used_quantity' => 0,
                     'employee_id' => $this->employee->id,
                     'notes' => 'Not used',
                 ],
                 [
                     'code' => 'MIX-2',
-                    'used_quantity' => 3,  // keep
+                    'used_quantity' => 3,
                     'employee_id' => $this->employee->id,
                     'notes' => 'Used 3',
                 ],
@@ -199,14 +216,13 @@ class ComplaintZeroQuantityTest extends TestCase
             ['Test complaint']
         );
 
-        // Yalnız 1 detal yaradılmalıdır (MIX-2)
-        $details = $complaint->details()->get();
-        $this->assertCount(1, $details);
-        $this->assertEquals('MIX-2', $details->first()->code);
-        $this->assertEquals(3, $details->first()->used_quantity);
+        $details = $complaint->details()->orderBy('code')->get();
+        $this->assertCount(2, $details);
+        $this->assertSame('inspection', $details[0]->source_type); // MIX-1
+        $this->assertSame('warehouse',  $details[1]->source_type); // MIX-2
     }
 
-    public function test_complaint_creation_with_all_zero_quantities_succeeds_without_details(): void
+    public function test_complaint_creation_with_all_zero_quantities_creates_inspection_rows(): void
     {
         $this->makeWarehouse('ALLZERO-1', 10);
         $this->makeWarehouse('ALLZERO-2', 20);
@@ -220,19 +236,23 @@ class ComplaintZeroQuantityTest extends TestCase
             ['Test complaint']
         );
 
-        // Heç bir detal yaradılmamalıdır
-        $this->assertEquals(0, $complaint->details()->count());
+        $details = $complaint->details()->get();
+        $this->assertCount(2, $details);
 
-        // Hər iki stok toxunulmaz qalmalıdır
+        $details->each(function ($detail) {
+            $this->assertSame('inspection', $detail->source_type);
+            $this->assertSame(0, $detail->used_quantity);
+        });
+
         $this->assertEquals(10, Warehouse::withoutGlobalScopes()->where('code', 'ALLZERO-1')->first()->quantity);
         $this->assertEquals(20, Warehouse::withoutGlobalScopes()->where('code', 'ALLZERO-2')->first()->quantity);
     }
 
     // ==================================================================
-    // 3. UPDATE WITH ZERO QUANTITY
+    // 3. UPDATE WITH ZERO QUANTITY → CONVERT TO INSPECTION
     // ==================================================================
 
-    public function test_update_removing_a_detail_by_setting_quantity_to_zero(): void
+    public function test_update_converts_a_detail_to_inspection_when_quantity_becomes_zero(): void
     {
         $warehouse = $this->makeWarehouse('UPD-1', 10);
 
@@ -252,7 +272,7 @@ class ComplaintZeroQuantityTest extends TestCase
         $this->assertEquals(7, $warehouse->fresh()->quantity);
         $this->assertEquals(1, $complaint->details()->count());
 
-        // İndi used_quantity = 0 göndərək → detal silinməlidir, stok geri qaytarılmalıdır
+        // Set quantity to 0 → convert to inspection, restore stock.
         $this->service->update(
             $complaint,
             $this->baseData(),
@@ -261,24 +281,27 @@ class ComplaintZeroQuantityTest extends TestCase
                     'code' => 'UPD-1',
                     'used_quantity' => 0,
                     'employee_id' => $this->employee->id,
-                    'notes' => 'Removing',
+                    'notes' => 'Now inspection',
                 ],
             ],
             ['Test']
         );
 
-        // Stok geri qayıtmalıdır
+        // Stock restored to 10
         $this->assertEquals(10, $warehouse->fresh()->quantity);
 
-        // Detal silinməlidir (soft delete)
-        $this->assertEquals(0, $complaint->fresh()->details()->count());
+        // Detail still exists, now as inspection
+        $detail = $complaint->fresh()->details()->first();
+        $this->assertNotNull($detail);
+        $this->assertSame('inspection', $detail->source_type);
+        $this->assertSame(0, $detail->used_quantity);
     }
 
     // ==================================================================
     // 4. DB CONSTRAINT SANITY CHECK
     // ==================================================================
 
-    public function test_direct_zero_quantity_insert_still_fails_at_db_level(): void
+    public function test_direct_zero_quantity_insert_is_allowed_at_db_level(): void
     {
         $complaint = Complaint::create([
             'bus_id' => $this->bus->id,
@@ -289,22 +312,25 @@ class ComplaintZeroQuantityTest extends TestCase
             'complaint_type' => 'breakdown',
         ]);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
-
-        // DB CHECK constraint (used_quantity > 0) pozulmalıdır
-        ComplaintDetail::create([
+        // Migration 2026_09_17_174409 relaxed the CHECK constraint
+        // from `> 0` to `>= 0`, so this insert must succeed.
+        $detail = ComplaintDetail::create([
             'complaint_id' => $complaint->id,
             'code' => 'TEST',
             'name' => 'Test',
             'stock_quantity' => 10,
-            'used_quantity' => 0,  // ← CHECK pozur
+            'used_quantity' => 0,
+            'source_type' => 'inspection',
             'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
+
+        $this->assertNotNull($detail->id);
+        $this->assertSame(0, $detail->used_quantity);
     }
 
     // ==================================================================
-    // 5. IMPORT INTEGRATION (B3-dən sonra)
+    // 5. IMPORT INTEGRATION
     // ==================================================================
 
     public function test_import_with_zero_quantity_does_not_crash(): void
@@ -316,7 +342,7 @@ class ComplaintZeroQuantityTest extends TestCase
             $this->company->id
         );
 
-        $bus = Bus::factory()->create([
+        Bus::factory()->create([
             'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
             'dqn' => 'IMPORT-ZERO',
@@ -329,7 +355,7 @@ class ComplaintZeroQuantityTest extends TestCase
             'complaints' => 'Test',
             'status' => 'pending',
             'part_code' => 'IMP-1',
-            'used_quantity' => 0,  // ← Problem yaratmamalı
+            'used_quantity' => 0,
         ], 2);
 
         $this->assertEquals(1, $import->importedCount);
