@@ -191,6 +191,10 @@
     // ════════════════════════════════════════════════════════════════
     // DELETE ALL MATCHING FILTER
     // ════════════════════════════════════════════════════════════════
+    //
+    // collectFilters() returns a plain object, so we must iterate with
+    // Object.entries() — not .forEach(), which only exists on Maps,
+    // Sets, and arrays.
 
     if (bulkDeleteAllBtn && bulkDeleteAllForm && bulkDeleteAllFilters) {
         bulkDeleteAllBtn.addEventListener('click', () => {
@@ -204,7 +208,7 @@
             if (! confirm(message)) return;
 
             bulkDeleteAllFilters.innerHTML = '';
-            collectFilters().forEach((value, key) => {
+            Object.entries(collectFilters()).forEach(([key, value]) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = key;

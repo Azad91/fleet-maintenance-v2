@@ -20,9 +20,12 @@ class DailyKmRecordController extends Controller
     {
         $this->authorize('viewAny', DailyKmRecord::class);
 
-        // Same filtering model as bus-daily-statuses:
-        // default to today, explicit empty date = all dates.
-        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        // Same pattern as bus-daily-statuses: display defaults to
+        // today, but `dateWasExplicit` records whether the user
+        // actually supplied a date filter.
+        $dateWasExplicit = $request->filled('date');
+        $date = $dateWasExplicit ? $request->input('date') : now()->toDateString();
+
         $dqn = $request->input('dqn');
 
         $query = DailyKmRecord::with('bus');
@@ -41,7 +44,17 @@ class DailyKmRecordController extends Controller
             ->paginate(config('settings.pagination', 15))
             ->withQueryString();
 
-        return view('daily-km-records.index', compact('records', 'date', 'dqn'));
+        // Total record count across ALL dates — used by the "delete all"
+        // button when no explicit date filter is applied.
+        $totalAll = DailyKmRecord::count();
+
+        return view('daily-km-records.index', compact(
+            'records',
+            'date',
+            'dqn',
+            'dateWasExplicit',
+            'totalAll',
+        ));
     }
 
     public function create()
@@ -196,8 +209,6 @@ class DailyKmRecordController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        // Resolve garage first so that a missing context redirects to
-        // garage selection instead of triggering a 403 in the policy.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -239,14 +250,12 @@ class DailyKmRecordController extends Controller
                 ->with('error', __('messages.flash.import_error'));
         }
     }
-    /**
-     * Export the currently-filtered KM list to Excel.
-     */
+
     public function export(Request $request): BinaryFileResponse
     {
         $this->authorize('viewAny', DailyKmRecord::class);
 
-        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $date = $request->filled('date') ? $request->input('date') : now()->toDateString();
         $dqn = $request->input('dqn');
 
         $filename = 'daily-km-records-'.now()->format('Y-m-d-His').'.xlsx';
@@ -258,10 +267,11 @@ class DailyKmRecordController extends Controller
     }
 
     /**
-     * Bulk soft-delete ALL daily KM records matching the current filter.
+     * Bulk soft-delete daily KM records matching the current filter.
      *
-     * Reuses the same filter logic as index() / export() so that
-     * "what you see is what you delete".
+     * If no explicit date filter is present in the request, the date
+     * filter is IGNORED — the operation then wipes every KM record
+     * for the current garage, not just today's.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
@@ -269,7 +279,7 @@ class DailyKmRecordController extends Controller
 
         @set_time_limit(300);
 
-        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $date = $request->filled('date') ? $request->input('date') : null;
         $dqn = $request->input('dqn');
 
         $query = DailyKmRecord::query();

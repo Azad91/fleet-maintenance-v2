@@ -5,9 +5,15 @@
 @php
     use App\Enums\RoleEnum;
 
-    // Admin + Daily Status Manager/Worker can manage records
     $canManageDailyStatus = auth()->user()?->isSuperAdmin()
         || auth()->user()?->hasGarageRole(array_merge([RoleEnum::ADMIN->value], RoleEnum::dailyStatusRoles()));
+
+    // When no explicit date filter is applied, the "delete all" button
+    // reflects the TOTAL count across every date — clicking it wipes
+    // the entire status history for this garage.
+    $deleteAllCount = ($dateWasExplicit ?? false)
+        ? $statuses->total()
+        : ($totalAll ?? 0);
 @endphp
 
 @section('content')
@@ -17,10 +23,11 @@
     <div class="d-flex gap-2">
         @can('delete', App\Models\BusDailyStatus::class)
             <button type="button" class="btn btn-outline-danger" id="bulkDeleteAllBtn"
-                    data-total="{{ $statuses->total() }}"
-                    {{ $statuses->total() === 0 ? 'disabled' : '' }}>
+                    data-total="{{ $deleteAllCount }}"
+                    data-date-explicit="{{ ($dateWasExplicit ?? false) ? '1' : '0' }}"
+                    {{ $deleteAllCount === 0 ? 'disabled' : '' }}>
                 <i class="bi bi-trash-fill"></i>
-                {{ __('messages.common.bulk_delete_all') }} ({{ $statuses->total() }})
+                {{ __('messages.common.bulk_delete_all') }} ({{ $deleteAllCount }})
             </button>
         @endcan
         <a href="{{ route('bus-daily-statuses.import') }}" class="btn btn-success">
@@ -33,14 +40,12 @@
     @endif
 </div>
 
-{{-- Hidden form for "delete all matching filter" --}}
 <form id="bulkDeleteAllForm" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
     <div id="bulkDeleteAllFilters"></div>
 </form>
 
-{{-- ─── Filter panel ─── --}}
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('bus-daily-statuses.index') }}" class="row g-3 align-items-end">
@@ -48,7 +53,7 @@
                 <label for="date" class="form-label fw-bold">
                     <i class="bi bi-calendar-event"></i> {{ __('messages.daily_status.date') }}
                 </label>
-                <input type="date" name="date" id="date" class="form-control" value="{{ $date }}">
+                <input type="date" name="date" id="date" class="form-control" value="{{ $dateWasExplicit ? $date : '' }}">
                 <small class="text-muted d-block mt-1">{{ __('messages.daily_status.filter_date_hint') }}</small>
             </div>
             <div class="col-md-3">
@@ -79,7 +84,7 @@
                 <a href="{{ route('bus-daily-statuses.index') }}" class="btn btn-secondary" title="{{ __('messages.common.reset') }}">
                     <i class="bi bi-x-circle"></i>
                 </a>
-                <a href="{{ route('bus-daily-statuses.export', ['date' => $date, 'dqn' => $dqn, 'status' => $status]) }}"
+                <a href="{{ route('bus-daily-statuses.export', ['date' => $dateWasExplicit ? $date : '', 'dqn' => $dqn, 'status' => $status]) }}"
                    class="btn btn-outline-success"
                    title="{{ __('messages.common.export') }}">
                     <i class="bi bi-file-earmark-excel"></i>
@@ -159,10 +164,6 @@
 
 @section('scripts')
 <script>
-    // ════════════════════════════════════════════════════════════════
-    // DELETE ALL MATCHING FILTER
-    // ════════════════════════════════════════════════════════════════
-
     (function () {
         const btn = document.getElementById('bulkDeleteAllBtn');
         const form = document.getElementById('bulkDeleteAllForm');
@@ -172,6 +173,7 @@
 
         btn.addEventListener('click', () => {
             const total = parseInt(btn.dataset.total, 10) || 0;
+            const dateExplicit = btn.dataset.dateExplicit === '1';
 
             if (total === 0) return;
 
@@ -180,18 +182,22 @@
 
             if (! confirm(message)) return;
 
-            // Reuse the same values as the visible filter form.
-            const date = document.getElementById('date')?.value ?? '';
+            filtersContainer.innerHTML = '';
+
+            // Only pass the date if the user explicitly filtered by it.
+            // Otherwise, the controller deletes across ALL dates.
+            if (dateExplicit) {
+                const date = document.getElementById('date')?.value ?? '';
+                if (date !== '') {
+                    const i = document.createElement('input');
+                    i.type = 'hidden'; i.name = 'date'; i.value = date;
+                    filtersContainer.appendChild(i);
+                }
+            }
+
             const dqn = document.getElementById('dqn')?.value ?? '';
             const status = document.getElementById('status')?.value ?? '';
 
-            filtersContainer.innerHTML = '';
-
-            if (date !== '') {
-                const i = document.createElement('input');
-                i.type = 'hidden'; i.name = 'date'; i.value = date;
-                filtersContainer.appendChild(i);
-            }
             if (dqn !== '') {
                 const i = document.createElement('input');
                 i.type = 'hidden'; i.name = 'dqn'; i.value = dqn;

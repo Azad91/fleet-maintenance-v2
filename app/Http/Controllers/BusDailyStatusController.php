@@ -20,23 +20,22 @@ class BusDailyStatusController extends Controller
     {
         $this->authorize('viewAny', BusDailyStatus::class);
 
-        // ── Filter parameters ──
-        //
-        // `date` defaults to today so the page opens on the most common
-        // query (the operator checks the current day's statuses first
-        // thing in the morning).
-        //
-        // An EMPTY date (`?date=`) means "all dates" — that's how the user
-        // can browse the full history if they want. `has('date')` is what
-        // distinguishes "not provided" (default to today) from "explicitly
-        // empty" (show everything).
-        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        // `date` defaults to today for display purposes.
+        // However, `dateWasExplicit` records whether the user actually
+        // supplied a date filter — this drives the "delete all" button,
+        // which wipes every date when no explicit filter is applied.
+        $dateWasExplicit = $request->filled('date');
+        $date = $dateWasExplicit ? $request->input('date') : now()->toDateString();
+
         $dqn = $request->input('dqn');
         $status = $request->input('status');
 
         $query = BusDailyStatus::with('bus');
 
-        if ($date) {
+        if ($dateWasExplicit && $date) {
+            $query->whereDate('date', $date);
+        } elseif (!$dateWasExplicit && $date) {
+            // Default view: show today's records.
             $query->whereDate('date', $date);
         }
 
@@ -54,9 +53,6 @@ class BusDailyStatusController extends Controller
             ->paginate(config('settings.pagination', 15))
             ->withQueryString();
 
-        // Status dropdown values — sourced from the current garage's data
-        // so it stays in sync with whatever Excel imports contain.
-        // HasGarageScope filters this automatically.
         $availableStatuses = BusDailyStatus::query()
             ->distinct()
             ->orderBy('status')
@@ -64,12 +60,19 @@ class BusDailyStatusController extends Controller
             ->filter()
             ->values();
 
+        // Total record count across ALL dates (used when no explicit
+        // date filter is applied — the "delete all" button then wipes
+        // the entire garage's status history, not just today's).
+        $totalAll = BusDailyStatus::count();
+
         return view('bus-daily-statuses.index', compact(
             'statuses',
             'date',
             'dqn',
             'status',
             'availableStatuses',
+            'dateWasExplicit',
+            'totalAll',
         ));
     }
 
@@ -171,8 +174,6 @@ class BusDailyStatusController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        // Resolve garage first so that a missing context redirects to
-        // garage selection instead of triggering a 403 in the policy.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -214,18 +215,12 @@ class BusDailyStatusController extends Controller
                 ->with('error', __('messages.flash.import_error'));
         }
     }
-    /**
-     * Export the currently-filtered status list to Excel.
-     *
-     * Uses exactly the same filters as index() so that "what you see
-     * is what you export" — the operator can filter on screen, click
-     * the button, and get the same rows in the spreadsheet.
-     */
+
     public function export(Request $request): BinaryFileResponse
     {
         $this->authorize('viewAny', BusDailyStatus::class);
 
-        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $date = $request->filled('date') ? $request->input('date') : now()->toDateString();
         $dqn = $request->input('dqn');
         $status = $request->input('status');
 
@@ -238,10 +233,11 @@ class BusDailyStatusController extends Controller
     }
 
     /**
-     * Bulk soft-delete ALL bus daily statuses matching the current filter.
+     * Bulk soft-delete bus daily statuses matching the current filter.
      *
-     * Reuses the same filter logic as index() / export() so that
-     * "what you see is what you delete".
+     * If no explicit date filter is present in the request, the date
+     * filter is IGNORED — the operation then wipes every status record
+     * for the current garage, not just today's.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
@@ -249,9 +245,7 @@ class BusDailyStatusController extends Controller
 
         @set_time_limit(300);
 
-        // Same defaults as index(): missing `date` → today, empty
-        // `date` → all dates.
-        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $date = $request->filled('date') ? $request->input('date') : null;
         $dqn = $request->input('dqn');
         $status = $request->input('status');
 
