@@ -14,7 +14,7 @@ class MotorOilPolicy
             || $user->hasGarageRole(RoleEnum::ADMIN->value);
     }
 
-    public function view(User $user, MotorOilDetail $detail): bool
+    public function view(User $user, ?MotorOilDetail $detail = null): bool
     {
         return $this->viewAny($user);
     }
@@ -24,12 +24,17 @@ class MotorOilPolicy
         return $this->viewAny($user);
     }
 
-    public function update(User $user, MotorOilDetail $detail): bool
+    public function update(User $user, ?MotorOilDetail $detail = null): bool
     {
         return $this->viewAny($user);
     }
 
-    public function delete(User $user, MotorOilDetail $detail): bool
+    /**
+     * The nullable second parameter allows the blade check
+     * `@can('delete', MotorOilDetail::class)` to work — Laravel then
+     * calls this method with only the $user argument.
+     */
+    public function delete(User $user, ?MotorOilDetail $detail = null): bool
     {
         return $this->viewAny($user);
     }
