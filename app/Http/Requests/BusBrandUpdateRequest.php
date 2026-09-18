@@ -6,43 +6,52 @@ use App\Services\GarageContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class BusUpdateRequest extends FormRequest
+/**
+ * Validation for updating a bus brand.
+ *
+ * Mirrors BusBrandStoreRequest but adds ->ignore() so the current
+ * brand can keep its own name/code without triggering a uniqueness
+ * violation.
+ */
+class BusBrandUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'name' => trim((string) $this->input('name')),
+            'code' => mb_strtoupper(trim((string) $this->input('code'))),
+        ]);
+    }
+
     public function rules(): array
     {
-        $busId = $this->route('bus');
+        $brandId  = $this->route('busBrand');
         $garageId = GarageContext::getGarageId();
 
         return [
-            'brand_id' => [
-                'nullable',
-                Rule::exists('bus_brands', 'id')->where('garage_id', $garageId),
-            ],
-            'bus_project' => 'nullable|string|max:255',
-            'vin' => 'nullable|string|max:17',
-            'uzunluq' => 'nullable|numeric|min:0',
-            'route_number' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('buses', 'route_number')
-                    ->where('garage_id', $garageId)
-                    ->whereNull('deleted_at')
-                    ->ignore($busId),
-            ],
-            'dqn' => [
+            'name' => [
                 'required',
-                Rule::unique('buses', 'dqn')
+                'string',
+                'max:100',
+                Rule::unique('bus_brands', 'name')
                     ->where('garage_id', $garageId)
                     ->whereNull('deleted_at')
-                    ->ignore($busId),
+                    ->ignore($brandId),
             ],
-            'engine_number' => 'nullable|string|max:255',
+            'code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('bus_brands', 'code')
+                    ->where('garage_id', $garageId)
+                    ->whereNull('deleted_at')
+                    ->ignore($brandId),
+            ],
             'is_active' => 'nullable|boolean',
         ];
     }
