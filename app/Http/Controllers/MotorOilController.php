@@ -96,4 +96,47 @@ class MotorOilController extends Controller
                 ->with('error', __('messages.flash.import_error'));
         }
     }
+
+    /**
+     * Bulk delete ALL motor oil details matching the current search filter.
+     *
+     * The Motor Oil catalog is a flat catalog (no soft-delete on the
+     * model), so the rows are removed permanently. The import can
+     * re-add them at any time.
+     */
+    public function bulkDeleteAll(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', MotorOilDetail::class);
+
+        @set_time_limit(300);
+
+        $search = $request->input('search');
+
+        // Normalize the search input the same way search() does — the
+        // filter is a KM value that may contain dots/spaces.
+        $normalizedKm = $search !== null
+            ? preg_replace('/[^\d]/', '', (string) $search)
+            : null;
+
+        $query = MotorOilDetail::query();
+
+        if ($normalizedKm !== null && $normalizedKm !== '') {
+            $query->where('km', (int) $normalizedKm);
+        }
+
+        $count = $query->delete();
+
+        if ($count === 0) {
+            return redirect()
+                ->route('motor-oil.index')
+                ->with('error', __('messages.flash.none_selected'));
+        }
+
+        return redirect()
+            ->route('motor-oil.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => $count,
+                'items' => 'motor oil details',
+            ]));
+    }
 }

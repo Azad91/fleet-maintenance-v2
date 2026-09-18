@@ -104,4 +104,40 @@ class BusService
 
         Bus::whereIn('id', $ids)->delete();
     }
+
+    /**
+     * Bulk soft-delete ALL buses matching the given filters.
+     *
+     * Unlike bulkDelete() which operates on an explicit list of IDs,
+     * this method rebuilds the same query as advancedSearch() so that
+     * the operator can delete every row matching the current filter
+     * in one action — not just the rows visible on the current page.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return int  Number of buses actually deleted
+     */
+    public function bulkDeleteAllByFilters(array $filters): int
+    {
+        $query = Bus::query();
+
+        $searchableFields = [
+            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+        ];
+
+        foreach ($searchableFields as $field) {
+            if (! empty($filters[$field])) {
+                $query->where($field, 'ILIKE', '%'.$filters[$field].'%');
+            }
+        }
+
+        $ids = $query->pluck('id')->all();
+
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $this->bulkDelete($ids);
+
+        return count($ids);
+    }
 }

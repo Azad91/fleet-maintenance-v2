@@ -232,6 +232,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::post('/bulk-deactivate', [BusController::class, 'bulkDeactivate'])->name('bulk.deactivate');
         Route::post('/bulk-activate', [BusController::class, 'bulkActivate'])->name('bulk.activate');
         Route::delete('/bulk-delete', [BusController::class, 'bulkDelete'])->name('bulk.delete');
+        Route::delete('/bulk-delete-all', [BusController::class, 'bulkDeleteAll'])->name('bulk.delete-all'); // ← YENİ
         Route::get('/search', [BusController::class, 'search'])->name('search');
 
         // Dynamic routes last
@@ -318,6 +319,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
             ->middleware('throttle:import')
             ->name('import.store');
         Route::get('/search', [MotorOilController::class, 'search'])->name('search');
+        Route::delete('/bulk-delete-all', [MotorOilController::class, 'bulkDeleteAll'])->name('bulk.delete-all');
         Route::get('/', [MotorOilController::class, 'index'])->name('index');
     });
 
@@ -357,6 +359,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
 
     Route::prefix('bus-daily-statuses')->name('bus-daily-statuses.')->middleware(['role:'.$dailyStatusRoles])->group(function () {
         Route::get('/export', [BusDailyStatusController::class, 'export'])->name('export');
+        Route::delete('/bulk-delete-all', [BusDailyStatusController::class, 'bulkDeleteAll'])->name('bulk.delete-all');
         Route::get('/import', [BusDailyStatusController::class, 'importForm'])->name('import');
         Route::post('/import', [BusDailyStatusController::class, 'import'])
             ->middleware('throttle:import')
@@ -378,6 +381,7 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
 
     Route::prefix('daily-km-records')->name('daily-km-records.')->middleware(['role:'.$dailyKmRoles])->group(function () {
         Route::get('/export', [DailyKmRecordController::class, 'export'])->name('export');
+        Route::delete('/bulk-delete-all', [DailyKmRecordController::class, 'bulkDeleteAll'])->name('bulk.delete-all');
         Route::get('/import', [DailyKmRecordController::class, 'importForm'])->name('import');
         Route::post('/import', [DailyKmRecordController::class, 'import'])
             ->middleware('throttle:import')

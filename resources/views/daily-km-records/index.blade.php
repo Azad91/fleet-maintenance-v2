@@ -14,7 +14,15 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📊 {{ __('messages.daily_km.title') }}</h1>
     @if($canManageDailyKm)
-    <div>
+    <div class="d-flex gap-2">
+        @can('delete', App\Models\DailyKmRecord::class)
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteAllBtn"
+                    data-total="{{ $records->total() }}"
+                    {{ $records->total() === 0 ? 'disabled' : '' }}>
+                <i class="bi bi-trash-fill"></i>
+                {{ __('messages.common.bulk_delete_all') }} ({{ $records->total() }})
+            </button>
+        @endcan
         <a href="{{ route('daily-km-records.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> {{ __('messages.daily_km.import') }}
         </a>
@@ -24,6 +32,13 @@
     </div>
     @endif
 </div>
+
+{{-- Hidden form for "delete all matching filter" --}}
+<form id="bulkDeleteAllForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <div id="bulkDeleteAllFilters"></div>
+</form>
 
 {{-- ─── Filter panel ─── --}}
 <div class="card mb-4">
@@ -136,4 +151,50 @@
 <div class="pagination-wrapper d-flex justify-content-center mt-4">
     {{ $records->withQueryString()->links() }}
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // ════════════════════════════════════════════════════════════════
+    // DELETE ALL MATCHING FILTER
+    // ════════════════════════════════════════════════════════════════
+
+    (function () {
+        const btn = document.getElementById('bulkDeleteAllBtn');
+        const form = document.getElementById('bulkDeleteAllForm');
+        const filtersContainer = document.getElementById('bulkDeleteAllFilters');
+
+        if (! btn || ! form || ! filtersContainer) return;
+
+        btn.addEventListener('click', () => {
+            const total = parseInt(btn.dataset.total, 10) || 0;
+
+            if (total === 0) return;
+
+            const message = @json(__('messages.common.bulk_delete_all_confirm'))
+                .replace(':count', total);
+
+            if (! confirm(message)) return;
+
+            const date = document.getElementById('date')?.value ?? '';
+            const dqn = document.getElementById('dqn')?.value ?? '';
+
+            filtersContainer.innerHTML = '';
+
+            if (date !== '') {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = 'date'; i.value = date;
+                filtersContainer.appendChild(i);
+            }
+            if (dqn !== '') {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = 'dqn'; i.value = dqn;
+                filtersContainer.appendChild(i);
+            }
+
+            form.action = "{{ route('daily-km-records.bulk.delete-all') }}";
+            form.submit();
+        });
+    })();
+</script>
 @endsection

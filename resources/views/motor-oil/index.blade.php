@@ -5,12 +5,28 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>🛢️ {{ __('messages.motor_oil.title') }}</h1>
-    <div>
+    <div class="d-flex gap-2">
+        @can('delete', App\Models\MotorOilDetail::class)
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteAllBtn"
+                    data-total="{{ $grouped->sum(fn ($items) => $items->count()) }}"
+                    {{ $grouped->isEmpty() ? 'disabled' : '' }}>
+                <i class="bi bi-trash-fill"></i>
+                {{ __('messages.common.bulk_delete_all') }}
+                ({{ $grouped->sum(fn ($items) => $items->count()) }})
+            </button>
+        @endcan
         <a href="{{ route('motor-oil.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> {{ __('messages.motor_oil.import') }}
         </a>
     </div>
 </div>
+
+{{-- Hidden form for "delete all matching filter" --}}
+<form id="bulkDeleteAllForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="search" id="bulkDeleteAllSearch" value="{{ request('search') }}">
+</form>
 
 <div class="card">
     <div class="card-body">
@@ -98,14 +114,60 @@
 
             const counter = container.querySelector('.total-count');
             const totalEl = document.getElementById('totalCount');
+            const newTotal = counter ? (counter.dataset.count || '0') : '0';
+
             if (totalEl) {
-                totalEl.textContent = counter ? (counter.dataset.count || '0') : '0';
+                totalEl.textContent = newTotal;
             }
+
+            syncBulkDeleteAllButton(newTotal);
         })
         .catch(error => {
             console.error('Motor oil search error:', error);
         });
     }
+
+    function syncBulkDeleteAllButton(total) {
+        const btn = document.getElementById('bulkDeleteAllBtn');
+        if (! btn) return;
+
+        btn.dataset.total = total;
+        btn.disabled = total === '0';
+        btn.innerHTML =
+            '<i class="bi bi-trash-fill"></i> '
+            + @json(__('messages.common.bulk_delete_all'))
+            + ' (' + total + ')';
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // DELETE ALL MATCHING FILTER
+    // ════════════════════════════════════════════════════════════════
+
+    (function () {
+        const btn       = document.getElementById('bulkDeleteAllBtn');
+        const form      = document.getElementById('bulkDeleteAllForm');
+        const searchEl  = document.getElementById('bulkDeleteAllSearch');
+
+        if (! btn || ! form || ! searchEl) return;
+
+        btn.addEventListener('click', () => {
+            const total = parseInt(btn.dataset.total, 10) || 0;
+
+            if (total === 0) return;
+
+            const message = @json(__('messages.common.bulk_delete_all_confirm'))
+                .replace(':count', total);
+
+            if (! confirm(message)) return;
+
+            const currentSearch = document.getElementById('motorOilSearchInput')?.value ?? '';
+            const normalized = String(currentSearch).replace(/[.,\s]/g, '');
+
+            searchEl.value = normalized;
+            form.action = "{{ route('motor-oil.bulk.delete-all') }}";
+            form.submit();
+        });
+    })();
 
     document.addEventListener('DOMContentLoaded', function () {
         const counter = document.querySelector('#motorOilResults .total-count');

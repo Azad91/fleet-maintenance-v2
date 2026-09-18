@@ -50,6 +50,8 @@ return [
         'garage' => 'Garage',
         'or' => 'or',
         'days' => 'days',
+        'bulk_delete_all' => 'Delete all matching',
+        'bulk_delete_all_confirm' => 'Are you sure you want to DELETE ALL :count records matching the current filter? This cannot be undone!',
     ],
 
     // ==================== NAVIGATION ====================

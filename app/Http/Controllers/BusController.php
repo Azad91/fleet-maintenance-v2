@@ -288,6 +288,42 @@ class BusController extends Controller
     }
 
     /**
+     * Bulk soft-delete ALL buses matching the current filter.
+     *
+     * Mirrors ComplaintController::bulkDeleteAll() — the operator can
+     * filter on screen and remove every matching row, not just the
+     * rows visible on the current page.
+     */
+    public function bulkDeleteAll(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', Bus::class);
+
+        // Large batches can exceed the default 30-second execution limit.
+        @set_time_limit(300);
+
+        $filters = $request->only([
+            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+        ]);
+
+        $filters = array_filter($filters, fn ($v) => filled($v));
+
+        $count = $this->busService->bulkDeleteAllByFilters($filters);
+
+        if ($count === 0) {
+            return redirect()
+                ->route('buses.index')
+                ->with('error', __('messages.flash.none_selected'));
+        }
+
+        return redirect()
+            ->route('buses.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => $count,
+                'items' => 'buses',
+            ]));
+    }
+
+    /**
      * Normalize an array of IDs (handles JSON string input from forms).
      *
      * @return array<int>

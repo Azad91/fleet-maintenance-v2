@@ -236,4 +236,52 @@ class BusDailyStatusController extends Controller
             $filename
         );
     }
+
+    /**
+     * Bulk soft-delete ALL bus daily statuses matching the current filter.
+     *
+     * Reuses the same filter logic as index() / export() so that
+     * "what you see is what you delete".
+     */
+    public function bulkDeleteAll(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', BusDailyStatus::class);
+
+        @set_time_limit(300);
+
+        // Same defaults as index(): missing `date` → today, empty
+        // `date` → all dates.
+        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $dqn = $request->input('dqn');
+        $status = $request->input('status');
+
+        $query = BusDailyStatus::query();
+
+        if ($date) {
+            $query->whereDate('date', $date);
+        }
+
+        if ($dqn) {
+            $query->whereHas('bus', fn ($q) => $q->where('dqn', 'ILIKE', "%{$dqn}%"));
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $count = $query->delete();
+
+        if ($count === 0) {
+            return redirect()
+                ->route('bus-daily-statuses.index')
+                ->with('error', __('messages.flash.none_selected'));
+        }
+
+        return redirect()
+            ->route('bus-daily-statuses.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => $count,
+                'items' => 'statuses',
+            ]));
+    }
 }

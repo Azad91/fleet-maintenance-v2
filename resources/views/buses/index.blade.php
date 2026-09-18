@@ -27,6 +27,12 @@
             <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
                 <i class="bi bi-trash"></i> {{ __('messages.buses.bulk_delete') }}
             </button>
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteAllBtn"
+                    data-total="{{ $buses->total() }}"
+                    {{ $buses->total() === 0 ? 'disabled' : '' }}>
+                <i class="bi bi-trash-fill"></i>
+                {{ __('messages.common.bulk_delete_all') }} ({{ $buses->total() }})
+            </button>
         @endcan
         @can('create', App\Models\Bus::class)
             <a href="{{ route('buses.create') }}" class="btn btn-primary">
@@ -39,6 +45,12 @@
 <form id="bulkForm" method="POST">
     @csrf
     <input type="hidden" name="ids" id="selectedIds" value="">
+</form>
+
+<form id="bulkDeleteAllForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <div id="bulkDeleteAllFilters"></div>
 </form>
 
 <div id="searchResults">
@@ -61,6 +73,11 @@
     const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
     const bulkForm = document.getElementById('bulkForm');
     const selectedIdsInput = document.getElementById('selectedIds');
+
+    const bulkDeleteAllBtn     = document.getElementById('bulkDeleteAllBtn');
+    const bulkDeleteAllForm    = document.getElementById('bulkDeleteAllForm');
+    const bulkDeleteAllFilters = document.getElementById('bulkDeleteAllFilters');
+    const DELETE_ALL_LABEL     = @json(__('messages.common.bulk_delete_all'));
 
     const translations = {
         bulk_deactivate: @json(__('messages.buses.bulk_deactivate')),
@@ -85,6 +102,19 @@
             bulkDeleteBtn.disabled = count === 0;
             bulkDeleteBtn.innerHTML = `<i class="bi bi-trash"></i> ${translations.bulk_delete} (${count})`;
         }
+    }
+
+    function syncBulkDeleteAllButton() {
+        if (! bulkDeleteAllBtn) return;
+
+        const counter = document.querySelector('#searchResults .total-count');
+        const newTotal = counter?.dataset.count || '0';
+
+        bulkDeleteAllBtn.dataset.total = newTotal;
+        bulkDeleteAllBtn.disabled = newTotal === '0';
+        bulkDeleteAllBtn.innerHTML =
+            '<i class="bi bi-trash-fill"></i> '
+            + DELETE_ALL_LABEL + ' (' + newTotal + ')';
     }
 
     document.addEventListener('change', function (e) {
@@ -158,6 +188,35 @@
         );
     });
 
+    // ════════════════════════════════════════════════════════════════
+    // DELETE ALL MATCHING FILTER
+    // ════════════════════════════════════════════════════════════════
+
+    if (bulkDeleteAllBtn && bulkDeleteAllForm && bulkDeleteAllFilters) {
+        bulkDeleteAllBtn.addEventListener('click', () => {
+            const total = parseInt(bulkDeleteAllBtn.dataset.total, 10) || 0;
+
+            if (total === 0) return;
+
+            const message = @json(__('messages.common.bulk_delete_all_confirm'))
+                .replace(':count', total);
+
+            if (! confirm(message)) return;
+
+            bulkDeleteAllFilters.innerHTML = '';
+            collectFilters().forEach((value, key) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                bulkDeleteAllFilters.appendChild(input);
+            });
+
+            bulkDeleteAllForm.action = "{{ route('buses.bulk.delete-all') }}";
+            bulkDeleteAllForm.submit();
+        });
+    }
+
     let searchTimeout = null;
 
     function collectFilters() {
@@ -205,6 +264,7 @@
 
             selectedIds.clear();
             updateBulkButtons();
+            syncBulkDeleteAllButton();
         })
         .catch(error => {
             console.error('Bus search error:', error);
@@ -231,6 +291,7 @@
     });
 
     updateBulkButtons();
+    syncBulkDeleteAllButton();
 })();
 </script>
 @endsection

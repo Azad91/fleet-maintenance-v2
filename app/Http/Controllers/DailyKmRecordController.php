@@ -256,4 +256,45 @@ class DailyKmRecordController extends Controller
             $filename
         );
     }
+
+    /**
+     * Bulk soft-delete ALL daily KM records matching the current filter.
+     *
+     * Reuses the same filter logic as index() / export() so that
+     * "what you see is what you delete".
+     */
+    public function bulkDeleteAll(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', DailyKmRecord::class);
+
+        @set_time_limit(300);
+
+        $date = $request->has('date') ? $request->input('date') : now()->toDateString();
+        $dqn = $request->input('dqn');
+
+        $query = DailyKmRecord::query();
+
+        if ($date) {
+            $query->whereDate('date', $date);
+        }
+
+        if ($dqn) {
+            $query->whereHas('bus', fn ($q) => $q->where('dqn', 'ILIKE', "%{$dqn}%"));
+        }
+
+        $count = $query->delete();
+
+        if ($count === 0) {
+            return redirect()
+                ->route('daily-km-records.index')
+                ->with('error', __('messages.flash.none_selected'));
+        }
+
+        return redirect()
+            ->route('daily-km-records.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => $count,
+                'items' => 'KM records',
+            ]));
+    }
 }

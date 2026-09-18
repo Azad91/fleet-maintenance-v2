@@ -14,7 +14,8 @@
                         <th>{{ __('messages.buses.col_route') }}</th>
                         <th>{{ __('messages.buses.col_dqn') }}</th>
                         <th>{{ __('messages.buses.col_engine') }}</th>
-                        <th style="width: 150px; text-align: center;">📊 {{ __('messages.buses.col_daily_km') }}</th>                        <th style="width: 150px; text-align: center;">{{ __('messages.common.actions') }}</th>
+                        <th style="width: 150px; text-align: center;">📊 {{ __('messages.buses.col_daily_km') }}</th>
+                        <th style="width: 150px; text-align: center;">{{ __('messages.common.actions') }}</th>
                     </tr>
                     <tr id="busTableFilter" style="background-color: #f8f9fa;">
                         <th></th>
@@ -140,3 +141,6 @@
         @endif
     </div>
 </div>
+
+{{-- Total count for the header badge (read by JS after each search) --}}
+<span class="total-count d-none" data-count="{{ $buses->total() }}"></span>

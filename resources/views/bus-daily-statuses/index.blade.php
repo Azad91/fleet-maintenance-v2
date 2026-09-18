@@ -14,7 +14,15 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📋 {{ __('messages.daily_status.title') }}</h1>
     @if($canManageDailyStatus)
-    <div>
+    <div class="d-flex gap-2">
+        @can('delete', App\Models\BusDailyStatus::class)
+            <button type="button" class="btn btn-outline-danger" id="bulkDeleteAllBtn"
+                    data-total="{{ $statuses->total() }}"
+                    {{ $statuses->total() === 0 ? 'disabled' : '' }}>
+                <i class="bi bi-trash-fill"></i>
+                {{ __('messages.common.bulk_delete_all') }} ({{ $statuses->total() }})
+            </button>
+        @endcan
         <a href="{{ route('bus-daily-statuses.import') }}" class="btn btn-success">
             <i class="bi bi-upload"></i> {{ __('messages.daily_status.import') }}
         </a>
@@ -24,6 +32,13 @@
     </div>
     @endif
 </div>
+
+{{-- Hidden form for "delete all matching filter" --}}
+<form id="bulkDeleteAllForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <div id="bulkDeleteAllFilters"></div>
+</form>
 
 {{-- ─── Filter panel ─── --}}
 <div class="card mb-4">
@@ -140,4 +155,57 @@
 <div class="pagination-wrapper d-flex justify-content-center mt-4">
     {{ $statuses->withQueryString()->links() }}
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // ════════════════════════════════════════════════════════════════
+    // DELETE ALL MATCHING FILTER
+    // ════════════════════════════════════════════════════════════════
+
+    (function () {
+        const btn = document.getElementById('bulkDeleteAllBtn');
+        const form = document.getElementById('bulkDeleteAllForm');
+        const filtersContainer = document.getElementById('bulkDeleteAllFilters');
+
+        if (! btn || ! form || ! filtersContainer) return;
+
+        btn.addEventListener('click', () => {
+            const total = parseInt(btn.dataset.total, 10) || 0;
+
+            if (total === 0) return;
+
+            const message = @json(__('messages.common.bulk_delete_all_confirm'))
+                .replace(':count', total);
+
+            if (! confirm(message)) return;
+
+            // Reuse the same values as the visible filter form.
+            const date = document.getElementById('date')?.value ?? '';
+            const dqn = document.getElementById('dqn')?.value ?? '';
+            const status = document.getElementById('status')?.value ?? '';
+
+            filtersContainer.innerHTML = '';
+
+            if (date !== '') {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = 'date'; i.value = date;
+                filtersContainer.appendChild(i);
+            }
+            if (dqn !== '') {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = 'dqn'; i.value = dqn;
+                filtersContainer.appendChild(i);
+            }
+            if (status !== '') {
+                const i = document.createElement('input');
+                i.type = 'hidden'; i.name = 'status'; i.value = status;
+                filtersContainer.appendChild(i);
+            }
+
+            form.action = "{{ route('bus-daily-statuses.bulk.delete-all') }}";
+            form.submit();
+        });
+    })();
+</script>
 @endsection
