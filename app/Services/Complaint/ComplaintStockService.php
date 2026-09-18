@@ -55,8 +55,6 @@ class ComplaintStockService
             $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
 
             // ── Inspection / repair-only row ──
-            // The part was worked on but no stock was consumed. We record
-            // it for documentation, but skip every stock mutation.
             if ($usedQuantity <= 0) {
                 $processed[] = [
                     'shikayet_index' => $detail['shikayet_index'] ?? 0,
@@ -64,6 +62,7 @@ class ComplaintStockService
                     'name'           => $detail['name'] ?? $code,
                     'stock_quantity' => 0,
                     'used_quantity'  => 0,
+                    'price_at_use'   => 0,           // ← YENİ
                     'employee_id'    => $detail['employee_id'] ?? null,
                     'notes'          => $detail['notes'] ?? null,
                     'source_type'    => 'inspection',
@@ -352,6 +351,9 @@ class ComplaintStockService
     ): array {
         $name = $warehouse?->name ?? $stock?->name ?? $code;
 
+        // Price snapshot — see migration 2026_09_18_120000
+        $priceAtUse = $this->resolvePrice($warehouse, $stock, $code);
+
         return [
             'shikayet_index' => $detail['shikayet_index'] ?? 0,
             'code'           => $code,
@@ -360,9 +362,40 @@ class ComplaintStockService
                 ? ($warehouse?->quantity ?? 0)
                 : ($stock?->quantity ?? 0),
             'used_quantity'  => $usedQuantity,
+            'price_at_use'   => $priceAtUse,
             'employee_id'    => $detail['employee_id'] ?? null,
             'notes'          => $detail['notes'] ?? null,
             'source_type'    => $sourceType,
         ];
+    }
+
+    /**
+     * Resolve the unit price to snapshot for this detail row.
+     *
+     *   - warehouse source     → warehouse.price
+     *   - service vehicle      → warehouse.price for the same code in the
+     *                            same garage (vehicle stocks have no price)
+     *   - unknown              → null
+     */
+    private function resolvePrice(
+        ?Warehouse $warehouse,
+        ?ServiceVehicleStock $stock,
+        string $code
+    ): ?float {
+        if ($warehouse !== null) {
+            return $warehouse->price !== null ? (float) $warehouse->price : null;
+        }
+
+        if ($stock !== null) {
+            $fallback = Warehouse::withoutGlobalScopes()
+                ->where('garage_id', $stock->garage_id)
+                ->where('code', $code)
+                ->whereNull('deleted_at')
+                ->value('price');
+
+            return $fallback !== null ? (float) $fallback : null;
+        }
+
+        return null;
     }
 }

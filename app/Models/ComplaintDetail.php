@@ -21,6 +21,7 @@ class ComplaintDetail extends Model
      */
     protected static array $auditExcluded = [
         'stock_quantity',
+        'price_at_use',
     ];
 
     protected $fillable = [
@@ -30,6 +31,7 @@ class ComplaintDetail extends Model
         'name',
         'stock_quantity',
         'used_quantity',
+        'price_at_use',   // ← YENİ
         'source_type',
         'employee_id',
         'notes',
@@ -90,5 +92,19 @@ class ComplaintDetail extends Model
     {
         return in_array($this->source_type, ['warehouse', 'service_vehicle'], true)
             && $this->used_quantity > 0;
+    }
+    /**
+     * Total cost of this detail line — used_quantity × price_at_use.
+     *
+     * Returns null when the price snapshot is unknown (legacy historical
+     * rows, or rows where the warehouse price was NULL at the time of use).
+     */
+    public function getTotalCostAttribute(): ?float
+    {
+        if ($this->price_at_use === null) {
+            return null;
+        }
+
+        return (float) $this->used_quantity * (float) $this->price_at_use;
     }
 }

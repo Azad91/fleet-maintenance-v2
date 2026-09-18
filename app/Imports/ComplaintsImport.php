@@ -280,6 +280,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
         // ── Stock deduction (consumed parts only) ──
         $stockQuantity = 0;
+        $priceAtUse = null;
 
         if ($partCode !== '' && $usedQuantity > 0 && $this->deductStock) {
             $warehouse = $this->resolveWarehouse($partCode);
@@ -301,18 +302,20 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             }
 
             $stockQuantity = $warehouse->quantity;
+            $priceAtUse = $warehouse->price !== null ? (float) $warehouse->price : null;
             $warehouse->decrement('quantity', $usedQuantity);
 
             // Update the cache so subsequent rows see the new quantity.
             $this->warehouseCache[$this->warehouseCacheKey($partCode)] = $warehouse->fresh();
         } elseif ($partCode !== '' && $usedQuantity > 0 && ! $this->deductStock) {
-            // Historical mode: look up name only, never touch quantity.
+            // Historical mode: look up name and price only, never touch quantity.
             $warehouse = $this->resolveWarehouse($partCode);
 
             if ($warehouse) {
                 $partName ??= $warehouse->name;
+                $priceAtUse = $warehouse->price !== null ? (float) $warehouse->price : null;
             }
-        }
+}
 
         // ── Complaint item ──
         if ($description !== '') {
@@ -338,6 +341,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
                 'name' => $partName ?? $partCode,
                 'stock_quantity' => $stockQuantity,
                 'used_quantity' => max(0, $usedQuantity),
+                'price_at_use' => $sourceType === 'inspection' ? 0 : $priceAtUse,   // ← YENİ
                 'source_type' => $sourceType,
                 'employee_id' => $this->resolveEmployeeId($rowArray),
                 'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
