@@ -115,7 +115,74 @@ class ComplaintStockService
                 continue;
             }
 
-            // ... qalan kod eyni qalır
+    /**
+     * Restore stock for the given details (used on complaint delete
+     * or when replacing details during an update).
+     *
+     * The `source_type` recorded on each detail decides where the
+     * stock goes back to. For `service_vehicle` rows, the caller must
+     * pass the complaint's `service_vehicle_id`.
+     *
+     * @param  array<int, array<string, mixed>>  $details
+     * @param  int|null  $serviceVehicleId  Vehicle to credit when restoring
+     */
+    public function restoreStock(array $details, ?int $serviceVehicleId = null): void
+    {
+        foreach ($details as $detail) {
+            $code = $detail['code'] ?? null;
+            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
+
+            if (empty($code) || $usedQuantity <= 0) {
+                continue;
+            }
+
+            $sourceType = $detail['source_type'] ?? 'warehouse';
+
+            // Historical imports and inspection rows never touched
+            // stock on creation, so there is nothing to restore.
+            if (in_array($sourceType, ['historical', 'inspection'], true)) {
+                continue;
+            }
+
+            // ── Service vehicle: restore to the specific vehicle ──
+            if ($sourceType === 'service_vehicle') {
+                if ($serviceVehicleId === null) {
+                    // Legacy road complaint created before the
+                    // service_vehicle_id column existed — cannot
+                    // restore automatically. Log and skip.
+                    Log::warning('Service vehicle id missing — stock restore skipped', [
+                        'code' => $code,
+                        'quantity' => $usedQuantity,
+                    ]);
+
+                    continue;
+                }
+
+                $this->restoreToSpecificVehicle(
+                    $code,
+                    $usedQuantity,
+                    $serviceVehicleId,
+                    $detail['name'] ?? null
+                );
+
+                continue;
+            }
+
+            // ── Warehouse: restore to the garage warehouse ──
+            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
+
+            if ($warehouse) {
+                $warehouse->increment('quantity', $usedQuantity);
+
+                continue;
+            }
+
+            // Warehouse row not found — this should not happen if the
+            // original deduction succeeded, but log it for safety.
+            Log::warning('Warehouse row not found — stock restore skipped', [
+                'code' => $code,
+                'quantity' => $usedQuantity,
+            ]);
         }
     }
 
