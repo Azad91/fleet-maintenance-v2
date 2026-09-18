@@ -17,7 +17,11 @@ class ComplaintReportService
     {
         $base = Complaint::withoutGlobalScope('garage')
             ->whereIn('garage_id', $scope->garageIds)
-            ->when($scope->userId, fn ($q) => $q->where('created_by', $scope->userId));
+            ->when($scope->userId, fn ($q) => $q->where('created_by', $scope->userId))
+            ->when($scope->brandId, fn ($q) => $q->whereHas(
+                'bus',
+                fn ($bq) => $bq->where('brand_id', $scope->brandId)
+            ));
 
         $opened = (clone $base)
             ->whereBetween('created_at', [$period->from, $period->to])
@@ -56,6 +60,10 @@ class ComplaintReportService
             ->whereIn('garage_id', $scope->garageIds)
             ->whereBetween('created_at', [$period->from, $period->to])
             ->when($scope->userId, fn ($q) => $q->where('created_by', $scope->userId))
+            ->when($scope->brandId, fn ($q) => $q->whereHas(
+                'bus',
+                fn ($bq) => $bq->where('brand_id', $scope->brandId)
+            ))
             ->select('complaint_type', DB::raw('COUNT(*) as total'))
             ->whereNotNull('complaint_type')
             ->groupBy('complaint_type')
@@ -65,6 +73,10 @@ class ComplaintReportService
 
     /**
      * Per-user action counts based on the audit log.
+     *
+     * The brand filter is intentionally NOT applied here: worker
+     * activity counts how many actions each user performed, which is
+     * a user metric independent of which bus they touched.
      */
     public function workerActivity(ReportPeriod $period, ReportScope $scope): Collection
     {
@@ -108,6 +120,7 @@ class ComplaintReportService
             ->whereNull('complaints.deleted_at')
             ->when($scope->userId, fn ($q) => $q->where('complaints.created_by', $scope->userId))
             ->join('buses', 'buses.id', '=', 'complaints.bus_id')
+            ->when($scope->brandId, fn ($q) => $q->where('buses.brand_id', $scope->brandId))
             ->select(
                 'buses.id as bus_id',
                 'buses.dqn',
@@ -131,6 +144,10 @@ class ComplaintReportService
             ->whereNotNull('closed_at')
             ->whereBetween('closed_at', [$period->from, $period->to])
             ->when($scope->userId, fn ($q) => $q->where('created_by', $scope->userId))
+            ->when($scope->brandId, fn ($q) => $q->whereHas(
+                'bus',
+                fn ($bq) => $bq->where('brand_id', $scope->brandId)
+            ))
             ->get(['created_at', 'closed_at', 'complaint_type']);
 
         if ($rows->isEmpty()) {

@@ -6,10 +6,8 @@
     $shellUser = auth()->user();
     $shellIsDirector = $shellUser?->isDirector() ?? false;
 
-    // Route prefix: Director sees director.reports.*, garage users see reports.*
     $shellRoutePrefix = $shellIsDirector ? 'director.' : '';
 
-    // Domain metadata — tabs and titles per domain
     $domainConfig = [
         'warehouse' => [
             'title'   => __('messages.reports.warehouse.title'),
@@ -74,10 +72,6 @@
     $config = $domainConfig[$domain] ?? null;
     abort_unless($config, 404);
 
-    // Filter visible reports:
-    //   - Director sees ALL reports in their company's aggregated data
-    //   - SuperAdmin sees everything
-    //   - Garage user sees only reports matching their role
     if ($shellIsDirector) {
         $visibleReports = $config['reports'];
     } else {
@@ -94,13 +88,38 @@
         });
     }
 
-    // Resolve the effective route name for a given report config entry.
-    // For Director, prefixes with `director.`; otherwise keeps as-is.
     $resolveRoute = function (string $routeName) use ($shellRoutePrefix) {
         return $shellRoutePrefix.$routeName;
     };
 
-    $queryString = request()->only(['period', 'from', 'to']);
+    // Preserve period, custom range AND the brand filter across tab switches.
+    $queryString = request()->only(['period', 'from', 'to', 'brand_id']);
+
+    // ─── Brand filter support ───
+    // Only the three bus-related domains accept a brand filter.
+    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status'];
+    $brandFilterSupported = in_array($domain, $brandSupportedDomains, true);
+
+    $reportBrands = collect();
+    $selectedBrandId = request('brand_id');
+
+    if ($brandFilterSupported) {
+        if ($shellIsDirector) {
+            $directorCompany = $shellUser->activeDirectorCompany();
+
+            $reportBrands = $directorCompany
+                ? \App\Models\BusBrand::withoutGlobalScope('garage')
+                    ->where('company_id', $directorCompany->id)
+                    ->whereNull('deleted_at')
+                    ->orderBy('name')
+                    ->get()
+                : collect();
+        } else {
+            $reportBrands = \App\Models\BusBrand::active()
+                ->orderBy('name')
+                ->get();
+        }
+    }
 @endphp
 
 @section('title', $config['title'])
@@ -114,6 +133,12 @@
                 · {{ $config['eyebrow'] }}
                 @if($shellIsDirector)
                     · {{ __('messages.director.reports.company_scope') }}
+                @endif
+                @if($selectedBrandId && $reportBrands->isNotEmpty())
+                    @php $activeBrand = $reportBrands->firstWhere('id', (int) $selectedBrandId); @endphp
+                    @if($activeBrand)
+                        · <span class="text-primary">{{ $activeBrand->name }}</span>
+                    @endif
                 @endif
             </span>
             <h1>{{ $config['title'] }}</h1>
@@ -144,7 +169,7 @@
         @endforeach
     </div>
 
-    {{-- Period filter --}}
+    {{-- Period & Brand filter --}}
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route($resolveRoute($config['reports'][$activeReport]['route'] ?? array_key_first($config['reports']))) }}">
@@ -158,6 +183,20 @@
                             <option value="custom"  @selected(request('period') === 'custom')>{{ __('messages.reports.period.custom') }}</option>
                         </select>
                     </div>
+
+                    @if($brandFilterSupported)
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">{{ __('messages.reports.brand') }}</label>
+                            <select name="brand_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">{{ __('messages.reports.all_brands') }}</option>
+                                @foreach($reportBrands as $brand)
+                                    <option value="{{ $brand->id }}" @selected($selectedBrandId == $brand->id)>
+                                        {{ $brand->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     @if(request('period') === 'custom')
                         <div class="col-md-3">

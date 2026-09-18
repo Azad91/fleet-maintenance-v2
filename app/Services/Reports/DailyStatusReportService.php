@@ -12,7 +12,6 @@ class DailyStatusReportService
 {
     /**
      * Distribution of statuses in the period.
-     * Returns counts grouped by status text with total sample size.
      */
     public function distribution(ReportPeriod $period, ReportScope $scope): array
     {
@@ -20,7 +19,11 @@ class DailyStatusReportService
             ->whereIn('bus_daily_statuses.garage_id', $scope->garageIds)
             ->whereBetween('bus_daily_statuses.date', [$period->from->toDateString(), $period->to->toDateString()])
             ->whereNull('bus_daily_statuses.deleted_at')
-            ->when($scope->userId, fn ($q) => $q->where('bus_daily_statuses.created_by', $scope->userId));
+            ->when($scope->userId, fn ($q) => $q->where('bus_daily_statuses.created_by', $scope->userId))
+            ->when($scope->brandId, fn ($q) => $q->whereHas(
+                'bus',
+                fn ($bq) => $bq->where('brand_id', $scope->brandId)
+            ));
 
         $rows = (clone $base)
             ->select('status', DB::raw('COUNT(*) as total'))
@@ -38,6 +41,10 @@ class DailyStatusReportService
 
     /**
      * Status changes timeline — the audit log for BusDailyStatus in the period.
+     *
+     * Brand filter is applied via a subquery on the statuses' parent
+     * buses: only audit entries whose subject belongs to a bus of the
+     * selected brand are kept.
      */
     public function changes(ReportPeriod $period, ReportScope $scope): Collection
     {
@@ -46,6 +53,17 @@ class DailyStatusReportService
             ->whereBetween('audit_logs.created_at', [$period->from, $period->to])
             ->whereIn('audit_logs.garage_id', $scope->garageIds)
             ->when($scope->userId, fn ($q) => $q->where('audit_logs.user_id', $scope->userId))
+            ->when($scope->brandId, function ($q) use ($scope) {
+                $q->whereIn('auditable_id', function ($sub) use ($scope) {
+                    $sub->select('id')
+                        ->from('bus_daily_statuses')
+                        ->whereIn('bus_id', function ($sub2) use ($scope) {
+                            $sub2->select('id')
+                                ->from('buses')
+                                ->where('brand_id', $scope->brandId);
+                        });
+                });
+            })
             ->with('user')
             ->orderByDesc('audit_logs.id')
             ->limit(200)
@@ -54,6 +72,8 @@ class DailyStatusReportService
 
     /**
      * Per-user action counts based on the audit log.
+     *
+     * Brand filter intentionally NOT applied — see ComplaintReportService.
      */
     public function workerActivity(ReportPeriod $period, ReportScope $scope): Collection
     {

@@ -15,7 +15,7 @@ class DailyStatusReportController extends ReportController
     public function distribution(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('daily_status');
+        $scope = $this->scope('daily_status', $request);
 
         return $this->render('distribution', $period, $scope, [
             'data' => $this->service->distribution($period, $scope),
@@ -25,7 +25,7 @@ class DailyStatusReportController extends ReportController
     public function changes(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('daily_status');
+        $scope = $this->scope('daily_status', $request);
 
         return $this->render('changes', $period, $scope, [
             'logs' => $this->service->changes($period, $scope),
@@ -35,7 +35,7 @@ class DailyStatusReportController extends ReportController
     public function workerActivity(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('daily_status');
+        $scope = $this->scope('daily_status', $request);
 
         return $this->render('worker-activity', $period, $scope, [
             'rows' => $this->service->workerActivity($period, $scope),

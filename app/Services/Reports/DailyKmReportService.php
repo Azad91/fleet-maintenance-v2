@@ -14,10 +14,7 @@ class DailyKmReportService
     /**
      * Buses with no KM record for TODAY.
      *
-     * This report is intentionally a current-state snapshot:
-     * a bus either has today's KM entry or it does not.
-     * The `$period` argument is accepted for interface consistency
-     * but is not used to compute the target date.
+     * The brand filter narrows the list to a single manufacturer.
      */
     public function missing(ReportPeriod $period, ReportScope $scope): Collection
     {
@@ -27,11 +24,12 @@ class DailyKmReportService
             ->whereIn('buses.garage_id', $scope->garageIds)
             ->where('buses.is_active', true)
             ->whereNull('buses.deleted_at')
+            ->when($scope->brandId, fn ($q) => $q->where('buses.brand_id', $scope->brandId))
             ->whereDoesntHave('dailyKmRecords', function ($q) use ($targetDate) {
                 $q->whereDate('date', $targetDate);
             })
             ->orderBy('buses.dqn')
-            ->get(['buses.id', 'buses.dqn', 'buses.route_number', 'buses.bus_project', 'buses.km']);
+            ->get(['buses.id', 'buses.dqn', 'buses.route_number', 'buses.bus_project', 'buses.km', 'buses.brand_id']);
     }
 
     /**
@@ -39,14 +37,13 @@ class DailyKmReportService
      */
     public function topBuses(ReportPeriod $period, ReportScope $scope): Collection
     {
-        // For each bus, we compute the diff between the highest KM and lowest KM
-        // within the period — that represents distance driven.
         return DailyKmRecord::withoutGlobalScope('garage')
             ->whereIn('daily_km_records.garage_id', $scope->garageIds)
             ->whereBetween('daily_km_records.date', [$period->from->toDateString(), $period->to->toDateString()])
             ->whereNull('daily_km_records.deleted_at')
             ->when($scope->userId, fn ($q) => $q->where('daily_km_records.created_by', $scope->userId))
             ->join('buses', 'buses.id', '=', 'daily_km_records.bus_id')
+            ->when($scope->brandId, fn ($q) => $q->where('buses.brand_id', $scope->brandId))
             ->select(
                 'buses.id as bus_id',
                 'buses.dqn',
@@ -69,6 +66,9 @@ class DailyKmReportService
 
     /**
      * Per-user action counts based on the audit log.
+     *
+     * The brand filter is intentionally NOT applied — see the
+     * ComplaintReportService for the rationale.
      */
     public function workerActivity(ReportPeriod $period, ReportScope $scope): Collection
     {

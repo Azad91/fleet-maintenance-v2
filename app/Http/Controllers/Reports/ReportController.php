@@ -19,11 +19,22 @@ abstract class ReportController extends Controller
 
     /**
      * Resolve the report scope for the given domain.
-     * Domains: 'complaint', 'warehouse', 'daily_km', 'daily_status'.
+     *
+     * Domains: 'complaint', 'warehouse', 'daily_km', 'daily_status', 'transfer'.
+     *
+     * The optional $request is used to read the `brand_id` filter.
+     * Only the three bus-related domains use it; passing null keeps
+     * the previous behavior (no brand filter).
      */
-    protected function scope(string $domain): ReportScope
+    protected function scope(string $domain, ?Request $request = null): ReportScope
     {
-        $scope = ReportScope::for(auth()->user(), $domain);
+        $brandId = null;
+
+        if ($request && $request->filled('brand_id')) {
+            $brandId = (int) $request->input('brand_id');
+        }
+
+        $scope = ReportScope::for(auth()->user(), $domain, $brandId);
 
         abort_unless($scope->hasAccess(), 403, __('messages.reports.no_scope'));
 

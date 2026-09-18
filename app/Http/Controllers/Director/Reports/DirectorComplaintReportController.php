@@ -16,7 +16,7 @@ class DirectorComplaintReportController extends ReportController
     public function summary(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('complaint');
+        $scope = $this->scope('complaint', $request);
 
         return $this->render('summary', $period, $scope, [
             'summary' => $this->service->summary($period, $scope),
@@ -26,7 +26,7 @@ class DirectorComplaintReportController extends ReportController
     public function topTypes(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('complaint');
+        $scope = $this->scope('complaint', $request);
 
         return $this->render('top-types', $period, $scope, [
             'items' => $this->service->topTypes($period, $scope),
@@ -36,7 +36,7 @@ class DirectorComplaintReportController extends ReportController
     public function workerActivity(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('complaint');
+        $scope = $this->scope('complaint', $request);
 
         return $this->render('worker-activity', $period, $scope, [
             'rows' => $this->service->workerActivity($period, $scope),
@@ -46,7 +46,7 @@ class DirectorComplaintReportController extends ReportController
     public function byBus(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('complaint');
+        $scope = $this->scope('complaint', $request);
 
         return $this->render('by-bus', $period, $scope, [
             'items' => $this->service->byBus($period, $scope),
@@ -56,7 +56,7 @@ class DirectorComplaintReportController extends ReportController
     public function avgCloseTime(Request $request): View
     {
         $period = $this->period($request);
-        $scope = $this->scope('complaint');
+        $scope = $this->scope('complaint', $request);
 
         return $this->render('avg-close-time', $period, $scope, [
             'data' => $this->service->avgCloseTime($period, $scope),

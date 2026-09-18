@@ -19,6 +19,11 @@ use App\Services\GarageContext;
  *     • Worker         → only their own records
  *
  *   Read-only        — Super Admin + Director see aggregates only.
+ *
+ *   Brand filter     — optional manufacturer filter. When set, only
+ *                      records belonging to buses of that brand are
+ *                      counted. Supported domains: complaint,
+ *                      daily_km, daily_status.
  */
 class ReportScope
 {
@@ -30,9 +35,10 @@ class ReportScope
         public readonly ?int $userId,
         public readonly bool $readOnly,
         public readonly bool $aggregateOnly = false,
+        public readonly ?int $brandId = null,
     ) {}
 
-    public static function for(User $user, string $domain): self
+    public static function for(User $user, string $domain, ?int $brandId = null): self
     {
         // Super Admin: full platform, read-only aggregates
         if ($user->isSuperAdmin()) {
@@ -41,6 +47,7 @@ class ReportScope
                 userId: null,
                 readOnly: true,
                 aggregateOnly: true,
+                brandId: $brandId,
             );
         }
 
@@ -53,6 +60,7 @@ class ReportScope
                 userId: null,
                 readOnly: true,
                 aggregateOnly: true,
+                brandId: $brandId,
             );
         }
 
@@ -69,11 +77,20 @@ class ReportScope
             userId: $userId,
             readOnly: false,
             aggregateOnly: false,
+            brandId: $brandId,
         );
     }
 
     public function hasAccess(): bool
     {
         return ! empty($this->garageIds);
+    }
+
+    /**
+     * True when a brand filter is currently active.
+     */
+    public function hasBrandFilter(): bool
+    {
+        return $this->brandId !== null;
     }
 }
