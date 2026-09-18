@@ -10,6 +10,7 @@ class BusService
     public function getPaginatedBuses(?string $search = null, int $perPage = 15): LengthAwarePaginator
     {
         $query = Bus::with([
+            'brand',
             'latestKmRecord',
             'dailyKmRecords' => fn ($q) => $q->limit(2),
         ]);
@@ -28,9 +29,15 @@ class BusService
     public function advancedSearch(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         $query = Bus::with([
+            'brand',
             'latestKmRecord',
             'dailyKmRecords' => fn ($q) => $q->limit(2),
         ]);
+
+        // Brand filter uses an exact match because it is a foreign key.
+        if (! empty($filters['brand_id'])) {
+            $query->where('brand_id', (int) $filters['brand_id']);
+        }
 
         $searchableFields = [
             'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
@@ -78,7 +85,6 @@ class BusService
             return;
         }
 
-        // Capture the audit trail before mutating the database.
         Bus::auditBulkUpdate(
             $ids,
             ['is_active' => $isActive],
@@ -107,18 +113,14 @@ class BusService
 
     /**
      * Bulk soft-delete ALL buses matching the given filters.
-     *
-     * Unlike bulkDelete() which operates on an explicit list of IDs,
-     * this method rebuilds the same query as advancedSearch() so that
-     * the operator can delete every row matching the current filter
-     * in one action — not just the rows visible on the current page.
-     *
-     * @param  array<string, mixed>  $filters
-     * @return int  Number of buses actually deleted
      */
     public function bulkDeleteAllByFilters(array $filters): int
     {
         $query = Bus::query();
+
+        if (! empty($filters['brand_id'])) {
+            $query->where('brand_id', (int) $filters['brand_id']);
+        }
 
         $searchableFields = [
             'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',

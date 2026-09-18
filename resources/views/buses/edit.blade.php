@@ -24,6 +24,19 @@
 
             <div class="row g-3">
                 <div class="col-md-6">
+                    <label for="brand_id" class="form-label fw-bold">{{ __('messages.buses.brand') }}</label>
+                    <select class="form-select" id="brand_id" name="brand_id">
+                        <option value="">{{ __('messages.common.select') }}</option>
+                        @foreach($brands as $brand)
+                            <option value="{{ $brand->id }}" @selected(old('brand_id', $bus->brand_id) == $brand->id)>
+                                {{ $brand->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">{{ __('messages.buses.brand_hint') }}</small>
+                </div>
+
+                <div class="col-md-6">
                     <label for="bus_project" class="form-label fw-bold">{{ __('messages.buses.bus_project') }}</label>
                     <input type="text" class="form-control" id="bus_project" name="bus_project"
                            value="{{ old('bus_project', $bus->bus_project) }}">

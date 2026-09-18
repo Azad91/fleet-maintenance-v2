@@ -9,6 +9,20 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class BusesImport extends AbstractImport implements ToModel, WithChunkReading, WithHeadingRow
 {
+    /**
+     * @param  int|null  $garageId    Positive for tenant imports.
+     * @param  int|null  $companyId   Optional, used for strict company scoping.
+     * @param  int|null  $brandId     Optional default brand for every imported bus.
+     *                                Selected by the operator on the import form.
+     */
+    public function __construct(
+        ?int $garageId = null,
+        ?int $companyId = null,
+        public readonly ?int $brandId = null,
+    ) {
+        parent::__construct($garageId, $companyId);
+    }
+
     public function model(array $row)
     {
         $currentRow = $this->nextRowIndex();
@@ -49,6 +63,7 @@ class BusesImport extends AbstractImport implements ToModel, WithChunkReading, W
         $bus->fill([
             'garage_id' => $this->garageId,
             'company_id' => $this->companyId,
+            'brand_id' => $this->brandId,
             'dqn' => $dqn,
             'bus_project' => $row['bus_project'] ?? null,
             'vin' => $row['vin'] ?? null,

@@ -56,6 +56,7 @@
 <div id="searchResults">
     @include('buses.partials.table', [
         'buses' => $buses,
+        'brands' => $brands,
         'isEmpty' => $isEmpty ?? $buses->isEmpty(),
         'hasActiveFilters' => $hasActiveFilters ?? false,
     ])
@@ -191,10 +192,6 @@
     // ════════════════════════════════════════════════════════════════
     // DELETE ALL MATCHING FILTER
     // ════════════════════════════════════════════════════════════════
-    //
-    // collectFilters() returns a plain object, so we must iterate with
-    // Object.entries() — not .forEach(), which only exists on Maps,
-    // Sets, and arrays.
 
     if (bulkDeleteAllBtn && bulkDeleteAllForm && bulkDeleteAllFilters) {
         bulkDeleteAllBtn.addEventListener('click', () => {
@@ -225,10 +222,10 @@
 
     function collectFilters() {
         const filters = {};
-        document.querySelectorAll('#busTableFilter input[name]').forEach(input => {
-            const value = input.value.trim();
+        document.querySelectorAll('#busTableFilter input[name], #busTableFilter select[name]').forEach(el => {
+            const value = (el.value || '').trim();
             if (value !== '') {
-                filters[input.name] = value;
+                filters[el.name] = value;
             }
         });
         return filters;
@@ -283,6 +280,13 @@
     document.addEventListener('input', function (e) {
         if (e.target.matches('#busTableFilter input[name]')) {
             scheduleSearch();
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        if (e.target.matches('#busTableFilter select[name]')) {
+            clearTimeout(searchTimeout);
+            performSearch();
         }
     });
 

@@ -8,6 +8,7 @@
                             <input type="checkbox" id="selectAll">
                         </th>
                         <th style="width: 50px; text-align: center;">#</th>
+                        <th>{{ __('messages.buses.col_brand') }}</th>
                         <th>{{ __('messages.buses.col_project') }}</th>
                         <th>{{ __('messages.buses.col_vin') }}</th>
                         <th>{{ __('messages.buses.col_length') }}</th>
@@ -20,6 +21,16 @@
                     <tr id="busTableFilter" style="background-color: #f8f9fa;">
                         <th></th>
                         <th></th>
+                        <th>
+                            <select class="form-select form-select-sm" name="brand_id" style="font-size: 13px;">
+                                <option value="">{{ __('messages.buses.filter_all_brands') }}</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->id }}" @selected(request('brand_id') == $brand->id)>
+                                        {{ $brand->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </th>
                         <th>
                             <input type="text" class="form-control form-control-sm" name="bus_project"
                                 placeholder="🔍 {{ __('messages.buses.filter_project') }}" style="font-size: 13px;"
@@ -61,6 +72,13 @@
                             <input type="checkbox" class="bus-checkbox" value="{{ $bus->id }}">
                         </td>
                         <td style="text-align: center;">{{ $buses->firstItem() + $loop->index }}</td>
+                        <td>
+                            @if($bus->brand)
+                                <span class="badge bg-info text-dark">{{ $bus->brand->name }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td>{{ $bus->bus_project ?? '-' }}</td>
                         <td>{{ $bus->vin ?? '-' }}</td>
                         <td>{{ $bus->uzunluq ? number_format($bus->uzunluq, 1) . ' m' : '-' }}</td>
@@ -104,7 +122,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-4">
+                        <td colspan="11" class="text-center text-muted py-4">
                             <i class="bi bi-bus-front" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                             @if($hasActiveFilters ?? false)
                                 <p class="mb-2">{{ __('messages.buses.no_results') }}</p>

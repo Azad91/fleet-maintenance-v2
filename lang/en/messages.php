@@ -227,6 +227,13 @@ return [
         'current_status' => 'Current Status',
         'status_month'   => 'Month',
         'status_summary' => 'Monthly Summary',
+        'brand' => 'Brand',
+        'brand_hint' => 'Optional — assign this bus to a manufacturer for reporting.',
+        'col_brand' => 'BRAND',
+        'filter_all_brands' => 'All brands',
+        'import_no_brand' => '— No brand —',
+        'import_brand_hint' => 'Pick a brand to assign it to every bus in this file. Leave blank if the file contains mixed brands.',
+        'no_brands_hint' => 'No brands yet. Create one first to categorize imported buses.',
     ],
 
     // ==================== COMPLAINTS ====================

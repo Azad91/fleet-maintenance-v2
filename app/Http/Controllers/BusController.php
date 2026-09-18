@@ -6,6 +6,7 @@ use App\Http\Requests\BusStoreRequest;
 use App\Http\Requests\BusUpdateRequest;
 use App\Imports\BusesImport;
 use App\Models\Bus;
+use App\Models\BusBrand;
 use App\Services\BusService;
 use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
@@ -25,8 +26,11 @@ class BusController extends Controller
 
         $buses = $this->busService->getPaginatedBuses(null, config('settings.pagination', 15));
 
+        $brands = BusBrand::active()->orderBy('name')->get();
+
         return view('buses.index', [
             'buses' => $buses,
+            'brands' => $brands,
             'isEmpty' => $buses->isEmpty(),
             'hasActiveFilters' => false,
         ]);
@@ -37,7 +41,7 @@ class BusController extends Controller
         $this->authorize('viewAny', Bus::class);
 
         $filters = $request->only([
-            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+            'brand_id', 'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
         ]);
 
         $filters = array_filter($filters, fn ($v) => filled($v));
@@ -47,14 +51,16 @@ class BusController extends Controller
             (int) config('settings.pagination', 15)
         );
 
+        $brands = BusBrand::active()->orderBy('name')->get();
+
         $isEmpty = $buses->isEmpty();
         $hasActiveFilters = ! empty($filters);
 
         if ($this->isAjaxRequest($request)) {
-            return view('buses.partials.table', compact('buses', 'isEmpty', 'hasActiveFilters'))->render();
+            return view('buses.partials.table', compact('buses', 'brands', 'isEmpty', 'hasActiveFilters'))->render();
         }
 
-        return view('buses.index', compact('buses', 'isEmpty', 'hasActiveFilters'));
+        return view('buses.index', compact('buses', 'brands', 'isEmpty', 'hasActiveFilters'));
     }
 
     private function isAjaxRequest(Request $request): bool
@@ -65,7 +71,7 @@ class BusController extends Controller
 
     public function show(Request $request, int $id): View
     {
-        $bus = Bus::with('latestDailyStatus')->findOrFail($id);
+        $bus = Bus::with(['brand', 'latestDailyStatus'])->findOrFail($id);
         $this->authorize('view', $bus);
 
         // ─── KM records (paginated) ───
@@ -73,10 +79,6 @@ class BusController extends Controller
             ->paginate(30, ['*'], 'km_page')
             ->withQueryString();
 
-        // Compute daily distance for every record on this page.
-        // To compute the diff for the OLDEST record shown, we need the
-        // record just before it — which may live on a previous page.
-        // Fetch it explicitly (1 extra query per page).
         $kmItems = $kmRecords->items();
         $oldestOnPage = ! empty($kmItems) ? $kmItems[count($kmItems) - 1] : null;
         $previousOfOldest = $oldestOnPage
@@ -92,8 +94,6 @@ class BusController extends Controller
         $kmRecords->setCollection(collect($kmItems));
 
         // ─── Status records — filtered by month ───
-        // Defaults to the current month. The user navigates to earlier
-        // months via the ?status_month=YYYY-MM query string.
         $statusMonth = $request->input('status_month');
 
         if (! is_string($statusMonth) || ! preg_match('/^\d{4}-\d{2}$/', $statusMonth)) {
@@ -114,9 +114,8 @@ class BusController extends Controller
             ->paginate(31, ['*'], 'status_page')
             ->withQueryString();
 
-        // ─── Monthly status summary (aggregated for the KPI panel) ───
         $monthlySummary = $bus->dailyStatuses()
-            ->reorder()   // ← İşin sehrli açarı: relation-in default `orderBy('date', 'desc')`-ını silir
+            ->reorder()
             ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
             ->select('status', DB::raw('COUNT(*) as days'))
             ->groupBy('status')
@@ -138,7 +137,9 @@ class BusController extends Controller
     {
         $this->authorize('create', Bus::class);
 
-        return view('buses.create');
+        $brands = BusBrand::active()->orderBy('name')->get();
+
+        return view('buses.create', compact('brands'));
     }
 
     public function store(BusStoreRequest $request): RedirectResponse
@@ -153,10 +154,12 @@ class BusController extends Controller
 
     public function edit(int $id): View
     {
-        $bus = Bus::findOrFail($id);
+        $bus = Bus::with('brand')->findOrFail($id);
         $this->authorize('update', $bus);
 
-        return view('buses.edit', compact('bus'));
+        $brands = BusBrand::active()->orderBy('name')->get();
+
+        return view('buses.edit', compact('bus', 'brands'));
     }
 
     public function update(BusUpdateRequest $request, int $id): RedirectResponse
@@ -185,16 +188,14 @@ class BusController extends Controller
     {
         $this->authorize('import', Bus::class);
 
-        return view('buses.import');
+        $brands = BusBrand::active()->orderBy('name')->get();
+
+        return view('buses.import', compact('brands'));
     }
 
     public function import(Request $request): RedirectResponse
     {
-        // Garage context must be resolved BEFORE authorization. The
-        // BusPolicy reads the current garage id via hasGarageRole(),
-        // so without a garage the policy returns false and the user
-        // would see a confusing 403 instead of being sent to garage
-        // selection. Resolving first makes the failure mode clear.
+        // Garage context must be resolved BEFORE authorization.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -204,12 +205,20 @@ class BusController extends Controller
         }
 
         $this->authorize('import', Bus::class);
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:10240']);
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'brand_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('bus_brands', 'id')->where('garage_id', $garageId),
+            ],
+        ]);
 
         try {
             $import = new BusesImport(
                 $garageId,
                 GarageContext::resolveCompanyId(),
+                $request->filled('brand_id') ? (int) $request->input('brand_id') : null,
             );
 
             Excel::import($import, $request->file('file'));
@@ -289,20 +298,15 @@ class BusController extends Controller
 
     /**
      * Bulk soft-delete ALL buses matching the current filter.
-     *
-     * Mirrors ComplaintController::bulkDeleteAll() — the operator can
-     * filter on screen and remove every matching row, not just the
-     * rows visible on the current page.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
         $this->authorize('delete', Bus::class);
 
-        // Large batches can exceed the default 30-second execution limit.
         @set_time_limit(300);
 
         $filters = $request->only([
-            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+            'brand_id', 'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
         ]);
 
         $filters = array_filter($filters, fn ($v) => filled($v));
@@ -323,11 +327,6 @@ class BusController extends Controller
             ]));
     }
 
-    /**
-     * Normalize an array of IDs (handles JSON string input from forms).
-     *
-     * @return array<int>
-     */
     private function normalizeIds(mixed $ids): array
     {
         if (is_string($ids)) {

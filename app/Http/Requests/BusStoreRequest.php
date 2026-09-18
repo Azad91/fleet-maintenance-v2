@@ -18,6 +18,10 @@ class BusStoreRequest extends FormRequest
         $garageId = GarageContext::getGarageId();
 
         return [
+            'brand_id' => [
+                'nullable',
+                Rule::exists('bus_brands', 'id')->where('garage_id', $garageId),
+            ],
             'bus_project' => 'nullable|string|max:255',
             'vin' => 'nullable|string|max:17',
             'uzunluq' => 'nullable|numeric|min:0',

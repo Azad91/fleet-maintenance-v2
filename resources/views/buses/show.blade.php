@@ -14,6 +14,9 @@
                 @endif
             </h1>
             <p class="text-muted mb-0">
+                @if($bus->brand)
+                    <span class="badge bg-info text-dark">{{ $bus->brand->name }}</span> ·
+                @endif
                 {{ $bus->bus_project ?? __('messages.dashboard.model_not_specified') }}
                 @if($bus->is_active)
                     · <span class="badge bg-success">{{ __('messages.buses.status_active') }}</span>
@@ -58,13 +61,15 @@
     </ul>
 
     <div class="tab-content" id="busTabContent">
-        {{-- ═══════════════════════════════════════════════════ --}}
-        {{-- TAB 1: General info                                 --}}
-        {{-- ═══════════════════════════════════════════════════ --}}
+        {{-- TAB 1: General info --}}
         <div class="tab-pane fade show active" id="general-pane" role="tabpanel">
             <div class="card">
                 <div class="card-body">
                     <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">{{ __('messages.buses.brand') }}</small>
+                            <strong>{{ $bus->brand?->name ?? '—' }}</strong>
+                        </div>
                         <div class="col-md-4">
                             <small class="text-muted d-block">{{ __('messages.buses.bus_project') }}</small>
                             <strong>{{ $bus->bus_project ?? '—' }}</strong>
@@ -119,12 +124,8 @@
             </div>
         </div>
 
-        {{-- ═══════════════════════════════════════════════════ --}}
-        {{-- TAB 2: KM history                                  --}}
-        {{-- ═══════════════════════════════════════════════════ --}}
+        {{-- TAB 2: KM history --}}
         <div class="tab-pane fade" id="km-pane" role="tabpanel">
-
-            {{-- Current KM KPI card --}}
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <div class="card">
@@ -207,12 +208,8 @@
             </div>
         </div>
 
-        {{-- ═══════════════════════════════════════════════════ --}}
-        {{-- TAB 3: Status history                              --}}
-        {{-- ═══════════════════════════════════════════════════ --}}
+        {{-- TAB 3: Status history --}}
         <div class="tab-pane fade" id="status-pane" role="tabpanel">
-
-            {{-- ─── KPI: Current Status ─── --}}
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <div class="card">
@@ -243,7 +240,6 @@
                 </div>
             </div>
 
-            {{-- ─── Month filter + Monthly summary ─── --}}
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row g-3 align-items-start">
@@ -277,7 +273,6 @@
                 </div>
             </div>
 
-            {{-- ─── Status history table ─── --}}
             <div class="card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -328,11 +323,6 @@
 
 @section('scripts')
 <script>
-    // Persist the active tab in the URL hash so that:
-    //   1. Reloading the page keeps the user on the same tab.
-    //   2. Copying the link (e.g. #km) opens directly on that tab.
-    //   3. Paginating through KM history does not silently reset
-    //      back to the General tab.
     (function () {
         const hash = window.location.hash.replace('#', '');
         if (hash === 'km' || hash === 'status' || hash === 'general') {

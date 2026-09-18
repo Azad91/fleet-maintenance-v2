@@ -6,45 +6,43 @@ use App\Services\GarageContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class BusBrandUpdateRequest extends FormRequest
+class BusUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
 
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'name' => trim((string) $this->input('name')),
-            'code' => mb_strtoupper(trim((string) $this->input('code'))),
-        ]);
-    }
-
     public function rules(): array
     {
-        $brandId = $this->route('busBrand')?->id;
+        $busId = $this->route('bus');
         $garageId = GarageContext::getGarageId();
 
         return [
-            'name' => [
-                'required',
+            'brand_id' => [
+                'nullable',
+                Rule::exists('bus_brands', 'id')->where('garage_id', $garageId),
+            ],
+            'bus_project' => 'nullable|string|max:255',
+            'vin' => 'nullable|string|max:17',
+            'uzunluq' => 'nullable|numeric|min:0',
+            'route_number' => [
+                'nullable',
                 'string',
-                'max:100',
-                Rule::unique('bus_brands', 'name')
+                'max:255',
+                Rule::unique('buses', 'route_number')
                     ->where('garage_id', $garageId)
                     ->whereNull('deleted_at')
-                    ->ignore($brandId),
+                    ->ignore($busId),
             ],
-            'code' => [
+            'dqn' => [
                 'required',
-                'string',
-                'max:50',
-                Rule::unique('bus_brands', 'code')
+                Rule::unique('buses', 'dqn')
                     ->where('garage_id', $garageId)
                     ->whereNull('deleted_at')
-                    ->ignore($brandId),
+                    ->ignore($busId),
             ],
+            'engine_number' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
         ];
     }

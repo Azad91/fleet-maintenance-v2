@@ -8,6 +8,16 @@
         <h4>📂 {{ __('messages.buses.import_title') }}</h4>
     </div>
     <div class="card-body">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{ route('buses.import.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
@@ -26,6 +36,33 @@
                     <i class="bi bi-exclamation-triangle"></i>
                     <strong>#</strong> {{ __('messages.buses.import_note_auto') }}
                 </p>
+            </div>
+
+            {{-- ─── Brand selection ─── --}}
+            <div class="card mb-3" style="border: 1px solid #bfdbfe; background: #eff6ff;">
+                <div class="card-body">
+                    <label for="brand_id" class="form-label fw-bold">
+                        <i class="bi bi-tag"></i> {{ __('messages.buses.brand') }}
+                    </label>
+                    <select class="form-select" id="brand_id" name="brand_id">
+                        <option value="">{{ __('messages.buses.import_no_brand') }}</option>
+                        @foreach($brands as $brand)
+                            <option value="{{ $brand->id }}" @selected(old('brand_id') == $brand->id)>
+                                {{ $brand->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        {{ __('messages.buses.import_brand_hint') }}
+                    </small>
+                    @if($brands->isEmpty())
+                        <div class="alert alert-warning mt-2 mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            {{ __('messages.buses.no_brands_hint') }}
+                            — <a href="{{ route('bus-brands.create') }}">{{ __('messages.bus_brands.new') }}</a>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <div class="mb-3">
