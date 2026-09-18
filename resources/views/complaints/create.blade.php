@@ -265,12 +265,9 @@
 
     // ═══════════════════════════════════════════════════════════════
     // COMPLAINT TYPE → LOCATION
-<<<<<<< HEAD
     //
     // `resetLocation` — false on page load (so old('yer') survives),
     // true when the user changes a radio (so the location resets).
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     // ═══════════════════════════════════════════════════════════════
     function handleComplaintTypeChange(resetLocation) {
         if (typeof resetLocation === 'undefined') {
@@ -283,10 +280,7 @@
 
         if (!roadRadio || !garageRadio) return;
 
-<<<<<<< HEAD
         // Re-enable both radios (a previous maintenance selection may have left them disabled)
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
         roadRadio.disabled = false;
         garageRadio.disabled = false;
 
@@ -308,10 +302,7 @@
             document.getElementById('serviceTypeBlock').style.display = 'block';
             document.getElementById('complaintsLabel').innerHTML = '📝 ' + @json(__('messages.complaints.service_type_label'));
 
-<<<<<<< HEAD
             // Disable the complaint selects so HTML5 validation does not block submit
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
             document.querySelectorAll('#complaintsDropdown select[name="complaints[]"]').forEach(el => {
                 el.disabled = true;
                 el.required = false;
@@ -518,10 +509,7 @@
     // ═══════════════════════════════════════════════════════════════
     // DETAILS (add / remove)
     // ═══════════════════════════════════════════════════════════════
-<<<<<<< HEAD
     // Starting index coming from the server (max key in old input + 1)
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     let detailCount = parseInt(document.getElementById('detailCountValue')?.value || '1', 10) || 1;
 
     function addDetail() {
@@ -631,11 +619,8 @@
     // INIT
     // ═══════════════════════════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
-<<<<<<< HEAD
         // ⚡ Page load → do NOT reset the location (so old('yer') survives).
         //    When the user changes a radio, onchange defaults to reset = true.
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
         handleComplaintTypeChange(false);
         toggleFields();
     });

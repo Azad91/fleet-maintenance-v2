@@ -5,11 +5,8 @@
     $isCreate = ! ($complaint->exists ?? false);
 
     // ─── Defaults for create ───
-<<<<<<< HEAD
     // When creating a card, start_date = today and start_time = now.
     // When validation fails, the old() value takes precedence.
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     $defaultStartDate = $isCreate ? now()->format('Y-m-d') : '';
     $defaultStartTime = $isCreate ? now()->format('H:i') : '';
 
@@ -28,10 +25,7 @@
         $detailsData = [];
     }
 
-<<<<<<< HEAD
     // Starting index for a new detail row — the largest existing key + 1
-=======
->>>>>>> 841e96a543425f541dda6b069fa8df1c7563e1cc
     $detailCount = 1;
     if (! empty($detailsData)) {
         $numericKeys = array_filter(array_keys($detailsData), 'is_numeric');
