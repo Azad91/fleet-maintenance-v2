@@ -111,6 +111,10 @@
                         || ($currentUser?->hasGarageRole(array_merge(
                             RoleEnum::warehouseRoles()
                         )) ?? false);
+                    $canViewMaintenanceReports = $isSuperAdmin || $isAdmin
+                        || ($currentUser?->hasGarageRole(array_merge(
+                            RoleEnum::complaintRoles()
+                        )) ?? false);
                 @endphp
 
                 {{-- ==================== SUPER ADMIN MENU ==================== --}}
@@ -251,6 +255,11 @@
                 @if($canViewTransferReports)
                     <a href="{{ route('reports.transfer.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.transfer.*') ? 'is-active' : '' }}">
                         <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.report.title') }}</span>
+                    </a>
+                @endif
+                @if($canViewMaintenanceReports)
+                    <a href="{{ route('reports.maintenance.summary') }}" class="fleet-nav__link {{ request()->routeIs('reports.maintenance.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-wrench"></i><span>{{ __('messages.reports.maintenance.title') }}</span>
                     </a>
                 @endif
             @endif

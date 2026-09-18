@@ -67,6 +67,18 @@
                 'disputed'        => ['label' => __('messages.transfers.report.disputed_tab'),    'route' => 'reports.transfer.disputed',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
             ],
         ],
+        'maintenance' => [
+            'title'   => __('messages.reports.maintenance.title'),
+            'eyebrow' => __('messages.nav.complaints'),
+            'icon'    => 'fa-wrench',
+            'reports' => [
+                'summary'       => ['label' => __('messages.reports.maintenance.summary'),       'route' => 'reports.maintenance.summary',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
+                'per-bus'       => ['label' => __('messages.reports.maintenance.per_bus'),       'route' => 'reports.maintenance.per-bus',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
+                'per-part'      => ['label' => __('messages.reports.maintenance.per_part'),      'route' => 'reports.maintenance.per-part',      'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
+                'motor-oil'     => ['label' => __('messages.reports.maintenance.motor_oil'),     'route' => 'reports.maintenance.motor-oil',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
+                'most-repaired' => ['label' => __('messages.reports.maintenance.most_repaired'), 'route' => 'reports.maintenance.most-repaired', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
+            ],
+        ],
     ];
 
     $config = $domainConfig[$domain] ?? null;
@@ -97,7 +109,7 @@
 
     // ─── Brand filter support ───
     // Only the three bus-related domains accept a brand filter.
-    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status'];
+    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance'];
     $brandFilterSupported = in_array($domain, $brandSupportedDomains, true);
 
     $reportBrands = collect();

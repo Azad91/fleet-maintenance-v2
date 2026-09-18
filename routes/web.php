@@ -492,6 +492,20 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\TransferReportController::class, 'workerActivity'])->name('worker-activity');
                 Route::get('/disputed',        [App\Http\Controllers\Reports\TransferReportController::class, 'disputed'])->name('disputed');
             });
+
+        // Maintenance reports — comprehensive technical breakdown
+        Route::prefix('maintenance')->name('maintenance.')
+            ->middleware(['role:'.implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::complaintRoles()
+            ))])
+            ->group(function () {
+                Route::get('/summary',       [App\Http\Controllers\Reports\MaintenanceReportController::class, 'summary'])->name('summary');
+                Route::get('/per-bus',       [App\Http\Controllers\Reports\MaintenanceReportController::class, 'perBus'])->name('per-bus');
+                Route::get('/per-part',      [App\Http\Controllers\Reports\MaintenanceReportController::class, 'perPart'])->name('per-part');
+                Route::get('/motor-oil',     [App\Http\Controllers\Reports\MaintenanceReportController::class, 'motorOil'])->name('motor-oil');
+                Route::get('/most-repaired', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'mostRepaired'])->name('most-repaired');
+            });
     });
 
     // ==================== API JSON (Garage Data) ====================
