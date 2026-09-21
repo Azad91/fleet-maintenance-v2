@@ -2,16 +2,10 @@
 
 namespace App\Http\Requests\SuperAdmin;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UserUpdateRequest extends FormRequest
+class UserUpdateRequest extends SuperAdminRequest
 {
-    public function authorize(): bool
-    {
-        return $this->user()?->isSuperAdmin() ?? false;
-    }
-
     public function rules(): array
     {
         $userId = $this->route('user')->id;

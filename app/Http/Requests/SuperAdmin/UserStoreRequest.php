@@ -2,15 +2,8 @@
 
 namespace App\Http\Requests\SuperAdmin;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class UserStoreRequest extends FormRequest
+class UserStoreRequest extends SuperAdminRequest
 {
-    public function authorize(): bool
-    {
-        return $this->user()?->isSuperAdmin() ?? false;
-    }
-
     public function rules(): array
     {
         return [
