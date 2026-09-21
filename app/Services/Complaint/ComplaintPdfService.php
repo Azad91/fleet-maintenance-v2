@@ -6,7 +6,6 @@ use App\Models\Complaint;
 use App\Models\Employee;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class ComplaintPdfService
 {
@@ -64,43 +63,21 @@ class ComplaintPdfService
         );
     }
 
+    /**
+     * Delete the PDF file for the given complaint.
+     *
+     * NOTE: This method deletes ONLY the generated PDF file, not the
+     * complaint row. Complaint deletion lives in ComplaintService.
+     *
+     * ✅ P2 FIX: The old bulkDelete() method was removed because it
+     * silently called this method inside a loop and returned a "deleted
+     * count" that misleadingly looked like complaint-row deletions.
+     * ComplaintService::bulkDelete() is the single source of truth.
+     */
     public function delete(Complaint $complaint): bool
     {
         return Storage::disk('local')->delete(
             self::PDF_DIR."/akt-{$complaint->id}.pdf"
         );
-    }
-    /**
-     * Bulk soft-delete multiple complaints.
-     *
-     * Each complaint is deleted through the existing delete() method
-     * so that stock restoration, detail cascades, and per-row audit
-     * logging all run exactly as they do for single-row deletes.
-     *
-     * The whole batch runs inside a single DB transaction: if any
-     * single delete fails (e.g. a stock restore throws), the entire
-     * batch rolls back and no complaint is removed.
-     *
-     * @param  array<int>  $ids
-     * @return int  Number of complaints actually deleted
-     */
-    public function bulkDelete(array $ids): int
-    {
-        if (empty($ids)) {
-            return 0;
-        }
-
-        $deleted = 0;
-
-        DB::transaction(function () use ($ids, &$deleted) {
-            $complaints = Complaint::whereIn('id', $ids)->get();
-
-            foreach ($complaints as $complaint) {
-                $this->delete($complaint);
-                $deleted++;
-            }
-        });
-
-        return $deleted;
     }
 }

@@ -45,4 +45,34 @@ class ExportTest extends TestCase
             return $export->collection()->contains('code', 'DRV-777');
         });
     }
+        public function test_drivers_export_sanitizes_formula_injection(): void
+    {
+        $company = Company::factory()->create();
+        $garage  = Garage::factory()->create(['company_id' => $company->id]);
+        $user    = User::factory()->create(['role' => 'super_admin']);
+
+        // Driver with a malicious code that would become a formula in Excel
+        Driver::withoutGlobalScopes()->create([
+            'garage_id'  => $garage->id,
+            'company_id' => $company->id,
+            'code'       => 'DRV-SAFE-1',
+            'first_name' => '=cmd|\'/c calc\'!A1', // ← Formula injection attempt
+            'last_name'  => '@SUM(1+1)',
+            'notes'      => '+HYPERLINK("http://evil.com","click")',
+            'is_active'  => true,
+        ]);
+
+        $export = new \App\Exports\DriversExport;
+        $row = $export->map(\App\Models\Driver::withoutGlobalScopes()
+            ->where('code', 'DRV-SAFE-1')
+            ->first());
+
+        // Values starting with dangerous characters must be prefixed with '
+        $this->assertSame("'=cmd|'/c calc'!A1", $row[1]);
+        $this->assertSame("'@SUM(1+1)", $row[2]);
+        $this->assertSame("'+HYPERLINK(\"http://evil.com\",\"click\")", $row[6]);
+
+        // Safe values must remain untouched
+        $this->assertSame('DRV-SAFE-1', $row[0]);
+    }
 }

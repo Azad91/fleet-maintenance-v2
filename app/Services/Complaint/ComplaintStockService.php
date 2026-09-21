@@ -220,8 +220,13 @@ class ComplaintStockService
 
     /**
      * Deduct from the SPECIFIC service vehicle selected on the complaint.
-     * Throws if the vehicle is not provided, not found, or has
-     * insufficient stock. There is NO fallback to the warehouse.
+     * Throws if the vehicle is not provided, not found, not in the
+     * current garage, or has insufficient stock.
+     *
+     * ✅ SECURITY (defense-in-depth): the vehicle must belong to the
+     * current garage context. The FormRequest already validates this,
+     * but a future controller, queue job, or console command might
+     * bypass the request layer. Re-checking here closes that gap.
      */
     private function deductFromServiceVehicle(
         array $detail,
@@ -235,7 +240,18 @@ class ComplaintStockService
             ]);
         }
 
-        $vehicle = ServiceVehicle::withoutGlobalScopes()->find($serviceVehicleId);
+        // Defense-in-depth: resolve the current garage and require the
+        // vehicle to belong to it.
+        $currentGarageId = \App\Services\GarageContext::resolveGarageId();
+
+        $vehicleQuery = ServiceVehicle::withoutGlobalScopes()
+            ->whereKey($serviceVehicleId);
+
+        if ($currentGarageId !== null) {
+            $vehicleQuery->where('garage_id', $currentGarageId);
+        }
+
+        $vehicle = $vehicleQuery->first();
 
         if (! $vehicle) {
             throw ValidationException::withMessages([

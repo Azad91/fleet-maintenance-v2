@@ -363,4 +363,62 @@ class ComplaintServiceVehicleStockTest extends TestCase
 
         $this->assertSoftDeleted('complaints', ['id' => $complaint->id]);
     }
+
+    // ==================================================================
+    // 5. CROSS-GARAGE DEFENSE-IN-DEPTH (P1 FIX)
+    // ==================================================================
+
+    public function test_service_deduct_rejects_vehicle_from_other_garage(): void
+    {
+        $otherGarage = Garage::factory()->create(['company_id' => $this->company->id]);
+
+        $foreignVehicle = ServiceVehicle::withoutGlobalScopes()->create([
+            'garage_id'  => $otherGarage->id,
+            'company_id' => $this->company->id,
+            'name'       => 'Foreign Vehicle',
+            'is_active'  => true,
+        ]);
+
+        ServiceVehicleStock::withoutGlobalScopes()->create([
+            'service_vehicle_id' => $foreignVehicle->id,
+            'garage_id'          => $otherGarage->id,
+            'company_id'         => $this->company->id,
+            'code'               => 'FILTER-001',
+            'name'               => 'Oil Filter',
+            'quantity'           => 100,
+        ]);
+
+        // ✅ Service-i birbaşa çağırırıq — FormRequest bypass olunur.
+        // İkinci sədd (service guard) bu halda işə düşməlidir.
+        $this->expectException(ValidationException::class);
+
+        $this->service->create(
+            $this->baseData('road', $foreignVehicle->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+    }
+
+    public function test_service_deduct_accepts_own_garage_vehicle(): void
+    {
+        $this->makeVehicleStock($this->vehicleA, 'FILTER-001', 20);
+
+        // Own-garage vehicle — uğurla işləməlidir.
+        $complaint = $this->service->create(
+            $this->baseData('road', $this->vehicleA->id),
+            [$this->detail('FILTER-001', 5)],
+            ['Test']
+        );
+
+        $this->assertNotNull($complaint->id);
+
+        // Stok azalıb: 20 - 5 = 15
+        $this->assertSame(
+            15,
+            ServiceVehicleStock::withoutGlobalScopes()
+                ->where('service_vehicle_id', $this->vehicleA->id)
+                ->where('code', 'FILTER-001')
+                ->value('quantity')
+        );
+    }
 }

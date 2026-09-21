@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OilType;
+use App\Http\Requests\OilChangeStoreRequest;
+use App\Http\Requests\OilChangeUpdateRequest;
 use App\Models\Bus;
 use App\Models\BusOilChange;
-use App\Services\GarageContext;
 use App\Services\OilChange\OilChangeService;
 use App\Services\OilChange\OilChangeStatusService;
 use Illuminate\Http\RedirectResponse;
@@ -34,13 +35,11 @@ class OilChangeController extends Controller
             $statusFilter = 'all';
         }
 
-        // Aktual tab
         $activeType = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
             ?? OilType::Motor;
 
         $rows = $this->buildStatusRows();
 
-        // Hər növ üçün sətir sayı (tab badge-ləri üçün)
         $typeCounts = collect(OilType::cases())->mapWithKeys(function (OilType $t) use ($rows, $statusFilter) {
             $count = $rows->filter(function (array $row) use ($t, $statusFilter) {
                 if ($statusFilter === 'all') {
@@ -52,7 +51,6 @@ class OilChangeController extends Controller
             return [$t->value => $count];
         });
 
-        // Aktiv tab üçün sətirlər
         $sectionRows = $rows
             ->filter(function (array $row) use ($activeType, $statusFilter) {
                 if ($statusFilter === 'all') {
@@ -63,7 +61,6 @@ class OilChangeController extends Controller
             ->sortBy(fn (array $row) => $row['statuses'][$activeType->value]->remainingKm ?? PHP_INT_MAX)
             ->values();
 
-        // Aktiv tab üçün təcili sayı
         $urgentCount = $sectionRows->filter(
             fn (array $row) => in_array($row['statuses'][$activeType->value]->status, ['overdue', 'critical'], true)
         )->count();
@@ -78,8 +75,7 @@ class OilChangeController extends Controller
     }
 
     /**
-     * Urgent-only view: buses with overdue or critical oil changes
-     * across any of the three types.
+     * Urgent-only view.
      */
     public function urgent(): View
     {
@@ -139,12 +135,26 @@ class OilChangeController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * ✅ FIX P1: FormRequest injection.
+     *
+     * ƏVVƏL:
+     *   public function store(Request $request) {
+     *       $validated = app(OilChangeStoreRequest::class)->rules();
+     *       $data = $request->validate($validated);
+     *   }
+     *
+     * Bu pattern prepareForValidation()-u və Rule::requiredIf() closure-unu
+     * sındırırdı, çünki Laravel FormRequest lifecycle-ı tam işlədilmirdi.
+     *
+     * İNDİ: Tip-hint ilə FormRequest inject olunur → Laravel hər şeyi
+     * (authorize, prepareForValidation, rules, messages) düzgün işə salır.
+     */
+    public function store(OilChangeStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', BusOilChange::class);
 
-        $validated = app(\App\Http\Requests\OilChangeStoreRequest::class)->rules();
-        $data = $request->validate($validated);
+        $data = $request->validated();
 
         $bus = Bus::findOrFail($data['bus_id']);
 
@@ -167,13 +177,14 @@ class OilChangeController extends Controller
         ]);
     }
 
-    public function update(Request $request, BusOilChange $oilChange): RedirectResponse
+    /**
+     * ✅ FIX P1: FormRequest injection (update üçün də eyni problem idi).
+     */
+    public function update(OilChangeUpdateRequest $request, BusOilChange $oilChange): RedirectResponse
     {
         $this->authorize('update', $oilChange);
 
-        $data = $request->validate(
-            app(\App\Http\Requests\OilChangeUpdateRequest::class)->rules()
-        );
+        $data = $request->validated();
 
         $this->service->update($oilChange, $data);
 
@@ -196,8 +207,6 @@ class OilChangeController extends Controller
 
     /**
      * Build one row per active bus, with all three oil-type statuses.
-     *
-     * @return \Illuminate\Support\Collection<int, array{bus: Bus, statuses: Collection, worst_priority: int, min_remaining: int}>
      */
     private function buildStatusRows(): Collection
     {
