@@ -1166,4 +1166,30 @@ return [
         'warehouse'       => 'Anbar',
         'service_vehicle' => 'Servis Maşını',
     ],
+
+    'oil_change' => [
+        'title'          => 'Yağ dəyişmələri',  // EN: 'Oil Changes'
+        'subtitle'       => '...',
+        'priority'       => 'Prioritet',
+        'motor'          => 'Motor yağı',
+        'gearbox'        => 'Korobka yağı',
+        'axle'           => 'Most yağı',
+        'current_km'     => 'Cari km',
+        'last_change_km' => 'Son dəyişmə',
+        'next_due_km'    => 'Növbəti dəyişmə',
+        'remaining_km'   => 'Qalan km',
+        'interval_km'    => 'İnterval',
+        'changed_at'     => 'Dəyişmə tarixi',
+        'oil_brand'      => 'Yağ markası',
+        'scheduled_km'   => 'Planlaşdırılan km',
+        'actual_km'      => 'Faktiki km',
+        'no_history'     => 'Tarixçə yoxdur',
+        'status' => [
+            'overdue'    => 'Gecikib',
+            'critical'   => 'Təcili',
+            'due-soon'   => 'Tezliklə',
+            'ok'         => 'Normal',
+            'no-history' => 'Məlum deyil',
+        ],
+    ],
 ];

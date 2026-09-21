@@ -334,6 +334,17 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
         Route::get('/', [MotorOilController::class, 'index'])->name('index');
     });
 
+    // ==================== OIL CHANGES (ADMIN ONLY) ====================
+    Route::prefix('oil-changes')->name('oil-changes.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
+        Route::get('/', [\App\Http\Controllers\OilChangeController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\OilChangeController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
+        Route::get('/{oilChange}/edit', [\App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');
+        Route::put('/{oilChange}', [\App\Http\Controllers\OilChangeController::class, 'update'])->name('update');
+        Route::delete('/{oilChange}', [\App\Http\Controllers\OilChangeController::class, 'destroy'])->name('destroy');
+        Route::get('/bus/{bus}', [\App\Http\Controllers\OilChangeController::class, 'show'])->name('show');
+    });
+
     // ==================== EMPLOYEES (ADMIN ONLY) ====================
     Route::prefix('employees')->name('employees.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/import', [EmployeeController::class, 'importForm'])->name('import');

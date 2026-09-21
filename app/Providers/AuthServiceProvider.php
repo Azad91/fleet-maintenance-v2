@@ -30,6 +30,8 @@ use App\Models\WarehouseTransfer;
 use App\Policies\WarehouseTransferPolicy;
 use App\Models\BusBrand;
 use App\Policies\BusBrandPolicy;
+use App\Models\BusOilChange;
+use App\Policies\BusOilChangePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -47,7 +49,8 @@ class AuthServiceProvider extends ServiceProvider
             ComplaintType::class => ComplaintTypePolicy::class,
             ServiceVehicle::class => ServiceVehiclePolicy::class,
             WarehouseTransfer::class => WarehouseTransferPolicy::class,
-        ];
+            BusOilChange::class => BusOilChangePolicy::class,
+            ];
 
     public function boot(): void
     {
