@@ -34,11 +34,46 @@ class OilChangeController extends Controller
             $statusFilter = 'all';
         }
 
+        // Aktual tab
+        $activeType = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
+            ?? OilType::Motor;
+
         $rows = $this->buildStatusRows();
 
+        // Hər növ üçün sətir sayı (tab badge-ləri üçün)
+        $typeCounts = collect(OilType::cases())->mapWithKeys(function (OilType $t) use ($rows, $statusFilter) {
+            $count = $rows->filter(function (array $row) use ($t, $statusFilter) {
+                if ($statusFilter === 'all') {
+                    return true;
+                }
+                return $row['statuses'][$t->value]->status === $statusFilter;
+            })->count();
+
+            return [$t->value => $count];
+        });
+
+        // Aktiv tab üçün sətirlər
+        $sectionRows = $rows
+            ->filter(function (array $row) use ($activeType, $statusFilter) {
+                if ($statusFilter === 'all') {
+                    return true;
+                }
+                return $row['statuses'][$activeType->value]->status === $statusFilter;
+            })
+            ->sortBy(fn (array $row) => $row['statuses'][$activeType->value]->remainingKm ?? PHP_INT_MAX)
+            ->values();
+
+        // Aktiv tab üçün təcili sayı
+        $urgentCount = $sectionRows->filter(
+            fn (array $row) => in_array($row['statuses'][$activeType->value]->status, ['overdue', 'critical'], true)
+        )->count();
+
         return view('oil-changes.index', [
-            'rows' => $rows,
+            'rows'         => $sectionRows,
             'statusFilter' => $statusFilter,
+            'activeType'   => $activeType,
+            'typeCounts'   => $typeCounts,
+            'urgentCount'  => $urgentCount,
         ]);
     }
 

@@ -1204,6 +1204,10 @@ return [
 
         'filter_status'  => 'Status filteri',
         'all_statuses'   => 'Bütün statuslar',
+        'urgent_title'    => 'Təcili Yağ Dəyişmələri',
+        'urgent_subtitle' => 'Bu gün diqqət tələb edən avtobuslar — gecikmiş və təcili yağ dəyişmələri.',
+        'urgent_empty'    => 'Bu gün diqqət tələb edən avtobus yoxdur 👍',
+        'urgent_short'    => 'təcili',
 
         'import_title'    => 'Yağ dəyişmə tarixçəsini import et',
         'bus_length'      => 'Avtobus uzunluğu',
