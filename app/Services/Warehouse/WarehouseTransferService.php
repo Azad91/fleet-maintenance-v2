@@ -191,8 +191,10 @@ class WarehouseTransferService
 
         DB::transaction(function () use ($transfer, $receivedQuantities) {
             $transfer->load('items');
-            $receivedTotal = 0;
+
+            $receivedTotal  = 0;
             $hasDiscrepancy = false;
+            $discrepancies  = [];
 
             foreach ($transfer->items as $item) {
                 $received = $receivedQuantities[$item->id] ?? null;
@@ -214,8 +216,25 @@ class WarehouseTransferService
                 $item->update(['received_quantity' => $received]);
                 $receivedTotal += $received;
 
-                if ($received !== $item->declared_quantity) {
+                $diff = $received - $item->declared_quantity;
+
+                if ($diff !== 0) {
                     $hasDiscrepancy = true;
+
+                    // Record a compact, human-readable line for the
+                    // automatic discrepancy_notes field. Operators can
+                    // still edit it afterwards through the resolve flow.
+                    $itemLabel = $item->warehouse?->code
+                        ? $item->warehouse->code.' — '.($item->warehouse->name ?? '')
+                        : "Item #{$item->id}";
+
+                    $discrepancies[] = sprintf(
+                        '%s: declared %d, received %d (%+d)',
+                        $itemLabel,
+                        $item->declared_quantity,
+                        $received,
+                        $diff
+                    );
                 }
 
                 if ($received > 0) {
@@ -228,10 +247,13 @@ class WarehouseTransferService
                 : TransferStatus::Received->value;
 
             $transfer->update([
-                'status'         => $newStatus,
-                'received_total' => $receivedTotal,
-                'received_by'    => auth()->id(),
-                'received_at'    => now(),
+                'status'            => $newStatus,
+                'received_total'    => $receivedTotal,
+                'discrepancy_notes' => $hasDiscrepancy
+                    ? implode("\n", $discrepancies)
+                    : null,
+                'received_by'       => auth()->id(),
+                'received_at'       => now(),
             ]);
         });
     }
