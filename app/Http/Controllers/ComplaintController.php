@@ -231,6 +231,35 @@ class ComplaintController extends Controller
                 'items' => 'cards',
             ]));
     }
+    /**
+     * Bulk soft-delete an explicit list of complaints (checkbox selection).
+     *
+     * The browser submits the selected IDs as a JSON-encoded string;
+     * normalizeIds() parses and sanitizes it before the service is
+     * called. Use bulkDeleteAll() instead when the intent is "delete
+     * everything matching the current filter".
+     */
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', Complaint::class);
+
+        $ids = $this->normalizeIds($request->input('ids', []));
+
+        if (empty($ids)) {
+            return redirect()
+                ->route('complaints.index')
+                ->with('error', __('messages.flash.none_selected'));
+        }
+
+        $count = $this->complaintService->bulkDelete($ids);
+
+        return redirect()
+            ->route('complaints.index')
+            ->with('success', __('messages.flash.bulk_deleted', [
+                'count' => $count,
+                'items' => 'cards',
+            ]));
+    }
 
     public function close(ComplaintCloseRequest $request, int $id): RedirectResponse
     {
