@@ -190,57 +190,60 @@ class ComplaintService
     /**
      * Bulk soft-delete ALL complaints matching the given Eloquent query.
      *
-     * This is the memory-safe variant of bulkDelete(): instead of
-     * loading every matching ID into a PHP array up front (which for
-     * 10 000+ rows can exhaust memory), it streams the IDs from the
-     * database in fixed-size chunks via chunkById().
+     * Memory-safe: the ID stream is pulled from the database in
+     * fixed-size chunks via chunkById().
      *
-     * Each chunk runs its own transaction. If a chunk fails, earlier
-     * chunks stay committed and the caller can retry the rest.
-     *
-     * Eager loads from the incoming query are explicitly stripped —
-     * chunkById() only needs the primary key column, and a chunk of
-     * partial models would otherwise trigger needless relation
-     * queries for every iteration.
+     * Chunk-level atomicity means a failure partway through leaves
+     * earlier chunks committed. The caller receives the partial count
+     * so it can show the operator what actually happened; the log
+     * entry records which chunk failed.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<Complaint>  $query
      * @param  int  $chunkSize
-     * @return int  Number of complaints actually deleted
+     * @return array{deleted: int, error: ?string}
      */
-    public function bulkDeleteByQuery($query, int $chunkSize = 100): int
+    public function bulkDeleteByQuery($query, int $chunkSize = 100): array
     {
         $deleted = 0;
+        $error   = null;
 
-        // Work on a clone so the caller's query is not mutated:
-        //   - reorder()        — remove the incoming ORDER BY, chunkById
-        //                        adds its own stable order
-        //   - setEagerLoads([]) — strip eager loads; we only need IDs
-        //   - select('complaints.id') — narrow the projection
         $idQuery = $query->clone()
             ->reorder()
             ->setEagerLoads([])
             ->select('complaints.id');
 
-        $idQuery->chunkById($chunkSize, function ($rows) use (&$deleted) {
-            $ids = $rows->pluck('id')->all();
+        try {
+            $idQuery->chunkById($chunkSize, function ($rows) use (&$deleted) {
+                $ids = $rows->pluck('id')->all();
 
-            if (empty($ids)) {
-                return;
-            }
-
-            DB::transaction(function () use ($ids, &$deleted) {
-                $complaints = Complaint::with('details')
-                    ->whereIn('id', $ids)
-                    ->get();
-
-                foreach ($complaints as $complaint) {
-                    $this->delete($complaint);
-                    $deleted++;
+                if (empty($ids)) {
+                    return;
                 }
-            });
-        }, 'complaints.id', 'id');
 
-        return $deleted;
+                DB::transaction(function () use ($ids, &$deleted) {
+                    $complaints = Complaint::with('details')
+                        ->whereIn('id', $ids)
+                        ->get();
+
+                    foreach ($complaints as $complaint) {
+                        $this->delete($complaint);
+                        $deleted++;
+                    }
+                });
+            }, 'complaints.id', 'id');
+        } catch (\Throwable $e) {
+            // Preserve the partial count so the caller can report it.
+            $error = $e->getMessage();
+
+            \Illuminate\Support\Facades\Log::error('Bulk complaint delete aborted mid-run', [
+                'deleted_so_far' => $deleted,
+                'error'          => $error,
+                'user_id'        => auth()->id(),
+                'request_id'     => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
+        }
+
+        return ['deleted' => $deleted, 'error' => $error];
     }
 
     /**

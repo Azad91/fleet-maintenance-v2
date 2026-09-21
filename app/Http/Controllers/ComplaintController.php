@@ -213,13 +213,14 @@ class ComplaintController extends Controller
         /**
      * Bulk soft-delete ALL complaints matching the current filter.
      *
-     * Memory-safe variant: the ID stream is pulled from the database
-     * in fixed-size chunks via ComplaintService::bulkDeleteByQuery()
-     * instead of loading every matching ID into a PHP array. On a
-     * garage with 20 000+ matching cards this avoids an OOM kill.
+     * Memory-safe: the ID stream is pulled from the database in
+     * fixed-size chunks via ComplaintService::bulkDeleteByQuery().
      *
-     * The time limit is raised because each chunk restores stock per
-     * detail row, and 20+ chunks can exceed PHP's default 30-second cap.
+     * If a chunk fails partway through, the earlier chunks stay
+     * committed and the controller reports the partial count with an
+     * explicit warning — otherwise the operator would see a clean
+     * "N deleted" success message while a large remainder was left
+     * untouched.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
@@ -227,20 +228,31 @@ class ComplaintController extends Controller
 
         @set_time_limit(300);
 
-        $count = $this->complaintService->bulkDeleteByQuery(
+        $result = $this->complaintService->bulkDeleteByQuery(
             $this->buildFilteredQuery($request)
         );
 
-        if ($count === 0) {
+        if ($result['deleted'] === 0) {
             return redirect()
                 ->route('complaints.index')
                 ->with('error', __('messages.flash.none_selected'));
         }
 
+        // Partial failure: report both the count and the fact that the
+        // operation stopped early.
+        if ($result['error'] !== null) {
+            return redirect()
+                ->route('complaints.index')
+                ->with('warning', __('messages.flash.bulk_delete_partial', [
+                    'count' => $result['deleted'],
+                    'items' => 'cards',
+                ]));
+        }
+
         return redirect()
             ->route('complaints.index')
             ->with('success', __('messages.flash.bulk_deleted', [
-                'count' => $count,
+                'count' => $result['deleted'],
                 'items' => 'cards',
             ]));
     }
