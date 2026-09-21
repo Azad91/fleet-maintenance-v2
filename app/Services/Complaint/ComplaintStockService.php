@@ -93,20 +93,38 @@ class ComplaintStockService
      * stock goes back to. For `service_vehicle` rows, the caller must
      * pass the complaint's `service_vehicle_id`.
      *
+     * DEADLOCK GUARD: rows are sorted by `code` before any lock is
+     * acquired. Two concurrent deletes that touch the same warehouse
+     * rows in a different order would otherwise deadlock on
+     * PostgreSQL's row-level locks (transaction A locks W-001 then
+     * W-002, transaction B locks W-002 then W-001, both wait forever).
+     * Sorting makes every transaction acquire locks in the same
+     * order, eliminating the cycle.
+     *
      * @param  array<int, array<string, mixed>>  $details
      * @param  int|null  $serviceVehicleId  Vehicle to credit when restoring
      */
     public function restoreStock(array $details, ?int $serviceVehicleId = null): void
     {
-        foreach ($details as $detail) {
-            $code = $detail['code'] ?? null;
-            $usedQuantity = (int) ($detail['used_quantity'] ?? 0);
+        // ── Deterministic lock order ──
+        // Filter out rows that will never touch stock, then sort by
+        // code so both warehouse and vehicle branches see a stable
+        // sequence.
+        $sortedDetails = collect($details)
+            ->filter(function ($detail) {
+                $code = $detail['code'] ?? null;
+                $qty  = (int) ($detail['used_quantity'] ?? 0);
 
-            if (empty($code) || $usedQuantity <= 0) {
-                continue;
-            }
+                return ! empty($code) && $qty > 0;
+            })
+            ->sortBy('code')
+            ->values()
+            ->all();
 
-            $sourceType = $detail['source_type'] ?? 'warehouse';
+        foreach ($sortedDetails as $detail) {
+            $code         = $detail['code'];
+            $usedQuantity = (int) $detail['used_quantity'];
+            $sourceType   = $detail['source_type'] ?? 'warehouse';
 
             // Historical imports and inspection rows never touched
             // stock on creation, so there is nothing to restore.
@@ -121,7 +139,7 @@ class ComplaintStockService
                     // service_vehicle_id column existed — cannot
                     // restore automatically. Log and skip.
                     Log::warning('Service vehicle id missing — stock restore skipped', [
-                        'code' => $code,
+                        'code'     => $code,
                         'quantity' => $usedQuantity,
                     ]);
 
