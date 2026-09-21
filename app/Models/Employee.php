@@ -40,11 +40,21 @@ class Employee extends Model
     public function getFullNameWithPositionAttribute()
     {
         $name = $this->first_name;
+
         if (! empty($this->last_name)) {
             $name .= ' '.$this->last_name;
         }
 
-        return $name.' ('.$this->position.')';
+        // Skip the parenthesis entirely when position is empty or
+        // whitespace — avoids "Elshad Mammadov ()" leaking into
+        // dropdowns, PDFs and reports.
+        $position = trim((string) $this->position);
+
+        if ($position === '') {
+            return $name;
+        }
+
+        return $name.' ('.$position.')';
     }
 
     // ==================== RELATIONSHIPS ====================
