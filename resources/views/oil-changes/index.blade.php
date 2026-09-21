@@ -39,6 +39,32 @@
         </li>
     @endforeach
 </ul>
+{{-- Status filter chips --}}
+@php
+    $statusChips = [
+        'all'        => ['label' => __('messages.oil_change.all_statuses'),   'color' => 'secondary'],
+        'overdue'    => ['label' => __('messages.oil_change.status.overdue'), 'color' => 'danger'],
+        'critical'   => ['label' => __('messages.oil_change.status.critical'), 'color' => 'warning'],
+        'due-soon'   => ['label' => __('messages.oil_change.status.due-soon'), 'color' => 'info'],
+        'ok'         => ['label' => __('messages.oil_change.status.ok'),       'color' => 'success'],
+    ];
+@endphp
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    @foreach($statusChips as $key => $chip)
+        @php
+            $isActive = ($statusFilter ?? 'all') === $key;
+        @endphp
+        <a href="{{ route('oil-changes.index', ['type' => $activeType->value, 'status' => $key]) }}"
+           class="btn btn-sm {{ $isActive ? 'btn-' . $chip['color'] : 'btn-outline-' . $chip['color'] }}">
+            {{ $chip['label'] }}
+        </a>
+    @endforeach
+
+    <span class="ms-auto align-self-center text-muted small">
+        {{ __('messages.common.total') }}: <strong>{{ $statuses->count() }}</strong>
+    </span>
+</div>
 
 @include('oil-changes.partials.table', ['statuses' => $statuses])
 @endsection

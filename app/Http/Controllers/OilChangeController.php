@@ -29,6 +29,14 @@ class OilChangeController extends Controller
         $type = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
             ?? OilType::Motor;
 
+        // Status filter: all | overdue | critical | due-soon | ok | no-history
+        $statusFilter = (string) $request->input('status', 'all');
+        $validStatuses = ['all', 'overdue', 'critical', 'due-soon', 'ok', 'no-history'];
+
+        if (! in_array($statusFilter, $validStatuses, true)) {
+            $statusFilter = 'all';
+        }
+
         $buses = Bus::with(['latestKmRecord', 'oilChanges' => function ($q) use ($type) {
             $q->where('oil_type', $type->value)->orderByDesc('actual_km');
         }])
@@ -38,9 +46,17 @@ class OilChangeController extends Controller
 
         $statuses = $this->statusService->priorityFor($buses, $type);
 
+        // Apply status filter
+        if ($statusFilter !== 'all') {
+            $statuses = $statuses
+                ->filter(fn ($s) => $s->status === $statusFilter)
+                ->values();
+        }
+
         return view('oil-changes.index', [
-            'statuses'   => $statuses,
-            'activeType' => $type,
+            'statuses'     => $statuses,
+            'activeType'   => $type,
+            'statusFilter' => $statusFilter,
         ]);
     }
 

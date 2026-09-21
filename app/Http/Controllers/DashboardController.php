@@ -49,7 +49,7 @@ class DashboardController extends Controller
         // Eager-load 'oilChanges' so OilChangeStatusService does not fire
         // a query per (bus × type). The service already checks relationLoaded().
         $oilStats = $this->computeOilChangeStats();
-
+        $oilAlerts = $this->computeOilAlerts();
         $today = now()->toDateString();
 
         $busesWithoutKmTodayQuery = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
@@ -110,6 +110,7 @@ class DashboardController extends Controller
                 'disputedCount',
                 'pendingTransfers',
                 'oilStats',
+                'oilAlerts',
         ));
     }
 
@@ -162,5 +163,52 @@ class DashboardController extends Controller
             + $counts['due-soon'];
 
         return $counts;
+    }
+
+    /**
+     * Buses that need immediate attention (overdue or critical) on any
+     * oil type, sorted by the most urgent (lowest remaining km) first.
+     *
+     * @return \Illuminate\Support\Collection<int, array{bus: Bus, statuses: \Illuminate\Support\Collection, min_remaining: int}>
+     */
+    private function computeOilAlerts(int $limit = 15): \Illuminate\Support\Collection
+    {
+        $buses = Bus::with(['oilChanges', 'latestKmRecord'])
+            ->where('is_active', true)
+            ->get();
+
+        if ($buses->isEmpty()) {
+            return collect();
+        }
+
+        $service = app(\App\Services\OilChange\OilChangeStatusService::class);
+        $alerts = collect();
+
+        foreach ($buses as $bus) {
+            $busStatuses = collect();
+            $minRemaining = PHP_INT_MAX;
+
+            foreach (\App\Enums\OilType::cases() as $type) {
+                $status = $service->forBus($bus, $type);
+
+                if (in_array($status->status, ['overdue', 'critical'], true)) {
+                    $busStatuses->push($status);
+                    $minRemaining = min($minRemaining, (int) $status->remainingKm);
+                }
+            }
+
+            if ($busStatuses->isNotEmpty()) {
+                $alerts->push([
+                    'bus' => $bus,
+                    'statuses' => $busStatuses,
+                    'min_remaining' => $minRemaining,
+                ]);
+            }
+        }
+
+        return $alerts
+            ->sortBy('min_remaining')
+            ->take($limit)
+            ->values();
     }
 }
