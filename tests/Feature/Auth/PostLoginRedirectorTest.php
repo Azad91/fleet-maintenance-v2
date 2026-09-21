@@ -300,4 +300,31 @@ class PostLoginRedirectorTest extends TestCase
         $emailResponse->assertRedirect(route('dashboard'));
         $pinResponse->assertRedirect(route('dashboard'));
     }
+        // ==================================================================
+    // 9. DIRECTOR CACHE
+    // ==================================================================
+
+    public function test_is_director_result_is_cached_per_instance(): void
+    {
+        $director = User::factory()->create(['role' => 'user']);
+        $this->company->users()->attach($director->id, [
+            'role' => 'director',
+            'is_active' => true,
+        ]);
+
+        // İlk çağırış — DB sorğusu işə düşür və cache doldurulur
+        $this->assertTrue($director->isDirector());
+
+        // İkinci çağırış — DB sorğusu OLMAMALIDIR
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        $director->isDirector();
+        $queries = \Illuminate\Support\Facades\DB::getQueryLog();
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+
+        $this->assertCount(
+            0,
+            $queries,
+            'Second isDirector() call must hit the cache, not the DB'
+        );
+    }
 }

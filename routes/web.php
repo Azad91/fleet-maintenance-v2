@@ -35,7 +35,7 @@ Route::get('/', function () {
 Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'garage.selected'])
+    ->middleware(['auth', 'verified', 'garage.selected'])
     ->name('dashboard');
 
 /*
@@ -192,12 +192,22 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
         });
     });
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes (Auth + Garage Selected + Idempotent)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Authenticated Routes (Auth + Garage Selected + Idempotent)
+    |--------------------------------------------------------------------------
+    */
+    // ✅ P1-8 FIX: `verified` middleware əlavə olundu.
+    //
+    // Bu sistemdə self-registration YOXDUR. Bütün istifadəçilər
+    // admin tərəfindən yaradılır və yaradılma anında avtomatik
+    // `email_verified_at` ilə işarələnir (CompanyOnboardingService,
+    // GarageOnboardingService, UserService, SuperAdmin\UserController).
+    //
+    // Middleware defense-in-depth rolunu oynayır: gələcəkdə self-
+    // registration yenidən aktivləşdirilərsə, unverified istifadəçi
+    // business route-lara giriş əldə edə bilməyəcək.
+    Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idempotent'])->group(function () {
 
     // ==================== PROFILE ====================
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

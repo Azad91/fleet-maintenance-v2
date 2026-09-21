@@ -6,6 +6,7 @@ use App\Enums\RoleEnum;
 use App\Models\Traits\Auditable;
 use App\Services\GarageContext;
 use App\Support\TwoFactor\TwoFactorManager;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,9 +14,22 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use Auditable, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    /**
+     * Per-instance cache for isDirector().
+     *
+     * The layout calls isDirector() on every request to decide the
+     * sidebar/topbar rendering. Without cache, that's one DB query
+     * per call. The cache resets when the model is rehydrated.
+     *
+     * null  = not yet computed
+     * true  = user is an active director
+     * false = user is not a director
+     */
+    private ?bool $cachedIsDirector = null;
 
     /**
      * Mass-assignable attributes.
@@ -155,7 +169,7 @@ class User extends Authenticatable
 
     public function isDirector(): bool
     {
-        return $this->companies()
+        return $this->cachedIsDirector ??= $this->companies()
             ->wherePivot('role', 'director')
             ->wherePivot('is_active', true)
             ->exists();

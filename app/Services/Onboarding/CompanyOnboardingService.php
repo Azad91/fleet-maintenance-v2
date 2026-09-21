@@ -30,7 +30,8 @@ class CompanyOnboardingService
                 'is_active' => $companyData['is_active'] ?? true,
             ]);
 
-            $director = User::create([
+            $director = new User;
+            $director->forceFill([
                 'name' => $directorData['name'],
                 'email' => $directorData['email'],
                 'password' => Hash::make($directorData['password']),
@@ -38,7 +39,8 @@ class CompanyOnboardingService
                 'pin' => Hash::make($directorData['pin']),
                 'pin_is_default' => true,
                 'is_active' => true,
-            ]);
+                'email_verified_at' => now(), // ✅ Auto-verified: admin tərəfindən yaradılıb
+            ])->save();
 
             $company->users()->attach($director->id, [
                 'role' => 'director',

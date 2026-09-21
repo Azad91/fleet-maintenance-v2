@@ -52,7 +52,8 @@ class GarageOnboardingService
                 'is_active' => $garageData['is_active'] ?? true,
             ]);
 
-            $admin = User::create([
+            $admin = new User;
+            $admin->forceFill([
                 'name' => $adminData['name'],
                 'email' => $adminData['email'],
                 'password' => Hash::make($adminData['password']),
@@ -60,7 +61,8 @@ class GarageOnboardingService
                 'pin' => Hash::make($adminData['pin']),
                 'pin_is_default' => true,
                 'is_active' => true,
-            ]);
+                'email_verified_at' => now(), // ✅ Auto-verified
+            ])->save();
 
             $garage->users()->attach($admin->id, [
                 'role' => 'admin',

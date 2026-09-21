@@ -69,7 +69,8 @@ class UserController extends Controller
         $pinWasGenerated = empty($validated['pin']);
         $pin = $validated['pin'] ?? $this->generatePin();
 
-        $user = User::create([
+        $user = new User;
+        $user->forceFill([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -77,7 +78,8 @@ class UserController extends Controller
             'pin' => Hash::make($pin),
             'pin_is_default' => $pinWasGenerated,
             'is_active' => $request->boolean('is_active', true),
-        ]);
+            'email_verified_at' => now(), // ✅ Auto-verified: SuperAdmin yaradıb
+        ])->save();
 
         // All user-supplied values are escaped before being placed
         // into the flash message: the translation keys contain HTML

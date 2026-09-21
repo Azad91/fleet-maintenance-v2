@@ -23,11 +23,13 @@ class UserService
         bool $isActive = true
     ): User {
         return DB::transaction(function () use ($data, $garageId, $isActive) {
-            $user = User::create([
+            $user = new User;
+            $user->forceFill([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => $data['password'],
-            ]);
+                'email_verified_at' => now(), // ✅ Auto-verified: qaraj admini yaradıb
+            ])->save();
 
             $user->garages()->attach($garageId, [
                 'role' => $data['role'],
