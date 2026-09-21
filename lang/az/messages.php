@@ -1118,6 +1118,8 @@ return [
         'profile_updated' => 'Profil uğurla yeniləndi.',
         'profile_password_updated' => 'Şifrə uğurla yeniləndi.',
         'profile_deleted' => 'Hesabınız silindi.',
+        'no_garage_assigned' => 'Heç bir qaraja təyin olunmamısınız. Sistem administratoru ilə əlaqə saxlayın.',
+
     ],
 
     // ==================== API ====================

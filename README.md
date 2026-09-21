@@ -189,3 +189,16 @@ SESSION_SAME_SITE=lax
 - Production mühitində `APP_DEBUG=false` istifadə edin.
 - İlkin admin şifrəsini dərhal dəyişin.
 - İstifadəçilərə yalnız ehtiyac duyduğu qaraj və rolu verin.
+
+### 4. PostgreSQL Credentials
+
+Production-da PostgreSQL parolu **mütləq** güclü və unikal olmalıdır.
+Zəif parol bütün tenant məlumatlarını riskə atır.
+
+```bash
+# 1. Güclü parol yarat
+openssl rand -base64 32
+
+# 2. Kopyala və doldur
+cp .env.production.db.example .env.production.db
+nano .env.production.db

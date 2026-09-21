@@ -44,11 +44,22 @@ class GarageSelectionController extends Controller
                 ->get();
         }
 
-        if ($companies->isEmpty() || $companies->every(fn ($c) => $c->garages->isEmpty())) {
-            if (! $user->isSuperAdmin()) {
-                return redirect()->route('dashboard')
-                    ->with('error', __('messages.flash.no_garage_assigned'));
-            }
+        // ───────────────────────────────────────────────────────────
+        // FIX P0-2: Infinite redirect loop
+        //
+        // ƏVVƏL: Heç bir qarajı olmayan istifadəçi /dashboard-a
+        // redirect olunurdu. /dashboard isə `garage.selected`
+        // middleware tərəfindən yenidən bura qaytarılırdı → sonsuz loop.
+        //
+        // İNDİ: Statik "giriş yoxdur" səhifəsi göstərilir. İstifadəçi
+        // yalnız logout edə bilər. Bu, həm loop-u bitirir, həm də
+        // istifadəçiyə aydın mesaj verir.
+        // ───────────────────────────────────────────────────────────
+        $hasNoGarages = $companies->isEmpty()
+            || $companies->every(fn ($c) => $c->garages->isEmpty());
+
+        if ($hasNoGarages && ! $user->isSuperAdmin()) {
+            return view('garage-no-access');
         }
 
         return view('garage-selection', compact('companies'));
