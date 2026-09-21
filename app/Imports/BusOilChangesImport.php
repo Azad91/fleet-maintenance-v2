@@ -54,8 +54,9 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
             return;
         }
 
-        $cacheKey = "oil_import_header:{$this->garageId}:{$this->type->value}:"
-            .spl_object_id($this);
+        // Token-based cache key. See AbstractImport::\$importToken
+        // for why spl_object_id() is not safe across processes.
+        $cacheKey = "oil_import_header:{$this->garageId}:{$this->type->value}:{$this->importToken}";
 
         if (! $this->headerParsed) {
             $firstRow = $rows->first()->toArray();

@@ -68,10 +68,11 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
             }
         }
 
-        // Cache key scoped per import instance so parallel imports
-        // do not collide. Stored in the cache for 1 hour — far more
-        // than the actual runtime.
-        $cacheKey = 'km_mapping_'.$this->garageId.'_'.($this->companyId ?? 0).'_'.spl_object_id($this);
+        // Cache key scoped per import instance via the unique
+        // importToken inherited from AbstractImport. spl_object_id()
+        // would collide across processes (queue workers, artisan +
+        // web), leading one import to read another's header mapping.
+        $cacheKey = 'km_mapping:'.$this->garageId.':'.($this->companyId ?? 0).':'.$this->importToken;
 
         if ($isFirstChunk) {
             $dateRow   = $rows->get(0)->toArray();
