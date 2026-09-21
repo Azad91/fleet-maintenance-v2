@@ -26,7 +26,13 @@ class ComplaintPdfService
             $employeeIds->push($complaint->employee_id);
         }
 
+        // Filter by the complaint's own garage_id so a detail row that
+        // (through an old bug or manual DB edit) references an employee
+        // from another tenant cannot leak that employee's name into
+        // the PDF. Soft-deleted employees are still resolved so
+        // historical complaints render their original names.
         $employeesById = Employee::withoutGlobalScopes()
+            ->where('garage_id', $complaint->garage_id)
             ->whereIn('id', $employeeIds->unique()->values())
             ->get()
             ->keyBy('id');
