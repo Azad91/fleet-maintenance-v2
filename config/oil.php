@@ -19,7 +19,7 @@ return [
     'bus_length_threshold' => 15,
 
     'thresholds' => [
-        'critical_km' => 1000,
-        'due_soon_km' => 5000,
+        'critical_km' => 150,
+        'due_soon_km' => 500,
     ],
 ];
