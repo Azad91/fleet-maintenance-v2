@@ -257,7 +257,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
      */
     protected function attachRowData(Complaint $complaint, array $rowArray): void
     {
-        $garageId = $this->garageId;
+        $garageId  = $this->garageId;
         $companyId = $this->companyId;
 
         $partCode = trim((string) (
@@ -278,73 +278,82 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
         $description = trim((string) ($rowArray['complaints'] ?? ''));
 
-        // ── Stock deduction (consumed parts only) ──
+        // ─── Stock deduction (consumed parts only) ───
         $stockQuantity = 0;
-        $priceAtUse = null;
+        $priceAtUse    = null;
 
-        if ($partCode !== '' && $usedQuantity > 0 && $this->deductStock) {
-            $warehouse = $this->resolveWarehouse($partCode);
+        if ($partCode !== '' && $usedQuantity > 0) {
+            if ($this->deductStock) {
+                // Live import: check stock, deduct, snapshot price.
+                $warehouse = $this->resolveWarehouse($partCode);
 
-            if (! $warehouse) {
-                throw new RowSkippedException(
-                    __('messages.imports.reasons.part_not_found', ['code' => $partCode])
-                );
-            }
+                if (! $warehouse) {
+                    throw new RowSkippedException(
+                        __('messages.imports.reasons.part_not_found', ['code' => $partCode])
+                    );
+                }
 
-            $partName ??= $warehouse->name;
-
-            if ($usedQuantity > $warehouse->quantity) {
-                throw new RowSkippedException(__('messages.flash.stock_insufficient', [
-                    'name' => $warehouse->name,
-                    'requested' => $usedQuantity,
-                    'available' => $warehouse->quantity,
-                ]));
-            }
-
-            $stockQuantity = $warehouse->quantity;
-            $priceAtUse = $warehouse->price !== null ? (float) $warehouse->price : null;
-            $warehouse->decrement('quantity', $usedQuantity);
-
-            // Update the cache so subsequent rows see the new quantity.
-            $this->warehouseCache[$this->warehouseCacheKey($partCode)] = $warehouse->fresh();
-        } elseif ($partCode !== '' && $usedQuantity > 0 && ! $this->deductStock) {
-            // Historical mode: look up name and price only, never touch quantity.
-            $warehouse = $this->resolveWarehouse($partCode);
-
-            if ($warehouse) {
                 $partName ??= $warehouse->name;
-                $priceAtUse = $warehouse->price !== null ? (float) $warehouse->price : null;
-            }
-}
 
-        // ── Complaint item ──
+                if ($usedQuantity > $warehouse->quantity) {
+                    throw new RowSkippedException(__('messages.flash.stock_insufficient', [
+                        'name'      => $warehouse->name,
+                        'requested' => $usedQuantity,
+                        'available' => $warehouse->quantity,
+                    ]));
+                }
+
+                $stockQuantity = $warehouse->quantity;
+                $priceAtUse    = $warehouse->price !== null
+                    ? (float) $warehouse->price
+                    : null;
+
+                $warehouse->decrement('quantity', $usedQuantity);
+
+                // Refresh the cache so subsequent rows see the new quantity.
+                $this->warehouseCache[$this->warehouseCacheKey($partCode)] = $warehouse->fresh();
+            } else {
+                // Historical import: never touch stock, but still snapshot
+                // the current catalog price and name for reference.
+                $warehouse = $this->resolveWarehouse($partCode);
+
+                if ($warehouse) {
+                    $partName   ??= $warehouse->name;
+                    $priceAtUse = $warehouse->price !== null
+                        ? (float) $warehouse->price
+                        : null;
+                }
+            }
+        }
+
+        // ─── Complaint item ───
         if ($description !== '') {
             $complaint->items()->create([
                 'description' => $description,
-                'type' => $rowArray['complaint_type'] ?? null,
-                'garage_id' => $garageId,
-                'company_id' => $companyId,
+                'type'        => $rowArray['complaint_type'] ?? null,
+                'garage_id'   => $garageId,
+                'company_id'  => $companyId,
             ]);
         }
 
-        // ── Detail (0-qty allowed → inspection) ──
+        // ─── Detail (0-qty allowed → inspection) ───
         if ($partCode !== '') {
             $sourceType = match (true) {
-                ! $this->deductStock  => 'historical',
-                $usedQuantity <= 0    => 'inspection',
-                default               => 'warehouse',
+                ! $this->deductStock => 'historical',
+                $usedQuantity <= 0   => 'inspection',
+                default              => 'warehouse',
             };
 
             $complaint->details()->create([
                 'shikayet_index' => 0,
-                'code' => $partCode,
-                'name' => $partName ?? $partCode,
+                'code'           => $partCode,
+                'name'           => $partName ?? $partCode,
                 'stock_quantity' => $stockQuantity,
-                'used_quantity' => max(0, $usedQuantity),
-                'price_at_use' => $sourceType === 'inspection' ? 0 : $priceAtUse,   // ← YENİ
-                'source_type' => $sourceType,
-                'employee_id' => $this->resolveEmployeeId($rowArray),
-                'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
+                'used_quantity'  => max(0, $usedQuantity),
+                'price_at_use'   => $sourceType === 'inspection' ? 0 : $priceAtUse,
+                'source_type'    => $sourceType,
+                'employee_id'    => $this->resolveEmployeeId($rowArray),
+                'notes'          => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
             ]);
         }
     }
