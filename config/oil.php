@@ -7,8 +7,9 @@ return [
             '18m' => 30000,
         ],
         'gearbox' => [
-            'SHELL' => 180000,
-            'LUK'   => 120000,
+            'SHELL'   => 180000,
+            'LUK'     => 120000,
+            'default' => 180000,
         ],
         'axle' => [
             'default' => 180000,

@@ -139,13 +139,14 @@ class Bus extends Model
 
     public static function gearboxIntervalForBrand(?string $brand): int
     {
-        $fallback = (int) config('oil.intervals.axle.default', 180000);
+        $intervals = config('oil.intervals.gearbox', []);
+        $default   = (int) ($intervals['default'] ?? 180000);
 
         if ($brand === null || $brand === '') {
-            return $fallback;
+            return $default;
         }
 
-        return (int) (config('oil.intervals.gearbox', [])[$brand] ?? $fallback);
+        return (int) ($intervals[$brand] ?? $default);
     }
 
     public function nextOilIntervalKm(OilType $type): int

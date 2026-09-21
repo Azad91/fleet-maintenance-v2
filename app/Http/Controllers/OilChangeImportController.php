@@ -8,6 +8,7 @@ use App\Models\BusOilChange;
 use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -34,15 +35,23 @@ class OilChangeImportController extends Controller
         $this->authorize('import', BusOilChange::class);
 
         $validated = $request->validate([
-            'type'        => ['required', \Illuminate\Validation\Rule::in(OilType::values())],
-            'bus_length'  => ['nullable', 'integer', \Illuminate\Validation\Rule::in([12, 18])],
-            'file'        => ['required', 'mimes:xlsx,xls,csv', 'max:10240'],
+            'type'       => ['required', \Illuminate\Validation\Rule::in(OilType::values())],
+            'bus_length' => ['nullable', 'integer', \Illuminate\Validation\Rule::in([12, 18])],
+            'file'       => ['required', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
         $type = OilType::from($validated['type']);
         $busLengthM = $type === OilType::Motor
             ? (int) ($validated['bus_length'] ?? 12)
             : null;
+
+        // ─── Debug: log start of import ───
+        Log::info('Oil import started', [
+            'type'       => $type->value,
+            'bus_length' => $busLengthM,
+            'file'       => $request->file('file')->getClientOriginalName(),
+            'garage_id'  => $garageId,
+        ]);
 
         try {
             $import = new BusOilChangesImport(
@@ -56,6 +65,13 @@ class OilChangeImportController extends Controller
 
             $skipped = $import->skipped;
             $imported = $import->importedCount;
+
+            // ─── Debug: log result ───
+            Log::info('Oil import finished', [
+                'type'     => $type->value,
+                'imported' => $imported,
+                'skipped'  => count($skipped),
+            ]);
 
             if (empty($skipped)) {
                 return redirect()
@@ -72,6 +88,15 @@ class OilChangeImportController extends Controller
                 ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
 
         } catch (\Throwable $e) {
+            // ─── Debug: log full failure ───
+            Log::error('Oil import failed', [
+                'type'       => $type->value,
+                'error'      => $e->getMessage(),
+                'file'       => $e->getFile(),
+                'line'       => $e->getLine(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
             report($e);
 
             return redirect()

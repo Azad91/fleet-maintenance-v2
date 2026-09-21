@@ -6,14 +6,6 @@ use App\Enums\OilType;
 use App\Models\Bus;
 use Illuminate\Support\Collection;
 
-/**
- * Computes the oil-change status for buses.
- *
- * The status is derived from three numbers:
- *   - last change's `actual_km`
- *   - the interval valid at that moment (snapshotted on the change)
- *   - the bus's current km (latest daily record, falling back to `bus.km`)
- */
 class OilChangeStatusService
 {
     public function forBus(Bus $bus, OilType $type): OilChangeStatus
@@ -40,7 +32,15 @@ class OilChangeStatusService
             );
         }
 
-        $nextDueKm   = $last->actual_km + $last->interval_km;
+        // Interval seçimi:
+        //   - Korobka → sabit 180 000 km (Excel qarışıq olduğu üçün)
+        //   - Digərləri → son dəyişmədə snapshot edilmiş interval
+        $interval = match ($type) {
+            OilType::Gearbox => 180000,
+            default          => $last->interval_km,
+        };
+
+        $nextDueKm   = $last->actual_km + $interval;
         $remainingKm = $nextDueKm - $currentKm;
 
         return new OilChangeStatus(
@@ -55,9 +55,6 @@ class OilChangeStatusService
     }
 
     /**
-     * Priority list for a set of buses, sorted by urgency
-     * (most overdue / no-history first).
-     *
      * @param  \Illuminate\Support\Collection<int, Bus>  $buses
      * @return \Illuminate\Support\Collection<int, OilChangeStatus>
      */

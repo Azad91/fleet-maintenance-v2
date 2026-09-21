@@ -1,7 +1,10 @@
 @php
     use App\Enums\OilType;
 
-    $isEdit = isset($change) && $change->exists;
+    // Unified: on create the caller doesn't pass $change, so we
+    // normalize it to null and use the ?-> operator everywhere.
+    $change = $change ?? null;
+    $isEdit = $change !== null && $change->exists;
 @endphp
 
 @if ($errors->any())
@@ -24,7 +27,7 @@
             <option value="">{{ __('messages.common.select') }}</option>
             @foreach($buses as $bus)
                 <option value="{{ $bus->id }}"
-                    @selected(old('bus_id', $change->bus_id ?? $selectedBusId ?? null) == $bus->id)>
+                    @selected(old('bus_id', $change?->bus_id ?? $selectedBusId ?? null) == $bus->id)>
                     {{ $bus->dqn }}
                     @if($bus->route_number) · {{ __('messages.daily_km.route_label', ['route' => $bus->route_number]) }} @endif
                 </option>
@@ -40,7 +43,7 @@
                 onchange="onTypeChange()">
             @foreach(OilType::cases() as $type)
                 <option value="{{ $type->value }}"
-                    @selected(old('oil_type', $change->oil_type?->value ?? $selectedOilType ?? 'motor') === $type->value)>
+                    @selected(old('oil_type', $change?->oil_type?->value ?? $selectedOilType ?? 'motor') === $type->value)>
                     {{ $type->icon() }} {{ $type->label() }}
                 </option>
             @endforeach
@@ -52,7 +55,7 @@
             {{ __('messages.oil_change.brand') }} <span class="text-danger">*</span>
         </label>
         <input type="text" name="oil_brand" id="oil_brand" class="form-control"
-               value="{{ old('oil_brand', $change->oil_brand ?? '') }}"
+               value="{{ old('oil_brand', $change?->oil_brand ?? '') }}"
                placeholder="SHELL, LUK, ..."
                style="text-transform: uppercase;">
         <small class="text-muted">
@@ -70,7 +73,7 @@
         </label>
         <input type="number" name="scheduled_km" id="scheduled_km" class="form-control"
                min="0"
-               value="{{ old('scheduled_km', $change->scheduled_km ?? '') }}"
+               value="{{ old('scheduled_km', $change?->scheduled_km ?? '') }}"
                placeholder="180000">
     </div>
 
@@ -80,7 +83,7 @@
         </label>
         <input type="number" name="actual_km" id="actual_km" class="form-control"
                min="0" required
-               value="{{ old('actual_km', $change->actual_km ?? '') }}">
+               value="{{ old('actual_km', $change?->actual_km ?? '') }}">
     </div>
 
     <div class="col-md-6">
@@ -88,7 +91,7 @@
             {{ __('messages.oil_change.changed_at') }}
         </label>
         <input type="date" name="changed_at" id="changed_at" class="form-control"
-               value="{{ old('changed_at', $change->changed_at?->format('Y-m-d') ?? '') }}">
+               value="{{ old('changed_at', $change?->changed_at?->format('Y-m-d') ?? '') }}">
     </div>
 
     <div class="col-12">
@@ -96,7 +99,7 @@
             {{ __('messages.oil_change.notes') }}
         </label>
         <textarea name="notes" id="notes" class="form-control" rows="2"
-                  maxlength="2000">{{ old('notes', $change->notes ?? '') }}</textarea>
+                  maxlength="2000">{{ old('notes', $change?->notes ?? '') }}</textarea>
     </div>
 </div>
 

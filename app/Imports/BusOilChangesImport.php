@@ -7,33 +7,22 @@ use App\Models\Bus;
 use App\Models\BusOilChange;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 /**
  * Generic import for bus oil change history.
  *
- * One class handles all three oil types. The behavior varies by type:
+ * Handles three oil types with type-specific header parsing:
  *
- *   MOTOR    — columns like "324000 BAKIMI" hold the scheduled km,
- *              the cell value is the actual km. Interval is derived
- *              from the bus length (12m=36000, 18m=30000).
- *
- *   GEARBOX  — columns like "SHELL 1", "LUK 2" — the brand is taken
- *              from the column header. Interval depends on the brand
- *              (SHELL=180k, LUK=120k).
- *
- *   AXLE     — columns are pure numbers ("360", "540") meaning
- *              "360000 km", "540000 km". Interval is fixed at 180k.
- *
- * The import is idempotent: re-uploading the same file will not
- * create duplicates. Existing (bus, type, actual_km) rows are skipped.
+ *   MOTOR    — headers like "324000 BAKIMI" / "396000 BAKIMI"
+ *   GEARBOX  — headers like "SHELL 1" / "LUK 1" / "SHELL 2" / ...
+ *   AXLE     — numeric headers like "360" / "540" (thousands of km)
  */
 class BusOilChangesImport extends AbstractImport implements ToCollection, WithChunkReading
 {
     /**
-     * Column mappings detected from the header row.
-     *
      * @var array<int, array{scheduled: int|null, brand: string|null}>
      */
     protected array $kmColumns = [];
@@ -65,27 +54,22 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
             return;
         }
 
-        // Cache key survives between chunks so the header mapping
-        // detected in the first chunk is still available later.
         $cacheKey = "oil_import_header:{$this->garageId}:{$this->type->value}:"
             .spl_object_id($this);
 
         if (! $this->headerParsed) {
             $firstRow = $rows->first()->toArray();
 
-            // Header row is the one whose DQN column contains "DQN"
-            // or "PLAKA" instead of an actual bus DQN.
             if ($this->looksLikeHeader($firstRow)) {
                 $this->parseHeader($firstRow);
                 $this->headerParsed = true;
                 Cache::put($cacheKey, [
-                    'dqnCol'   => $this->dqnColumnIndex,
-                    'kmCols'   => $this->kmColumns,
+                    'dqnCol' => $this->dqnColumnIndex,
+                    'kmCols' => $this->kmColumns,
                 ], now()->addHours(2));
 
                 $rows = $rows->slice(1);
             } else {
-                // Continuing chunk — restore mapping from cache.
                 $cached = Cache::get($cacheKey);
                 if (! $cached) {
                     throw new \RuntimeException(
@@ -99,6 +83,12 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
         }
 
         if ($this->dqnColumnIndex === null || empty($this->kmColumns)) {
+            Log::warning('Oil import aborted: no DQN column or no KM columns detected', [
+                'type' => $this->type->value,
+                'dqn_col' => $this->dqnColumnIndex,
+                'km_col_count' => count($this->kmColumns),
+            ]);
+
             return;
         }
 
@@ -106,7 +96,6 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
         $dqnList = $rows
             ->map(fn ($r) => trim((string) ($r[$this->dqnColumnIndex] ?? '')))
             ->filter()
-            ->unique()
             ->values()
             ->all();
 
@@ -158,9 +147,9 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 continue;
             }
 
-            // GEARBOX: "SHELL 1", "LUK 2", "SHELL" ...
+            // GEARBOX: "SHELL 1", "LUK 2", "SHELL", "LUK", "shell 1 180" ...
             if ($this->type === OilType::Gearbox
-                && preg_match('/^(shell|luk)\b/i', $v, $m)) {
+                && preg_match('/\b(shell|luk)\b/i', $v, $m)) {
                 $this->kmColumns[(int) $idx] = [
                     'scheduled' => null,
                     'brand'     => strtoupper($m[1]),
@@ -172,7 +161,6 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
             if ($this->type === OilType::Axle
                 && preg_match('/^(\d+)$/', $v, $m)) {
                 $km = (int) $m[1];
-                // Values under 10000 represent thousands of km.
                 if ($km < 10000) {
                     $km *= 1000;
                 }
@@ -182,6 +170,14 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 ];
             }
         }
+
+        // ─── Debug: log what was detected ───
+        Log::info('Oil import header parse', [
+            'type'             => $this->type->value,
+            'header_raw'       => $header,
+            'detected_dqn_col' => $this->dqnColumnIndex,
+            'detected_km_cols' => $this->kmColumns,
+        ]);
     }
 
     protected function processRow(array $row, Collection $buses): void
@@ -191,7 +187,7 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
         $dqn = trim((string) ($row[$this->dqnColumnIndex] ?? ''));
 
         if ($dqn === '') {
-            return; // Empty rows are common in real Excel files.
+            return;
         }
 
         /** @var Bus|null $bus */
@@ -220,7 +216,6 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
             $brand    = $meta['brand'];
             $interval = $this->resolveInterval($bus, $brand);
 
-            // Idempotency: skip if a matching row already exists.
             $exists = BusOilChange::withoutGlobalScopes()
                 ->where('bus_id', $bus->id)
                 ->where('oil_type', $this->type->value)
@@ -259,7 +254,7 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 12      => 36000,
                 default => $bus->motorOilIntervalKm(),
             },
-            OilType::Gearbox => Bus::gearboxIntervalForBrand($brand),
+            OilType::Gearbox => 180000,
             OilType::Axle    => 180000,
         };
     }
