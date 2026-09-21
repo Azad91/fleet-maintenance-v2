@@ -109,7 +109,7 @@
                                 <span class="badge bg-info">{{ $user->garages_count }}</span>
                             </td>
                             <td>
-                                @if($user->is_active ?? true)
+                                @if($user->is_active)
                                     <span class="badge text-bg-success">{{ __('messages.common.active') }}</span>
                                 @else
                                     <span class="badge text-bg-secondary">{{ __('messages.common.inactive') }}</span>
