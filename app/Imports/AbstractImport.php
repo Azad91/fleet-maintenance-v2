@@ -2,11 +2,14 @@
 
 namespace App\Imports;
 
+use Illuminate\Support\Str;
+
 /**
  * Base class for all Excel imports.
  *
  * Centralizes:
  *   - garage / company context validation (constructor guard)
+ *   - a per-instance importToken for cache-key isolation
  *   - skip tracking (recordSkip helper)
  *   - import count tracking
  *   - a consistent chunk size (100)
@@ -40,6 +43,18 @@ abstract class AbstractImport
     protected int $rowCounter = 0;
 
     /**
+     * Per-instance unique token.
+     *
+     * Used by imports that need a cache key stable across chunks of the
+     * SAME import but distinct from any other import instance. The
+     * PHP-provided spl_object_id() is only unique within a single
+     * process; two queue workers or a web request running alongside an
+     * artisan command can both see id=1 for their respective import
+     * objects. A random token makes the key globally safe.
+     */
+    public readonly string $importToken;
+
+    /**
      * @param  int|null  $garageId  Positive for tenant imports, null for global catalogs.
      * @param  int|null  $companyId  Optional, used for strict company scoping.
      *
@@ -49,6 +64,8 @@ abstract class AbstractImport
         public readonly ?int $garageId = null,
         public readonly ?int $companyId = null,
     ) {
+        $this->importToken = (string) Str::uuid();
+
         if ($garageId !== null && $garageId <= 0) {
             throw new \InvalidArgumentException(sprintf(
                 '%s requires a valid garage id (> 0) when one is provided. Got [%d]. '
