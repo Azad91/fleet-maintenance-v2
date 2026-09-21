@@ -78,6 +78,10 @@ class BusService
      * `auditBulkUpdate()` compares the requested new value against the
      * current value stored in the database. If we update first, the
      * comparison sees identical values and silently skips logging.
+     *
+     * Ids are processed in chunks so a 10 000-row selection does not
+     * overflow PostgreSQL's parameter limit (65 535) nor time out
+     * inside auditBulkUpdate's per-row INSERT loop.
      */
     public function bulkUpdateStatus(array $ids, bool $isActive): void
     {
@@ -85,20 +89,21 @@ class BusService
             return;
         }
 
-        Bus::auditBulkUpdate(
-            $ids,
-            ['is_active' => $isActive],
-            $isActive ? 'bulk_activated' : 'bulk_deactivated'
-        );
+        $event = $isActive ? 'bulk_activated' : 'bulk_deactivated';
 
-        Bus::whereIn('id', $ids)->update(['is_active' => $isActive]);
+        foreach (array_chunk($ids, 500) as $chunk) {
+            Bus::auditBulkUpdate($chunk, ['is_active' => $isActive], $event);
+
+            Bus::whereIn('id', $chunk)->update(['is_active' => $isActive]);
+        }
     }
 
     /**
      * Bulk soft-delete multiple buses.
      *
      * The audit snapshot must be taken before deletion so that the
-     * original values are preserved in the audit log.
+     * original values are preserved in the audit log. Ids are
+     * chunked for the same reason as bulkUpdateStatus().
      */
     public function bulkDelete(array $ids): void
     {
@@ -106,13 +111,19 @@ class BusService
             return;
         }
 
-        Bus::auditBulkDelete($ids);
+        foreach (array_chunk($ids, 500) as $chunk) {
+            Bus::auditBulkDelete($chunk);
 
-        Bus::whereIn('id', $ids)->delete();
+            Bus::whereIn('id', $chunk)->delete();
+        }
     }
 
     /**
      * Bulk soft-delete ALL buses matching the given filters.
+     *
+     * Ids are streamed from the database in chunks via cursor() so the
+     * full list never lives in PHP memory. Each chunk is then deleted
+     * through bulkDelete() so audit entries continue to be written.
      */
     public function bulkDeleteAllByFilters(array $filters): int
     {
@@ -132,14 +143,24 @@ class BusService
             }
         }
 
-        $ids = $query->pluck('id')->all();
+        $totalDeleted = 0;
+        $buffer       = [];
 
-        if (empty($ids)) {
-            return 0;
+        foreach ($query->select('id')->cursor() as $row) {
+            $buffer[] = $row->id;
+
+            if (count($buffer) >= 500) {
+                $this->bulkDelete($buffer);
+                $totalDeleted += count($buffer);
+                $buffer = [];
+            }
         }
 
-        $this->bulkDelete($ids);
+        if (! empty($buffer)) {
+            $this->bulkDelete($buffer);
+            $totalDeleted += count($buffer);
+        }
 
-        return count($ids);
+        return $totalDeleted;
     }
 }
