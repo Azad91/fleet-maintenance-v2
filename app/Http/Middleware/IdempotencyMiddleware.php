@@ -16,6 +16,14 @@ class IdempotencyMiddleware
 
     private const MAX_KEY_LENGTH = 255;
 
+    /**
+     * Responses larger than this are not cached. Guards against
+     * PDF/Excel exports and binary downloads bloating the cache
+     * store. 512 KB is generous for JSON payloads while keeping
+     * the cache fast.
+     */
+    private const MAX_CACHEABLE_RESPONSE_BYTES = 512 * 1024;
+
     private const STRIPPED_HEADERS = [
         'set-cookie',
         'cookie',
@@ -60,15 +68,23 @@ class IdempotencyMiddleware
             $response = $next($request);
 
             // 4. UĞURLU CAVABI KEŞLƏ
-            $status = $response->getStatusCode();
+            $status              = $response->getStatusCode();
             $hasValidationErrors = $this->responseHasValidationErrors($response);
 
             if ($status >= 200 && $status < 400 && ! $hasValidationErrors) {
-                Cache::put($cacheKey, [
-                    'status' => $status,
-                    'headers' => $this->filterHeaders($response->headers->all()),
-                    'content' => $response->getContent(),
-                ], now()->addHours(self::CACHE_TTL_HOURS));
+                $content = (string) $response->getContent();
+
+                // Skip caching oversized responses (PDFs, Excel
+                // exports, binary downloads). Writing them would
+                // bloat the cache store and slow down every later
+                // request that touches the same key.
+                if (strlen($content) <= self::MAX_CACHEABLE_RESPONSE_BYTES) {
+                    Cache::put($cacheKey, [
+                        'status'  => $status,
+                        'headers' => $this->filterHeaders($response->headers->all()),
+                        'content' => $content,
+                    ], now()->addHours(self::CACHE_TTL_HOURS));
+                }
             }
 
             return $response;
@@ -139,6 +155,7 @@ class IdempotencyMiddleware
      */
     private function filterHeaders(array $headers): array
     {
+
         $filtered = [];
 
         foreach ($headers as $name => $values) {
