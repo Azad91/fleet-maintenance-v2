@@ -137,7 +137,7 @@ class ComplaintService
         });
     }
 
-    /**
+        /**
      * Bulk soft-delete multiple complaints.
      *
      * Each complaint is deleted through the existing delete() method
@@ -148,10 +148,8 @@ class ComplaintService
      * transaction. This is a deliberate trade-off:
      *
      *   - One giant transaction over 2000+ rows holds table locks
-     *     for too long, blocks other users, and risks PHP timeouts
-     *     if anything slows down.
-     *   - One transaction per row would be correct but slow (2000+
-     *     transaction boundaries).
+     *     for too long, blocks other users, and risks PHP timeouts.
+     *   - One transaction per row would be correct but slow.
      *
      * Chunking gives us atomicity at a reasonable granularity while
      * keeping each transaction short. If a chunk fails, earlier
@@ -185,6 +183,54 @@ class ComplaintService
                 }
             });
         }
+
+        return $deleted;
+    }
+
+    /**
+     * Bulk soft-delete ALL complaints matching the given Eloquent query.
+     *
+     * This is the memory-safe variant of bulkDelete(): instead of
+     * loading every matching ID into a PHP array up front (which for
+     * 10 000+ rows can exhaust memory), it streams the IDs from the
+     * database in fixed-size chunks via chunkById().
+     *
+     * Each chunk runs its own transaction. If a chunk fails, earlier
+     * chunks stay committed and the caller can retry the rest.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Complaint>  $query
+     * @param  int  $chunkSize
+     * @return int  Number of complaints actually deleted
+     */
+    public function bulkDeleteByQuery($query, int $chunkSize = 100): int
+    {
+        $deleted = 0;
+
+        // chunkById() works on a Builder that selects the primary key.
+        // The filter query may include joins and eager loads — we strip
+        // them because chunkById() needs a clean, ordered ID stream.
+        $idQuery = $query->clone()
+            ->reorder()
+            ->select('complaints.id');
+
+        $idQuery->chunkById($chunkSize, function ($rows) use (&$deleted) {
+            $ids = $rows->pluck('id')->all();
+
+            if (empty($ids)) {
+                return;
+            }
+
+            DB::transaction(function () use ($ids, &$deleted) {
+                $complaints = Complaint::with('details')
+                    ->whereIn('id', $ids)
+                    ->get();
+
+                foreach ($complaints as $complaint) {
+                    $this->delete($complaint);
+                    $deleted++;
+                }
+            });
+        }, 'complaints.id', 'id');
 
         return $deleted;
     }

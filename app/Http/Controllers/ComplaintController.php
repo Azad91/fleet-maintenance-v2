@@ -197,39 +197,32 @@ class ComplaintController extends Controller
             ->route('complaints.index')
             ->with('success', __('messages.flash.deleted', ['Item' => 'Card']));
     }
-    /**
+        /**
      * Bulk soft-delete ALL complaints matching the current filter.
      *
-     * Unlike bulkDelete() which operates on an explicit list of IDs
-     * submitted by the browser, this method rebuilds the exact same
-     * query the list page uses (buildFilteredQuery), extracts every
-     * matching ID, and deletes them in one go.
+     * Memory-safe variant: the ID stream is pulled from the database
+     * in fixed-size chunks via ComplaintService::bulkDeleteByQuery()
+     * instead of loading every matching ID into a PHP array. On a
+     * garage with 20 000+ matching cards this avoids an OOM kill.
      *
-     * Use case: "I filtered Yer=Yol and I want to remove all 2187
-     * results, not just the 25 visible on page 1."
-     *
-     * The time limit is raised because a 2000+ row delete, even
-     * chunked, can exceed PHP's default 30-second cap when each
-     * complaint has several details to restore stock for.
+     * The time limit is raised because each chunk restores stock per
+     * detail row, and 20+ chunks can exceed PHP's default 30-second cap.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
         $this->authorize('delete', Complaint::class);
 
-        // Raise the ceiling for large batches. Chunking in
-        // ComplaintService keeps individual transactions short, but
-        // the sum of all chunks can still exceed 30 seconds.
         @set_time_limit(300);
 
-        $ids = $this->buildFilteredQuery($request)->pluck('id')->all();
+        $count = $this->complaintService->bulkDeleteByQuery(
+            $this->buildFilteredQuery($request)
+        );
 
-        if (empty($ids)) {
+        if ($count === 0) {
             return redirect()
                 ->route('complaints.index')
                 ->with('error', __('messages.flash.none_selected'));
         }
-
-        $count = $this->complaintService->bulkDelete($ids);
 
         return redirect()
             ->route('complaints.index')
