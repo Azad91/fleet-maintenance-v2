@@ -1168,23 +1168,39 @@ return [
     ],
 
     'oil_change' => [
-        'title'          => 'Yağ dəyişmələri',  // EN: 'Oil Changes'
-        'subtitle'       => '...',
-        'priority'       => 'Prioritet',
-        'motor'          => 'Motor yağı',
-        'gearbox'        => 'Korobka yağı',
-        'axle'           => 'Most yağı',
+        'title'          => 'Yağ dəyişmələri',
+        'subtitle'       => 'Prioritet siyahısı və hər avtobusun yağ dəyişmə tarixçəsi.',
+        'priority'       => 'Prioritet siyahısı',
+        'history'        => 'Tarixçə',
+        'all_types'      => 'Hamısı',
+        'new'            => 'Yeni qeyd',
+        'add_change'     => 'Yağ dəyişməsi əlavə et',
+        'edit_change'    => 'Yağ dəyişməsini redaktə et',
+
+        'bus'            => 'Avtobus',
+        'type'           => 'Növ',
+        'brand'          => 'Marka',
         'current_km'     => 'Cari km',
         'last_change_km' => 'Son dəyişmə',
         'next_due_km'    => 'Növbəti dəyişmə',
         'remaining_km'   => 'Qalan km',
+        'overdue_km'     => 'Gecikmə',
         'interval_km'    => 'İnterval',
         'changed_at'     => 'Dəyişmə tarixi',
-        'oil_brand'      => 'Yağ markası',
         'scheduled_km'   => 'Planlaşdırılan km',
         'actual_km'      => 'Faktiki km',
+        'notes'          => 'Qeyd',
+        'status'         => 'Status',
+
         'no_history'     => 'Tarixçə yoxdur',
-        'status' => [
+        'no_active_buses' => 'Aktiv avtobus yoxdur.',
+        'no_changes'     => 'Bu avtobus üçün yağ dəyişmə qeydi yoxdur.',
+        'no_priority_items' => 'Diqqət tələb edən avtobus yoxdur. 👍',
+
+        'filter_status'  => 'Status filteri',
+        'all_statuses'   => 'Bütün statuslar',
+
+        'status'         => [
             'overdue'    => 'Gecikib',
             'critical'   => 'Təcili',
             'due-soon'   => 'Tezliklə',

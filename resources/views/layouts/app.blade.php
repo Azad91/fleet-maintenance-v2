@@ -79,7 +79,7 @@
                     $canViewComplaints = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::complaintRoles()) ?? false);
                     $canViewWarehouse  = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::warehouseRoles()) ?? false);
                     $canViewMotorOil   = $isSuperAdmin || $isAdmin;
-
+                    $canViewOilChanges = $isSuperAdmin || $isAdmin;
                     // ---- Daily records ----
                     $canViewDailyStatus = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyStatusRoles()) ?? false);
                     $canViewDailyKm     = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyKmRoles()) ?? false);
@@ -189,6 +189,11 @@
                     @if($canViewMotorOil)
                         <a href="{{ route('motor-oil.index') }}" class="fleet-nav__link {{ request()->routeIs('motor-oil.*') ? 'is-active' : '' }}">
                             <i class="fas fa-oil-can"></i><span>{{ __('messages.nav.motor_oil') }}</span>
+                        </a>
+                    @endif
+                    @if($canViewOilChanges)
+                        <a href="{{ route('oil-changes.index') }}" class="fleet-nav__link {{ request()->routeIs('oil-changes.*') ? 'is-active' : '' }}">
+                            <i class="fas fa-oil-can-drip"></i><span>{{ __('messages.oil_change.title') }}</span>
                         </a>
                     @endif
                 @endif
