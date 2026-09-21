@@ -106,7 +106,17 @@ class BusDailyStatusController extends Controller
             ])->withInput();
         }
 
-        BusDailyStatus::create($validated);
+        try {
+            BusDailyStatus::create($validated);
+        } catch (\Throwable $e) {
+            if (! $this->isUniqueViolation($e)) {
+                throw $e;
+            }
+
+            return back()->withErrors([
+                'date' => __('messages.flash.duplicate_date', ['date' => $request->date]),
+            ])->withInput();
+        }
 
         return redirect()->route('bus-daily-statuses.index')
             ->with('success', __('messages.flash.created', ['Item' => 'Status']));
@@ -151,7 +161,17 @@ class BusDailyStatusController extends Controller
             ])->withInput();
         }
 
-        $status->update($validated);
+        try {
+            $status->update($validated);
+        } catch (\Throwable $e) {
+            if (! $this->isUniqueViolation($e)) {
+                throw $e;
+            }
+
+            return back()->withErrors([
+                'date' => __('messages.flash.duplicate_date', ['date' => $request->date]),
+            ])->withInput();
+        }
 
         return redirect()->route('bus-daily-statuses.index')
             ->with('success', __('messages.flash.updated', ['Item' => 'Status']));

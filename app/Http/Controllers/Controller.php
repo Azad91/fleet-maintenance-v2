@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\GarageContext;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 abstract class Controller
@@ -40,6 +41,18 @@ abstract class Controller
         }
 
         return implode(',', $roles);
+    }
+
+    /**
+     * True when the given throwable is a PostgreSQL unique-violation
+     * (SQLSTATE 23505). Used to turn a race condition between an
+     * "is this unique?" pre-check and the subsequent insert into a
+     * friendly validation error instead of a raw 500 stack trace.
+     */
+    protected function isUniqueViolation(\Throwable $e): bool
+    {
+        return $e instanceof QueryException
+            && ($e->errorInfo[0] ?? null) === '23505';
     }
 
     /**

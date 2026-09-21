@@ -107,7 +107,22 @@ class DailyKmRecordController extends Controller
             ])->withInput();
         }
 
-        DailyKmRecord::create($validated);
+        try {
+            DailyKmRecord::create($validated);
+        } catch (\Throwable $e) {
+            // Race-condition guard: another request may have inserted
+            // the same (bus, date) between our exists() check and the
+            // create(). The partial unique index rejects the second
+            // insert with SQLSTATE 23505; surface it as a normal
+            // validation error instead of a raw 500.
+            if (! $this->isUniqueViolation($e)) {
+                throw $e;
+            }
+
+            return back()->withErrors([
+                'date' => __('messages.flash.km_already_recorded', ['date' => $request->date]),
+            ])->withInput();
+        }
 
         return redirect()->route('daily-km-records.index')
             ->with('success', __('messages.flash.created', ['Item' => 'KM record']));
@@ -182,7 +197,17 @@ class DailyKmRecordController extends Controller
             ])->withInput();
         }
 
-        $record->update($validated);
+        try {
+            $record->update($validated);
+        } catch (\Throwable $e) {
+            if (! $this->isUniqueViolation($e)) {
+                throw $e;
+            }
+
+            return back()->withErrors([
+                'date' => __('messages.flash.km_already_recorded', ['date' => $request->date]),
+            ])->withInput();
+        }
 
         return redirect()->route('daily-km-records.index')
             ->with('success', __('messages.flash.updated', ['Item' => 'KM record']));
