@@ -93,6 +93,15 @@ class AssignmentController extends Controller
             );
         });
 
+        // Invalidate the cached isDirector() result on both affected
+        // users so any subsequent check within this request sees the
+        // new state.
+        $newDirector->forgetDirectorCache();
+
+        if ($deactivatedDirector) {
+            $deactivatedDirector->forgetDirectorCache();
+        }
+
         $message = $deactivatedDirector
             ? __('messages.super_admin.assignments.director_changed', [
                 'new' => $newDirector->name,
@@ -126,6 +135,8 @@ class AssignmentController extends Controller
                 companyId: $company->id,
             );
         });
+
+        $user->forgetDirectorCache();
 
         return back()->with('success', __(
             'messages.super_admin.assignments.director_removed',

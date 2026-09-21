@@ -46,6 +46,10 @@ class CompanyOnboardingService
                 'role' => 'director',
                 'is_active' => true,
             ]);
+            // The freshly-created director instance may be reused by
+            // the caller in the same request (e.g. tests, seeders).
+            // Clear any cached isDirector() result before returning.
+            $director->forgetDirectorCache();
 
             // Audit: record the pivot attachment on the Company.
             $this->pivotAuditor->log(

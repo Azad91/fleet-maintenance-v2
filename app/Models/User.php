@@ -32,6 +32,21 @@ class User extends Authenticatable implements MustVerifyEmail
     private ?bool $cachedIsDirector = null;
 
     /**
+     * Invalidate the per-instance isDirector() cache.
+     *
+     * Call this immediately after any pivot change on the
+     * `company_user` table when the same User instance will be
+     * inspected in the same request. Onboarding services and the
+     * AssignmentController already call this; new call sites that
+     * mutate the pivot should do the same.
+     */
+    public function forgetDirectorCache(): static
+    {
+        $this->cachedIsDirector = null;
+
+        return $this;
+    }
+    /**
      * Mass-assignable attributes.
      *
      * NOTE: 'role' is intentionally NOT fillable. It must be set explicitly
@@ -167,6 +182,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // ==================== COMPANY-LEVEL ROLE CHECKS ====================
 
+    /**
+     * True when the user is an active Company Director.
+     *
+     * Result is cached per instance because the sidebar layout and
+     * PostLoginRedirector both call this on every request. The cache
+     * is invalidated by forgetDirectorCache(), which callers must
+     * invoke after mutating the `company_user` pivot on this same
+     * instance.
+     */
     public function isDirector(): bool
     {
         return $this->cachedIsDirector ??= $this->companies()
