@@ -74,8 +74,11 @@
                         <tr>
                             <th>{{ __('messages.oil_change.bus') }}</th>
                             <th>{{ __('messages.oil_change.type') }}</th>
+                            <th class="text-end">{{ __('messages.oil_change.last_change_km') }}</th>
+                            <th class="text-end">{{ __('messages.oil_change.interval_km') }}</th>
                             <th class="text-end">{{ __('messages.oil_change.current_km') }}</th>
                             <th class="text-end">{{ __('messages.oil_change.next_due_km') }}</th>
+                            <th class="text-end">{{ __('messages.oil_change.next_scheduled_km') }}</th>
                             <th class="text-end">{{ __('messages.oil_change.remaining_km') }}</th>
                             <th class="text-center">{{ __('messages.oil_change.column_status') }}</th>
                             <th class="text-end">{{ __('messages.common.actions') }}</th>
@@ -103,10 +106,43 @@
                                         </span>
                                     </td>
                                     <td class="text-end">
+                                        @if($status->lastChange)
+                                            <strong>{{ number_format($status->lastChange->actual_km, 0, '', '.') }}</strong> km
+                                            @if($status->lastChange->changed_at)
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ $status->lastChange->changed_at->format('d.m.Y') }}
+                                                </small>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if($status->lastChange)
+                                            <strong>{{ number_format($status->lastChange->interval_km, 0, '', '.') }}</strong> km
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
                                         <strong>{{ number_format($status->currentKm, 0, '', '.') }}</strong> km
                                     </td>
                                     <td class="text-end">
-                                        {{ number_format($status->nextDueKm, 0, '', '.') }} km
+                                        @if($status->nextDueKm)
+                                            {{ number_format($status->nextDueKm, 0, '', '.') }} km
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if($status->nextCatalogKm)
+                                            <strong style="color: #2563eb; font-size: 15px;">
+                                                {{ number_format($status->nextCatalogKm, 0, '', '.') }}
+                                            </strong> km
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
                                     </td>
                                     <td class="text-end">
                                         @if($status->isOverdue())
