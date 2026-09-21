@@ -56,7 +56,14 @@ class MotorOilController extends Controller
         $grouped = $details->groupBy('km');
         $brands = BusBrand::active()->orderBy('name')->get();
 
-        if (! $request->ajax() && ! $request->wantsJson()) {
+        // Same AJAX detection pattern as the rest of the codebase
+        // (ComplaintController, WarehouseController, BusController).
+        // $request->ajax() is deprecated in Laravel 11+.
+        $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->boolean('_ajax')
+            || $request->wantsJson();
+
+        if (! $isAjax) {
             return view('motor-oil.index', compact('grouped', 'search', 'brands', 'brandId'));
         }
 
