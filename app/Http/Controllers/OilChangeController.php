@@ -26,9 +26,6 @@ class OilChangeController extends Controller
     {
         $this->authorize('viewAny', BusOilChange::class);
 
-        $type = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
-            ?? OilType::Motor;
-
         // Status filter: all | overdue | critical | due-soon | ok | no-history
         $statusFilter = (string) $request->input('status', 'all');
         $validStatuses = ['all', 'overdue', 'critical', 'due-soon', 'ok', 'no-history'];
@@ -37,25 +34,66 @@ class OilChangeController extends Controller
             $statusFilter = 'all';
         }
 
-        $buses = Bus::with(['latestKmRecord', 'oilChanges' => function ($q) use ($type) {
-            $q->where('oil_type', $type->value)->orderByDesc('actual_km');
-        }])
+        // Eager-load all oil changes (all types) and latest km record.
+        $buses = Bus::with([
+            'latestKmRecord',
+            'oilChanges' => fn ($q) => $q->orderByDesc('actual_km'),
+        ])
             ->where('is_active', true)
             ->orderBy('dqn')
             ->get();
 
-        $statuses = $this->statusService->priorityFor($buses, $type);
+        // Build one row per bus, with all three oil type statuses.
+        $rows = $buses->map(function (Bus $bus) {
+            $statuses = collect(OilType::cases())
+                ->mapWithKeys(fn (OilType $t) => [$t->value => $this->statusService->forBus($bus, $t)]);
 
-        // Apply status filter
+            // Determine the "worst" status across all three types to sort by.
+            $priority = [
+                'no-history' => 5,
+                'ok'         => 4,
+                'due-soon'   => 3,
+                'critical'   => 2,
+                'overdue'    => 1,
+            ];
+
+            $worstPriority = collect($statuses->values())
+                ->map(fn ($s) => $priority[$s->status] ?? 99)
+                ->min();
+
+            // For sorting: use the smallest remaining km across types
+            // (overdue rows are negative, so they float to the top).
+            $minRemaining = collect($statuses->values())
+                ->map(fn ($s) => $s->remainingKm)
+                ->filter(fn ($v) => $v !== null)
+                ->min() ?? PHP_INT_MAX;
+
+            return [
+                'bus' => $bus,
+                'statuses' => $statuses,
+                'worst_priority' => $worstPriority,
+                'min_remaining' => $minRemaining,
+            ];
+        });
+
+        // Apply status filter: keep a bus if ANY of its three oil types
+        // matches the requested status.
         if ($statusFilter !== 'all') {
-            $statuses = $statuses
-                ->filter(fn ($s) => $s->status === $statusFilter)
-                ->values();
+            $rows = $rows->filter(
+                fn ($row) => $row['statuses']->contains(fn ($s) => $s->status === $statusFilter)
+            );
         }
 
+        // Sort: most urgent first, then by DQN.
+        $rows = $rows
+            ->sortBy([
+                ['worst_priority', 'asc'],
+                ['min_remaining', 'asc'],
+            ])
+            ->values();
+
         return view('oil-changes.index', [
-            'statuses'     => $statuses,
-            'activeType'   => $type,
+            'rows' => $rows,
             'statusFilter' => $statusFilter,
         ]);
     }
