@@ -11,37 +11,20 @@ use Illuminate\View\View;
 
 class GarageSelectionController extends Controller
 {
-    public function index(): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse
     {
         $user = auth()->user();
 
+        // Optional case-insensitive substring filter applied to both
+        // company names and garage names. When empty, the full list is
+        // shown — the previous behaviour, kept for backwards
+        // compatibility and for the SuperAdmin "show everything" case.
+        $search = trim((string) $request->input('q', ''));
+
         if ($user->isSuperAdmin()) {
-            $companies = Company::query()
-                ->whereHas('garages', fn ($q) => $q->where('is_active', true))
-                ->with(['garages' => function ($query) {
-                    $query->where('is_active', true)->orderBy('name');
-                }])
-                ->orderBy('name')
-                ->get();
+            $companies = $this->superAdminCompanies($search);
         } else {
-            $companies = Company::query()
-                ->whereHas('garages', function ($query) use ($user) {
-                    $query->where('is_active', true)
-                        ->whereHas('users', function ($q) use ($user) {
-                            $q->where('user_id', $user->id)
-                                ->where('garage_user.is_active', true);
-                        });
-                })
-                ->with(['garages' => function ($query) use ($user) {
-                    $query->where('is_active', true)
-                        ->whereHas('users', function ($q) use ($user) {
-                            $q->where('user_id', $user->id)
-                                ->where('garage_user.is_active', true);
-                        })
-                        ->orderBy('name');
-                }])
-                ->orderBy('name')
-                ->get();
+            $companies = $this->userCompanies($user, $search);
         }
 
         // ───────────────────────────────────────────────────────────
@@ -54,15 +37,18 @@ class GarageSelectionController extends Controller
         // İNDİ: Statik "giriş yoxdur" səhifəsi göstərilir. İstifadəçi
         // yalnız logout edə bilər. Bu, həm loop-u bitirir, həm də
         // istifadəçiyə aydın mesaj verir.
+        //
+        // QEYD: Search filteri aktiv olduqda boş nəticə "giriş yoxdur"
+        // demək deyil — istifadəçi sadəcə fərqli söz axtarmalıdır.
         // ───────────────────────────────────────────────────────────
         $hasNoGarages = $companies->isEmpty()
             || $companies->every(fn ($c) => $c->garages->isEmpty());
 
-        if ($hasNoGarages && ! $user->isSuperAdmin()) {
+        if ($hasNoGarages && ! $user->isSuperAdmin() && $search === '') {
             return view('garage-no-access');
         }
 
-        return view('garage-selection', compact('companies'));
+        return view('garage-selection', compact('companies', 'search'));
     }
 
     public function selectGarage(Request $request): RedirectResponse
@@ -108,5 +94,74 @@ class GarageSelectionController extends Controller
 
         return redirect()->route('dashboard')
             ->with('success', __('messages.flash.garage_selected', ['name' => $garage->name]));
+    }
+
+    // ==================== HELPERS ====================
+
+    /**
+     * Companies visible to a SuperAdmin: every company that has at
+     * least one active garage, with optional name filter.
+     *
+     * When $search is non-empty, both the company list and the nested
+     * garage list are narrowed by an ILIKE substring match. This keeps
+     * the rendered HTML size bounded on large platforms without
+     * breaking the "select any garage" workflow — the user simply
+     * types the target name to filter.
+     */
+    private function superAdminCompanies(string $search)
+    {
+        return Company::query()
+            ->whereHas('garages', function ($query) use ($search) {
+                $query->where('is_active', true);
+
+                if ($search !== '') {
+                    $query->where('name', 'ILIKE', "%{$search}%");
+                }
+            })
+            ->when($search !== '', fn ($q) => $q->where(function ($q) use ($search) {
+                // Keep companies whose own name matches, even when
+                // the matched garage list below is a subset.
+                $q->where('name', 'ILIKE', "%{$search}%")
+                  ->orWhereHas('garages', function ($gq) use ($search) {
+                      $gq->where('is_active', true)
+                         ->where('name', 'ILIKE', "%{$search}%");
+                  });
+            }))
+            ->with(['garages' => function ($query) use ($search) {
+                $query->where('is_active', true)
+                      ->when($search !== '', fn ($q) => $q->where('name', 'ILIKE', "%{$search}%"))
+                      ->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Companies visible to a regular user: only garages the user is
+     * actively a member of. Optional name filter applied the same way
+     * as for the SuperAdmin list.
+     */
+    private function userCompanies($user, string $search)
+    {
+        $garageAccessFilter = function ($query) use ($user, $search) {
+            $query->where('is_active', true)
+                  ->whereHas('users', function ($q) use ($user) {
+                      $q->where('user_id', $user->id)
+                        ->where('garage_user.is_active', true);
+                  });
+
+            if ($search !== '') {
+                $query->where('name', 'ILIKE', "%{$search}%");
+            }
+        };
+
+        return Company::query()
+            ->whereHas('garages', $garageAccessFilter)
+            ->with(['garages' => function ($query) use ($garageAccessFilter) {
+                $garageAccessFilter($query);
+                $query->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get();
     }
 }

@@ -134,6 +134,8 @@ return [
         'label' => 'Şirket ve Garaj',
         'placeholder' => 'Garaj seçin…',
         'submit' => 'Garaja Gir',
+        'search_placeholder'    => 'Şirket veya garaj adına göre ara…',
+        'no_search_results'     => '":search" için sonuç bulunamadı.',
     ],
 
     // ==================== BUSES ====================

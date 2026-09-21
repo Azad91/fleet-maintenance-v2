@@ -17,6 +17,30 @@
         <span class="garage-selection__icon"><i class="fas fa-warehouse"></i></span>
         <h2>{{ __('messages.garage.card_title') }}</h2>
         <p>{{ __('messages.garage.card_subtitle') }}</p>
+
+        {{-- Search filter — helpful on large platforms with many
+             companies. When empty, all accessible garages are listed. --}}
+        <form method="GET" action="{{ route('garage.selection') }}" class="mb-3" autocomplete="off">
+            <label for="garage_search" class="form-label">{{ __('messages.common.search') }}</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text"
+                       id="garage_search"
+                       name="q"
+                       class="form-control"
+                       value="{{ $search ?? '' }}"
+                       placeholder="{{ __('messages.garage.search_placeholder') }}">
+                <button type="submit" class="btn btn-primary">
+                    {{ __('messages.common.search') }}
+                </button>
+                @if(! empty($search))
+                    <a href="{{ route('garage.selection') }}" class="btn btn-secondary">
+                        <i class="fas fa-xmark"></i>
+                    </a>
+                @endif
+            </div>
+        </form>
+
         <form action="{{ route('garage.select') }}" method="POST">
             @csrf
             <label for="garage_id" class="form-label">{{ __('messages.garage.label') }}</label>
@@ -31,6 +55,13 @@
                 @endforeach
             </select>
             @error('garage_id')<div class="fleet-guest__error">{{ $message }}</div>@enderror
+
+            @if($companies->isEmpty() && ! empty($search))
+                <div class="fleet-guest__error">
+                    {{ __('messages.garage.no_search_results', ['search' => $search]) }}
+                </div>
+            @endif
+
             <button type="submit" class="garage-selection__submit">
                 <i class="fas fa-arrow-right"></i> {{ __('messages.garage.submit') }}
             </button>

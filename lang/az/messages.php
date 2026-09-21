@@ -154,6 +154,8 @@ return [
         'label' => 'Şirkət və Qaraj',
         'placeholder' => 'Qaraj seçin…',
         'submit' => 'Qaraja Daxil Ol',
+        'search_placeholder'    => 'Şirkət və ya qaraj adı ilə axtar…',
+        'no_search_results'     => '":search" üzrə şirkət və ya qaraj tapılmadı.',
     ],
 
     // ==================== BUSES ====================

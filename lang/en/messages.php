@@ -154,6 +154,8 @@ return [
         'label' => 'Company and Garage',
         'placeholder' => 'Select garage…',
         'submit' => 'Enter Garage',
+        'search_placeholder'    => 'Search by company or garage name…',
+        'no_search_results'     => 'No company or garage matches ":search".',
     ],
 
     // ==================== BUSES ====================
