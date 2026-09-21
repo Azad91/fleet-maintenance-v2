@@ -4,11 +4,12 @@ namespace App\Services\Warehouse;
 
 use App\Enums\TransferStatus;
 use App\Enums\TransferType;
+use App\Models\Garage;
+use App\Models\ServiceVehicleStock;
 use App\Models\Warehouse;
 use App\Models\WarehouseTransfer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use App\Models\ServiceVehicleStock;
 
 /**
  * Business logic for warehouse transfers.
@@ -38,6 +39,46 @@ class WarehouseTransferService
     {
         return DB::transaction(function () use ($data, $companyId) {
             $type = TransferType::from($data['type']);
+
+            // ─────────────────────────────────────────────────────────
+            // SECURITY GUARD: cross-company / cross-garage destination
+            //
+            // The FormRequest already validates this, but we re-check
+            // here as defense-in-depth. If a future controller, job,
+            // or console command calls this service directly, it must
+            // not be possible to inject stock into a foreign tenant.
+            // ─────────────────────────────────────────────────────────
+            if ($type->isGarageToGarage() && ! empty($data['to_garage_id'])) {
+                $destinationGarage = Garage::withoutGlobalScopes()
+                    ->whereKey($data['to_garage_id'])
+                    ->where('company_id', $companyId)
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                if (! $destinationGarage) {
+                    throw ValidationException::withMessages([
+                        'to_garage_id' => __('validation.exists', [
+                            'attribute' => __('messages.transfers.to_garage'),
+                        ]),
+                    ]);
+                }
+            }
+
+            if ($type->isToServiceVehicle() && ! empty($data['to_service_vehicle_id'])) {
+                $vehicleExists = \App\Models\ServiceVehicle::withoutGlobalScopes()
+                    ->whereKey($data['to_service_vehicle_id'])
+                    ->where('garage_id', $data['from_garage_id'])
+                    ->whereNull('deleted_at')
+                    ->exists();
+
+                if (! $vehicleExists) {
+                    throw ValidationException::withMessages([
+                        'to_service_vehicle_id' => __('validation.exists', [
+                            'attribute' => __('messages.transfers.to_service_vehicle'),
+                        ]),
+                    ]);
+                }
+            }
 
             // Item rows must exist and belong to the source garage.
             // We lock them now so nobody can delete them mid-create.
@@ -101,8 +142,6 @@ class WarehouseTransferService
             $transfer->load('items.warehouse');
 
             foreach ($transfer->items as $item) {
-                // Re-read with a lock in case another request touched
-                // the row since the transfer was created.
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('id', $item->warehouse_id)
                     ->lockForUpdate()
@@ -179,8 +218,6 @@ class WarehouseTransferService
                     $hasDiscrepancy = true;
                 }
 
-                // Destination stock only grows if quantity was actually
-                // received. If zero, nothing is added.
                 if ($received > 0) {
                     $this->incrementDestinationStock($transfer, $item->warehouse_id, $received);
                 }
@@ -275,7 +312,6 @@ class WarehouseTransferService
                 }
 
                 if (! empty($missingItems)) {
-                    // Create a follow-up draft with the same destination.
                     $this->create([
                         'from_garage_id'        => $transfer->from_garage_id,
                         'to_garage_id'          => $transfer->to_garage_id,
@@ -319,10 +355,6 @@ class WarehouseTransferService
      * For garage-to-garage transfers, the destination warehouse row
      * is the SAME code within the destination garage — we look it up
      * or create it on the fly.
-     *
-     * For service-vehicle and quarantine transfers, this method is
-     * not called (those complete via a different flow — see the
-     * transfer types).
      */
     private function incrementDestinationStock(WarehouseTransfer $transfer, int $sourceWarehouseId, int $quantity): void
     {
@@ -351,9 +383,18 @@ class WarehouseTransferService
         // The destination garage does not yet have this item.
         // Create it from the source row, preserving code/name/unit/
         // price/minimum_quantity so the two rows stay aligned.
+        //
+        // ✅ SECURITY: We set company_id from the DESTINATION garage,
+        // not from the transfer's company_id. This keeps the warehouse
+        // row internally consistent even if the transfer data were
+        // somehow corrupted upstream.
+        $destinationGarage = Garage::withoutGlobalScopes()
+            ->whereKey($transfer->to_garage_id)
+            ->first();
+
         Warehouse::withoutGlobalScopes()->create([
             'garage_id'        => $transfer->to_garage_id,
-            'company_id'       => $transfer->company_id,
+            'company_id'       => $destinationGarage?->company_id ?? $transfer->company_id,
             'code'             => $source->code,
             'name'             => $source->name,
             'category'         => $source->category,
@@ -364,17 +405,14 @@ class WarehouseTransferService
             'supplier'         => $source->supplier,
         ]);
     }
+
     /**
      * Create AND immediately complete a transfer that does not
      * require the dispatch → receive workflow.
      *
      * Currently used for:
      *   - return_to_quarantine (within the same garage)
-     *   - to_service_vehicle (handled in Phase 3.2)
-     *
-     * The full workflow is bypassed because both the source and the
-     * destination are controlled by the same admin — no second party
-     * exists to confirm receipt.
+     *   - to_service_vehicle
      */
     public function createAndComplete(array $data, int $companyId): WarehouseTransfer
     {
@@ -387,12 +425,29 @@ class WarehouseTransferService
         }
 
         return DB::transaction(function () use ($data, $companyId, $type) {
+            // SECURITY: same-vehicle guard as in create().
+            if ($type->isToServiceVehicle() && ! empty($data['to_service_vehicle_id'])) {
+                $vehicleExists = \App\Models\ServiceVehicle::withoutGlobalScopes()
+                    ->whereKey($data['to_service_vehicle_id'])
+                    ->where('garage_id', $data['from_garage_id'])
+                    ->whereNull('deleted_at')
+                    ->exists();
+
+                if (! $vehicleExists) {
+                    throw ValidationException::withMessages([
+                        'to_service_vehicle_id' => __('validation.exists', [
+                            'attribute' => __('messages.transfers.to_service_vehicle'),
+                        ]),
+                    ]);
+                }
+            }
+
             $warehouseIds = array_column($data['items'], 'warehouse_id');
 
             $warehouses = Warehouse::withoutGlobalScopes()
                 ->whereIn('id', $warehouseIds)
                 ->where('garage_id', $data['from_garage_id'])
-                ->where('is_quarantine', false) // Can only send ACTIVE stock
+                ->where('is_quarantine', false)
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
@@ -445,10 +500,8 @@ class WarehouseTransferService
                     'notes'             => $item['notes'] ?? null,
                 ]);
 
-                // Decrease the source warehouse.
                 $source->decrement('quantity', $item['declared_quantity']);
 
-                // Route to the correct destination.
                 if ($type->isReturnToQuarantine()) {
                     $this->moveToQuarantine($source, $item['declared_quantity']);
                 } elseif ($type->isToServiceVehicle()) {
@@ -458,7 +511,6 @@ class WarehouseTransferService
                         $item['declared_quantity']
                     );
                 }
-                // Note: to_service_vehicle is added in Phase 3.2.
             }
 
             return $transfer->fresh(['items']);
@@ -468,11 +520,6 @@ class WarehouseTransferService
     /**
      * Move `quantity` units of the given source warehouse item to its
      * matching quarantine row in the SAME garage.
-     *
-     * The quarantine row uses code "Q-{original_code}" so the partial
-     * unique index (garage_id, code) never conflicts. The row is
-     * created on demand, cloning name/unit/price from the source so
-     * the two stay in sync visually.
      */
     private function moveToQuarantine(Warehouse $source, int $quantity): void
     {
@@ -504,14 +551,10 @@ class WarehouseTransferService
             'supplier'         => $source->supplier,
         ]);
     }
+
     /**
      * Move `quantity` units of the given source warehouse item to
      * the stock of the target service vehicle.
-     *
-     * Matching is by `code`: if the service vehicle already holds
-     * the same code, its quantity is incremented. Otherwise a new
-     * stock row is created, cloning name/unit/price from the source
-     * so the two stay visually aligned.
      */
     private function moveToServiceVehicle(int $serviceVehicleId, Warehouse $source, int $quantity): void
     {

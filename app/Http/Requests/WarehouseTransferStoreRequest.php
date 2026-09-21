@@ -16,20 +16,31 @@ class WarehouseTransferStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId = GarageContext::getGarageId();
+        $garageId  = GarageContext::getGarageId();
+        $companyId = GarageContext::resolveCompanyId();
 
         return [
+            // ✅ FIX: to_garage_id must belong to the SAME company.
+            // Otherwise a garage admin from company A could target a
+            // garage id from company B and inject stock rows into a
+            // foreign tenant.
             'to_garage_id' => [
                 'nullable',
                 'integer',
-                'exists:garages,id',
+                Rule::exists('garages', 'id')->where('company_id', $companyId),
                 Rule::notIn([$garageId]), // Can't transfer to self
             ],
+
+            // ✅ FIX: service vehicle must belong to the CURRENT garage,
+            // not just exist anywhere.
             'to_service_vehicle_id' => [
                 'nullable',
                 'integer',
-                'exists:service_vehicles,id',
+                Rule::exists('service_vehicles', 'id')
+                    ->where('garage_id', $garageId)
+                    ->whereNull('deleted_at'),
             ],
+
             'type'  => ['required', Rule::in(TransferType::values())],
             'notes' => 'nullable|string|max:2000',
 

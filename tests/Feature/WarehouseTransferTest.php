@@ -519,4 +519,110 @@ class WarehouseTransferTest extends TestCase
         $response->assertOk();
         $response->assertSee('Q-FILTER-001');
     }
+        // ==================================================================
+    // 7. CROSS-COMPANY SECURITY (P0 FIX)
+    // ==================================================================
+
+    public function test_cannot_transfer_to_garage_from_another_company(): void
+    {
+        $otherCompany = Company::factory()->create();
+        $otherGarage  = Garage::factory()->create(['company_id' => $otherCompany->id]);
+
+        $this->actingAs($this->adminA)
+            ->withSession($this->sessionFor($this->garageA))
+            ->post(route('warehouse-transfers.store'), [
+                'type'         => TransferType::GarageToGarage->value,
+                'to_garage_id' => $otherGarage->id, // ← other company's garage
+                'items'        => [
+                    ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
+                ],
+            ])
+            ->assertSessionHasErrors('to_garage_id');
+
+        // Heç bir transfer yaranmamalıdır
+        $this->assertSame(
+            0,
+            WarehouseTransfer::where('to_garage_id', $otherGarage->id)->count(),
+            'Cross-company transfer must be rejected at the request layer'
+        );
+    }
+
+    public function test_service_layer_rejects_cross_company_destination(): void
+    {
+        // Defense-in-depth test: bypass the FormRequest and call the
+        // service directly. This simulates a future controller, queue
+        // job, or console command that forgets to validate.
+        $otherCompany = Company::factory()->create();
+        $otherGarage  = Garage::factory()->create(['company_id' => $otherCompany->id]);
+
+        $this->actingAs($this->adminA);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->create([
+            'from_garage_id' => $this->garageA->id,
+            'to_garage_id'   => $otherGarage->id, // ← other company's garage
+            'type'           => TransferType::GarageToGarage->value,
+            'items'          => [
+                ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
+            ],
+        ], $this->company->id);
+
+        // Heç bir warehouse sətri yaranmamalıdır
+        $this->assertSame(
+            0,
+            Warehouse::withoutGlobalScopes()
+                ->where('garage_id', $otherGarage->id)
+                ->where('code', 'FILTER-001')
+                ->count(),
+            'Cross-company stock injection must be blocked at the service layer'
+        );
+    }
+
+    public function test_destination_warehouse_row_uses_destination_company_id(): void
+    {
+        // Even if the guard passes (same company), the new destination
+        // warehouse row must carry the DESTINATION garage's company_id.
+        $this->actingAs($this->adminA);
+        $transfer = $this->makeTransfer(5);
+        $this->service->dispatch($transfer);
+
+        $this->actingAs($this->adminB);
+        $item = $transfer->items->first();
+        $this->service->receive($transfer, [$item->id => 5]);
+
+        $destRow = Warehouse::withoutGlobalScopes()
+            ->where('garage_id', $this->garageB->id)
+            ->where('code', 'FILTER-001')
+            ->first();
+
+        $this->assertNotNull($destRow);
+        $this->assertSame(
+            $this->company->id,
+            $destRow->company_id,
+            'Destination warehouse row must carry the destination garage\'s company_id'
+        );
+    }
+
+    public function test_cannot_transfer_to_service_vehicle_from_another_garage(): void
+    {
+        $otherGarage = Garage::factory()->create(['company_id' => $this->company->id]);
+        $otherVehicle = \App\Models\ServiceVehicle::withoutGlobalScopes()->create([
+            'garage_id'  => $otherGarage->id,
+            'company_id' => $this->company->id,
+            'name'       => 'Other Garage Vehicle',
+            'is_active'  => true,
+        ]);
+
+        $this->actingAs($this->adminA)
+            ->withSession($this->sessionFor($this->garageA))
+            ->post(route('warehouse-transfers.store'), [
+                'type'                  => TransferType::ToServiceVehicle->value,
+                'to_service_vehicle_id' => $otherVehicle->id, // ← other garage
+                'items'                 => [
+                    ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
+                ],
+            ])
+            ->assertSessionHasErrors('to_service_vehicle_id');
+    }
 }
