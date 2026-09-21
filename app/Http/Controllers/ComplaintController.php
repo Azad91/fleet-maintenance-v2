@@ -43,6 +43,10 @@ class ComplaintController extends Controller
             ->paginate(config('settings.pagination', 15))
             ->withQueryString();
 
+        // Same canonical path as search() — keeps pagination links
+        // stable regardless of which route rendered the list.
+        $complaints->setPath(route('complaints.index'));
+
         return view('complaints.index', compact('complaints'));
     }
 
@@ -53,6 +57,12 @@ class ComplaintController extends Controller
      * front-end (X-Requested-With: XMLHttpRequest), and falls back
      * to the full index view otherwise. This makes the same route
      * work for both AJAX calls and direct URL visits.
+     *
+     * NOTE: the paginator's path is explicitly set to the index route
+     * so that pagination links rendered inside the partial point at
+     * /complaints?page=N&filters — not /complaints/search?... The AJAX
+     * handler intercepts clicks, but the URL must still be correct for
+     * a JS-disabled browser or a middle-click "open in new tab".
      */
     public function search(Request $request): View|string
     {
@@ -62,6 +72,9 @@ class ComplaintController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(config('settings.pagination', 15))
             ->withQueryString();
+
+        // Point the paginator at the canonical index URL.
+        $complaints->setPath(route('complaints.index'));
 
         if ($this->isAjaxRequest($request)) {
             return view('complaints.partials.table', compact('complaints'))->render();
