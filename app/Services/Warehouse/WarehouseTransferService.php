@@ -87,6 +87,7 @@ class WarehouseTransferService
             $warehouses = Warehouse::withoutGlobalScopes()
                 ->whereIn('id', $warehouseIds)
                 ->where('garage_id', $data['from_garage_id'])
+                ->whereNull('deleted_at')
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
@@ -155,6 +156,7 @@ class WarehouseTransferService
             foreach ($sortedItems as $item) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('id', $item->warehouse_id)
+                    ->whereNull('deleted_at')
                     ->lockForUpdate()
                     ->first();
 
@@ -395,7 +397,9 @@ class WarehouseTransferService
             return; // Service-vehicle / quarantine: handled elsewhere.
         }
 
-        $source = Warehouse::withoutGlobalScopes()->find($sourceWarehouseId);
+        $source = Warehouse::withoutGlobalScopes()
+            ->whereNull('deleted_at')
+            ->find($sourceWarehouseId);
 
         if (! $source) {
             return;
@@ -404,6 +408,7 @@ class WarehouseTransferService
         $destination = Warehouse::withoutGlobalScopes()
             ->where('garage_id', $transfer->to_garage_id)
             ->where('code', $source->code)
+            ->whereNull('deleted_at')
             ->lockForUpdate()
             ->first();
 
@@ -481,6 +486,7 @@ class WarehouseTransferService
                 ->whereIn('id', $warehouseIds)
                 ->where('garage_id', $data['from_garage_id'])
                 ->where('is_quarantine', false)
+                ->whereNull('deleted_at')
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
@@ -561,6 +567,7 @@ class WarehouseTransferService
         $quarantine = Warehouse::withoutGlobalScopes()
             ->where('garage_id', $source->garage_id)
             ->where('code', $quarantineCode)
+            ->whereNull('deleted_at')
             ->lockForUpdate()
             ->first();
 
