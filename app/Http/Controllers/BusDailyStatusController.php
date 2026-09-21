@@ -27,15 +27,15 @@ class BusDailyStatusController extends Controller
         $dateWasExplicit = $request->filled('date');
         $date = $dateWasExplicit ? $request->input('date') : now()->toDateString();
 
-        $dqn = $request->input('dqn');
+        $dqn    = $request->input('dqn');
         $status = $request->input('status');
 
         $query = BusDailyStatus::with('bus');
 
-        if ($dateWasExplicit && $date) {
-            $query->whereDate('date', $date);
-        } elseif (!$dateWasExplicit && $date) {
-            // Default view: show today's records.
+        // The date filter is applied in both cases (explicit filter or
+        // default-to-today). The `dateWasExplicit` flag only affects
+        // the "delete all" button's scope, not the listing itself.
+        if ($date) {
             $query->whereDate('date', $date);
         }
 
@@ -53,7 +53,11 @@ class BusDailyStatusController extends Controller
             ->paginate(config('settings.pagination', 15))
             ->withQueryString();
 
+        // Select only the `status` column before DISTINCT — otherwise
+        // PostgreSQL would sort by the full row, which is wasteful on
+        // large tables.
         $availableStatuses = BusDailyStatus::query()
+            ->select('status')
             ->distinct()
             ->orderBy('status')
             ->pluck('status')
