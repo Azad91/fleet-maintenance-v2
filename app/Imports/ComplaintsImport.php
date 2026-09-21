@@ -65,7 +65,16 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
     // are either the resolved model ID or null (negative cache).
     // ────────────────────────────────────────────────────────────────
 
-    /** @var array<string, int|null>  key: lowercased DQN */
+    /**
+     * Memoized Bus models, keyed by the lowercased DQN.
+     *
+     * We cache the model instance, not its id, so a cache hit is a
+     * real O(1) lookup with no DB round trip. The previous
+     * implementation stored the id and re-fetched the model on every
+     * hit — turning memoization into a different kind of N+1.
+     *
+     * @var array<string, Bus|null>  key: lowercased DQN
+     */
     protected array $busCache = [];
 
     /** @var array<string, int|null>  key: normalized employee query */
@@ -183,15 +192,18 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
     /**
      * Resolve a Bus by DQN, memoized.
+     *
+     * The cache stores the full model instance keyed by the lowercased
+     * DQN. Negative results are cached too (a null value) so a large
+     * file with many references to an unknown DQN does not re-hit the
+     * database for every row.
      */
     protected function resolveBus(string $dqn): ?Bus
     {
         $key = mb_strtolower($dqn);
 
         if (array_key_exists($key, $this->busCache)) {
-            $cachedId = $this->busCache[$key];
-
-            return $cachedId === null ? null : Bus::withoutGlobalScopes()->find($cachedId);
+            return $this->busCache[$key];
         }
 
         $bus = Bus::withoutGlobalScopes()
@@ -199,7 +211,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             ->where('garage_id', $this->garageId)
             ->first();
 
-        $this->busCache[$key] = $bus?->id;
+        $this->busCache[$key] = $bus;
 
         return $bus;
     }
