@@ -14,7 +14,7 @@
                         <th>{{ __('messages.oil_change.current_km') }}</th>
                         <th>{{ __('messages.oil_change.next_due_km') }}</th>
                         <th class="text-end">{{ __('messages.oil_change.remaining_km') }}</th>
-                        <th>{{ __('messages.oil_change.status') }}</th>
+                        <th>{{ __('messages.oil_change.column_status') }}</th>
                         <th class="text-end">{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>

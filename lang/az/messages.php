@@ -1190,7 +1190,8 @@ return [
         'scheduled_km'   => 'Planlaşdırılan km',
         'actual_km'      => 'Faktiki km',
         'notes'          => 'Qeyd',
-        'status'         => 'Status',
+
+        'column_status'  => 'Status',
 
         'no_history'     => 'Tarixçə yoxdur',
         'no_active_buses' => 'Aktiv avtobus yoxdur.',
@@ -1200,7 +1201,7 @@ return [
         'filter_status'  => 'Status filteri',
         'all_statuses'   => 'Bütün statuslar',
 
-        'status'         => [
+        'status' => [
             'overdue'    => 'Gecikib',
             'critical'   => 'Təcili',
             'due-soon'   => 'Tezliklə',
