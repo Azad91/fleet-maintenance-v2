@@ -298,8 +298,23 @@ class ComplaintController extends Controller
 
         $this->authorize('view', $complaint);
 
-        if (! $this->pdfService->exists($complaint)) {
-            $this->pdfService->save($complaint);
+        try {
+            if (! $this->pdfService->exists($complaint)) {
+                $this->pdfService->save($complaint);
+            }
+        } catch (\Throwable $e) {
+            // PDF generation is best-effort. DomPDF, disk-full and
+            // permission failures all surface here. Log with context
+            // so operators can diagnose, then return a friendly
+            // message instead of a raw 500 stack trace.
+            \Log::error('Complaint PDF generation failed', [
+                'complaint_id' => $complaint->id,
+                'error'        => $e->getMessage(),
+                'user_id'      => auth()->id(),
+                'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
+
+            abort(500, __('messages.flash.pdf_generation_failed'));
         }
 
         $filePath = $this->pdfService->getFilePath($complaint);

@@ -132,8 +132,21 @@ class ComplaintController extends Controller
     {
         Gate::authorize('view', $complaint);
 
-        if (! $this->pdfService->exists($complaint)) {
-            $this->pdfService->save($complaint);
+        try {
+            if (! $this->pdfService->exists($complaint)) {
+                $this->pdfService->save($complaint);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Complaint PDF generation failed', [
+                'complaint_id' => $complaint->id,
+                'error'        => $e->getMessage(),
+                'user_id'      => auth()->id(),
+                'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
+
+            return response()->json([
+                'message' => __('messages.flash.pdf_generation_failed'),
+            ], 500);
         }
 
         $filePath = $this->pdfService->getFilePath($complaint);

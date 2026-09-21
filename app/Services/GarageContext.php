@@ -37,7 +37,11 @@ class GarageContext
     /**
      * Populate Context from a User's persisted current_garage_id.
      *
-     * Returns true when the Context was set.
+     * Returns true when the Context was set. The garage is verified
+     * to exist and to be active; a user whose persisted garage has
+     * since been soft-deleted or deactivated is treated as having no
+     * context, so downstream queries fall back to the standard
+     * "missing context" path instead of operating on a dead tenant.
      */
     public static function fromUser(User $user): bool
     {
@@ -45,9 +49,19 @@ class GarageContext
             return false;
         }
 
+        $garage = Garage::withoutGlobalScopes()
+            ->whereKey($user->current_garage_id)
+            ->whereNull('deleted_at')
+            ->where('is_active', true)
+            ->first();
+
+        if (! $garage) {
+            return false;
+        }
+
         self::set(
-            (int) $user->current_garage_id,
-            $user->current_company_id ? (int) $user->current_company_id : null,
+            (int) $garage->id,
+            $garage->company_id ? (int) $garage->company_id : null,
         );
 
         return true;

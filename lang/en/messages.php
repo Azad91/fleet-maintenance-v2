@@ -1094,6 +1094,7 @@ return [
         'already_closed' => 'This card is already closed.',
         'closed_success' => 'Card closed successfully. PDF has been generated.',
         'pdf_not_found' => 'PDF file not found.',
+        'pdf_generation_failed' => 'The PDF could not be generated. Please try again or contact support.',
         'duplicate_date' => 'An entry already exists for this bus on :date.',
         'km_must_be_greater' => 'KM value must be greater than the previous entry (:km).',
         'km_must_be_less' => 'KM value must be less than the next entry (:km).',
