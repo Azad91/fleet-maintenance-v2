@@ -105,7 +105,20 @@ class IdempotencyMiddleware
         $query = $request->getQueryString() ?? '';
         $keyHash = hash('sha256', $idempotencyKey);
 
-        return "idempotency:{$userId}:{$garageId}:{$method}:{$path}:{$query}:{$keyHash}";
+        // ✅ YENİ: include the request body hash.
+        //
+        // Without this, two POSTs with the same key but different
+        // bodies would collide and the second would receive the first
+        // response. That is arguably correct per RFC 7231 (idempotency
+        // keys must not be reused for different payloads), but in
+        // practice a UI bug that reuses a key is far more likely than
+        // a deliberate replay, and the failure is silent.
+        //
+        // By including the body hash, the second request simply gets
+        // a fresh idempotency slot and executes normally.
+        $bodyHash = hash('sha256', (string) $request->getContent());
+
+        return "idempotency:{$userId}:{$garageId}:{$method}:{$path}:{$query}:{$keyHash}:{$bodyHash}";
     }
 
     private function buildCachedResponse(array $cached): Response
