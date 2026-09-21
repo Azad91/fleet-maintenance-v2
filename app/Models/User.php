@@ -32,17 +32,30 @@ class User extends Authenticatable implements MustVerifyEmail
     private ?bool $cachedIsDirector = null;
 
     /**
-     * Invalidate the per-instance isDirector() cache.
+     * Per-instance cache for hasGarageRole() results.
      *
-     * Call this immediately after any pivot change on the
-     * `company_user` table when the same User instance will be
-     * inspected in the same request. Onboarding services and the
-     * AssignmentController already call this; new call sites that
-     * mutate the pivot should do the same.
+     * The sidebar layout calls hasGarageRole() 5-6 times per request
+     * to decide which menu sections to render. Without this cache
+     * every call fires its own EXISTS query against the pivot table.
+     *
+     * Key: "garageId:role1|role2|..." — the exact tuple asked for.
+     * Value: true/false.
+     *
+     * @var array<string, bool>
      */
-    public function forgetDirectorCache(): static
+    private array $cachedGarageRoles = [];
+
+    /**
+     * Invalidate the per-instance role caches.
+     *
+     * Called after any pivot change on company_user or garage_user
+     * when the same User instance will be inspected again within the
+     * same request.
+     */
+    public function forgetRoleCache(): static
     {
-        $this->cachedIsDirector = null;
+        $this->cachedIsDirector   = null;
+        $this->cachedGarageRoles  = [];
 
         return $this;
     }
@@ -132,6 +145,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // ==================== GARAGE-LEVEL ROLE CHECKS ====================
 
+    /**
+     * True when the user holds one of the given roles in the given
+     * garage (or the current one). Result is cached per instance, so
+     * the sidebar's 5-6 permission checks per page load cost one
+     * query each and no more.
+     */
     public function hasGarageRole(string|array $roles, ?int $garageId = null): bool
     {
         $roles = (array) $roles;
@@ -141,11 +160,39 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return $this->garages()
+        // Canonical cache key — sort the roles so [a, b] and [b, a]
+        // share a cache entry.
+        $sortedRoles = $roles;
+        sort($sortedRoles);
+        $cacheKey = $garageId.':'.implode('|', $sortedRoles);
+
+        if (array_key_exists($cacheKey, $this->cachedGarageRoles)) {
+            return $this->cachedGarageRoles[$cacheKey];
+        }
+
+        $result = $this->garages()
             ->whereKey($garageId)
             ->wherePivot('is_active', true)
             ->wherePivotIn('role', $roles)
             ->exists();
+
+        $this->cachedGarageRoles[$cacheKey] = $result;
+
+        return $result;
+    }
+
+    /**
+     * Invalidate the per-instance hasGarageRole() cache.
+     *
+     * Call this after mutating the garage_user pivot on the same
+     * instance (UserManagementController, UserService) so the next
+     * permission check sees the new state.
+     */
+    public function forgetGarageRoleCache(): static
+    {
+        $this->cachedGarageRoles = [];
+
+        return $this;
     }
 
     public function isGarageAdmin(?int $garageId = null): bool

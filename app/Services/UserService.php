@@ -45,6 +45,8 @@ class UserService
                 garageId: $garageId,
             );
 
+            $user->forgetRoleCache();
+
             return $user;
         });
     }
@@ -103,6 +105,8 @@ class UserService
                     garageId: $garageId,
                 );
             }
+
+            $user->forgetRoleCache();
 
             return $user->fresh(['garages']);
         });
