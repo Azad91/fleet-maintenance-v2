@@ -164,8 +164,13 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
             $this->currentComplaint = $complaint;
             $this->incrementImported();
         } catch (RowSkippedException $e) {
+            // A failed header row must not poison the rest of the
+            // card. Reset both pointers so the next row with the same
+            // DQN is treated as a fresh card attempt instead of
+            // being skipped with "previous row failed".
             if ($isNewCard) {
                 $this->currentComplaint = null;
+                $this->currentDqn = null;
             }
 
             $this->recordSkip(
