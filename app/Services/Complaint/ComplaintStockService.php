@@ -139,7 +139,22 @@ class ComplaintStockService
             }
 
             // ── Warehouse: restore to the garage warehouse ──
-            $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
+            //
+            // Defense-in-depth: we resolve the current garage and filter
+            // explicitly, even though HasGarageScope would normally do
+            // it. This keeps the operation correct when the service is
+            // called from a queue job or artisan command where the
+            // global scope may be inactive.
+            $garageId = \App\Services\GarageContext::resolveGarageId();
+
+            $warehouseQuery = Warehouse::withoutGlobalScopes()
+                ->where('code', $code);
+
+            if ($garageId !== null) {
+                $warehouseQuery->where('garage_id', $garageId);
+            }
+
+            $warehouse = $warehouseQuery->lockForUpdate()->first();
 
             if ($warehouse) {
                 $warehouse->increment('quantity', $usedQuantity);
@@ -150,8 +165,9 @@ class ComplaintStockService
             // Warehouse row not found — this should not happen if the
             // original deduction succeeded, but log it for safety.
             Log::warning('Warehouse row not found — stock restore skipped', [
-                'code' => $code,
-                'quantity' => $usedQuantity,
+                'code'      => $code,
+                'quantity'  => $usedQuantity,
+                'garage_id' => $garageId,
             ]);
         }
     }
@@ -182,10 +198,25 @@ class ComplaintStockService
 
     /**
      * Deduct from the garage warehouse. Throws if insufficient.
+     *
+     * ✅ SECURITY (defense-in-depth): the query filters by the current
+     * garage explicitly, even though HasGarageScope would normally do
+     * it. This keeps the deduction correct when the service is invoked
+     * from a queue job, artisan command, or an import where the global
+     * scope may be inactive.
      */
     private function deductFromWarehouse(array $detail, string $code, int $usedQuantity): array
     {
-        $warehouse = Warehouse::where('code', $code)->lockForUpdate()->first();
+        $garageId = \App\Services\GarageContext::resolveGarageId();
+
+        $warehouseQuery = Warehouse::withoutGlobalScopes()
+            ->where('code', $code);
+
+        if ($garageId !== null) {
+            $warehouseQuery->where('garage_id', $garageId);
+        }
+
+        $warehouse = $warehouseQuery->lockForUpdate()->first();
 
         if (! $warehouse) {
             throw ValidationException::withMessages([
@@ -339,7 +370,7 @@ class ComplaintStockService
         // Recreate the row. Fall back to the warehouse row for a
         // canonical name/unit when the detail carried no name.
         $warehouse = Warehouse::withoutGlobalScopes()
-            ->where('garage_id', $vehicle->garage_id)
+            ->where('garage_id', $vehicle->garage_id)   // ← explicit, not context
             ->where('code', $code)
             ->first();
 
