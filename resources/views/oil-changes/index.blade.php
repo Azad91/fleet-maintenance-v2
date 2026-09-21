@@ -116,13 +116,6 @@
                         @php
                             $status = $row['statuses'][$activeType->value];
                             $bus = $row['bus'];
-
-                            // Növbəti planlaşdırılan milestone: son dəyişmənin scheduled_km-i + interval.
-                            // Məsələn scheduled_km=360000, interval=30000 → 390000.
-                            $nextScheduled = null;
-                            if ($status->lastChange && $status->lastChange->scheduled_km) {
-                                $nextScheduled = $status->lastChange->scheduled_km + $status->lastChange->interval_km;
-                            }
                         @endphp
                         <tr>
                             <td>
@@ -167,9 +160,9 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                @if($nextScheduled)
-                                    <strong style="color: #2563eb;">
-                                        {{ number_format($nextScheduled, 0, '', '.') }}
+                                @if($status->nextCatalogKm)
+                                    <strong style="color: #2563eb; font-size: 15px;">
+                                        {{ number_format($status->nextCatalogKm, 0, '', '.') }}
                                     </strong> km
                                 @else
                                     <span class="text-muted">—</span>
@@ -195,14 +188,14 @@
                                 <div class="d-flex justify-content-end gap-1">
                                     @if($status->lastChange)
                                         <a href="{{ route('oil-changes.edit', $status->lastChange) }}"
-                                           class="btn btn-sm btn-outline-warning"
-                                           title="{{ __('messages.common.edit') }}">
+                                        class="btn btn-sm btn-outline-warning"
+                                        title="{{ __('messages.common.edit') }}">
                                             <i class="fas fa-pencil"></i>
                                         </a>
                                     @endif
                                     <a href="{{ route('oil-changes.create', ['bus_id' => $bus->id, 'type' => $activeType->value]) }}"
-                                       class="btn btn-sm btn-outline-success"
-                                       title="{{ __('messages.oil_change.add_change') }}">
+                                    class="btn btn-sm btn-outline-success"
+                                    title="{{ __('messages.oil_change.add_change') }}">
                                         <i class="fas fa-plus"></i>
                                     </a>
                                 </div>

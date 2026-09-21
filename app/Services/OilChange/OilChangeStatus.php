@@ -20,6 +20,7 @@ class OilChangeStatus
         public readonly ?int $nextDueKm,
         public readonly ?int $remainingKm,
         public readonly string $status,
+        public readonly ?int $nextCatalogKm = null,
     ) {}
 
     /** True when a change is due or overdue. */
