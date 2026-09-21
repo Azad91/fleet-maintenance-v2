@@ -37,7 +37,14 @@ class EmployeeController extends Controller
         $this->authorize('create', Employee::class);
 
         $validated = $request->validated();
-        $validated['is_active'] = $request->boolean('is_active');
+
+        // Only set is_active when the form actually submitted it.
+        // Otherwise the DB column default (true) applies — matching
+        // the front-end intent where the checkbox is checked by
+        // default and an unchecked submission explicitly sends "0".
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active');
+        }
 
         Employee::create($validated);
 
@@ -71,7 +78,13 @@ class EmployeeController extends Controller
         $this->authorize('update', $employee);
 
         $validated = $request->validated();
-        $validated['is_active'] = $request->boolean('is_active');
+
+        // Same reasoning as store(): only touch is_active when the
+        // form submitted it, so a partial update does not silently
+        // flip the flag.
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active');
+        }
 
         $employee->update($validated);
 
