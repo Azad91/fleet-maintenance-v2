@@ -13,6 +13,9 @@
         <h1 class="mb-1">🛢️ {{ __('messages.oil_change.title') }}</h1>
         <p class="text-muted mb-0">{{ __('messages.oil_change.subtitle') }}</p>
     </div>
+    <a href="{{ route('oil-changes.import') }}" class="btn btn-success">
+        <i class="fas fa-upload"></i> {{ __('messages.oil_change.import_title') }}
+    </a>
     <a href="{{ route('oil-changes.create', ['type' => $activeType->value]) }}"
        class="btn btn-primary">
         <i class="fas fa-plus"></i> {{ __('messages.oil_change.new') }}

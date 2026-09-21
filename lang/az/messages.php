@@ -1201,6 +1201,10 @@ return [
         'filter_status'  => 'Status filteri',
         'all_statuses'   => 'Bütün statuslar',
 
+        'import_title'    => 'Yağ dəyişmə tarixçəsini import et',
+        'bus_length'      => 'Avtobus uzunluğu',
+        'bus_length_hint' => 'Yalnız motor yağı üçün — import faylındaki bütün avtobuslar bu uzunluqdadır.',
+
         'status' => [
             'overdue'    => 'Gecikib',
             'critical'   => 'Təcili',

@@ -337,6 +337,10 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
     // ==================== OIL CHANGES (ADMIN ONLY) ====================
     Route::prefix('oil-changes')->name('oil-changes.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
         Route::get('/', [\App\Http\Controllers\OilChangeController::class, 'index'])->name('index');
+        Route::get('/import', [\App\Http\Controllers\OilChangeImportController::class, 'form'])->name('import');
+        Route::post('/import', [\App\Http\Controllers\OilChangeImportController::class, 'store'])
+            ->middleware('throttle:import')
+            ->name('import.store');
         Route::get('/create', [\App\Http\Controllers\OilChangeController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
         Route::get('/{oilChange}/edit', [\App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');
