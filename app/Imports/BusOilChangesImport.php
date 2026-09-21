@@ -67,7 +67,7 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 Cache::put($cacheKey, [
                     'dqnCol' => $this->dqnColumnIndex,
                     'kmCols' => $this->kmColumns,
-                ], now()->addHours(2));
+                ], now()->addHours(24));
 
                 $rows = $rows->slice(1);
             } else {
