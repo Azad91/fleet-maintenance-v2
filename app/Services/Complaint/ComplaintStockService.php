@@ -166,7 +166,8 @@ class ComplaintStockService
             $garageId = \App\Services\GarageContext::resolveGarageId();
 
             $warehouseQuery = Warehouse::withoutGlobalScopes()
-                ->where('code', $code);
+                ->where('code', $code)
+                ->whereNull('deleted_at');   // ← only live warehouse rows
 
             if ($garageId !== null) {
                 $warehouseQuery->where('garage_id', $garageId);
@@ -388,8 +389,9 @@ class ComplaintStockService
         // Recreate the row. Fall back to the warehouse row for a
         // canonical name/unit when the detail carried no name.
         $warehouse = Warehouse::withoutGlobalScopes()
-            ->where('garage_id', $vehicle->garage_id)   // ← explicit, not context
+            ->where('garage_id', $vehicle->garage_id)
             ->where('code', $code)
+            ->whereNull('deleted_at')
             ->first();
 
         ServiceVehicleStock::withoutGlobalScopes()->create([
