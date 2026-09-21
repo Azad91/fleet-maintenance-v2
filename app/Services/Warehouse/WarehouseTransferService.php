@@ -10,6 +10,7 @@ use App\Models\Warehouse;
 use App\Models\WarehouseTransfer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Business logic for warehouse transfers.
@@ -331,8 +332,20 @@ class WarehouseTransferService
 
             if ($resolution === 'retransfer') {
                 $missingItems = [];
+                $nullReceived = [];
 
                 foreach ($transfer->items as $item) {
+                    // A disputed transfer should always have
+                    // received_quantity set on every item — the
+                    // receive step sets it before switching the status
+                    // to disputed. If it is null, either data was
+                    // manipulated or an upstream bug wrote the row
+                    // half-formed. Log it; the "?? 0" below treats the
+                    // item as fully missing, which is the safe default.
+                    if ($item->received_quantity === null) {
+                        $nullReceived[] = $item->id;
+                    }
+
                     $missing = $item->declared_quantity - ($item->received_quantity ?? 0);
 
                     if ($missing > 0) {
@@ -346,7 +359,23 @@ class WarehouseTransferService
                     }
                 }
 
-                if (! empty($missingItems)) {
+                if (! empty($nullReceived)) {
+                    Log::warning('Disputed transfer has items with null received_quantity', [
+                        'transfer_id' => $transfer->id,
+                        'item_ids'    => $nullReceived,
+                    ]);
+                }
+
+                if (empty($missingItems)) {
+                    // The operator chose "retransfer" but every item's
+                    // received quantity already matches its declared
+                    // quantity. There is nothing to resend. Record
+                    // this unusual state so it is visible in the log
+                    // rather than as a silent no-op.
+                    Log::info('Retransfer requested but no missing items found', [
+                        'transfer_id' => $transfer->id,
+                    ]);
+                } else {
                     $this->create([
                         'from_garage_id'        => $transfer->from_garage_id,
                         'to_garage_id'          => $transfer->to_garage_id,
