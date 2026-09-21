@@ -24,8 +24,19 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $totalBuses          = Bus::count();
-        $activeBuses         = Bus::where('is_active', true)->count();
+        // ────────────────────────────────────────────────────────────
+        // KPI aggregation — one query instead of two separate COUNTs.
+        // The CASE/SUM pattern is well supported by PostgreSQL and
+        // avoids a second full scan on the buses table.
+        // ────────────────────────────────────────────────────────────
+        $busStats = Bus::query()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN is_active THEN 1 ELSE 0 END) as active')
+            ->first();
+
+        $totalBuses  = (int) ($busStats->total  ?? 0);
+        $activeBuses = (int) ($busStats->active ?? 0);
+
         $activeComplaints    = Complaint::where('status', '!=', 'completed')->count();
         $totalWarehouseItems = Warehouse::sum('quantity');
 
@@ -45,6 +56,9 @@ class DashboardController extends Controller
 
         $recurringIssues = ComplaintItem::recurring(30)->get();
 
+        // ────────────────────────────────────────────────────────────
+        // Oil change stats + alerts — ONE bus query, ONE pass.
+        // ────────────────────────────────────────────────────────────
         [$oilStats, $oilAlerts] = $this->computeOilChangeData();
 
         $today = now()->toDateString();
