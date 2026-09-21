@@ -245,7 +245,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'current_garage_id' => $garage->id,
             'current_garage_name' => $garage->name,
             'current_company_id' => $garage->company_id,
-            'current_company_name' => $garage->company->name,
+            // The company relation may be null when the parent company
+            // has been soft-deleted, or when the garage was loaded
+            // without an eager load. Use the null-safe operator so
+            // the session value simply becomes null in that case —
+            // the layout already guards with @if(session(...)).
+            'current_company_name' => $garage->company?->name,
         ]);
     }
 
