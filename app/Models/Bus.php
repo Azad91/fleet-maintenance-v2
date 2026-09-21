@@ -7,6 +7,7 @@ use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Enums\OilType;
 
 class Bus extends Model
 {
@@ -106,5 +107,55 @@ class Bus extends Model
     public function scopeInactive($query)
     {
         return $query->where('is_active', false);
+    }
+    public function oilChanges()
+    {
+        return $this->hasMany(BusOilChange::class)->orderByDesc('actual_km');
+    }
+
+    public function latestOilChange(OilType|string $type)
+    {
+        $value = $type instanceof OilType ? $type->value : $type;
+
+        return $this->hasOne(BusOilChange::class)
+            ->where('oil_type', $value)
+            ->latestOfMany('actual_km');
+    }
+
+    public function motorOilIntervalKm(): int
+    {
+        $threshold = (int) config('oil.bus_length_threshold', 15);
+        $isLarge   = ((float) ($this->uzunluq ?? 12)) >= $threshold;
+
+        $key = $isLarge ? '18m' : '12m';
+
+        return (int) config("oil.intervals.motor.{$key}", 36000);
+    }
+
+    public function axleOilIntervalKm(): int
+    {
+        return (int) config('oil.intervals.axle.default', 180000);
+    }
+
+    public static function gearboxIntervalForBrand(?string $brand): int
+    {
+        $fallback = (int) config('oil.intervals.axle.default', 180000);
+
+        if ($brand === null || $brand === '') {
+            return $fallback;
+        }
+
+        return (int) (config('oil.intervals.gearbox', [])[$brand] ?? $fallback);
+    }
+
+    public function nextOilIntervalKm(OilType $type): int
+    {
+        return match ($type) {
+            OilType::Motor   => $this->motorOilIntervalKm(),
+            OilType::Axle    => $this->axleOilIntervalKm(),
+            OilType::Gearbox => self::gearboxIntervalForBrand(
+                $this->latestOilChange(OilType::Gearbox)?->oil_brand
+            ),
+        };
     }
 }

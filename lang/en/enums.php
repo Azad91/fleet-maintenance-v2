@@ -34,4 +34,9 @@ return [
         'to_service_vehicle'  => 'To Service Vehicle',
         'return_to_quarantine' => 'Return / Quarantine',
     ],
+    'oil_type' => [
+        'motor'   => 'Motor oil',
+        'gearbox' => 'Gearbox oil',
+        'axle'    => 'Axle oil',
+    ],
 ];
