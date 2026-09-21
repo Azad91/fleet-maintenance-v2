@@ -129,6 +129,11 @@ class WarehouseTransferService
     /**
      * Dispatch a draft transfer: decrement stock on the source garage
      * and move the transfer to "dispatched".
+     *
+     * DEADLOCK GUARD: items are sorted by `warehouse_id` before any
+     * lock is acquired. Two concurrent dispatches that reference the
+     * same warehouses in a different order would otherwise deadlock
+     * on PostgreSQL's row-level locks.
      */
     public function dispatch(WarehouseTransfer $transfer): void
     {
@@ -141,7 +146,13 @@ class WarehouseTransferService
         DB::transaction(function () use ($transfer) {
             $transfer->load('items.warehouse');
 
-            foreach ($transfer->items as $item) {
+            // ── Deterministic lock order ──
+            // Same reasoning as ComplaintStockService::restoreStock().
+            $sortedItems = $transfer->items
+                ->sortBy('warehouse_id')
+                ->values();
+
+            foreach ($sortedItems as $item) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('id', $item->warehouse_id)
                     ->lockForUpdate()
