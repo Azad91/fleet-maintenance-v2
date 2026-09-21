@@ -50,6 +50,8 @@ return [
         'garage' => 'Qaraj',
         'or' => 'və ya',
         'days' => 'gün',
+        'bulk_delete_all' => 'Filter üzrə hamısını sil',
+        'bulk_delete_all_confirm' => 'Cari filter-ə uyğun BÜTÜN :count qeydi SİLMƏK istədiyinizə əminsiniz? Bu geri alına bilməz!',
     ],
 
     // ==================== NAVIGATION ====================
@@ -74,15 +76,12 @@ return [
         'operations' => 'ƏMƏLİYYATLAR',
         'daily_records' => 'GÜNLÜK QEYDLƏR',
         'data' => 'MƏLUMATLAR',
+        'bus_brands' => 'Avtobus markaları',
         'administration' => 'İDARƏETMƏ',
         'main_navigation' => 'Əsas naviqasiya',
         'app_name' => 'Fleet Maintenance',
         'super_admin' => 'Super Admin Paneli',
         'super_admin_menu' => 'SUPER ADMIN',
-        'oil_change_eyebrow' => 'DİQQƏT TƏLƏB EDİR',
-        'oil_change_title'   => 'Yağ dəyişmələri',
-        'oil_view_details'   => 'Ətraflı',
-        'oil_buses'          => 'avtobus',
     ],
 
     // ==================== AUTH ====================
@@ -229,6 +228,13 @@ return [
         'current_status' => 'Cari Status',
         'status_month'   => 'Ay',
         'status_summary' => 'Aylıq Xülasə',
+        'brand' => 'Marka',
+        'brand_hint' => 'İstəyə bağlı — bu avtobusu hansı istehsalçıya aid etmək istədiyinizi seçin.',
+        'col_brand' => 'MARKA',
+        'filter_all_brands' => 'Bütün markalar',
+        'import_no_brand' => '— Marka yoxdur —',
+        'import_brand_hint' => 'Bu fayldaki bütün avtobuslara tətbiq olunacaq markanı seçin. Qarışıq markalar varsa boş buraxın.',
+        'no_brands_hint' => 'Hələ marka yoxdur. İdxal etməzdən əvvəl birini yaradın.',
     ],
 
     // ==================== COMPLAINTS ====================
@@ -257,6 +263,7 @@ return [
         'driver_help_default' => 'Kod seçildikdə ad avtomatik dolacaq.',
         'driver_searching' => 'Sürücü axtarılır...',
         'driver_found' => 'Sürücü tapıldı.',
+        'driver_not_found' => 'Sürücü tapılmadı.',
         'dqn_not_found' => 'Bu DQN ilə avtobus tapılmadı',
         'service_type_label' => 'Xidmət Növü',
         'select_service' => 'Xidmət seçin...',
@@ -324,6 +331,16 @@ return [
         'bulk_delete_confirm' => ':count kartı SİLMƏK istədiyinizə əminsiniz? Stok geri qaytarılacaq. Bu geri alına bilməz!',
         'bulk_delete_all' => 'Filter üzrə hamısını sil',
         'bulk_delete_all_confirm' => 'Cari filter-ə uyğun BÜTÜN :count kartı SİLMƏK istədiyinizə əminsiniz? Hər kart üçün stok geri qaytarılacaq. Bu geri alına bilməz!',
+
+        'service_vehicle'             => 'Servis Maşını',
+        'service_vehicle_placeholder' => 'Servis maşını seçin...',
+        'service_vehicle_hint'        => 'Detallar bu maşının stokundan çıxılacaq.',
+        'part_not_on_vehicle'  => 'Detal seçilmiş servis maşınında tapılmadı.',
+        'select_vehicle_first' => 'Zəhmət olmasa əvvəlcə servis maşını seçin.',
+
+        'import_historical_label'    => 'Tarixi idxal — stoka toxunma',
+        'import_historical_hint'     => 'Keçmiş şikayətləri idxal edərkən bunu işarələyin. Hər şikayətdə istifadə olunan detallar yadda saxlanacaq, lakin anbar və servis maşını stoku DƏYİŞMƏYƏCƏK. Sonradan bu şikayətləri silmək və ya redaktə etmək də stoka toxunmur.',
+        'import_success_historical'  => ':count tarixi kart uğurla idxal edildi. Stok dəyişmədi.',
     ],
 
     // ==================== COMPLAINT TYPES ====================
@@ -351,6 +368,13 @@ return [
         'name' => 'Ad',
         'name_placeholder' => 'məs.: Filter',
         'quantity' => 'Anbar miqdarı',
+        'import_mode_label'           => 'İdxal rejimi',
+        'import_mode_hint'            => 'Eyni kod təkrar gələndə mövcud məhsulun miqdarının necə idarə olunacağını seçin.',
+        'import_mode_overwrite'       => 'Üzərinə yaz',
+        'import_mode_overwrite_hint'  => 'Excel-dəki miqdar mövcud miqdarı ƏVƏZ EDİR. Fayl tam inventar siyahısı olduqda istifadə edin.',
+        'import_mode_add'             => 'Stoka əlavə et',
+        'import_mode_add_hint'        => 'Excel-dəki miqdar mövcud miqdara ƏLAVƏ OLUNUR. Yeni mal qəbul edərkən istifadə edin (məs. anbarda 500 L + gələn 2000 L → 2500 L).',
+        'import_mode_badge'           => 'Rejim',
         'unit' => 'Ölçü vahidi',
         'price' => 'Vahid qiyməti',
         'price_azn' => 'Vahid qiyməti (₼)',
@@ -430,6 +454,10 @@ return [
         'critical_stock' => 'Kritik ehtiyat',
         'no_code' => 'Kod yoxdur',
         'no_critical_stock' => 'Kritik ehtiyat yoxdur.',
+        'oil_change_eyebrow' => 'DİQQƏT TƏLƏB EDİR',
+        'oil_change_title'   => 'Yağ dəyişmələri',
+        'oil_view_details'   => 'Ətraflı',
+        'oil_buses'          => 'avtobus',
     ],
 
     // ==================== USERS ====================
@@ -504,6 +532,13 @@ return [
         'delete_confirm'            => 'Bu servis maşınını silmək istədiyinizə əminsiniz?',
         'current_stock' => 'Cari Stok',
         'no_stock'      => 'Bu servis maşınında hələ stok yoxdur.',
+        'stocks_title'                => 'Servis Maşını Stokları',
+        'stocks_subtitle'      => 'Cari stoku görmək üçün maşın seçin.',
+        'stocks_item_count'    => 'Məhsul',
+        'stocks_total_qty'     => 'Ümumi miqdar',
+        'view_stock'           => 'Stoku gör',
+        'stocks_search_placeholder'   => 'Detal kodu və ya adı ilə axtar...',
+        'stocks_all_vehicles'         => 'Bütün maşınlar',
     ],
 
     // ==================== DRIVERS ====================
@@ -551,6 +586,7 @@ return [
         'history_count' => ':count qeyd',
         'no_records' => 'Hələ KM qeydi yoxdur.',
         'no_records_for_bus' => 'Bu avtobus üçün KM qeydi yoxdur.',
+        'filter_date_hint' => 'Standart: bugün. Hamısını görmək üçün təmizləyin.',
         'add_for_bus' => 'Bu avtobus üçün KM əlavə et',
         'auto_read' => 'başlıqdan avtomatik oxunur',
         'ignored_columns' => 'Digər sütunlar (ROUTE, FUEL və s.) nəzərə alınmır.',
@@ -570,6 +606,7 @@ return [
         'notes' => 'Qeyd',
         'notes_placeholder' => 'Əlavə qeydlər...',
         'no_records' => 'Hələ status məlumatı yoxdur.',
+        'filter_date_hint' => 'Standart: bugün. Hamısını görmək üçün təmizləyin.',
         'import_date_hint' => 'Dəstəklənən formatlar: d.m.Y (15.09.2026), Y-m-d (2026-09-15) və ya Excel serial. Boş buraxılsa, bugünün tarixi istifadə olunur.',
     ],
 
@@ -590,6 +627,11 @@ return [
         'no_results' => 'KM ":search" üçün nəticə tapılmadı.',
         'no_details' => 'Hələ motor yağı detalları əlavə edilməyib.',
         'km_columns' => 'KM sütunları (neçə dəfə dəyişilir)',
+        'brand' => 'Marka',
+        'filter_all_brands' => 'Bütün markalar',
+        'import_brand_required' => 'Marka seçin — motor yağı cədvəlləri marka üzrə fərqlidir.',
+        'import_brand_hint' => 'Bu faylın hansı markaya aid olduğunu seçin. Bütün sətirlər bu markaya təyin olunacaq.',
+        'no_brands_hint' => 'Hələ marka yoxdur. Əvvəlcə birini yaradın.',
     ],
 
     // ==================== PROFILE ====================
@@ -656,6 +698,7 @@ return [
             'part_not_found' => 'Detal (:code) anbarda tapılmadı',
             'no_km_columns' => 'Heç bir KM sütununda miqdar > 0 deyil',
             'employee_code_empty' => 'İşçi kodu boşdur',
+            'previous_row_failed' => 'Bu kartda əvvəlki sətir uğursuz oldu — kart yaradılmadı.',
         ],
     ],
 
@@ -887,6 +930,8 @@ return [
         'coming_soon' => 'Tezliklə',
         'coming_soon_hint' => 'Bu hesabat hazırlanır. Bir az sonra yoxlayın.',
         'no_scope' => 'Bu hesabata girişiniz yoxdur.',
+        'brand' => 'Marka',
+        'all_brands' => 'Bütün markalar',
 
         'period' => [
             'label' => 'Dövr',
@@ -906,6 +951,7 @@ return [
             'worker_activity' => 'Worker fəaliyyəti',
             'low_stock' => 'Kritik stok',
             'movement' => 'Hərəkət tarixçəsi',
+            'service_vehicle_usage' => 'Servis Maşını İstifadəsi',
         ],
 
         'complaint' => [
@@ -929,7 +975,15 @@ return [
             'distribution' => 'Status paylanması',
             'changes' => 'Status dəyişiklikləri',
             'worker_activity' => 'Worker fəaliyyəti',
-            'filter_date_hint' => 'Standart: bugün. Hamısını görmək üçün təmizləyin.',
+        ],
+
+        'maintenance' => [
+            'title'          => 'Texniki xidmət hesabatları',
+            'summary'        => 'İcmal',
+            'per_bus'        => 'Avtobus üzrə',
+            'per_part'       => 'Detal üzrə',
+            'motor_oil'      => 'Motor yağı dəyişmələri',
+            'most_repaired'  => 'Ən çox təmir olunan',
         ],
 
         'content' => [
@@ -990,6 +1044,30 @@ return [
             'records_in_period' => 'dövr ərzində qeydlər',
             'unique_statuses' => 'Unikal statuslar',
             'distinct_types' => 'fərqli növlər',
+
+            'cards_opened'         => 'Açılmış kartlar',
+            'cards_closed'         => 'Bağlanmış kartlar',
+            'motor_oil_count'      => 'Motor yağı dəyişmələri',
+            'parts_lines'          => 'Detal sətirləri',
+            'total_quantity'       => 'Ümumi miqdar',
+            'total_cost'           => 'Ümumi dəyər',
+            'distinct_parts'       => 'Fərqli detallar',
+            'by_location'          => 'Yerə görə',
+            'top_bus'              => 'Ən çox təmir olunan',
+            'price_at_use'         => 'Vahid qiyməti',
+            'service_date'         => 'Xidmət tarixi',
+            'service_km'           => 'Xidmət KM',
+            'parts_used'           => 'İstifadə olunan detallar',
+            'no_activity'          => 'Bu dövrdə texniki xidmət fəaliyyəti yoxdur.',
+            'no_motor_oil'         => 'Bu dövrdə motor yağı dəyişməsi yoxdur.',
+            'ranking_by_cards'     => 'Kart sayına görə sıralanıb',
+            'period_label'         => 'Dövr',
+            'total_parts_count'    => 'Ümumi detallar',
+            'cost_label'           => 'Dəyər',
+            'qty_warehouse'        => 'Anbar',
+            'qty_service_vehicle'  => 'Servis Maşını',
+            'qty_historical'       => 'Tarixi',
+            'rank'                 => 'Yer',
         ],
     ],
 
@@ -1028,6 +1106,10 @@ return [
         'stock_item_not_found' => "':code' kodlu detal cari qarajın anbarında tapılmadı.",
         'stock_insufficient' => "Anbarda kifayət qədər ':name' yoxdur (tələb: :requested, mövcud: :available).",
         'stock_insufficient_generic' => 'Anbarda kifayət qədər detal yoxdur.',
+        'service_vehicle_required'           => 'Yol şikayətləri üçün servis maşını seçilməlidir.',
+        'service_vehicle_not_found'          => 'Seçilmiş servis maşını tapılmadı.',
+        'service_vehicle_part_not_found'     => "':code' detalı ':vehicle' maşınında tapılmadı. Zəhmət olmasa əvvəlcə anbardan maşına stok əlavə edin.",
+        'service_vehicle_stock_insufficient' => "':vehicle' maşınında kifayət qədər ':name' yoxdur (tələb: :requested, mövcud: :available). Zəhmət olmasa əvvəlcə maşını stokla doldurun.",
         'permission_denied' => 'Bu əməliyyat üçün icazəniz yoxdur.',
         'director_no_company' => 'Aktiv şirkət təyinatı tapılmadı.',
         'auth_logged_out' => 'Sistemdən çıxdınız.',
@@ -1162,6 +1244,7 @@ return [
             'total_declared'     => 'Bəyan edilən',
             'total_received'     => 'Qəbul edilən',
             'no_disputes'        => 'Bu dövrdə mübahisəli transfer yoxdur.',
+            'detailed'           => 'Ətraflı Görünüş',
         ],
     ],
 
@@ -1171,6 +1254,27 @@ return [
         'service_vehicle' => 'Servis Maşını',
     ],
 
+    // ==================== BUS BRANDS ====================
+    'bus_brands' => [
+        'title' => 'Avtobus Markaları',
+        'subtitle' => 'Qarajınız üçün istehsalçı kataloqu.',
+        'new' => 'Yeni marka',
+        'create_title' => 'Avtobus Markası Əlavə Et',
+        'edit_title' => 'Avtobus Markasını Redaktə Et',
+        'name' => 'Ad',
+        'name_placeholder' => 'məs.: BMC',
+        'code' => 'Kod',
+        'code_placeholder' => 'məs.: BMC',
+        'code_hint' => 'Qısa identifikator — idxal və hesabatlarda istifadə olunacaq.',
+        'is_active' => 'Aktiv',
+        'buses_count' => 'Avtobuslar',
+        'no_brands' => 'Hələ marka yoxdur. Başlamaq üçün ilkini yaradın.',
+        'delete_confirm' => 'Bu markanı silmək istədiyinizə əminsiniz?',
+        'cannot_delete_has_buses' => 'Silmək mümkün deyil: bu markaya təyin olunmuş avtobuslar var. Əvvəlcə onları başqa markaya keçirin və ya silin.',
+        'cannot_delete_has_motor_oil' => 'Silmək mümkün deyil: bu markaya təyin olunmuş motor yağı detalları var.',
+    ],
+
+    // ==================== OIL CHANGE ====================
     'oil_change' => [
         'title'          => 'Yağ dəyişmələri',
         'subtitle'       => 'Prioritet siyahısı və hər avtobusun yağ dəyişmə tarixçəsi.',
@@ -1204,14 +1308,16 @@ return [
 
         'filter_status'  => 'Status filteri',
         'all_statuses'   => 'Bütün statuslar',
-        'urgent_title'    => 'Təcili Yağ Dəyişmələri',
-        'urgent_subtitle' => 'Bu gün diqqət tələb edən avtobuslar — gecikmiş və təcili yağ dəyişmələri.',
-        'urgent_empty'    => 'Bu gün diqqət tələb edən avtobus yoxdur 👍',
-        'urgent_short'    => 'təcili',
 
         'import_title'    => 'Yağ dəyişmə tarixçəsini import et',
         'bus_length'      => 'Avtobus uzunluğu',
         'bus_length_hint' => 'Yalnız motor yağı üçün — import faylındaki bütün avtobuslar bu uzunluqdadır.',
+
+        'urgent_title'    => 'Təcili Yağ Dəyişmələri',
+        'urgent_subtitle' => 'Bu gün diqqət tələb edən avtobuslar — gecikmiş və təcili yağ dəyişmələri.',
+        'urgent_empty'    => 'Bu gün diqqət tələb edən avtobus yoxdur 👍',
+        'urgent_short'    => 'təcili',
+        'next_scheduled_km' => 'Yağdəyişmə növü',
 
         'status' => [
             'overdue'    => 'Gecikib',

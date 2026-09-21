@@ -75,7 +75,8 @@ return [
         'main_menu' => 'MAIN MENU',
         'operations' => 'OPERATIONS',
         'daily_records' => 'DAILY RECORDS',
-        'data' => 'DATA' , 'bus_brands' => 'Bus Brands',
+        'data' => 'DATA',
+        'bus_brands' => 'Bus Brands',
         'administration' => 'ADMINISTRATION',
         'main_navigation' => 'Main navigation',
         'app_name' => 'Fleet Maintenance',
@@ -267,6 +268,7 @@ return [
         'driver_help_default' => 'Driver name auto-fills when code is selected.',
         'driver_searching' => 'Searching for driver...',
         'driver_found' => 'Driver found.',
+        'driver_not_found' => 'Driver not found.',
         'dqn_not_found' => 'No bus found with this DQN',
         'service_type_label' => 'Service Type',
         'select_service' => 'Select service...',
@@ -450,6 +452,10 @@ return [
         'critical_stock' => 'Critical Stock',
         'no_code' => 'No code',
         'no_critical_stock' => 'No critical stock items.',
+        'oil_change_eyebrow' => 'REQUIRES ATTENTION',
+        'oil_change_title'   => 'Oil changes',
+        'oil_view_details'   => 'Details',
+        'oil_buses'          => 'buses',
     ],
 
     // ==================== USERS ====================
@@ -598,6 +604,7 @@ return [
         'notes' => 'Notes',
         'notes_placeholder' => 'Additional notes...',
         'no_records' => 'No status data yet.',
+        'filter_date_hint' => 'Default: today. Clear to see all dates.',
         'import_date_hint' => 'Supported formats: d.m.Y (15.09.2026), Y-m-d (2026-09-15), or Excel serial. If left empty, today\'s date is used.',
     ],
 
@@ -921,7 +928,6 @@ return [
         'coming_soon' => 'Coming soon',
         'coming_soon_hint' => 'This report is under development. Check back shortly.',
         'no_scope' => 'You do not have access to this report.',
-        // === NEW: Brand filter ===
         'brand' => 'Brand',
         'all_brands' => 'All brands',
 
@@ -1037,16 +1043,13 @@ return [
             'unique_statuses' => 'Unique Statuses',
             'distinct_types' => 'distinct types',
 
-            // ─── Maintenance report ───
             'cards_opened'         => 'Cards Opened',
             'cards_closed'         => 'Cards Closed',
             'motor_oil_count'      => 'Motor Oil Changes',
             'parts_lines'          => 'Part Lines',
             'total_quantity'       => 'Total Quantity',
             'total_cost'           => 'Total Cost',
-            'avg_close_hours'      => 'Avg. Close Time',
             'distinct_parts'       => 'Distinct Parts',
-            'by_type'              => 'By Complaint Type',
             'by_location'          => 'By Location',
             'top_bus'              => 'Most Repaired Bus',
             'price_at_use'         => 'Unit Price',
@@ -1059,7 +1062,6 @@ return [
             'period_label'         => 'Period',
             'total_parts_count'    => 'Total Parts',
             'cost_label'           => 'Cost',
-            'hours'                => 'hours',
             'qty_warehouse'        => 'Warehouse',
             'qty_service_vehicle'  => 'Service Vehicle',
             'qty_historical'       => 'Historical',
@@ -1240,7 +1242,7 @@ return [
             'total_declared'     => 'Declared',
             'total_received'     => 'Received',
             'no_disputes'        => 'No disputed transfers in this period.',
-            'detailed' => 'Detailed View',
+            'detailed'           => 'Detailed View',
         ],
     ],
 
@@ -1268,5 +1270,59 @@ return [
         'delete_confirm' => 'Are you sure you want to delete this brand?',
         'cannot_delete_has_buses' => 'Cannot delete: this brand has buses assigned to it. Reassign or remove them first.',
         'cannot_delete_has_motor_oil' => 'Cannot delete: this brand has motor oil details assigned to it.',
+    ],
+
+    // ==================== OIL CHANGE ====================
+    'oil_change' => [
+        'title'          => 'Oil Changes',
+        'subtitle'       => 'Priority list and each bus\'s oil change history.',
+        'priority'       => 'Priority list',
+        'history'        => 'History',
+        'all_types'      => 'All',
+        'new'            => 'New record',
+        'add_change'     => 'Add oil change',
+        'edit_change'    => 'Edit oil change',
+
+        'bus'            => 'Bus',
+        'type'           => 'Type',
+        'brand'          => 'Brand',
+        'current_km'     => 'Current km',
+        'last_change_km' => 'Last change',
+        'next_due_km'    => 'Next due',
+        'remaining_km'   => 'Remaining km',
+        'overdue_km'     => 'Overdue',
+        'interval_km'    => 'Interval',
+        'changed_at'     => 'Change date',
+        'scheduled_km'   => 'Scheduled km',
+        'actual_km'      => 'Actual km',
+        'notes'          => 'Notes',
+
+        'column_status'  => 'Status',
+
+        'no_history'     => 'No history',
+        'no_active_buses' => 'No active buses.',
+        'no_changes'     => 'No oil change records for this bus.',
+        'no_priority_items' => 'No buses require attention. 👍',
+
+        'filter_status'  => 'Status filter',
+        'all_statuses'   => 'All statuses',
+
+        'import_title'    => 'Import oil change history',
+        'bus_length'      => 'Bus length',
+        'bus_length_hint' => 'Motor oil only — every bus in the import file has this length.',
+
+        'urgent_title'    => 'Urgent Oil Changes',
+        'urgent_subtitle' => 'Buses requiring attention today — overdue and critical oil changes.',
+        'urgent_empty'    => 'No buses need immediate attention today 👍',
+        'urgent_short'    => 'urgent',
+        'next_scheduled_km' => 'Oil Change Type to Perform',
+
+        'status' => [
+            'overdue'    => 'Overdue',
+            'critical'   => 'Critical',
+            'due-soon'   => 'Due soon',
+            'ok'         => 'OK',
+            'no-history' => 'Unknown',
+        ],
     ],
 ];
