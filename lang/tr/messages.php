@@ -952,6 +952,7 @@ return [
 
     // ==================== FLASH MESSAGES ====================
     'flash' => [
+        'duplicate_part_codes' => 'Aynı parça kodu birden fazla kez girildi (:codes). Her kod bir kartta yalnızca bir kez girilebilir.',
         'created' => ':Item başarıyla oluşturuldu.',
         'updated' => ':Item başarıyla güncellendi.',
         'deleted' => ':Item başarıyla silindi.',

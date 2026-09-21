@@ -1073,6 +1073,7 @@ return [
 
     // ==================== FLASH MESSAGES ====================
     'flash' => [
+        'duplicate_part_codes' => 'The same part code appears more than once (:codes). Each code can only be entered once per card.',
         'created' => ':Item created successfully.',
         'updated' => ':Item updated successfully.',
         'deleted' => ':Item deleted successfully.',

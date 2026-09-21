@@ -277,6 +277,11 @@ class ComplaintService
     private function syncDetails(Complaint $complaint, array $processedDetails): void
     {
         // ==================== 0. PREPARE ====================
+        // NOTE: this method keys details by their `code` value. If two
+        // rows in $processedDetails share a code, the later one silently
+        // overwrites the earlier. FormRequests reject this at the input
+        // layer (see ComplaintStoreRequest/ComplaintUpdateRequest
+        // withValidator), so this is a defense-in-depth assertion only.
         $existingByCode = $complaint->details()
             ->orderBy('id')
             ->get()

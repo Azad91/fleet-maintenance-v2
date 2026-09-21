@@ -1075,6 +1075,7 @@ return [
 
     // ==================== FLASH MESSAGES ====================
     'flash' => [
+        'duplicate_part_codes' => 'Eyni detal kodu bir neçə dəfə göstərilib (:codes). Hər kod bir kartda yalnız bir dəfə ola bilər.',
         'created' => ':Item uğurla yaradıldı.',
         'updated' => ':Item uğurla yeniləndi.',
         'deleted' => ':Item uğurla silindi.',

@@ -88,6 +88,26 @@ class ComplaintUpdateRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // ── Duplicate part-code guard ──
+            //
+            // syncDetails() keys details by their `code` value, so two
+            // rows sharing the same code silently collapse into one —
+            // the second overwrites the first. Reject the payload early
+            // with a clear message instead.
+            $codes = collect($this->input('details', []))
+                ->pluck('code')
+                ->filter(fn ($c) => filled($c));
+
+            $duplicates = $codes->duplicates()->unique()->values();
+
+            if ($duplicates->isNotEmpty()) {
+                $validator->errors()->add(
+                    'details',
+                    __('messages.flash.duplicate_part_codes', [
+                        'codes' => $duplicates->implode(', '),
+                    ])
+                );
+            }
             foreach ($this->input('details', []) as $index => $detail) {
                 if (blank($detail['code'] ?? null)) {
                     continue;
