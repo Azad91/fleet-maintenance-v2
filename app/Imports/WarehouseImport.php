@@ -71,7 +71,7 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
             $unit = $row['unit'] ?? $row['olcu_vahidi'] ?? null;
 
             $rawPrice = $row['price'] ?? $row['qiymet'] ?? '0';
-            $price = (float) str_replace([' ', ','], '', (string) $rawPrice);
+            $price = $this->parsePrice($rawPrice);
 
             if (empty($code) || empty($name)) {
                 $this->recordSkip(
@@ -118,5 +118,67 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
 
             $this->incrementImported();
         }
+    }
+
+    /**
+     * Parse a price value from an Excel cell.
+     *
+     * Handles the two common locale formats:
+     *   - AZ / TR: "1.500,50"  → 1500.50   (nöqtə minliklər, vergül onluq)
+     *   - US / EN: "1,500.50"  → 1500.50   (vergül minliklər, nöqtə onluq)
+     *   - Plain:   "1500.50"   → 1500.50
+     *              "1500,50"   → 1500.50
+     *
+     * Strategiya: hər iki ayırıcı varsa, SONUNCU olan onluq ayırıcıdır.
+     * Yalnız biri varsa, 2 rəqəmdən sonra gəlirsə onluq, əks halda minlik
+     * sayılır.
+     */
+    private function parsePrice(mixed $raw): float
+    {
+        if ($raw === null || $raw === '') {
+            return 0.0;
+        }
+
+        $value = trim((string) $raw);
+
+        // Bütün boşluq / valyuta simvollarını sil (₼, $, €, AZN və s.)
+        $value = preg_replace('/[^\d.,\-]/u', '', $value);
+
+        if ($value === '' || $value === '-') {
+            return 0.0;
+        }
+
+        $hasDot   = str_contains($value, '.');
+        $hasComma = str_contains($value, ',');
+
+        if ($hasDot && $hasComma) {
+            // Sonuncu ayırıcı onluq ayırıcıdır.
+            $lastDot   = strrpos($value, '.');
+            $lastComma = strrpos($value, ',');
+
+            if ($lastComma > $lastDot) {
+                // "1.500,50" → 1500.50
+                $value = str_replace('.', '', $value);
+                $value = str_replace(',', '.', $value);
+            } else {
+                // "1,500.50" → 1500.50
+                $value = str_replace(',', '', $value);
+            }
+        } elseif ($hasComma) {
+            // Yalnız vergül: "1500,50" → 1500.50 ; "1,500" → 1500
+            $pos = strrpos($value, ',');
+            $decimals = strlen($value) - $pos - 1;
+
+            if ($decimals === 3 && $pos > 0) {
+                // "1,500" → minliklər
+                $value = str_replace(',', '', $value);
+            } else {
+                // "1500,50" → onluq
+                $value = str_replace(',', '.', $value);
+            }
+        }
+        // Yalnız nöqtə varsa və ya heç biri yoxdursa — olduğu kimi qalır.
+
+        return (float) $value;
     }
 }

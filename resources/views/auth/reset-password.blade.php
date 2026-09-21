@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', __('Şifrəni sıfırla') . ' · Fleet Control')
+@section('title', __('auth.reset_title') . ' · Fleet Control')
 
 @section('content')
 <div class="auth-container">
@@ -8,8 +8,8 @@
         <div class="logo">
             <i class="bi bi-shield-lock-fill"></i>
         </div>
-        <div class="auth-title">{{ __('Şifrəni sıfırla') }}</div>
-        <p class="auth-subtitle">{{ __('Yeni şifrənizi daxil edin.') }}</p>
+        <div class="auth-title">{{ __('auth.reset_title') }}</div>
+        <p class="auth-subtitle">{{ __('auth.reset_hint') }}</p>
 
         @if ($errors->any())
             <div class="alert-danger">
@@ -52,7 +52,7 @@
             </div>
 
             <button type="submit" class="btn-login">
-                <i class="bi bi-check-circle me-2"></i> {{ __('Şifrəni yenilə') }}
+                <i class="bi bi-check-circle me-2"></i> {{ __('auth.reset_button') }}
             </button>
         </form>
     </div>

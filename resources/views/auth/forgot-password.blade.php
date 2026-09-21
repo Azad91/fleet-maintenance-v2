@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', __('messages.auth.forgot_password') . ' · Fleet Control')
+@section('title', __('auth.forgot_title') . ' · Fleet Control')
 
 @section('content')
 <div class="auth-container">
@@ -8,10 +8,8 @@
         <div class="logo">
             <i class="bi bi-envelope-fill"></i>
         </div>
-        <div class="auth-title">{{ __('messages.auth.forgot_password') }}</div>
-        <p class="auth-subtitle">
-            {{ __('Email ilə şifrə sıfırlama linki göndərəcəyik.') }}
-        </p>
+        <div class="auth-title">{{ __('auth.forgot_title') }}</div>
+        <p class="auth-subtitle">{{ __('auth.forgot_hint') }}</p>
 
         @if (session('status'))
             <div class="alert alert-success">
@@ -41,7 +39,7 @@
             </div>
 
             <button type="submit" class="btn-login">
-                <i class="bi bi-send me-2"></i> {{ __('Şifrə sıfırlama linki göndər') }}
+                <i class="bi bi-send me-2"></i> {{ __('auth.forgot_button') }}
             </button>
         </form>
 

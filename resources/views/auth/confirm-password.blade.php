@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', __('Şifrəni təsdiqlə') . ' · Fleet Control')
+@section('title', __('auth.confirm_title') . ' · Fleet Control')
 
 @section('content')
 <div class="auth-container">
@@ -8,10 +8,8 @@
         <div class="logo">
             <i class="bi bi-shield-check"></i>
         </div>
-        <div class="auth-title">{{ __('Şifrəni təsdiqlə') }}</div>
-        <p class="auth-subtitle">
-            {{ __('Davam etməzdən əvvəl şifrənizi təsdiqləyin.') }}
-        </p>
+        <div class="auth-title">{{ __('auth.confirm_title') }}</div>
+        <p class="auth-subtitle">{{ __('auth.confirm_hint') }}</p>
 
         @if ($errors->any())
             <div class="alert-danger">
@@ -33,7 +31,7 @@
             </div>
 
             <button type="submit" class="btn-login">
-                <i class="bi bi-check-circle me-2"></i> {{ __('Təsdiqlə') }}
+                <i class="bi bi-check-circle me-2"></i> {{ __('auth.confirm_button') }}
             </button>
         </form>
     </div>
