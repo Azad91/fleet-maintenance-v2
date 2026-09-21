@@ -106,7 +106,10 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
                 }
             }
 
-            Cache::put($cacheKey, $kmColumns, now()->addHours(1));
+            // 24-hour TTL: comfortably longer than any realistic import
+            // runtime. The cache key carries the per-instance importToken
+            // so entries from concurrent or past imports cannot collide.
+            Cache::put($cacheKey, $kmColumns, now()->addHours(24));
 
             $dataRows = $rows->slice(2);
         } else {
