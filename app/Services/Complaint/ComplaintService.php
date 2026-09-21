@@ -198,6 +198,11 @@ class ComplaintService
      * Each chunk runs its own transaction. If a chunk fails, earlier
      * chunks stay committed and the caller can retry the rest.
      *
+     * Eager loads from the incoming query are explicitly stripped —
+     * chunkById() only needs the primary key column, and a chunk of
+     * partial models would otherwise trigger needless relation
+     * queries for every iteration.
+     *
      * @param  \Illuminate\Database\Eloquent\Builder<Complaint>  $query
      * @param  int  $chunkSize
      * @return int  Number of complaints actually deleted
@@ -206,11 +211,14 @@ class ComplaintService
     {
         $deleted = 0;
 
-        // chunkById() works on a Builder that selects the primary key.
-        // The filter query may include joins and eager loads — we strip
-        // them because chunkById() needs a clean, ordered ID stream.
+        // Work on a clone so the caller's query is not mutated:
+        //   - reorder()        — remove the incoming ORDER BY, chunkById
+        //                        adds its own stable order
+        //   - setEagerLoads([]) — strip eager loads; we only need IDs
+        //   - select('complaints.id') — narrow the projection
         $idQuery = $query->clone()
             ->reorder()
+            ->setEagerLoads([])
             ->select('complaints.id');
 
         $idQuery->chunkById($chunkSize, function ($rows) use (&$deleted) {
