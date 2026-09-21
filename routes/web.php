@@ -342,7 +342,9 @@ Route::middleware(['auth', 'pin.enforced', 'garage.selected', 'idempotent'])->gr
             ->middleware('throttle:import')
             ->name('import.store');
         Route::get('/create', [\App\Http\Controllers\OilChangeController::class, 'create'])->name('create');
+        Route::get('/urgent', [\App\Http\Controllers\OilChangeController::class, 'urgent'])->name('urgent');
         Route::post('/', [\App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
+        Route::get('/daily', [\App\Http\Controllers\OilChangeController::class, 'daily'])->name('daily');
         Route::get('/{oilChange}/edit', [\App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');
         Route::put('/{oilChange}', [\App\Http\Controllers\OilChangeController::class, 'update'])->name('update');
         Route::delete('/{oilChange}', [\App\Http\Controllers\OilChangeController::class, 'destroy'])->name('destroy');
