@@ -79,6 +79,10 @@ return [
         'app_name' => 'Fleet Maintenance',
         'super_admin' => 'Super Admin Paneli',
         'super_admin_menu' => 'SUPER ADMIN',
+        'oil_change_eyebrow' => 'DİQQƏT TƏLƏB EDİR',
+        'oil_change_title'   => 'Yağ dəyişmələri',
+        'oil_view_details'   => 'Ətraflı',
+        'oil_buses'          => 'avtobus',
     ],
 
     // ==================== AUTH ====================

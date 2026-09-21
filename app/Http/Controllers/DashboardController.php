@@ -45,6 +45,10 @@ class DashboardController extends Controller
             ->get();
 
         $recurringIssues = ComplaintItem::recurring(30)->get();
+        // ─── Oil change stats ───
+        // Eager-load 'oilChanges' so OilChangeStatusService does not fire
+        // a query per (bus × type). The service already checks relationLoaded().
+        $oilStats = $this->computeOilChangeStats();
 
         $today = now()->toDateString();
 
@@ -91,20 +95,72 @@ class DashboardController extends Controller
             : collect();
 
         return view('dashboard', compact(
-            'totalBuses',
-            'activeBuses',
-            'activeComplaints',
-            'totalWarehouseItems',
-            'recentBuses',
-            'lowStockItems',
-            'recentComplaints',
-            'recurringIssues',
-            'busesWithoutKmToday',
-            'busesWithoutKmTodayCount',
-            'outboundPending',
-            'inboundPending',
-            'disputedCount',
-            'pendingTransfers',
+                'totalBuses',
+                'activeBuses',
+                'activeComplaints',
+                'totalWarehouseItems',
+                'recentBuses',
+                'lowStockItems',
+                'recentComplaints',
+                'recurringIssues',
+                'busesWithoutKmToday',
+                'busesWithoutKmTodayCount',
+                'outboundPending',
+                'inboundPending',
+                'disputedCount',
+                'pendingTransfers',
+                'oilStats',
         ));
+    }
+
+    /**
+     * Count active buses by oil-change status, across all three types.
+     *
+     * Returns:
+     *   [
+     *     'overdue'    => N,
+     *     'critical'   => N,
+     *     'due-soon'   => N,
+     *     'ok'         => N,
+     *     'no-history' => N,
+     *     'total_attention' => overdue + critical + due-soon,
+     *   ]
+     */
+    private function computeOilChangeStats(): array
+    {
+        $counts = [
+            'overdue'         => 0,
+            'critical'        => 0,
+            'due-soon'        => 0,
+            'ok'              => 0,
+            'no-history'      => 0,
+            'total_attention' => 0,
+        ];
+
+        $buses = Bus::with(['oilChanges', 'latestKmRecord'])
+            ->where('is_active', true)
+            ->get();
+
+        if ($buses->isEmpty()) {
+            return $counts;
+        }
+
+        $service = app(\App\Services\OilChange\OilChangeStatusService::class);
+
+        foreach ($buses as $bus) {
+            foreach (\App\Enums\OilType::cases() as $type) {
+                $status = $service->forBus($bus, $type);
+
+                if (isset($counts[$status->status])) {
+                    $counts[$status->status]++;
+                }
+            }
+        }
+
+        $counts['total_attention'] = $counts['overdue']
+            + $counts['critical']
+            + $counts['due-soon'];
+
+        return $counts;
     }
 }

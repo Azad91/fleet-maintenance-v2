@@ -55,6 +55,81 @@
             </article>
         </section>
         {{-- ═══════════════════════════════════════════════════ --}}
+        {{-- OIL CHANGE ALERTS                                 --}}
+        {{-- ═══════════════════════════════════════════════════ --}}
+        @if(($oilStats['total_attention'] ?? 0) > 0)
+            <section class="fleet-panel mb-4">
+                <header class="fleet-panel__header">
+                    <div>
+                        <span class="fleet-eyebrow">{{ __('messages.dashboard.oil_change_eyebrow') }}</span>
+                        <h2>🛢️ {{ __('messages.dashboard.oil_change_title') }}</h2>
+                    </div>
+                    <a href="{{ route('oil-changes.index') }}" class="fleet-text-link">
+                        {{ __('messages.dashboard.oil_view_details') }} <i class="fas fa-arrow-right"></i>
+                    </a>
+                </header>
+
+                <div class="row g-3 p-3">
+                    @if(($oilStats['overdue'] ?? 0) > 0)
+                        <div class="col-md-4">
+                            <a href="{{ route('oil-changes.index') }}" class="text-decoration-none">
+                                <div class="p-3 rounded-3" style="background: #fef2f2; border: 1px solid #fecaca;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="fas fa-circle-exclamation text-danger"></i>
+                                        <strong class="text-danger" style="font-size: 13px;">
+                                            {{ __('messages.oil_change.status.overdue') }}
+                                        </strong>
+                                    </div>
+                                    <div class="fw-bold text-danger" style="font-size: 28px; letter-spacing: -0.5px;">
+                                        {{ $oilStats['overdue'] }}
+                                    </div>
+                                    <small class="text-danger">{{ __('messages.dashboard.oil_buses') }}</small>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+
+                    @if(($oilStats['critical'] ?? 0) > 0)
+                        <div class="col-md-4">
+                            <a href="{{ route('oil-changes.index') }}" class="text-decoration-none">
+                                <div class="p-3 rounded-3" style="background: #fff1f2; border: 1px solid #fed7aa;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="fas fa-triangle-exclamation" style="color: #ea580c;"></i>
+                                        <strong style="color: #ea580c; font-size: 13px;">
+                                            {{ __('messages.oil_change.status.critical') }}
+                                        </strong>
+                                    </div>
+                                    <div class="fw-bold" style="color: #ea580c; font-size: 28px; letter-spacing: -0.5px;">
+                                        {{ $oilStats['critical'] }}
+                                    </div>
+                                    <small style="color: #ea580c;">{{ __('messages.dashboard.oil_buses') }}</small>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+
+                    @if(($oilStats['due-soon'] ?? 0) > 0)
+                        <div class="col-md-4">
+                            <a href="{{ route('oil-changes.index') }}" class="text-decoration-none">
+                                <div class="p-3 rounded-3" style="background: #fffbeb; border: 1px solid #fde68a;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="fas fa-clock text-warning"></i>
+                                        <strong class="text-warning" style="font-size: 13px;">
+                                            {{ __('messages.oil_change.status.due-soon') }}
+                                        </strong>
+                                    </div>
+                                    <div class="fw-bold text-warning" style="font-size: 28px; letter-spacing: -0.5px;">
+                                        {{ $oilStats['due-soon'] }}
+                                    </div>
+                                    <small class="text-warning">{{ __('messages.dashboard.oil_buses') }}</small>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </section>
+        @endif
+        {{-- ═══════════════════════════════════════════════════ --}}
         {{-- TRANSFER NOTIFICATIONS                             --}}
         {{-- ═══════════════════════════════════════════════════ --}}
         @if($outboundPending + $inboundPending + $disputedCount > 0)
