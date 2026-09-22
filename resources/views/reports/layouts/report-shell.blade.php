@@ -226,7 +226,7 @@
                         </div>
                     @endif
 
-                    <div class="col-md-3 ms-auto text-end">
+                    <div class="col-md-3 ms-auto d-flex align-items-center justify-content-end gap-2 flex-wrap">
                         <small class="text-muted">
                             <i class="fas fa-calendar"></i>
                             {{ request()->filled('from') && request()->filled('to') && request('period') === 'custom'
@@ -238,6 +238,21 @@
                                 }
                             }}
                         </small>
+
+                        {{-- ✅ Export button — only rendered for reports
+                             that implement export support (they set the
+                             $exportUrl variable in their render() helper).
+                             The URL is the current filter URL with
+                             ?export=xlsx appended, so the export respects
+                             the same period, brand and custom date range. --}}
+                        @isset($exportUrl)
+                            <a href="{{ $exportUrl }}"
+                               class="btn btn-sm btn-outline-success"
+                               title="{{ __('messages.reports.export_excel') }}">
+                                <i class="fas fa-file-excel"></i>
+                                {{ __('messages.reports.export_excel') }}
+                            </a>
+                        @endisset
                     </div>
                 </div>
             </form>

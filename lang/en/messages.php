@@ -930,6 +930,7 @@ return [
         'coming_soon' => 'Coming soon',
         'coming_soon_hint' => 'This report is under development. Check back shortly.',
         'no_scope' => 'You do not have access to this report.',
+        'export_excel' => 'Export to Excel',
         'brand' => 'Brand',
         'all_brands' => 'All brands',
 
