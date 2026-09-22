@@ -63,12 +63,29 @@ class CloseComplaintAction
     /**
      * Generate the PDF as a side effect. Any failure is logged but
      * does not propagate — the complaint is already closed.
+     *
+     * If generation fails AND a stale PDF from a previous state still
+     * exists on disk, we attempt to remove it so the operator cannot
+     * accidentally download a pre-close version. This cleanup is also
+     * best-effort.
      */
     protected function generatePdf(Complaint $complaint): void
     {
         try {
             $this->pdfService->save($complaint);
         } catch (\Throwable $e) {
+            // Best-effort cleanup of any stale PDF left over from a
+            // previous (pre-close) state.
+            try {
+                $this->pdfService->delete($complaint);
+            } catch (\Throwable $deleteFailure) {
+                Log::warning('Failed to clean up stale complaint PDF after generation failure', [
+                    'complaint_id' => $complaint->id,
+                    'error'        => $deleteFailure->getMessage(),
+                    'request_id'   => Context::get('request_id'),
+                ]);
+            }
+
             Log::error('PDF generation failed', [
                 'complaint_id' => $complaint->id,
                 'error' => $e->getMessage(),

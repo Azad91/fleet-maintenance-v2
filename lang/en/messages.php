@@ -1304,7 +1304,12 @@ return [
 
         'column_status'  => 'Status',
         'daily_status'   => 'Daily status',
+        'search_km_min'  => 'Min. km',
+        'search_km_max'  => 'Max. km',
+        'search_hint'    => 'Live search — results update as you type.',
+        'no_results'     => 'No results match the given filters.',
 
+        'no_history'     => 'No history',
         'no_history'     => 'No history',
         'no_active_buses' => 'No active buses.',
         'no_changes'     => 'No oil change records for this bus.',

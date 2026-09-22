@@ -5,6 +5,7 @@ namespace Tests\Feature\OilChange;
 use App\Enums\OilType;
 use App\Models\Bus;
 use App\Models\Company;
+use App\Models\DailyKmRecord;
 use App\Models\Garage;
 use App\Models\User;
 use App\Services\GarageContext;
@@ -41,7 +42,13 @@ class OilChangeSearchTest extends TestCase
         parent::tearDown();
     }
 
-    protected function session(): array
+    /**
+     * Aktual qaraj sessiyası məlumatlarını qaytarır.
+     *
+     * Qeyd: metodu `session()` adlandırmırıq — bu ad Laravel TestCase-də
+     * artıq istifadə olunur və access level konflikti yaradır.
+     */
+    private function garageSession(): array
     {
         return [
             'current_garage_id'  => $this->garage->id,
@@ -49,8 +56,20 @@ class OilChangeSearchTest extends TestCase
         ];
     }
 
-    protected function makeBus(string $dqn, string $route = '100', int $km = 100000): Bus
+    /**
+     * Create a bus in the current garage.
+     *
+     * `route_number` is unique per garage (partial unique index
+     * `buses_garage_xett_active_unique`), so we auto-derive a unique
+     * default from the DQN whenever the caller does not supply one.
+     * Without this, tests that create more than one bus with the
+     * implicit default would collide.
+     */
+    protected function makeBus(string $dqn, ?string $route = null, int $km = 100000): Bus
     {
+        // Deterministic, collision-safe default: hash the DQN.
+        $route ??= 'R-'.substr(md5($dqn), 0, 8);
+
         $bus = Bus::factory()->create([
             'garage_id'    => $this->garage->id,
             'company_id'   => $this->company->id,
@@ -59,7 +78,7 @@ class OilChangeSearchTest extends TestCase
             'is_active'    => true,
         ]);
 
-        \App\Models\DailyKmRecord::withoutGlobalScopes()->create([
+        DailyKmRecord::withoutGlobalScopes()->create([
             'bus_id'     => $bus->id,
             'garage_id'  => $this->garage->id,
             'company_id' => $this->company->id,
@@ -79,7 +98,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('99JZ174');
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['dqn' => '99JZ']));
 
@@ -95,7 +114,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('99JZ174');
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('oil-changes.search', ['dqn' => '99JZ']));
 
         $response->assertOk();
@@ -108,11 +127,13 @@ class OilChangeSearchTest extends TestCase
 
     public function test_search_filters_by_dqn(): void
     {
-        $this->makeBus('99JZ174');
-        $this->makeBus('77XX999');
+        // Explicit distinct route numbers so the partial unique index
+        // `buses_garage_xett_active_unique` is not violated.
+        $this->makeBus('99JZ174', '15712');
+        $this->makeBus('77XX999', '15693');
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['dqn' => '99JZ']));
 
@@ -131,7 +152,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('BBB-001', '99999');
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['route_number' => '157']));
 
@@ -150,7 +171,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('HIGH-KM', '200', 500_000);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['km_min' => 400_000]));
 
@@ -165,7 +186,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('HIGH-KM', '200', 500_000);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['km_max' => 100_000]));
 
@@ -181,7 +202,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('TOO-HIGH', '300', 800_000);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['km_min' => 100_000, 'km_max' => 500_000]));
 
@@ -202,7 +223,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('NOPE-001',  '300', 300_000); // dqn fails
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', [
                 'dqn'    => 'MATCH',
@@ -225,7 +246,7 @@ class OilChangeSearchTest extends TestCase
 
         $this->makeBus('OWN-001', '100', 100_000);
 
-        $foreignBus = Bus::factory()->create([
+        Bus::factory()->create([
             'garage_id'    => $otherGarage->id,
             'company_id'   => $this->company->id,
             'dqn'          => 'FOREIGN-001',
@@ -234,7 +255,7 @@ class OilChangeSearchTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search'));
 
@@ -252,7 +273,7 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('AAA-001');
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', ['dqn' => 'ZZZZZ']));
 
@@ -279,7 +300,7 @@ class OilChangeSearchTest extends TestCase
         ]);
 
         $this->actingAs($worker)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('oil-changes.search'))
             ->assertForbidden();
     }

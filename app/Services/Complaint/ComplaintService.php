@@ -6,15 +6,28 @@ use App\Enums\ComplaintStatus;
 use App\Enums\Location;
 use App\Models\Complaint;
 use App\Models\Driver;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ComplaintService
 {
+    /**
+     * Resolved lazily in the constructor so tests that manually
+     * construct this service (without a PDF dependency) keep
+     * working. Production always goes through the container, which
+     * injects a real instance.
+     */
+    protected ComplaintPdfService $pdfService;
+
     public function __construct(
         protected ComplaintStockService $stockService,
         protected ComplaintItemService $itemService,
-        protected ComplaintStatusTransitionService $transitionService
-    ) {}
+        protected ComplaintStatusTransitionService $transitionService,
+        ?ComplaintPdfService $pdfService = null,
+    ) {
+        $this->pdfService = $pdfService ?? app(ComplaintPdfService::class);
+    }
 
     public function create(array $data, ?array $detallar = null, array $shikayet = []): Complaint
     {
@@ -57,7 +70,7 @@ class ComplaintService
 
         $this->applyLocationContext($data);
 
-        return DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
+        $updated = DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
             $oldDetails = $complaint->details()->orderBy('id')->get()->toArray();
 
             // Historical complaints (imported for archival) must never
@@ -95,6 +108,13 @@ class ComplaintService
 
             return $complaint->fresh(['details', 'items']);
         });
+
+        // The PDF (if any) now shows an outdated snapshot. Delete it
+        // after the transaction commits so a rollback never removes
+        // a still-valid file.
+        $this->invalidatePdfAfterCommit($updated);
+
+        return $updated;
     }
 
     public function close(Complaint $complaint, array $data): Complaint
@@ -135,9 +155,11 @@ class ComplaintService
             // Soft-delete complaint
             $complaint->delete();
         });
+
+        $this->invalidatePdfAfterCommit($complaint);
     }
 
-        /**
+    /**
      * Bulk soft-delete multiple complaints.
      *
      * Each complaint is deleted through the existing delete() method
@@ -235,15 +257,56 @@ class ComplaintService
             // Preserve the partial count so the caller can report it.
             $error = $e->getMessage();
 
-            \Illuminate\Support\Facades\Log::error('Bulk complaint delete aborted mid-run', [
+            Log::error('Bulk complaint delete aborted mid-run', [
                 'deleted_so_far' => $deleted,
                 'error'          => $error,
                 'user_id'        => auth()->id(),
-                'request_id'     => \Illuminate\Support\Facades\Context::get('request_id'),
+                'request_id'     => Context::get('request_id'),
             ]);
         }
 
         return ['deleted' => $deleted, 'error' => $error];
+    }
+
+    /**
+     * Register PDF invalidation to run after the enclosing transaction
+     * commits.
+     *
+     * Rationale: delete() is called inside bulkDelete()'s chunk
+     * transaction. If we deleted the PDF immediately and the chunk
+     * later rolled back, the complaint would still exist but its PDF
+     * would be gone — forcing a needless regeneration. DB::afterCommit()
+     * defers the deletion until the outermost transaction commits.
+     *
+     * When there is no active transaction, the callback fires
+     * immediately — which is the correct behavior for the standalone
+     * update() / delete() paths.
+     */
+    protected function invalidatePdfAfterCommit(Complaint $complaint): void
+    {
+        DB::afterCommit(function () use ($complaint) {
+            $this->invalidatePdf($complaint);
+        });
+    }
+
+    /**
+     * Best-effort removal of the stale PDF for a complaint.
+     *
+     * Failure is logged but never propagated: the primary operation
+     * (update or delete) has already succeeded, and a leftover file
+     * is strictly better than a rollback.
+     */
+    protected function invalidatePdf(Complaint $complaint): void
+    {
+        try {
+            $this->pdfService->delete($complaint);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to invalidate stale complaint PDF', [
+                'complaint_id' => $complaint->id,
+                'error'        => $e->getMessage(),
+                'request_id'   => Context::get('request_id'),
+            ]);
+        }
     }
 
     /**
