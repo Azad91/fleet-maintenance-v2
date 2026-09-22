@@ -160,7 +160,7 @@
                  clicks and routes them through performSearch()
                  anyway, but a non-JS fallback or a direct link visit
                  still needs the canonical URL. --}}
-            {{ $complaints->withQueryString()->links(paginator: 'pagination::bootstrap-5') }}
+            {{ $complaints->withQueryString()->links() }}
         </div>
     @endif
 </div>
