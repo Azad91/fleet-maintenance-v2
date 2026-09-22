@@ -108,6 +108,8 @@
                         <th class="text-end">{{ __('messages.oil_change.next_scheduled_km') }}</th>
                         <th class="text-end">{{ __('messages.oil_change.remaining_km') }}</th>
                         <th class="text-center">{{ __('messages.oil_change.column_status') }}</th>
+                        {{-- ✅ NEW: latest daily bus status (bus_daily_statuses) --}}
+                        <th class="text-center">{{ __('messages.oil_change.daily_status') }}</th>
                         <th class="text-end">{{ __('messages.common.actions') }}</th>
                     </tr>
                 </thead>
@@ -184,6 +186,28 @@
                                     {{ $status->statusLabel() }}
                                 </span>
                             </td>
+
+                            {{-- ✅ NEW: latest daily bus status. Tells the
+                                 operator WHY a bus might not be on route
+                                 today (e.g. "IN MAINTENANCE — engine
+                                 problem") when they are reviewing oil
+                                 change priorities. --}}
+                            <td class="text-center">
+                                @php $daily = $bus->latestDailyStatus; @endphp
+                                @if($daily)
+                                    <span class="badge bg-secondary text-white"
+                                          style="font-size: 11px; padding: 5px 10px; font-weight: 600; white-space: normal; max-width: 180px; display: inline-block; line-height: 1.3;">
+                                        {{ $daily->status }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted" style="font-size: 10px;">
+                                        {{ $daily->date?->format('d.m.Y') ?? '' }}
+                                    </small>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-1">
                                     @if($status->lastChange)

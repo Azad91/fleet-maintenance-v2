@@ -112,6 +112,8 @@ class BusesImport extends AbstractImport implements ToCollection, WithChunkReadi
 
             $bus ??= new Bus;
 
+            $isNew = ! $bus->exists;
+
             $bus->fill([
                 'garage_id'     => $this->garageId,
                 'company_id'    => $this->companyId,
@@ -123,9 +125,24 @@ class BusesImport extends AbstractImport implements ToCollection, WithChunkReadi
                 'route_number'  => $data['route_number'] ?? null,
                 'engine_number' => $data['engine_number'] ?? null,
                 'date'          => now()->format('Y-m-d'),
-                'is_active'     => true,
                 'km'            => isset($data['km']) ? (int) $data['km'] : null,
             ]);
+
+            // Only set is_active on creation. Preserving the existing
+            // flag on update means an operator who manually deactivated
+            // a bus will not have it silently re-enabled by the next
+            // Excel import.
+            if ($isNew) {
+                $bus->is_active = true;
+            }
+
+            // A bus pulled out of the trash should be visible again —
+            // soft-delete is not a semantic "deactivate". Restoring it
+            // without reactivating would hide it from every active
+            // query while still occupying the unique-index slot.
+            if ($bus->trashed()) {
+                $bus->is_active = true;
+            }
 
             $bus->save();
 

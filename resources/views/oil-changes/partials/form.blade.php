@@ -71,9 +71,12 @@
         <label for="scheduled_km" class="form-label fw-bold">
             {{ __('messages.oil_change.scheduled_km') }}
         </label>
+        {{-- ✅ NEW: $suggestedScheduledKm comes from the controller when
+             the operator arrived via the index page's "+" button.
+             Priority: old() → existing $change → suggested → empty. --}}
         <input type="number" name="scheduled_km" id="scheduled_km" class="form-control"
                min="0"
-               value="{{ old('scheduled_km', $change?->scheduled_km ?? '') }}"
+               value="{{ old('scheduled_km', $change?->scheduled_km ?? $suggestedScheduledKm ?? '') }}"
                placeholder="180000">
     </div>
 

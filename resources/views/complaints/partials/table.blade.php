@@ -155,7 +155,12 @@
 
     @if($complaints->hasPages())
         <div class="pagination-wrapper d-flex justify-content-center py-3 border-top">
-            {{ $complaints->withQueryString()->links() }}
+            {{-- Pagination links must point at the index route, not
+                 the AJAX search route. The AJAX handler intercepts
+                 clicks and routes them through performSearch()
+                 anyway, but a non-JS fallback or a direct link visit
+                 still needs the canonical URL. --}}
+            {{ $complaints->withQueryString()->links(paginator: 'pagination::bootstrap-5') }}
         </div>
     @endif
 </div>

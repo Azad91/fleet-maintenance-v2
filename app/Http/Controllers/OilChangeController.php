@@ -128,10 +128,42 @@ class OilChangeController extends Controller
 
         $buses = Bus::active()->orderBy('dqn')->get();
 
+        $selectedBusId = $request->integer('bus_id') ?: null;
+
+        $selectedOilType = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
+            ?? OilType::Motor;
+
+        // ✅ NEW: pre-fill the "Scheduled km" field with the catalog
+        // milestone shown on the index page ("YAĞDƏYİŞMƏ NÖVÜ" column).
+        //
+        // Priority:
+        //   1. nextCatalogKm — the exact value the operator saw on
+        //      the index page (a real catalog milestone, tied to a
+        //      parts list).
+        //   2. nextDueKm     — the mathematically computed next due
+        //      (used only when the catalog has no milestone beyond
+        //      the current due point — e.g. a bus already past the
+        //      last catalog entry).
+        //   3. null          — no bus selected yet; field stays empty.
+        $suggestedScheduledKm = null;
+
+        if ($selectedBusId) {
+            $bus = Bus::with(['latestKmRecord', 'oilChanges'])
+                ->find($selectedBusId);
+
+            if ($bus) {
+                $status = $this->statusService->forBus($bus, $selectedOilType);
+
+                $suggestedScheduledKm = $status->nextCatalogKm
+                    ?? $status->nextDueKm;
+            }
+        }
+
         return view('oil-changes.create', [
-            'buses'           => $buses,
-            'selectedBusId'   => $request->integer('bus_id') ?: null,
-            'selectedOilType' => $request->input('type', OilType::Motor->value),
+            'buses'                => $buses,
+            'selectedBusId'        => $selectedBusId,
+            'selectedOilType'      => $selectedOilType->value,
+            'suggestedScheduledKm' => $suggestedScheduledKm,
         ]);
     }
 
@@ -212,6 +244,12 @@ class OilChangeController extends Controller
     {
         $buses = Bus::with([
             'latestKmRecord',
+            // ✅ NEW: eager-load the latest daily status so the index
+            // page can render it in a dedicated column without an N+1.
+            // `latestDailyStatus()` is defined on the Bus model using
+            // latestOfMany('date') — a single subquery for the whole
+            // collection.
+            'latestDailyStatus',
             'oilChanges' => fn ($q) => $q->orderByDesc('actual_km'),
         ])
             ->where('is_active', true)

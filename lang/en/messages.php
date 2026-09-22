@@ -1084,6 +1084,7 @@ return [
         'bulk_activated' => ':count :items activated.',
         'bulk_deactivated' => ':count :items deactivated.',
         'bulk_deleted' => ':count :items deleted.',
+        'bulk_delete_partial' => ':count :items deleted before the operation stopped unexpectedly. Check the log and retry the remainder.',
         'no_garage' => 'Please select a garage first.',
         'garage_selected' => 'Garage selected: :name',
         'no_garage_assigned' => 'You are not assigned to any garage. Please contact the administrator.',
@@ -1302,6 +1303,7 @@ return [
         'notes'          => 'Notes',
 
         'column_status'  => 'Status',
+        'daily_status'   => 'Daily status',
 
         'no_history'     => 'No history',
         'no_active_buses' => 'No active buses.',
