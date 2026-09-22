@@ -23,8 +23,53 @@ class OilChangeController extends Controller
 
     /**
      * Combined view: one section per oil type.
+     *
+     * Delegates filter resolution and data collection to
+     * collectFilteredData() so that both the initial page load
+     * (index) and the AJAX search endpoint share the exact same
+     * filtering rules.
      */
     public function index(Request $request): View
+    {
+        return view('oil-changes.index', $this->collectFilteredData($request));
+    }
+
+    /**
+     * AJAX search endpoint. Returns only the results partial when
+     * called via XMLHttpRequest, and falls back to the full index
+     * view for direct URL visits or middle-click navigation.
+     *
+     * Mirrors the BusController::search() and WarehouseController
+     * ::search() pattern.
+     */
+    public function search(Request $request): View|string
+    {
+        $data = $this->collectFilteredData($request);
+
+        if ($this->isAjaxRequest($request)) {
+            return view('oil-changes.partials.results', $data)->render();
+        }
+
+        return view('oil-changes.index', $data);
+    }
+
+    /**
+     * Resolve every filter from the request, build the full row set,
+     * then apply status and KM filters.
+     *
+     * ── FILTER LAYERS ──────────────────────────────────────────────
+     * 1. DB-level (in buildStatusRows):
+     *      - dqn          → buses.dqn ILIKE
+     *      - route_number → buses.route_number ILIKE
+     *
+     * 2. Collection-level (here):
+     *      - km_min / km_max → current km of the active oil type
+     *      - status          → worst-match status of the active type
+     *
+     * KM and status filters run in PHP because both depend on
+     * computed values (OilChangeStatus), not on raw columns.
+     */
+    private function collectFilteredData(Request $request): array
     {
         $this->authorize('viewAny', BusOilChange::class);
 
@@ -38,13 +83,37 @@ class OilChangeController extends Controller
         $activeType = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
             ?? OilType::Motor;
 
-        $rows = $this->buildStatusRows();
+        $filters = [
+            'dqn'          => trim((string) $request->input('dqn', '')),
+            'route_number' => trim((string) $request->input('route_number', '')),
+            'km_min'       => $request->filled('km_min') ? max(0, (int) $request->input('km_min')) : null,
+            'km_max'       => $request->filled('km_max') ? max(0, (int) $request->input('km_max')) : null,
+        ];
+
+        $rows = $this->buildStatusRows($filters);
+
+        // ─── KM range filter (on the active oil type's current km) ───
+        if ($filters['km_min'] !== null || $filters['km_max'] !== null) {
+            $rows = $rows->filter(function (array $row) use ($activeType, $filters) {
+                $currentKm = $row['statuses'][$activeType->value]->currentKm ?? 0;
+
+                if ($filters['km_min'] !== null && $currentKm < $filters['km_min']) {
+                    return false;
+                }
+                if ($filters['km_max'] !== null && $currentKm > $filters['km_max']) {
+                    return false;
+                }
+
+                return true;
+            })->values();
+        }
 
         $typeCounts = collect(OilType::cases())->mapWithKeys(function (OilType $t) use ($rows, $statusFilter) {
             $count = $rows->filter(function (array $row) use ($t, $statusFilter) {
                 if ($statusFilter === 'all') {
                     return true;
                 }
+
                 return $row['statuses'][$t->value]->status === $statusFilter;
             })->count();
 
@@ -56,6 +125,7 @@ class OilChangeController extends Controller
                 if ($statusFilter === 'all') {
                     return true;
                 }
+
                 return $row['statuses'][$activeType->value]->status === $statusFilter;
             })
             ->sortBy(fn (array $row) => $row['statuses'][$activeType->value]->remainingKm ?? PHP_INT_MAX)
@@ -65,13 +135,24 @@ class OilChangeController extends Controller
             fn (array $row) => in_array($row['statuses'][$activeType->value]->status, ['overdue', 'critical'], true)
         )->count();
 
-        return view('oil-changes.index', [
+        return [
             'rows'         => $sectionRows,
             'statusFilter' => $statusFilter,
             'activeType'   => $activeType,
             'typeCounts'   => $typeCounts,
             'urgentCount'  => $urgentCount,
-        ]);
+            'filters'      => $filters,
+        ];
+    }
+
+    /**
+     * True when the request should receive a partial view instead of
+     * the full page. Same detection pattern used across the codebase.
+     */
+    private function isAjaxRequest(Request $request): bool
+    {
+        return $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->boolean('_ajax');
     }
 
     /**
@@ -133,7 +214,7 @@ class OilChangeController extends Controller
         $selectedOilType = OilType::tryFrom((string) $request->input('type', OilType::Motor->value))
             ?? OilType::Motor;
 
-        // ✅ NEW: pre-fill the "Scheduled km" field with the catalog
+        // ✅ Pre-fill the "Scheduled km" field with the catalog
         // milestone shown on the index page ("YAĞDƏYİŞMƏ NÖVÜ" column).
         //
         // Priority:
@@ -168,7 +249,7 @@ class OilChangeController extends Controller
     }
 
     /**
-     * ✅ FIX P1: FormRequest injection.
+     * ✅ P1 FIX: FormRequest injection.
      *
      * ƏVVƏL:
      *   public function store(Request $request) {
@@ -210,7 +291,7 @@ class OilChangeController extends Controller
     }
 
     /**
-     * ✅ FIX P1: FormRequest injection (update üçün də eyni problem idi).
+     * ✅ P1 FIX: FormRequest injection (update üçün də eyni problem idi).
      */
     public function update(OilChangeUpdateRequest $request, BusOilChange $oilChange): RedirectResponse
     {
@@ -239,13 +320,19 @@ class OilChangeController extends Controller
 
     /**
      * Build one row per active bus, with all three oil-type statuses.
+     *
+     * @param  array{dqn?: string, route_number?: string}  $filters
+     *         DQN and route filters are applied at the DB level so
+     *         PostgreSQL does the work before Laravel collects rows.
+     *         KM and status filters are applied later in PHP because
+     *         they depend on computed OilChangeStatus values.
      */
-    private function buildStatusRows(): Collection
+    private function buildStatusRows(array $filters = []): Collection
     {
         $buses = Bus::with([
             'latestKmRecord',
-            // ✅ NEW: eager-load the latest daily status so the index
-            // page can render it in a dedicated column without an N+1.
+            // ✅ Eager-load the latest daily status so the index page
+            // can render it in a dedicated column without an N+1.
             // `latestDailyStatus()` is defined on the Bus model using
             // latestOfMany('date') — a single subquery for the whole
             // collection.
@@ -253,6 +340,14 @@ class OilChangeController extends Controller
             'oilChanges' => fn ($q) => $q->orderByDesc('actual_km'),
         ])
             ->where('is_active', true)
+            ->when(
+                ! empty($filters['dqn']),
+                fn ($q) => $q->where('dqn', 'ILIKE', '%'.$filters['dqn'].'%')
+            )
+            ->when(
+                ! empty($filters['route_number']),
+                fn ($q) => $q->where('route_number', 'ILIKE', '%'.$filters['route_number'].'%')
+            )
             ->orderBy('dqn')
             ->get();
 

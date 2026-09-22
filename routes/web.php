@@ -353,6 +353,7 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
             ->name('import.store');
         Route::get('/create', [\App\Http\Controllers\OilChangeController::class, 'create'])->name('create');
         Route::get('/urgent', [\App\Http\Controllers\OilChangeController::class, 'urgent'])->name('urgent');
+        Route::get('/search', [\App\Http\Controllers\OilChangeController::class, 'search'])->name('search'); // ← YENİ
         Route::post('/', [\App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
         Route::get('/daily', [\App\Http\Controllers\OilChangeController::class, 'daily'])->name('daily');
         Route::get('/{oilChange}/edit', [\App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');

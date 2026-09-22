@@ -4,9 +4,6 @@
 
 @php
     use App\Enums\OilType;
-
-    // Query string-i tab-lar arasında qorumaq üçün
-    $baseQuery = request()->only(['status']);
 @endphp
 
 @section('content')
@@ -41,201 +38,249 @@
     </div>
 @endif
 
-{{-- Status filter chips --}}
-@php
-    $statusChips = [
-        'all'        => ['label' => __('messages.oil_change.all_statuses'),      'color' => 'secondary'],
-        'overdue'    => ['label' => __('messages.oil_change.status.overdue'),    'color' => 'danger'],
-        'critical'   => ['label' => __('messages.oil_change.status.critical'),   'color' => 'warning'],
-        'due-soon'   => ['label' => __('messages.oil_change.status.due-soon'),   'color' => 'info'],
-        'ok'         => ['label' => __('messages.oil_change.status.ok'),         'color' => 'success'],
-        'no-history' => ['label' => __('messages.oil_change.status.no-history'), 'color' => 'secondary'],
-    ];
-@endphp
+{{-- ─────────────────────────────────────────────────────────────── --}}
+{{-- SEARCH FORM                                                    --}}
+{{--                                                                --}}
+{{-- Kept OUTSIDE #oilChangeResults so that AJAX replacement does   --}}
+{{-- not steal focus from the active input. Type and status are     --}}
+{{-- hidden fields updated by the tab/chip click handlers.          --}}
+{{-- ─────────────────────────────────────────────────────────────── --}}
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="oilChangeSearchForm" method="GET" action="{{ route('oil-changes.index') }}" autocomplete="off">
+            <input type="hidden" name="type" id="oilTypeInput" value="{{ $activeType->value }}">
+            <input type="hidden" name="status" id="oilStatusInput" value="{{ $statusFilter }}">
 
-<div class="d-flex flex-wrap gap-2 mb-3">
-    @foreach($statusChips as $key => $chip)
-        @php $isActive = $statusFilter === $key; @endphp
-        <a href="{{ route('oil-changes.index', array_merge(['type' => $activeType->value, 'status' => $key])) }}"
-           class="btn btn-sm {{ $isActive ? 'btn-' . $chip['color'] : 'btn-outline-' . $chip['color'] }}">
-            {{ $chip['label'] }}
-        </a>
-    @endforeach
-</div>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label for="searchDqn" class="form-label fw-bold">
+                        <i class="fas fa-bus"></i> {{ __('messages.buses.dqn') }}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text"
+                               name="dqn"
+                               id="searchDqn"
+                               class="form-control"
+                               value="{{ $filters['dqn'] }}"
+                               placeholder="{{ __('messages.buses.filter_dqn') }}"
+                               style="text-transform: uppercase;">
+                    </div>
+                </div>
 
-{{-- Tabs --}}
-<ul class="nav nav-tabs mb-0">
-    @foreach(OilType::cases() as $type)
-        @php
-            $isActiveTab = $activeType === $type;
-            $count = $typeCounts[$type->value] ?? 0;
-        @endphp
-        <li class="nav-item">
-            <a class="nav-link {{ $isActiveTab ? 'active' : '' }}"
-               href="{{ route('oil-changes.index', array_merge($baseQuery, ['type' => $type->value])) }}">
-                {{ $type->icon() }} {{ $type->label() }}
-                <span class="badge bg-secondary ms-1">{{ $count }}</span>
-            </a>
-        </li>
-    @endforeach
-</ul>
+                <div class="col-md-3">
+                    <label for="searchRoute" class="form-label fw-bold">
+                        <i class="fas fa-route"></i> {{ __('messages.buses.route_number') }}
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text"
+                               name="route_number"
+                               id="searchRoute"
+                               class="form-control"
+                               value="{{ $filters['route_number'] }}"
+                               placeholder="{{ __('messages.buses.filter_route') }}">
+                    </div>
+                </div>
 
-{{-- Active tab content --}}
-<div class="card" style="border-top-left-radius: 0; border-top-right-radius: 0;">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-            <strong style="font-size: 15px;">
-                {{ $activeType->icon() }} {{ $activeType->label() }}
-            </strong>
-            <span class="badge bg-secondary ms-2">{{ $rows->count() }}</span>
-            @if($urgentCount > 0)
-                <a href="{{ route('oil-changes.urgent') }}" class="badge bg-danger text-decoration-none ms-1">
-                    <i class="fas fa-triangle-exclamation"></i> {{ $urgentCount }} {{ __('messages.oil_change.urgent_short') }}
-                </a>
-            @endif
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>{{ __('messages.oil_change.bus') }}</th>
-                        <th>{{ __('messages.oil_change.last_change_km') }}</th>
-                        <th class="text-end">{{ __('messages.oil_change.interval_km') }}</th>
-                        <th class="text-end">{{ __('messages.oil_change.current_km') }}</th>
-                        <th class="text-end">{{ __('messages.oil_change.next_due_km') }}</th>
-                        <th class="text-end">{{ __('messages.oil_change.next_scheduled_km') }}</th>
-                        <th class="text-end">{{ __('messages.oil_change.remaining_km') }}</th>
-                        <th class="text-center">{{ __('messages.oil_change.column_status') }}</th>
-                        {{-- ✅ NEW: latest daily bus status (bus_daily_statuses) --}}
-                        <th class="text-center">{{ __('messages.oil_change.daily_status') }}</th>
-                        <th class="text-end">{{ __('messages.common.actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($rows as $row)
-                        @php
-                            $status = $row['statuses'][$activeType->value];
-                            $bus = $row['bus'];
-                        @endphp
-                        <tr>
-                            <td>
-                                <a href="{{ route('oil-changes.show', $bus) }}" class="text-decoration-none">
-                                    <strong>{{ $bus->dqn }}</strong>
-                                </a>
-                                @if($bus->route_number)
-                                    <br>
-                                    <small class="text-muted">
-                                        {{ __('messages.daily_km.route_label', ['route' => $bus->route_number]) }}
-                                    </small>
-                                @endif
-                            </td>
-                            <td>
-                                @if($status->lastChange)
-                                    <strong>{{ number_format($status->lastChange->actual_km, 0, '', '.') }}</strong> km
-                                    @if($status->lastChange->changed_at)
-                                        <br>
-                                        <small class="text-muted">
-                                            {{ $status->lastChange->changed_at->format('d.m.Y') }}
-                                        </small>
-                                    @endif
-                                @else
-                                    <span class="text-muted">{{ __('messages.oil_change.no_history') }}</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                @if($status->lastChange)
-                                    <strong>{{ number_format($status->lastChange->interval_km, 0, '', '.') }}</strong> km
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                <strong>{{ number_format($status->currentKm, 0, '', '.') }}</strong> km
-                            </td>
-                            <td class="text-end">
-                                @if($status->nextDueKm)
-                                    {{ number_format($status->nextDueKm, 0, '', '.') }} km
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                @if($status->nextCatalogKm)
-                                    <strong style="color: #2563eb; font-size: 15px;">
-                                        {{ number_format($status->nextCatalogKm, 0, '', '.') }}
-                                    </strong> km
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                @if($status->remainingKm === null)
-                                    <span class="text-muted">—</span>
-                                @elseif($status->isOverdue())
-                                    <span class="text-danger fw-bold">
-                                        −{{ number_format($status->overdueByKm(), 0, '', '.') }} km
-                                    </span>
-                                @else
-                                    <strong>{{ number_format($status->remainingKm, 0, '', '.') }}</strong> km
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                <span class="badge bg-{{ $status->bootstrapColor() }}">
-                                    {{ $status->statusLabel() }}
-                                </span>
-                            </td>
+                <div class="col-md-2">
+                    <label for="searchKmMin" class="form-label fw-bold">
+                        {{ __('messages.oil_change.search_km_min') }}
+                    </label>
+                    <input type="number"
+                           name="km_min"
+                           id="searchKmMin"
+                           class="form-control"
+                           value="{{ $filters['km_min'] }}"
+                           min="0"
+                           placeholder="0">
+                </div>
 
-                            {{-- ✅ NEW: latest daily bus status. Tells the
-                                 operator WHY a bus might not be on route
-                                 today (e.g. "IN MAINTENANCE — engine
-                                 problem") when they are reviewing oil
-                                 change priorities. --}}
-                            <td class="text-center">
-                                @php $daily = $bus->latestDailyStatus; @endphp
-                                @if($daily)
-                                    <span class="badge bg-secondary text-white"
-                                          style="font-size: 11px; padding: 5px 10px; font-weight: 600; white-space: normal; max-width: 180px; display: inline-block; line-height: 1.3;">
-                                        {{ $daily->status }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted" style="font-size: 10px;">
-                                        {{ $daily->date?->format('d.m.Y') ?? '' }}
-                                    </small>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
+                <div class="col-md-2">
+                    <label for="searchKmMax" class="form-label fw-bold">
+                        {{ __('messages.oil_change.search_km_max') }}
+                    </label>
+                    <input type="number"
+                           name="km_max"
+                           id="searchKmMax"
+                           class="form-control"
+                           value="{{ $filters['km_max'] }}"
+                           min="0"
+                           placeholder="999999">
+                </div>
 
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end gap-1">
-                                    @if($status->lastChange)
-                                        <a href="{{ route('oil-changes.edit', $status->lastChange) }}"
-                                        class="btn btn-sm btn-outline-warning"
-                                        title="{{ __('messages.common.edit') }}">
-                                            <i class="fas fa-pencil"></i>
-                                        </a>
-                                    @endif
-                                    <a href="{{ route('oil-changes.create', ['bus_id' => $bus->id, 'type' => $activeType->value]) }}"
-                                    class="btn btn-sm btn-outline-success"
-                                    title="{{ __('messages.oil_change.add_change') }}">
-                                        <i class="fas fa-plus"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-5">
-                                <i class="fas fa-inbox fa-2x mb-2 d-block" style="opacity: .3;"></i>
-                                {{ __('messages.reports.content.no_data') }}
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                <div class="col-md-2 d-flex gap-1 align-items-center">
+                    <button type="button" class="btn btn-secondary flex-fill" id="oilClearFilters" title="{{ __('messages.common.reset') }}">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                    <span class="text-muted small" id="oilSearchStatus" style="display: none;">
+                        <i class="fas fa-arrow-rotate-right fa-spin"></i>
+                    </span>
+                </div>
+            </div>
+
+            <small class="text-muted d-block mt-2">{{ __('messages.oil_change.search_hint') }}</small>
+        </form>
     </div>
 </div>
+
+{{-- ─────────────────────────────────────────────────────────────── --}}
+{{-- RESULTS (chips + tabs + table) — replaced by AJAX              --}}
+{{-- ─────────────────────────────────────────────────────────────── --}}
+<div id="oilChangeResults">
+    @include('oil-changes.partials.results', [
+        'rows'         => $rows,
+        'statusFilter' => $statusFilter,
+        'activeType'   => $activeType,
+        'typeCounts'   => $typeCounts,
+        'urgentCount'  => $urgentCount,
+        'filters'      => $filters,
+    ])
+</div>
+@endsection
+
+@section('scripts')
+<script>
+(function () {
+    'use strict';
+
+    const form             = document.getElementById('oilChangeSearchForm');
+    const results          = document.getElementById('oilChangeResults');
+    const statusIndicator  = document.getElementById('oilSearchStatus');
+    const typeInput        = document.getElementById('oilTypeInput');
+    const statusInput      = document.getElementById('oilStatusInput');
+    const clearBtn         = document.getElementById('oilClearFilters');
+
+    if (! form || ! results) return;
+
+    let timer          = null;
+    let currentRequest = 0;
+
+    // ═══════════════════════════════════════════════════════════════
+    // SEARCH
+    // ═══════════════════════════════════════════════════════════════
+
+    function buildQuery() {
+        const params = new URLSearchParams(new FormData(form));
+        // Drop empty values so the URL stays clean.
+        for (const [key, value] of Array.from(params.entries())) {
+            if (value === '' || value === null) {
+                params.delete(key);
+            }
+        }
+        return params.toString();
+    }
+
+    function performSearch() {
+        const qs = buildQuery();
+        const requestId = ++currentRequest;
+
+        statusIndicator.style.display = 'inline-block';
+
+        const fetchUrl = "{{ route('oil-changes.search') }}" + (qs ? '?' + qs : '');
+
+        fetch(fetchUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => {
+            if (! response.ok) {
+                throw new Error('Search failed: HTTP ' + response.status);
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (requestId !== currentRequest) return;
+
+            results.innerHTML = html;
+
+            // Sync the URL bar with the current filter state.
+            const browserUrl = "{{ route('oil-changes.index') }}" + (qs ? '?' + qs : '');
+            history.replaceState(null, '', browserUrl);
+
+            // Re-bind tab and chip click handlers after the DOM swap.
+            attachTabHandlers();
+            attachChipHandlers();
+        })
+        .catch(error => console.error('Oil change search error:', error))
+        .finally(() => {
+            if (requestId === currentRequest) {
+                statusIndicator.style.display = 'none';
+            }
+        });
+    }
+
+    function scheduleSearch(delay) {
+        clearTimeout(timer);
+        timer = setTimeout(performSearch, delay);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FILTER BINDINGS
+    // ═══════════════════════════════════════════════════════════════
+
+    form.addEventListener('input', function (e) {
+        if (e.target.matches('input[name]')) {
+            scheduleSearch(300);
+        }
+    });
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(timer);
+        performSearch();
+    });
+
+    clearBtn?.addEventListener('click', function () {
+        form.querySelectorAll('input[type="text"], input[type="number"]').forEach(el => {
+            el.value = '';
+        });
+        clearTimeout(timer);
+        performSearch();
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // TAB / CHIP HANDLERS
+    //
+    // Both keep their href for middle-click / JS-disabled fallback,
+    // but the click is intercepted and routed through performSearch()
+    // so the whole page does not reload.
+    // ═══════════════════════════════════════════════════════════════
+
+    function attachTabHandlers() {
+        results.querySelectorAll('.oil-tab-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                // Allow middle-click / ctrl+click to open in new tab.
+                if (e.metaKey || e.ctrlKey || e.button !== 0) return;
+
+                e.preventDefault();
+                typeInput.value = link.dataset.type;
+                performSearch();
+            });
+        });
+    }
+
+    function attachChipHandlers() {
+        results.querySelectorAll('.oil-status-chip').forEach(chip => {
+            chip.addEventListener('click', function (e) {
+                if (e.metaKey || e.ctrlKey || e.button !== 0) return;
+
+                e.preventDefault();
+                statusInput.value = chip.dataset.status;
+                performSearch();
+            });
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
+
+    attachTabHandlers();
+    attachChipHandlers();
+})();
+</script>
 @endsection
