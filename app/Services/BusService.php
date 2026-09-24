@@ -7,13 +7,51 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class BusService
 {
-    public function getPaginatedBuses(?string $search = null, int $perPage = 15): LengthAwarePaginator
+    /**
+     * Eager-load set shared by the two paginated list methods.
+     *
+     * NOTE ON `dailyKmRecords`
+     * ------------------------
+     * The `dailyKmRecords` relation is intentionally NOT eager-loaded
+     * here. The previous implementation used:
+     *
+     *     'dailyKmRecords' => fn ($q) => $q->limit(2)
+     *
+     * which is a well-known Laravel footgun: the `limit(2)` is added
+     * to the eager-load subquery, so PostgreSQL returns 2 rows TOTAL
+     * for all buses — not 2 rows per bus. With 25 buses on a page,
+     * only the first bus received its records; every other bus got
+     * an empty collection, and Bus::getDailyKmAttribute() returned
+     * null, so the "Daily KM" column rendered "—" for 24 of 25 rows.
+     *
+     * Laravel has no native "limit N per parent" eager-loading. The
+     * correct approaches are:
+     *
+     *   1. Use hasOne()->latestOfMany() for a single row per parent
+     *      (this is how latestKmRecord works).
+     *   2. Let the accessor query per-bus (N+1) when the eager-loaded
+     *      data is not available.
+     *   3. Install a package like staudenmeir/eloquent-eager-limit.
+     *
+     * We chose (2) here: the accessor's fallback path is a per-bus
+     * query scoped to the current model, which is correct. The cost
+     * is at most one query per bus on the page (≤ 25 by default),
+     * each of them indexed on (bus_id, date) and returning at most 2
+     * rows. That is a small price for correct output.
+     *
+     * @return array<int|string, mixed>
+     */
+    private function busListWith(): array
     {
-        $query = Bus::with([
+        return [
             'brand',
             'latestKmRecord',
-            'dailyKmRecords' => fn ($q) => $q->limit(2),
-        ]);
+        ];
+    }
+
+    public function getPaginatedBuses(?string $search = null, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Bus::with($this->busListWith());
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -28,13 +66,8 @@ class BusService
 
     public function advancedSearch(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Bus::with([
-            'brand',
-            'latestKmRecord',
-            'dailyKmRecords' => fn ($q) => $q->limit(2),
-        ]);
+        $query = Bus::with($this->busListWith());
 
-        // Brand filter uses an exact match because it is a foreign key.
         if (! empty($filters['brand_id'])) {
             $query->where('brand_id', (int) $filters['brand_id']);
         }

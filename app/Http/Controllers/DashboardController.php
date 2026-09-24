@@ -73,7 +73,7 @@ class DashboardController extends Controller
             ->get();
 
         // ────────────────────────────────────────────────────────────────
-        // 
+        //
         // ────────────────────────────────────────────────────────────────
         $busesWithoutKmTodayCount = $busesWithoutKmTodayQuery->count();   // ✅ düzgün say
         $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();  // ⚠️ limit 10
@@ -93,13 +93,25 @@ class DashboardController extends Controller
 
         $today = now()->toDateString();
 
-        $busesWithoutKmTodayQuery = Bus::whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
-            $query->whereDate('date', $today);
-        });
+        // ────────────────────────────────────────────────────────
+        // Inactive-bus guard
+        // ────────────────────────────────────────────────────────
+        // An inactive bus (in repair, sold, retired) does not need
+        // a daily KM entry — same reasoning as the oil-change
+        // panel above and DailyKmReportService::missing(), both of
+        // which already filter to active buses only.
+        //
+        // Without this filter the dashboard counted every bus in
+        // the garage and reported a number larger than the one
+        // the "missing KM" report showed on the next click.
+        // ────────────────────────────────────────────────────────
+        $busesWithoutKmTodayQuery = Bus::where('is_active', true)
+            ->whereDoesntHave('dailyKmRecords', function ($query) use ($today) {
+                $query->whereDate('date', $today);
+            });
 
         $busesWithoutKmTodayCount = $busesWithoutKmTodayQuery->count();
         $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();
-
         // ─── Transfer notifications ───
         $garageId = GarageContext::getGarageId();
 
@@ -138,7 +150,7 @@ class DashboardController extends Controller
             'totalWarehouseItems',
             'recentBuses',
             'lowStockItems',
-            'lowStockItemsCount', 
+            'lowStockItemsCount',
             'recentComplaints',
             'recurringIssues',
             'busesWithoutKmToday',
