@@ -74,7 +74,12 @@ class ComplaintStoreRequest extends FormRequest
             // ── Parts / details ──
             'details' => 'nullable|array',
             'details.*.code' => 'nullable|string|distinct:strict',
-            'details.*.used_quantity' => 'nullable|integer|min:1',
+            // 0 is allowed and means "inspected / repaired, nothing
+            // consumed" — see migration 2026_09_17_174409 and
+            // ComplaintStockService::deductStock(). The blade form
+            // already uses min="0", and ComplaintDetail::isInspection()
+            // recognizes the resulting rows.
+            'details.*.used_quantity' => 'nullable|integer|min:0',
             'details.*.employee_id' => ['required_with:details.*.code', $employeeRule],
             'details.*.notes' => 'required_with:details.*.code|string|max:2000',
             'employee_id' => ['nullable', $employeeRule],

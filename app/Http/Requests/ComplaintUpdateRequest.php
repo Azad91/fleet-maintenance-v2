@@ -71,7 +71,8 @@ class ComplaintUpdateRequest extends FormRequest
 
             'details' => 'nullable|array',
             'details.*.code' => 'nullable|string',
-            'details.*.used_quantity' => 'nullable|integer|min:1',
+            // See ComplaintStoreRequest for the rationale on min:0.
+            'details.*.used_quantity' => 'nullable|integer|min:0',
             'details.*.employee_id' => ['required_with:details.*.code', $employeeRule],
             'details.*.notes' => 'required_with:details.*.code|string|max:2000',
             'employee_id' => ['nullable', $employeeRule],
