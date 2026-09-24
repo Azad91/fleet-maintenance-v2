@@ -138,16 +138,29 @@ class UserController extends Controller
             $updateData['pin_is_default'] = false;
         }
 
+        // Detect the deactivation transition so we can revoke every
+        // outstanding API token. Without this, an operator could
+        // deactivate a user and still see their API calls in the logs
+        // until every single token expired or was revoked manually.
+        $wasActive = (bool) $user->is_active;
+
         $user->update($updateData);
+
+        if ($wasActive && ! $user->is_active) {
+            $user->tokens()->delete();
+
+            \Illuminate\Support\Facades\Log::info('Revoked all API tokens for deactivated user', [
+                'user_id' => $user->id,
+                'deactivated_by' => auth()->id(),
+                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
+            ]);
+        }
 
         return redirect()
             ->route('super-admin.users.index')
             ->with('success', __('messages.super_admin.users.updated', ['name' => $user->name]));
     }
 
-    /**
-     * Soft delete the specified user.
-     */
     public function destroy(User $user): RedirectResponse
     {
         $this->ensureSuperAdmin();
@@ -161,6 +174,10 @@ class UserController extends Controller
         if ($user->isSuperAdmin()) {
             return back()->with('error', __('messages.super_admin.users.cannot_delete_super_admin'));
         }
+
+        // Revoke all API tokens BEFORE the soft delete so no orphaned
+        // token can survive the deactivation.
+        $user->tokens()->delete();
 
         $user->delete();
 

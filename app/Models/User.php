@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -437,29 +438,53 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function useRecoveryCode(string $code): bool
     {
-        $codes = $this->two_factor_recovery_codes ?? [];
+        return DB::transaction(function () use ($code) {
+            // Re-fetch the row with a pessimistic lock. Without this,
+            // two concurrent requests can both read the SAME list of
+            // codes, both find a match, and both succeed — each one
+            // consuming a different "slot" but the same physical code.
+            //
+            // `lockForUpdate()` serializes the two requests: the second
+            // one blocks until the first commits, then re-reads the
+            // already-updated list and correctly rejects the reused
+            // code.
+            $fresh = static::withoutGlobalScopes()
+                ->whereKey($this->getKey())
+                ->lockForUpdate()
+                ->first();
 
-        // Defensive: allow JSON-encoded string fallback.
-        if (is_string($codes)) {
-            $codes = json_decode($codes, true) ?? [];
-        }
-
-        if (! is_array($codes)) {
-            return false;
-        }
-
-        foreach ($codes as $index => $hashedCode) {
-            if (Hash::check($code, $hashedCode)) {
-                unset($codes[$index]);
-
-                $this->forceFill([
-                    'two_factor_recovery_codes' => array_values($codes),
-                ])->save();
-
-                return true;
+            if (! $fresh) {
+                return false;
             }
-        }
 
-        return false;
+            $codes = $fresh->two_factor_recovery_codes ?? [];
+
+            // Defensive: allow JSON-encoded string fallback.
+            if (is_string($codes)) {
+                $codes = json_decode($codes, true) ?? [];
+            }
+
+            if (! is_array($codes)) {
+                return false;
+            }
+
+            foreach ($codes as $index => $hashedCode) {
+                if (Hash::check($code, $hashedCode)) {
+                    unset($codes[$index]);
+
+                    $fresh->forceFill([
+                        'two_factor_recovery_codes' => array_values($codes),
+                    ])->save();
+
+                    // Keep the caller's in-memory instance consistent
+                    // with the freshly persisted row.
+                    $this->setRawAttributes($fresh->getAttributes(), true);
+
+                    return true;
+                }
+            }
+
+            return false;
+        });
     }
 }

@@ -53,6 +53,26 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Reject deactivated accounts AFTER the password check so that
+        // the response time profile is identical to a wrong-password
+        // attempt (account-status enumeration defense). The error
+        // message is the generic credentials error, not a specific
+        // "account disabled" message.
+        $user = Auth::user();
+
+        if ($user && ! $user->is_active) {
+            Auth::guard('web')->logout();
+
+            RateLimiter::hit(
+                $this->throttleKey(),
+                (int) config('rate_limits.login_decay_seconds', 900)
+            );
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

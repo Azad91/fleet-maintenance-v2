@@ -11,6 +11,13 @@
         <div class="auth-title">{{ __('messages.auth.login') }}</div>
         <p class="auth-subtitle">{{ __('messages.auth.sign_in_subtitle') }}</p>
 
+        @if (session('error'))
+            <div class="alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ session('error') }}
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="alert-danger">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>

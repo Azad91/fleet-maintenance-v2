@@ -43,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // it used to run BEFORE `auth` and was fragile.
         $middleware->web(append: [
             App\Http\Middleware\SetLocale::class,
+            App\Http\Middleware\EnsureActiveUser::class,
         ]);
 
         $middleware->alias([
@@ -53,6 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super.admin' => App\Http\Middleware\EnsureSuperAdmin::class,
             'pin.enforced' => App\Http\Middleware\EnforcePinChange::class,
             'director' => App\Http\Middleware\EnsureDirector::class,
+            'active.user' => App\Http\Middleware\EnsureActiveUser::class,
             '2fa.verified' => App\Http\Middleware\EnsureTwoFactorVerified::class,
         ]);
     })
