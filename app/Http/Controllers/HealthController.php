@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -27,7 +28,7 @@ class HealthController extends Controller
             $status['services']['database'] = ['status' => 'up'];
         } catch (Throwable $e) {
             $isHealthy = false;
-            \Log::error('HealthCheck DB Error: '.$e->getMessage());
+            Log::error('HealthCheck DB Error: '.$e->getMessage());
             $status['services']['database'] = ['status' => 'down', 'error' => 'Database connection failed.'];
         }
 
@@ -44,7 +45,7 @@ class HealthController extends Controller
             }
         } catch (Throwable $e) {
             $isHealthy = false;
-            \Log::error('HealthCheck Cache Error: '.$e->getMessage());
+            Log::error('HealthCheck Cache Error: '.$e->getMessage());
             $status['services']['cache'] = ['status' => 'down', 'error' => 'Cache service unavailable.'];
         }
 
@@ -61,8 +62,89 @@ class HealthController extends Controller
             }
         } catch (Throwable $e) {
             $isHealthy = false;
-            \Log::error('HealthCheck Storage Error: '.$e->getMessage());
+            Log::error('HealthCheck Storage Error: '.$e->getMessage());
             $status['services']['storage'] = ['status' => 'down', 'error' => 'Storage service unavailable.'];
+        }
+
+        // 4. Queue
+        //
+        // Reports the configured driver and — for database-backed
+        // queues — verifies the `jobs` table is actually reachable.
+        // A reachable DB (step 1) does not imply the jobs table
+        // exists: a fresh deployment that skipped migrations would
+        // pass the DB check but fail every queued job silently.
+        try {
+            $queueDriver = (string) config('queue.default', 'sync');
+
+            if ($queueDriver === 'database') {
+                DB::table('jobs')->limit(1)->count();
+            }
+
+            $status['services']['queue'] = [
+                'status' => 'up',
+                'driver' => $queueDriver,
+            ];
+        } catch (Throwable $e) {
+            $isHealthy = false;
+            Log::error('HealthCheck Queue Error: '.$e->getMessage());
+            $status['services']['queue'] = [
+                'status' => 'down',
+                'error' => 'Queue service unavailable.',
+            ];
+        }
+
+        // 5. Disk space
+        //
+        // disk_free_space() and disk_total_space() are disabled on
+        // some hardened PHP builds (open_basedir, disable_functions).
+        // When that is the case we report `skipped` rather than
+        // `down` — the check is informational, not a hard signal.
+        try {
+            if (! function_exists('disk_free_space') || ! function_exists('disk_total_space')) {
+                $status['services']['disk'] = [
+                    'status' => 'skipped',
+                    'reason' => 'disk_free_space() disabled',
+                ];
+            } else {
+                $path = storage_path();
+                $freeBytes = @disk_free_space($path);
+                $totalBytes = @disk_total_space($path);
+
+                if ($freeBytes === false || $totalBytes === false || $totalBytes <= 0) {
+                    $status['services']['disk'] = [
+                        'status' => 'skipped',
+                        'reason' => 'Unable to read disk stats',
+                    ];
+                } else {
+                    $freePercent = ($freeBytes / $totalBytes) * 100;
+                    $criticalPercent = (float) config('health.disk_critical_percent', 5);
+
+                    if ($freePercent < $criticalPercent) {
+                        $isHealthy = false;
+
+                        $status['services']['disk'] = [
+                            'status' => 'down',
+                            'free_percent' => round($freePercent, 1),
+                            'error' => 'Low disk space.',
+                        ];
+
+                        Log::error('HealthCheck Disk Error: low disk space', [
+                            'free_percent' => round($freePercent, 1),
+                            'threshold' => $criticalPercent,
+                            'path' => $path,
+                        ]);
+                    } else {
+                        $status['services']['disk'] = [
+                            'status' => 'up',
+                            'free_percent' => round($freePercent, 1),
+                        ];
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            $isHealthy = false;
+            Log::error('HealthCheck Disk Error: '.$e->getMessage());
+            $status['services']['disk'] = ['status' => 'down', 'error' => 'Disk check failed.'];
         }
 
         $statusCode = $isHealthy ? 200 : 503;
