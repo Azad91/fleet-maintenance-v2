@@ -71,11 +71,12 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // ────────────────────────────────────────────────────────────────
-        //
-        // ────────────────────────────────────────────────────────────────
-        $busesWithoutKmTodayCount = $busesWithoutKmTodayQuery->count();   // ✅ düzgün say
-        $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();  // ⚠️ limit 10
+        // NOTE: `$busesWithoutKmTodayQuery` is intentionally NOT
+        // computed here. It depends on `$today`, which is defined
+        // later in this method. An earlier (orphaned) block used to
+        // reference it before its definition — a leftover from an
+        // incomplete refactor that caused a 500 on every dashboard
+        // load. The correct block lives below, right after `$today`.
 
         $recentComplaints = Complaint::with('bus', 'items')
             ->open()
