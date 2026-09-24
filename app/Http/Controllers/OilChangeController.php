@@ -321,6 +321,21 @@ class OilChangeController extends Controller
     /**
      * Build one row per active bus, with all three oil-type statuses.
      *
+     * MEMORY NOTE
+     * -----------
+     * The `with([...])` block loads the three dedicated "latest"
+     * relations (one per oil type) instead of the full `oilChanges`
+     * history. Each `latestOfMany('actual_km')` relation costs one
+     * query for the whole collection, so we pay 3 queries total
+     * regardless of fleet size or history depth.
+     *
+     * The previous `with('oilChanges')` approach loaded every
+     * historical change for every bus — see Bus::latestMotorOilChange()
+     * for the full rationale.
+     *
+     * `OilChangeStatusService::forBus()` transparently picks up
+     * whichever relation is loaded via resolveLastChange().
+     *
      * @param  array{dqn?: string, route_number?: string}  $filters
      *                                                               DQN and route filters are applied at the DB level so
      *                                                               PostgreSQL does the work before Laravel collects rows.
@@ -337,7 +352,11 @@ class OilChangeController extends Controller
             // latestOfMany('date') — a single subquery for the whole
             // collection.
             'latestDailyStatus',
-            'oilChanges' => fn ($q) => $q->orderByDesc('actual_km'),
+            // ✅ Latest oil change per type — three relations total,
+            // NOT the full history. See the method docblock.
+            'latestMotorOilChange',
+            'latestGearboxOilChange',
+            'latestAxleOilChange',
         ])
             ->where('is_active', true)
             ->when(

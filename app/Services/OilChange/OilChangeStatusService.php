@@ -4,8 +4,10 @@ namespace App\Services\OilChange;
 
 use App\Enums\OilType;
 use App\Models\Bus;
+use App\Models\BusOilChange;
 use App\Models\MotorOilDetail;
 use Illuminate\Support\Collection;
+use App\Models\BusOilChange;
 
 class OilChangeStatusService
 {
@@ -19,9 +21,7 @@ class OilChangeStatusService
 
     public function forBus(Bus $bus, OilType $type): OilChangeStatus
     {
-        $last = $bus->relationLoaded('oilChanges')
-            ? $bus->oilChanges->where('oil_type', $type)->sortByDesc('actual_km')->first()
-            : $bus->latestOilChange($type)->first();
+        $last = $this->resolveLastChange($bus, $type);
 
         $currentKm = (int) (
             $bus->relationLoaded('latestKmRecord')
@@ -87,6 +87,55 @@ class OilChangeStatusService
             ->map(fn (Bus $bus) => $this->forBus($bus, $type))
             ->sortBy(fn (OilChangeStatus $s) => $s->remainingKm ?? PHP_INT_MAX)
             ->values();
+    }
+
+    /**
+     * Resolve the most recent oil change for the given (bus, type) pair.
+     *
+     * Resolution priority — the goal is to avoid triggering a new DB
+     * query when the caller has already eager-loaded the data:
+     *
+     *   1. Dedicated eager-loadable relation
+     *      (latestMotorOilChange / latestGearboxOilChange /
+     *      latestAxleOilChange). These three relations together cost
+     *      three queries for the ENTIRE bus list, regardless of how
+     *      many buses or history rows exist. This is the preferred
+     *      path used by DashboardController and
+     *      OilChangeController::buildStatusRows().
+     *
+     *   2. Full `oilChanges` relation — legacy path. Any caller that
+     *      still eager-loads the entire history (e.g. the show page
+     *      for a single bus) continues to work. Kept for backward
+     *      compatibility.
+     *
+     *   3. Per-bus query — last resort when nothing is loaded. This
+     *      is the N+1 path; callers on list pages should avoid it.
+     *
+     * All three paths share the same underlying ordering
+     * (`latestOfMany('actual_km')` or `sortByDesc('actual_km')`), so
+     * the returned model is identical regardless of which branch
+     * executes.
+     */
+    private function resolveLastChange(Bus $bus, OilType $type): ?BusOilChange
+    {
+        $relation = match ($type) {
+            OilType::Motor => 'latestMotorOilChange',
+            OilType::Gearbox => 'latestGearboxOilChange',
+            OilType::Axle => 'latestAxleOilChange',
+        };
+
+        if ($bus->relationLoaded($relation)) {
+            return $bus->getRelation($relation);
+        }
+
+        if ($bus->relationLoaded('oilChanges')) {
+            return $bus->oilChanges
+                ->where('oil_type', $type)
+                ->sortByDesc('actual_km')
+                ->first();
+        }
+
+        return $bus->latestOilChange($type)->first();
     }
 
     /**

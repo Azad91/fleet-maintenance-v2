@@ -123,6 +123,45 @@ class Bus extends Model
             ->latestOfMany('actual_km');
     }
 
+    // ==================== EAGER-LOADABLE LATEST RELATIONS ====================
+    //
+    // These three relations exist specifically so that list pages
+    // (DashboardController::computeOilChangeData and
+    // OilChangeController::buildStatusRows) can eager-load the MOST
+    // RECENT oil change per (bus, oil_type) pair in three queries
+    // total — instead of loading the entire oil-change history with
+    // `with('oilChanges')`, which grows linearly with fleet size ×
+    // history depth.
+    //
+    // Before: 500 buses × ~50 history rows = ~25,000 models in memory.
+    // After:  500 buses × 3 types            =  ~1,500 models in memory.
+    //
+    // `latestOilChange($type)` still exists for one-off lookups on a
+    // single bus (e.g. the show page). All four paths share the same
+    // `latestOfMany('actual_km')` subquery, so the returned model is
+    // identical regardless of which one is used.
+
+    public function latestMotorOilChange()
+    {
+        return $this->hasOne(BusOilChange::class)
+            ->where('oil_type', OilType::Motor->value)
+            ->latestOfMany('actual_km');
+    }
+
+    public function latestGearboxOilChange()
+    {
+        return $this->hasOne(BusOilChange::class)
+            ->where('oil_type', OilType::Gearbox->value)
+            ->latestOfMany('actual_km');
+    }
+
+    public function latestAxleOilChange()
+    {
+        return $this->hasOne(BusOilChange::class)
+            ->where('oil_type', OilType::Axle->value)
+            ->latestOfMany('actual_km');
+    }
+
     public function motorOilIntervalKm(): int
     {
         $threshold = (int) config('oil.bus_length_threshold', 15);

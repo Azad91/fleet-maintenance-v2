@@ -125,6 +125,19 @@ class DashboardController extends Controller
      * Compute both oil-change statistics and the alert list in a single
      * pass over the active bus list.
      *
+     * MEMORY NOTE
+     * -----------
+     * The buses are eager-loaded with three dedicated "latest"
+     * relations — one per oil type — instead of the full `oilChanges`
+     * history. This keeps memory usage flat as the fleet grows:
+     *
+     *   - Before: `with('oilChanges')` → N buses × M history rows.
+     *   - After:  three `latestOfMany` relations → N buses × 3 models.
+     *
+     * The OilChangeStatusService::forBus() call transparently picks
+     * up whichever relation is loaded — see resolveLastChange() for
+     * the priority chain.
+     *
      * @return array{0: array<string,int>, 1: Collection<int, array{bus: Bus, statuses: Collection, min_remaining: int}>}
      */
     private function computeOilChangeData(int $alertLimit = 15): array
@@ -138,8 +151,15 @@ class DashboardController extends Controller
             'total_attention' => 0,
         ];
 
-        // ONE eager-loaded query for the whole request.
-        $buses = Bus::with(['oilChanges', 'latestKmRecord'])
+        // ONE eager-loaded query for the whole request. See the
+        // method docblock for why we load the three "latest" relations
+        // instead of the full `oilChanges` history.
+        $buses = Bus::with([
+            'latestMotorOilChange',
+            'latestGearboxOilChange',
+            'latestAxleOilChange',
+            'latestKmRecord',
+        ])
             ->where('is_active', true)
             ->get();
 
