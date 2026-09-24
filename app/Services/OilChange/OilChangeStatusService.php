@@ -7,7 +7,6 @@ use App\Models\Bus;
 use App\Models\BusOilChange;
 use App\Models\MotorOilDetail;
 use Illuminate\Support\Collection;
-use App\Models\BusOilChange;
 
 class OilChangeStatusService
 {
