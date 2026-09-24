@@ -2,6 +2,7 @@
 
 namespace App\Services\Complaint;
 
+use App\Exceptions\MissingGarageContextException;
 use App\Models\ServiceVehicle;
 use App\Models\ServiceVehicleStock;
 use App\Models\Warehouse;
@@ -30,6 +31,44 @@ use Illuminate\Validation\ValidationException;
  */
 class ComplaintStockService
 {
+
+    /**
+     * Fail-closed guard for every stock mutation in this service.
+     *
+     * The queries below use withoutGlobalScopes() so that the service
+     * also works in queue jobs and console commands (where the
+     * HasGarageScope global scope may be inactive). That escape hatch
+     * has a cost: if no garage is in context, the query matches rows
+     * from ANY tenant. On a stock mutation that is never acceptable —
+     * a code collision (e.g. "FILTER-001" exists in two garages) would
+     * silently deduct from the wrong tenant's warehouse.
+     *
+     * This guard closes the gap: any call to deductStock() or
+     * restoreStock() without an active garage context is rejected
+     * outright, regardless of environment. Console commands that
+     * legitimately need this service must call GarageContext::set()
+     * first — see DemoDataSeeder for the pattern.
+     *
+     * @throws MissingGarageContextException
+     */
+    private function requireGarageId(): int
+    {
+        $garageId = \App\Services\GarageContext::resolveGarageId();
+
+        if ($garageId === null || $garageId <= 0) {
+            throw new MissingGarageContextException(
+                static::class,
+                sprintf(
+                    '%s requires an active garage context. '
+                    .'Call GarageContext::set($garageId, $companyId) '
+                    .'before invoking deductStock() / restoreStock().',
+                    static::class,
+                ),
+            );
+        }
+
+        return (int) $garageId;
+    }
     /**
      * Deduct stock for the given detail payloads.
      *
@@ -43,6 +82,9 @@ class ComplaintStockService
         string $location = 'garage',
         ?int $serviceVehicleId = null
     ): array {
+        // Fail-closed: never mutate stock without a known garage.
+        $this->requireGarageId();
+
         // ── DEADLOCK GUARD: deterministic lock order ──
         //
         // Both this method and restoreStock() acquire row-level locks
@@ -131,6 +173,9 @@ class ComplaintStockService
      */
     public function restoreStock(array $details, ?int $serviceVehicleId = null): void
     {
+        // Fail-closed: never mutate stock without a known garage.
+        $garageId = $this->requireGarageId();
+
         // ── Deterministic lock order ──
         // Filter out rows that will never touch stock, then sort by
         // code so both warehouse and vehicle branches see a stable
@@ -183,28 +228,20 @@ class ComplaintStockService
 
             // ── Warehouse: restore to the garage warehouse ──
             //
-            // Defense-in-depth: we resolve the current garage and filter
-            // explicitly, even though HasGarageScope would normally do
-            // it. This keeps the operation correct when the service is
-            // called from a queue job or artisan command where the
-            // global scope may be inactive.
-            //
-            // Quarantine rows are excluded: crediting a restored
-            // quantity to a quarantine bucket would silently "clean"
-            // defective stock and corrupt the active inventory
+            // The garage filter is mandatory (not conditional) — the
+            // guard at the top of this method already established that
+            // a garage is in context, so we lock the row inside that
+            // garage only. Quarantine rows are excluded: crediting a
+            // restored quantity to a quarantine bucket would silently
+            // "clean" defective stock and corrupt the active inventory
             // balance.
-            $garageId = \App\Services\GarageContext::resolveGarageId();
-
-            $warehouseQuery = Warehouse::withoutGlobalScopes()
+            $warehouse = Warehouse::withoutGlobalScopes()
                 ->where('code', $code)
                 ->where('is_quarantine', false)
-                ->whereNull('deleted_at');   // ← only live warehouse rows
-
-            if ($garageId !== null) {
-                $warehouseQuery->where('garage_id', $garageId);
-            }
-
-            $warehouse = $warehouseQuery->lockForUpdate()->first();
+                ->whereNull('deleted_at')
+                ->where('garage_id', $garageId)
+                ->lockForUpdate()
+                ->first();
 
             if ($warehouse) {
                 $warehouse->increment('quantity', $usedQuantity);
@@ -260,17 +297,18 @@ class ComplaintStockService
      */
     private function deductFromWarehouse(array $detail, string $code, int $usedQuantity): array
     {
-        $garageId = \App\Services\GarageContext::resolveGarageId();
+        // Fail-closed: the guard is repeated here (in addition to the
+        // one at the top of deductStock()) so that this method stays
+        // safe even if it is ever called directly from a future code
+        // path that skips the public entry point.
+        $garageId = $this->requireGarageId();
 
-        $warehouseQuery = Warehouse::withoutGlobalScopes()
+        $warehouse = Warehouse::withoutGlobalScopes()
             ->where('code', $code)
-            ->where('is_quarantine', false);
-
-        if ($garageId !== null) {
-            $warehouseQuery->where('garage_id', $garageId);
-        }
-
-        $warehouse = $warehouseQuery->lockForUpdate()->first();
+            ->where('is_quarantine', false)
+            ->where('garage_id', $garageId)
+            ->lockForUpdate()
+            ->first();
 
         if (! $warehouse) {
             throw ValidationException::withMessages([
@@ -325,18 +363,13 @@ class ComplaintStockService
             ]);
         }
 
-        // Defense-in-depth: resolve the current garage and require the
-        // vehicle to belong to it.
-        $currentGarageId = \App\Services\GarageContext::resolveGarageId();
+        // Fail-closed: the vehicle MUST belong to the current garage.
+        $currentGarageId = $this->requireGarageId();
 
-        $vehicleQuery = ServiceVehicle::withoutGlobalScopes()
-            ->whereKey($serviceVehicleId);
-
-        if ($currentGarageId !== null) {
-            $vehicleQuery->where('garage_id', $currentGarageId);
-        }
-
-        $vehicle = $vehicleQuery->first();
+        $vehicle = ServiceVehicle::withoutGlobalScopes()
+            ->whereKey($serviceVehicleId)
+            ->where('garage_id', $currentGarageId)
+            ->first();
 
         if (! $vehicle) {
             throw ValidationException::withMessages([
@@ -392,13 +425,20 @@ class ComplaintStockService
      * the detail's metadata so the quantity is never silently lost.
      */
     private function restoreToSpecificVehicle(
-        string $code,
-        int $quantity,
-        int $serviceVehicleId,
-        ?string $nameFromDetail = null
-    ): void {
-        $vehicle = ServiceVehicle::withoutGlobalScopes()->find($serviceVehicleId);
+            string $code,
+            int $quantity,
+            int $serviceVehicleId,
+            ?string $nameFromDetail = null
+        ): void {
+            // Fail-closed: only restore to a vehicle that belongs to the
+            // current garage. A stale complaint referencing a foreign
+            // vehicle must never silently credit a foreign tenant.
+            $currentGarageId = $this->requireGarageId();
 
+            $vehicle = ServiceVehicle::withoutGlobalScopes()
+                ->whereKey($serviceVehicleId)
+                ->where('garage_id', $currentGarageId)
+                ->first();
         if (! $vehicle) {
             Log::warning('Service vehicle not found — stock restore skipped', [
                 'service_vehicle_id' => $serviceVehicleId,
