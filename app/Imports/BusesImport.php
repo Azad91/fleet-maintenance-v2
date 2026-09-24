@@ -106,7 +106,19 @@ class BusesImport extends AbstractImport implements ToCollection, WithChunkReadi
             /** @var Bus|null $bus */
             $bus = $localBuses->get($dqn);
 
-            if ($bus?->trashed()) {
+            // Capture the trashed state BEFORE restore() runs.
+            //
+            // The previous implementation called $bus->restore() and
+            // then checked $bus->trashed() again — but restore() has
+            // already cleared deleted_at by that point, so the second
+            // check was dead code and the bus's is_active flag was
+            // never touched. A bus that had been deactivated before
+            // being soft-deleted came back from the import still
+            // inactive: present in the DB, but invisible to every
+            // active query, report and dashboard KPI.
+            $wasTrashed = $bus?->trashed() ?? false;
+
+            if ($wasTrashed) {
                 $bus->restore();
             }
 
@@ -128,19 +140,20 @@ class BusesImport extends AbstractImport implements ToCollection, WithChunkReadi
                 'km' => isset($data['km']) ? (int) $data['km'] : null,
             ]);
 
-            // Only set is_active on creation. Preserving the existing
-            // flag on update means an operator who manually deactivated
-            // a bus will not have it silently re-enabled by the next
-            // Excel import.
-            if ($isNew) {
-                $bus->is_active = true;
-            }
-
-            // A bus pulled out of the trash should be visible again —
-            // soft-delete is not a semantic "deactivate". Restoring it
-            // without reactivating would hide it from every active
-            // query while still occupying the unique-index slot.
-            if ($bus->trashed()) {
+            // Only force is_active = true when the row is genuinely
+            // new, or when it was pulled out of the trash by this
+            // import.
+            //
+            // Preserving the existing flag on a plain UPDATE means an
+            // operator who manually deactivated a bus will not have it
+            // silently re-enabled by the next Excel import — that was
+            // the original intent of this guard.
+            //
+            // Reactivating on RESTORE is the missing half: soft-delete
+            // is not a semantic "deactivate", so a restored bus must
+            // be visible again instead of occupying the unique-index
+            // slot while being hidden from every active query.
+            if ($isNew || $wasTrashed) {
                 $bus->is_active = true;
             }
 
