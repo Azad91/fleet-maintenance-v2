@@ -312,6 +312,7 @@ class TwoFactorAuthenticationTest extends TestCase
 
         return $sa->fresh();
     }
+
     public function test_soft_deleted_user_cannot_use_recovery_code(): void
     {
         $sa = $this->makeSuperAdminWithMfa();
@@ -335,7 +336,7 @@ class TwoFactorAuthenticationTest extends TestCase
         // `encrypted:array` cast decrypts the value for us — a raw
         // DB read returns the ciphertext and json_decode() would
         // simply return null.
-        $softDeleted = \App\Models\User::withTrashed()->find($sa->id);
+        $softDeleted = User::withTrashed()->find($sa->id);
 
         $this->assertNotNull($softDeleted);
         $this->assertCount(1, $softDeleted->two_factor_recovery_codes);
