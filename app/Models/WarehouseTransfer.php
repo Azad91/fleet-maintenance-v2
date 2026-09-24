@@ -50,11 +50,11 @@ class WarehouseTransfer extends Model
     ];
 
     protected $casts = [
-        'type'          => TransferType::class,
-        'status'        => TransferStatus::class,
+        'type' => TransferType::class,
+        'status' => TransferStatus::class,
         'dispatched_at' => 'datetime',
-        'received_at'   => 'datetime',
-        'resolved_at'   => 'datetime',
+        'received_at' => 'datetime',
+        'resolved_at' => 'datetime',
     ];
 
     // ==================== RELATIONS ====================
@@ -114,7 +114,7 @@ class WarehouseTransfer extends Model
     {
         return $query->where(function ($q) use ($garageId) {
             $q->where('from_garage_id', $garageId)
-              ->orWhere('to_garage_id', $garageId);
+                ->orWhere('to_garage_id', $garageId);
         });
     }
 
@@ -187,6 +187,7 @@ class WarehouseTransfer extends Model
 
         return '—';
     }
+
     /**
      * Human-readable destination, including quarantine.
      */

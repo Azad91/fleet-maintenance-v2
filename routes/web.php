@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\RoleEnum;
+use App\Http\Controllers\BusBrandController;
 use App\Http\Controllers\BusController;
 use App\Http\Controllers\BusDailyStatusController;
 use App\Http\Controllers\ComplaintController;
@@ -21,7 +22,6 @@ use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BusBrandController;
 
 /*
 |--------------------------------------------------------------------------
@@ -138,12 +138,12 @@ Route::middleware(['auth'])
 
             // Transfer reports — company-wide aggregation across all garages
             Route::prefix('transfer')->name('transfer.')->group(function () {
-                Route::get('/summary',         [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'summary'])->name('summary');
-                Route::get('/detailed',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'detailed'])->name('detailed');
-                Route::get('/by-route',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'byRoute'])->name('by-route');
-                Route::get('/top-items',       [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'topItems'])->name('top-items');
+                Route::get('/summary', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'summary'])->name('summary');
+                Route::get('/detailed', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'detailed'])->name('detailed');
+                Route::get('/by-route', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'byRoute'])->name('by-route');
+                Route::get('/top-items', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'topItems'])->name('top-items');
                 Route::get('/worker-activity', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'workerActivity'])->name('worker-activity');
-                Route::get('/disputed',        [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'disputed'])->name('disputed');
+                Route::get('/disputed', [App\Http\Controllers\Director\Reports\DirectorTransferReportController::class, 'disputed'])->name('disputed');
             });
         });
     });
@@ -192,22 +192,22 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
         });
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Authenticated Routes (Auth + Garage Selected + Idempotent)
-    |--------------------------------------------------------------------------
-    */
-    // ✅ P1-8 FIX: `verified` middleware əlavə olundu.
-    //
-    // Bu sistemdə self-registration YOXDUR. Bütün istifadəçilər
-    // admin tərəfindən yaradılır və yaradılma anında avtomatik
-    // `email_verified_at` ilə işarələnir (CompanyOnboardingService,
-    // GarageOnboardingService, UserService, SuperAdmin\UserController).
-    //
-    // Middleware defense-in-depth rolunu oynayır: gələcəkdə self-
-    // registration yenidən aktivləşdirilərsə, unverified istifadəçi
-    // business route-lara giriş əldə edə bilməyəcək.
-    Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idempotent'])->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes (Auth + Garage Selected + Idempotent)
+|--------------------------------------------------------------------------
+*/
+// ✅ P1-8 FIX: `verified` middleware əlavə olundu.
+//
+// Bu sistemdə self-registration YOXDUR. Bütün istifadəçilər
+// admin tərəfindən yaradılır və yaradılma anında avtomatik
+// `email_verified_at` ilə işarələnir (CompanyOnboardingService,
+// GarageOnboardingService, UserService, SuperAdmin\UserController).
+//
+// Middleware defense-in-depth rolunu oynayır: gələcəkdə self-
+// registration yenidən aktivləşdirilərsə, unverified istifadəçi
+// business route-lara giriş əldə edə bilməyəcək.
+Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idempotent'])->group(function () {
 
     // ==================== PROFILE ====================
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -322,15 +322,15 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
 
     // ==================== WAREHOUSE TRANSFERS ====================
     Route::prefix('warehouse-transfers')->name('warehouse-transfers.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
-        Route::get('/create', [\App\Http\Controllers\WarehouseTransferController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\WarehouseTransferController::class, 'store'])->name('store');
-        Route::get('/', [\App\Http\Controllers\WarehouseTransferController::class, 'index'])->name('index');
-        Route::get('/{transfer}', [\App\Http\Controllers\WarehouseTransferController::class, 'show'])->name('show');
-        Route::post('/{transfer}/dispatch', [\App\Http\Controllers\WarehouseTransferController::class, 'dispatch'])->name('dispatch');
-        Route::post('/{transfer}/receive', [\App\Http\Controllers\WarehouseTransferController::class, 'receive'])->name('receive');
-        Route::post('/{transfer}/reject', [\App\Http\Controllers\WarehouseTransferController::class, 'reject'])->name('reject');
-        Route::post('/{transfer}/resolve', [\App\Http\Controllers\WarehouseTransferController::class, 'resolve'])->name('resolve');
-        Route::post('/{transfer}/cancel', [\App\Http\Controllers\WarehouseTransferController::class, 'cancel'])->name('cancel');
+        Route::get('/create', [App\Http\Controllers\WarehouseTransferController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\WarehouseTransferController::class, 'store'])->name('store');
+        Route::get('/', [App\Http\Controllers\WarehouseTransferController::class, 'index'])->name('index');
+        Route::get('/{transfer}', [App\Http\Controllers\WarehouseTransferController::class, 'show'])->name('show');
+        Route::post('/{transfer}/dispatch', [App\Http\Controllers\WarehouseTransferController::class, 'dispatch'])->name('dispatch');
+        Route::post('/{transfer}/receive', [App\Http\Controllers\WarehouseTransferController::class, 'receive'])->name('receive');
+        Route::post('/{transfer}/reject', [App\Http\Controllers\WarehouseTransferController::class, 'reject'])->name('reject');
+        Route::post('/{transfer}/resolve', [App\Http\Controllers\WarehouseTransferController::class, 'resolve'])->name('resolve');
+        Route::post('/{transfer}/cancel', [App\Http\Controllers\WarehouseTransferController::class, 'cancel'])->name('cancel');
     });
 
     // ==================== MOTOR OIL (ADMIN ONLY) ====================
@@ -346,20 +346,20 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
 
     // ==================== OIL CHANGES (ADMIN ONLY) ====================
     Route::prefix('oil-changes')->name('oil-changes.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
-        Route::get('/', [\App\Http\Controllers\OilChangeController::class, 'index'])->name('index');
-        Route::get('/import', [\App\Http\Controllers\OilChangeImportController::class, 'form'])->name('import');
-        Route::post('/import', [\App\Http\Controllers\OilChangeImportController::class, 'store'])
+        Route::get('/', [App\Http\Controllers\OilChangeController::class, 'index'])->name('index');
+        Route::get('/import', [App\Http\Controllers\OilChangeImportController::class, 'form'])->name('import');
+        Route::post('/import', [App\Http\Controllers\OilChangeImportController::class, 'store'])
             ->middleware('throttle:import')
             ->name('import.store');
-        Route::get('/create', [\App\Http\Controllers\OilChangeController::class, 'create'])->name('create');
-        Route::get('/urgent', [\App\Http\Controllers\OilChangeController::class, 'urgent'])->name('urgent');
-        Route::get('/search', [\App\Http\Controllers\OilChangeController::class, 'search'])->name('search'); // ← YENİ
-        Route::post('/', [\App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
-        Route::get('/daily', [\App\Http\Controllers\OilChangeController::class, 'daily'])->name('daily');
-        Route::get('/{oilChange}/edit', [\App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');
-        Route::put('/{oilChange}', [\App\Http\Controllers\OilChangeController::class, 'update'])->name('update');
-        Route::delete('/{oilChange}', [\App\Http\Controllers\OilChangeController::class, 'destroy'])->name('destroy');
-        Route::get('/bus/{bus}', [\App\Http\Controllers\OilChangeController::class, 'show'])->name('show');
+        Route::get('/create', [App\Http\Controllers\OilChangeController::class, 'create'])->name('create');
+        Route::get('/urgent', [App\Http\Controllers\OilChangeController::class, 'urgent'])->name('urgent');
+        Route::get('/search', [App\Http\Controllers\OilChangeController::class, 'search'])->name('search'); // ← YENİ
+        Route::post('/', [App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
+        Route::get('/daily', [App\Http\Controllers\OilChangeController::class, 'daily'])->name('daily');
+        Route::get('/{oilChange}/edit', [App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');
+        Route::put('/{oilChange}', [App\Http\Controllers\OilChangeController::class, 'update'])->name('update');
+        Route::delete('/{oilChange}', [App\Http\Controllers\OilChangeController::class, 'destroy'])->name('destroy');
+        Route::get('/bus/{bus}', [App\Http\Controllers\OilChangeController::class, 'show'])->name('show');
     });
 
     // ==================== EMPLOYEES (ADMIN ONLY) ====================
@@ -379,15 +379,15 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
 
     // ==================== SERVICE VEHICLES (ADMIN ONLY) ====================
     Route::prefix('service-vehicles')->name('service-vehicles.')->middleware(['role:'.RoleEnum::ADMIN->value])->group(function () {
-        Route::get('/create', [\App\Http\Controllers\ServiceVehicleController::class, 'create'])->name('create');
-        Route::post('/', [\App\Http\Controllers\ServiceVehicleController::class, 'store'])->name('store');
+        Route::get('/create', [App\Http\Controllers\ServiceVehicleController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\ServiceVehicleController::class, 'store'])->name('store');
         // Static '/stocks' must come BEFORE the dynamic '/{service_vehicle}' route.
-        Route::get('/stocks', [\App\Http\Controllers\ServiceVehicleController::class, 'stocks'])->name('stocks');
-        Route::get('/', [\App\Http\Controllers\ServiceVehicleController::class, 'index'])->name('index');
-        Route::get('/{service_vehicle}/edit', [\App\Http\Controllers\ServiceVehicleController::class, 'edit'])->name('edit');
-        Route::get('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'show'])->name('show');
-        Route::put('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'update'])->name('update');
-        Route::delete('/{service_vehicle}', [\App\Http\Controllers\ServiceVehicleController::class, 'destroy'])->name('destroy');
+        Route::get('/stocks', [App\Http\Controllers\ServiceVehicleController::class, 'stocks'])->name('stocks');
+        Route::get('/', [App\Http\Controllers\ServiceVehicleController::class, 'index'])->name('index');
+        Route::get('/{service_vehicle}/edit', [App\Http\Controllers\ServiceVehicleController::class, 'edit'])->name('edit');
+        Route::get('/{service_vehicle}', [App\Http\Controllers\ServiceVehicleController::class, 'show'])->name('show');
+        Route::put('/{service_vehicle}', [App\Http\Controllers\ServiceVehicleController::class, 'update'])->name('update');
+        Route::delete('/{service_vehicle}', [App\Http\Controllers\ServiceVehicleController::class, 'destroy'])->name('destroy');
     });
 
     // ==================== BUS DAILY STATUSES ====================
@@ -513,12 +513,12 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
                 RoleEnum::warehouseRoles()
             ))])
             ->group(function () {
-                Route::get('/summary',         [App\Http\Controllers\Reports\TransferReportController::class, 'summary'])->name('summary');
-                Route::get('/detailed',        [App\Http\Controllers\Reports\TransferReportController::class, 'detailed'])->name('detailed');
-                Route::get('/by-route',        [App\Http\Controllers\Reports\TransferReportController::class, 'byRoute'])->name('by-route');
-                Route::get('/top-items',       [App\Http\Controllers\Reports\TransferReportController::class, 'topItems'])->name('top-items');
+                Route::get('/summary', [App\Http\Controllers\Reports\TransferReportController::class, 'summary'])->name('summary');
+                Route::get('/detailed', [App\Http\Controllers\Reports\TransferReportController::class, 'detailed'])->name('detailed');
+                Route::get('/by-route', [App\Http\Controllers\Reports\TransferReportController::class, 'byRoute'])->name('by-route');
+                Route::get('/top-items', [App\Http\Controllers\Reports\TransferReportController::class, 'topItems'])->name('top-items');
                 Route::get('/worker-activity', [App\Http\Controllers\Reports\TransferReportController::class, 'workerActivity'])->name('worker-activity');
-                Route::get('/disputed',        [App\Http\Controllers\Reports\TransferReportController::class, 'disputed'])->name('disputed');
+                Route::get('/disputed', [App\Http\Controllers\Reports\TransferReportController::class, 'disputed'])->name('disputed');
             });
 
         // Maintenance reports — comprehensive technical breakdown
@@ -528,10 +528,10 @@ Route::middleware(['auth', 'super.admin', '2fa.verified'])
                 RoleEnum::complaintRoles()
             ))])
             ->group(function () {
-                Route::get('/summary',       [App\Http\Controllers\Reports\MaintenanceReportController::class, 'summary'])->name('summary');
-                Route::get('/per-bus',       [App\Http\Controllers\Reports\MaintenanceReportController::class, 'perBus'])->name('per-bus');
-                Route::get('/per-part',      [App\Http\Controllers\Reports\MaintenanceReportController::class, 'perPart'])->name('per-part');
-                Route::get('/motor-oil',     [App\Http\Controllers\Reports\MaintenanceReportController::class, 'motorOil'])->name('motor-oil');
+                Route::get('/summary', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'summary'])->name('summary');
+                Route::get('/per-bus', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'perBus'])->name('per-bus');
+                Route::get('/per-part', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'perPart'])->name('per-part');
+                Route::get('/motor-oil', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'motorOil'])->name('motor-oil');
                 Route::get('/most-repaired', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'mostRepaired'])->name('most-repaired');
             });
     });

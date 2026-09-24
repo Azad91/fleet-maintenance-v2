@@ -4,9 +4,9 @@ namespace App\Enums;
 
 enum OilType: string
 {
-    case Motor   = 'motor';
+    case Motor = 'motor';
     case Gearbox = 'gearbox';
-    case Axle    = 'axle';
+    case Axle = 'axle';
 
     public function label(): string
     {
@@ -16,18 +16,18 @@ enum OilType: string
     public function icon(): string
     {
         return match ($this) {
-            self::Motor   => '🛢️',
+            self::Motor => '🛢️',
             self::Gearbox => '⚙️',
-            self::Axle    => '🔩',
+            self::Axle => '🔩',
         };
     }
 
     public function bootstrapColor(): string
     {
         return match ($this) {
-            self::Motor   => 'warning',
+            self::Motor => 'warning',
             self::Gearbox => 'info',
-            self::Axle    => 'primary',
+            self::Axle => 'primary',
         };
     }
 

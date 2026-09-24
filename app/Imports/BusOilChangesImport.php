@@ -78,8 +78,8 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                     );
                 }
                 $this->dqnColumnIndex = $cached['dqnCol'];
-                $this->kmColumns      = $cached['kmCols'];
-                $this->headerParsed   = true;
+                $this->kmColumns = $cached['kmCols'];
+                $this->headerParsed = true;
             }
         }
 
@@ -135,6 +135,7 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
             // DQN column — matches "DQN", "PLAKA No", "PLAKA"
             if (preg_match('/^(dqn|plaka)/i', $v)) {
                 $this->dqnColumnIndex ??= (int) $idx;
+
                 continue;
             }
 
@@ -143,8 +144,9 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 && preg_match('/^(\d{4,7})\s*bak/i', $v, $m)) {
                 $this->kmColumns[(int) $idx] = [
                     'scheduled' => (int) $m[1],
-                    'brand'     => null,
+                    'brand' => null,
                 ];
+
                 continue;
             }
 
@@ -153,8 +155,9 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 && preg_match('/\b(shell|luk)\b/i', $v, $m)) {
                 $this->kmColumns[(int) $idx] = [
                     'scheduled' => null,
-                    'brand'     => strtoupper($m[1]),
+                    'brand' => strtoupper($m[1]),
                 ];
+
                 continue;
             }
 
@@ -167,15 +170,15 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 }
                 $this->kmColumns[(int) $idx] = [
                     'scheduled' => $km,
-                    'brand'     => null,
+                    'brand' => null,
                 ];
             }
         }
 
         // ─── Debug: log what was detected ───
         Log::info('Oil import header parse', [
-            'type'             => $this->type->value,
-            'header_raw'       => $header,
+            'type' => $this->type->value,
+            'header_raw' => $header,
             'detected_dqn_col' => $this->dqnColumnIndex,
             'detected_km_cols' => $this->kmColumns,
         ]);
@@ -196,6 +199,7 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
 
         if (! $bus) {
             $this->recordSkip($rowIndex, $dqn, __('messages.imports.reasons.dqn_not_found'));
+
             return;
         }
 
@@ -214,7 +218,7 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
                 continue;
             }
 
-            $brand    = $meta['brand'];
+            $brand = $meta['brand'];
             $interval = $this->resolveInterval($bus, $brand);
 
             $exists = BusOilChange::withoutGlobalScopes()
@@ -229,14 +233,14 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
             }
 
             BusOilChange::withoutGlobalScopes()->create([
-                'garage_id'    => $this->garageId,
-                'company_id'   => $this->companyId,
-                'bus_id'       => $bus->id,
-                'oil_type'     => $this->type->value,
-                'oil_brand'    => $brand,
+                'garage_id' => $this->garageId,
+                'company_id' => $this->companyId,
+                'bus_id' => $bus->id,
+                'oil_type' => $this->type->value,
+                'oil_brand' => $brand,
                 'scheduled_km' => $meta['scheduled'],
-                'actual_km'    => $actualKm,
-                'interval_km'  => $interval,
+                'actual_km' => $actualKm,
+                'interval_km' => $interval,
             ]);
 
             $created++;
@@ -251,12 +255,12 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
     {
         return match ($this->type) {
             OilType::Motor => match ($this->busLengthM) {
-                18      => 30000,
-                12      => 36000,
+                18 => 30000,
+                12 => 36000,
                 default => $bus->motorOilIntervalKm(),
             },
             OilType::Gearbox => 180000,
-            OilType::Axle    => 180000,
+            OilType::Axle => 180000,
         };
     }
 

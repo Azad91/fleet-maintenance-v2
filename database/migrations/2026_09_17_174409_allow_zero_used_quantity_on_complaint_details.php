@@ -45,7 +45,7 @@ return new class extends Migration
         ");
 
         // Roll back rows that would violate the old constraint.
-        DB::statement("UPDATE complaint_details SET used_quantity = 1 WHERE used_quantity = 0");
+        DB::statement('UPDATE complaint_details SET used_quantity = 1 WHERE used_quantity = 0');
         DB::statement("UPDATE complaint_details SET source_type = 'warehouse' WHERE source_type = 'inspection'");
 
         DB::statement('ALTER TABLE complaint_details DROP CONSTRAINT IF EXISTS chk_complaint_details_used_qty');

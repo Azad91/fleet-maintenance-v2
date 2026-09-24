@@ -144,7 +144,7 @@ class BusService
         }
 
         $totalDeleted = 0;
-        $buffer       = [];
+        $buffer = [];
 
         foreach ($query->select('id')->cursor() as $row) {
             $buffer[] = $row->id;

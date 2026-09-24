@@ -38,10 +38,11 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
      * How to treat the quantity of an existing item.
      */
     public const MODE_OVERWRITE = 'overwrite';
-    public const MODE_ADD       = 'add';
+
+    public const MODE_ADD = 'add';
 
     /**
-     * @param  int|null  $garageId   Positive for tenant imports.
+     * @param  int|null  $garageId  Positive for tenant imports.
      * @param  int|null  $companyId  Optional, used for strict company scoping.
      * @param  string  $mode  One of MODE_OVERWRITE or MODE_ADD.
      */
@@ -98,20 +99,20 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
                     : $quantity;
 
                 $warehouse->update([
-                    'name'     => $name,
+                    'name' => $name,
                     'quantity' => $newQuantity,
-                    'unit'     => $unit,
-                    'price'    => $price,
+                    'unit' => $unit,
+                    'price' => $price,
                 ]);
             } else {
                 // New item — always created with the Excel quantity.
                 Warehouse::create([
-                    'code'       => $code,
-                    'name'       => $name,
-                    'quantity'   => $quantity,
-                    'unit'       => $unit,
-                    'price'      => $price,
-                    'garage_id'  => $this->garageId,
+                    'code' => $code,
+                    'name' => $name,
+                    'quantity' => $quantity,
+                    'unit' => $unit,
+                    'price' => $price,
+                    'garage_id' => $this->garageId,
                     'company_id' => $this->companyId,
                 ]);
             }
@@ -148,12 +149,12 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
             return 0.0;
         }
 
-        $hasDot   = str_contains($value, '.');
+        $hasDot = str_contains($value, '.');
         $hasComma = str_contains($value, ',');
 
         if ($hasDot && $hasComma) {
             // Sonuncu ayırıcı onluq ayırıcıdır.
-            $lastDot   = strrpos($value, '.');
+            $lastDot = strrpos($value, '.');
             $lastComma = strrpos($value, ',');
 
             if ($lastComma > $lastDot) {

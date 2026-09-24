@@ -20,24 +20,24 @@ return [
     ],
 
     'transfer_status' => [
-        'draft'      => 'Draft',
+        'draft' => 'Draft',
         'dispatched' => 'Dispatched',
-        'received'   => 'Received',
-        'disputed'   => 'Disputed',
-        'rejected'   => 'Rejected',
-        'cancelled'  => 'Cancelled',
-        'resolved'   => 'Resolved',
+        'received' => 'Received',
+        'disputed' => 'Disputed',
+        'rejected' => 'Rejected',
+        'cancelled' => 'Cancelled',
+        'resolved' => 'Resolved',
     ],
 
     'transfer_type' => [
-        'garage_to_garage'    => 'Garage to Garage',
-        'to_service_vehicle'  => 'To Service Vehicle',
+        'garage_to_garage' => 'Garage to Garage',
+        'to_service_vehicle' => 'To Service Vehicle',
         'return_to_quarantine' => 'Return / Quarantine',
     ],
 
     'oil_type' => [
-        'motor'   => 'Motor oil',
+        'motor' => 'Motor oil',
         'gearbox' => 'Gearbox oil',
-        'axle'    => 'Axle oil',
+        'axle' => 'Axle oil',
     ],
 ];

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\TransferStatus;
 use App\Enums\TransferType;
-use App\Models\Bus;
 use App\Models\Company;
 use App\Models\Garage;
 use App\Models\User;
@@ -21,11 +20,17 @@ class WarehouseTransferTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected User $adminA;
+
     protected User $adminB;
+
     protected Warehouse $itemA;
+
     protected WarehouseTransferService $service;
 
     protected function setUp(): void
@@ -45,13 +50,13 @@ class WarehouseTransferTest extends TestCase
         GarageContext::set($this->garageA->id, $this->company->id);
 
         $this->itemA = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $this->garageA->id,
-            'company_id'       => $this->company->id,
-            'code'             => 'FILTER-001',
-            'name'             => 'Oil Filter',
-            'quantity'         => 100,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'code' => 'FILTER-001',
+            'name' => 'Oil Filter',
+            'quantity' => 100,
             'minimum_quantity' => 10,
-            'unit'             => 'piece',
+            'unit' => 'piece',
         ]);
 
         $this->service = app(WarehouseTransferService::class);
@@ -66,7 +71,7 @@ class WarehouseTransferTest extends TestCase
     protected function sessionFor(Garage $garage): array
     {
         return [
-            'current_garage_id'  => $garage->id,
+            'current_garage_id' => $garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -75,12 +80,12 @@ class WarehouseTransferTest extends TestCase
     {
         return $this->service->create([
             'from_garage_id' => $this->garageA->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'notes'          => 'Test transfer',
-            'items'          => [
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'notes' => 'Test transfer',
+            'items' => [
                 [
-                    'warehouse_id'      => $this->itemA->id,
+                    'warehouse_id' => $this->itemA->id,
                     'declared_quantity' => $quantity,
                 ],
             ],
@@ -343,17 +348,17 @@ class WarehouseTransferTest extends TestCase
         // Transfer from C (unrelated)
         $garageC = Garage::factory()->create(['company_id' => $this->company->id]);
         $itemC = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $garageC->id,
+            'garage_id' => $garageC->id,
             'company_id' => $this->company->id,
-            'code'       => 'X-001',
-            'name'       => 'X',
-            'quantity'   => 10,
+            'code' => 'X-001',
+            'name' => 'X',
+            'quantity' => 10,
         ]);
         $this->service->create([
             'from_garage_id' => $garageC->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $itemC->id, 'declared_quantity' => 1]],
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $itemC->id, 'declared_quantity' => 1]],
         ], $this->company->id);
 
         $response = $this->actingAs($this->adminA)
@@ -367,7 +372,7 @@ class WarehouseTransferTest extends TestCase
             return $paginator->total() === 1; // only the A→B one
         });
     }
-        // ==================================================================
+    // ==================================================================
     // 7. QUARANTINE (RETURN_TO_QUARANTINE)
     // ==================================================================
 
@@ -377,8 +382,8 @@ class WarehouseTransferTest extends TestCase
 
         $transfer = $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [
                 ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
             ],
         ], $this->company->id);
@@ -407,14 +412,14 @@ class WarehouseTransferTest extends TestCase
         // Two separate quarantine operations
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 3]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 3]],
         ], $this->company->id);
 
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 4]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 4]],
         ], $this->company->id);
 
         $quarantine = Warehouse::withoutGlobalScopes()
@@ -434,8 +439,8 @@ class WarehouseTransferTest extends TestCase
 
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 150]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 150]],
         ], $this->company->id);
     }
 
@@ -446,8 +451,8 @@ class WarehouseTransferTest extends TestCase
         // First quarantine to create the Q- row
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         $quarantine = Warehouse::withoutGlobalScopes()
@@ -460,8 +465,8 @@ class WarehouseTransferTest extends TestCase
 
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $quarantine->id, 'declared_quantity' => 2]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $quarantine->id, 'declared_quantity' => 2]],
         ], $this->company->id);
     }
 
@@ -470,7 +475,7 @@ class WarehouseTransferTest extends TestCase
         $response = $this->actingAs($this->adminA)
             ->withSession($this->sessionFor($this->garageA))
             ->post(route('warehouse-transfers.store'), [
-                'type'  => TransferType::ReturnToQuarantine->value,
+                'type' => TransferType::ReturnToQuarantine->value,
                 'notes' => 'Broken filters found in stock',
                 'items' => [
                     ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 2],
@@ -490,8 +495,8 @@ class WarehouseTransferTest extends TestCase
         // Create a quarantine row via the service
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         $response = $this->actingAs($this->adminA)
@@ -508,8 +513,8 @@ class WarehouseTransferTest extends TestCase
 
         $this->service->createAndComplete([
             'from_garage_id' => $this->garageA->id,
-            'type'           => TransferType::ReturnToQuarantine->value,
-            'items'          => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5]],
+            'type' => TransferType::ReturnToQuarantine->value,
+            'items' => [['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         $response = $this->actingAs($this->adminA)
@@ -519,21 +524,21 @@ class WarehouseTransferTest extends TestCase
         $response->assertOk();
         $response->assertSee('Q-FILTER-001');
     }
-        // ==================================================================
+    // ==================================================================
     // 7. CROSS-COMPANY SECURITY (P0 FIX)
     // ==================================================================
 
     public function test_cannot_transfer_to_garage_from_another_company(): void
     {
         $otherCompany = Company::factory()->create();
-        $otherGarage  = Garage::factory()->create(['company_id' => $otherCompany->id]);
+        $otherGarage = Garage::factory()->create(['company_id' => $otherCompany->id]);
 
         $this->actingAs($this->adminA)
             ->withSession($this->sessionFor($this->garageA))
             ->post(route('warehouse-transfers.store'), [
-                'type'         => TransferType::GarageToGarage->value,
+                'type' => TransferType::GarageToGarage->value,
                 'to_garage_id' => $otherGarage->id, // ← other company's garage
-                'items'        => [
+                'items' => [
                     ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
                 ],
             ])
@@ -553,7 +558,7 @@ class WarehouseTransferTest extends TestCase
         // service directly. This simulates a future controller, queue
         // job, or console command that forgets to validate.
         $otherCompany = Company::factory()->create();
-        $otherGarage  = Garage::factory()->create(['company_id' => $otherCompany->id]);
+        $otherGarage = Garage::factory()->create(['company_id' => $otherCompany->id]);
 
         $this->actingAs($this->adminA);
 
@@ -561,9 +566,9 @@ class WarehouseTransferTest extends TestCase
 
         $this->service->create([
             'from_garage_id' => $this->garageA->id,
-            'to_garage_id'   => $otherGarage->id, // ← other company's garage
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [
+            'to_garage_id' => $otherGarage->id, // ← other company's garage
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [
                 ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
             ],
         ], $this->company->id);
@@ -608,18 +613,18 @@ class WarehouseTransferTest extends TestCase
     {
         $otherGarage = Garage::factory()->create(['company_id' => $this->company->id]);
         $otherVehicle = \App\Models\ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $otherGarage->id,
+            'garage_id' => $otherGarage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Other Garage Vehicle',
-            'is_active'  => true,
+            'name' => 'Other Garage Vehicle',
+            'is_active' => true,
         ]);
 
         $this->actingAs($this->adminA)
             ->withSession($this->sessionFor($this->garageA))
             ->post(route('warehouse-transfers.store'), [
-                'type'                  => TransferType::ToServiceVehicle->value,
+                'type' => TransferType::ToServiceVehicle->value,
                 'to_service_vehicle_id' => $otherVehicle->id, // ← other garage
-                'items'                 => [
+                'items' => [
                     ['warehouse_id' => $this->itemA->id, 'declared_quantity' => 5],
                 ],
             ])

@@ -13,8 +13,8 @@ use App\Services\GarageContext;
 use App\Services\Warehouse\WarehouseTransferService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class WarehouseTransferController extends Controller
 {
@@ -29,7 +29,7 @@ class WarehouseTransferController extends Controller
         $garageId = GarageContext::getGarageId();
 
         $direction = $request->input('direction', 'all');
-        $status    = $request->input('status');
+        $status = $request->input('status');
 
         $query = WarehouseTransfer::query()
             ->with(['fromGarage', 'toGarage', 'toServiceVehicle', 'items'])

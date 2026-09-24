@@ -3,16 +3,22 @@
 namespace App\Providers;
 
 use App\Models\Bus;
+use App\Models\BusBrand;
 use App\Models\BusDailyStatus;
+use App\Models\BusOilChange;
 use App\Models\Complaint;
 use App\Models\ComplaintType;
 use App\Models\DailyKmRecord;
 use App\Models\Driver;
 use App\Models\Employee;
 use App\Models\MotorOilDetail;
+use App\Models\ServiceVehicle;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\WarehouseTransfer;
+use App\Policies\BusBrandPolicy;
 use App\Policies\BusDailyStatusPolicy;
+use App\Policies\BusOilChangePolicy;
 use App\Policies\BusPolicy;
 use App\Policies\ComplaintPolicy;
 use App\Policies\ComplaintTypePolicy;
@@ -20,37 +26,31 @@ use App\Policies\DailyKmRecordPolicy;
 use App\Policies\DriverPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\MotorOilPolicy;
+use App\Policies\ServiceVehiclePolicy;
 use App\Policies\UserPolicy;
 use App\Policies\WarehousePolicy;
+use App\Policies\WarehouseTransferPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use App\Models\ServiceVehicle;
-use App\Policies\ServiceVehiclePolicy;
-use App\Models\WarehouseTransfer;
-use App\Policies\WarehouseTransferPolicy;
-use App\Models\BusBrand;
-use App\Policies\BusBrandPolicy;
-use App\Models\BusOilChange;
-use App\Policies\BusOilChangePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
-        protected $policies = [
-            Complaint::class => ComplaintPolicy::class,
-            Bus::class => BusPolicy::class,
-            BusBrand::class => BusBrandPolicy::class,
-            Warehouse::class => WarehousePolicy::class,
-            Driver::class => DriverPolicy::class,
-            Employee::class => EmployeePolicy::class,
-            User::class => UserPolicy::class,
-            BusDailyStatus::class => BusDailyStatusPolicy::class,
-            DailyKmRecord::class => DailyKmRecordPolicy::class,
-            MotorOilDetail::class => MotorOilPolicy::class,
-            ComplaintType::class => ComplaintTypePolicy::class,
-            ServiceVehicle::class => ServiceVehiclePolicy::class,
-            WarehouseTransfer::class => WarehouseTransferPolicy::class,
-            BusOilChange::class => BusOilChangePolicy::class,
-            ];
+    protected $policies = [
+        Complaint::class => ComplaintPolicy::class,
+        Bus::class => BusPolicy::class,
+        BusBrand::class => BusBrandPolicy::class,
+        Warehouse::class => WarehousePolicy::class,
+        Driver::class => DriverPolicy::class,
+        Employee::class => EmployeePolicy::class,
+        User::class => UserPolicy::class,
+        BusDailyStatus::class => BusDailyStatusPolicy::class,
+        DailyKmRecord::class => DailyKmRecordPolicy::class,
+        MotorOilDetail::class => MotorOilPolicy::class,
+        ComplaintType::class => ComplaintTypePolicy::class,
+        ServiceVehicle::class => ServiceVehiclePolicy::class,
+        WarehouseTransfer::class => WarehouseTransferPolicy::class,
+        BusOilChange::class => BusOilChangePolicy::class,
+    ];
 
     public function boot(): void
     {

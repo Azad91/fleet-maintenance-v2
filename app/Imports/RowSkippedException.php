@@ -8,6 +8,4 @@ namespace App\Imports;
  * rolls the transaction back and is caught by the caller, which then
  * records the row as skipped — leaving no partial state in the DB.
  */
-class RowSkippedException extends \RuntimeException
-{
-}
+class RowSkippedException extends \RuntimeException {}

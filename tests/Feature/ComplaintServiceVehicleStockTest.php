@@ -24,11 +24,17 @@ class ComplaintServiceVehicleStockTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected Bus $bus;
+
     protected Employee $employee;
+
     protected ServiceVehicle $vehicleA;
+
     protected ServiceVehicle $vehicleB;
+
     protected ComplaintService $service;
 
     protected function setUp(): void
@@ -36,32 +42,32 @@ class ComplaintServiceVehicleStockTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->employee = Employee::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->vehicleA = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Service A',
-            'is_active'  => true,
+            'name' => 'Service A',
+            'is_active' => true,
         ]);
 
         $this->vehicleB = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Service B',
-            'is_active'  => true,
+            'name' => 'Service B',
+            'is_active' => true,
         ]);
 
         $this->service = new ComplaintService(
@@ -80,11 +86,11 @@ class ComplaintServiceVehicleStockTest extends TestCase
     protected function makeWarehouse(string $code, int $qty): Warehouse
     {
         return Warehouse::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $qty,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $qty,
         ]);
     }
 
@@ -92,27 +98,27 @@ class ComplaintServiceVehicleStockTest extends TestCase
     {
         return ServiceVehicleStock::withoutGlobalScopes()->create([
             'service_vehicle_id' => $vehicle->id,
-            'garage_id'          => $this->garage->id,
-            'company_id'         => $this->company->id,
-            'code'               => $code,
-            'name'               => "Part {$code}",
-            'unit'               => 'piece',
-            'quantity'           => $qty,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'unit' => 'piece',
+            'quantity' => $qty,
         ]);
     }
 
     protected function baseData(string $location = 'garage', ?int $vehicleId = null): array
     {
         $data = [
-            'bus_id'         => $this->bus->id,
-            'yer'            => $location,
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'yer' => $location,
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
-            'km'             => 1000,
+            'km' => 1000,
         ];
 
         if ($location === 'road') {
-            $data['driver_name']   = 'Test Driver';
+            $data['driver_name'] = 'Test Driver';
             $data['reported_date'] = now()->toDateString();
             $data['reported_time'] = now()->format('H:i');
         }
@@ -128,10 +134,10 @@ class ComplaintServiceVehicleStockTest extends TestCase
     {
         return [
             'shikayet_index' => 0,
-            'code'           => $code,
-            'used_quantity'  => $qty,
-            'employee_id'    => $this->employee->id,
-            'notes'          => 'Test',
+            'code' => $code,
+            'used_quantity' => $qty,
+            'employee_id' => $this->employee->id,
+            'notes' => 'Test',
         ];
     }
 
@@ -340,22 +346,22 @@ class ComplaintServiceVehicleStockTest extends TestCase
     public function test_delete_legacy_road_complaint_does_not_crash(): void
     {
         $complaint = Complaint::create([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garage->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'road',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'yer' => 'road',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
         ]);
 
         $complaint->details()->create([
-            'code'            => 'LEGACY-001',
-            'name'            => 'Legacy Part',
-            'stock_quantity'  => 10,
-            'used_quantity'   => 3,
-            'source_type'     => 'service_vehicle',
-            'garage_id'       => $this->garage->id,
-            'company_id'      => $this->company->id,
+            'code' => 'LEGACY-001',
+            'name' => 'Legacy Part',
+            'stock_quantity' => 10,
+            'used_quantity' => 3,
+            'source_type' => 'service_vehicle',
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
         ]);
 
         // Must not throw. The warning is logged, the delete succeeds.
@@ -373,19 +379,19 @@ class ComplaintServiceVehicleStockTest extends TestCase
         $otherGarage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $foreignVehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $otherGarage->id,
+            'garage_id' => $otherGarage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Foreign Vehicle',
-            'is_active'  => true,
+            'name' => 'Foreign Vehicle',
+            'is_active' => true,
         ]);
 
         ServiceVehicleStock::withoutGlobalScopes()->create([
             'service_vehicle_id' => $foreignVehicle->id,
-            'garage_id'          => $otherGarage->id,
-            'company_id'         => $this->company->id,
-            'code'               => 'FILTER-001',
-            'name'               => 'Oil Filter',
-            'quantity'           => 100,
+            'garage_id' => $otherGarage->id,
+            'company_id' => $this->company->id,
+            'code' => 'FILTER-001',
+            'name' => 'Oil Filter',
+            'quantity' => 100,
         ]);
 
         // ✅ Service-i birbaşa çağırırıq — FormRequest bypass olunur.

@@ -73,7 +73,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
      * implementation stored the id and re-fetched the model on every
      * hit — turning memoization into a different kind of N+1.
      *
-     * @var array<string, Bus|null>  key: lowercased DQN
+     * @var array<string, Bus|null> key: lowercased DQN
      */
     protected array $busCache = [];
 
@@ -274,7 +274,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
      */
     protected function attachRowData(Complaint $complaint, array $rowArray): void
     {
-        $garageId  = $this->garageId;
+        $garageId = $this->garageId;
         $companyId = $this->companyId;
 
         $partCode = trim((string) (
@@ -297,7 +297,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
         // ─── Stock deduction (consumed parts only) ───
         $stockQuantity = 0;
-        $priceAtUse    = null;
+        $priceAtUse = null;
 
         if ($partCode !== '' && $usedQuantity > 0) {
             if ($this->deductStock) {
@@ -314,14 +314,14 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
 
                 if ($usedQuantity > $warehouse->quantity) {
                     throw new RowSkippedException(__('messages.flash.stock_insufficient', [
-                        'name'      => $warehouse->name,
+                        'name' => $warehouse->name,
                         'requested' => $usedQuantity,
                         'available' => $warehouse->quantity,
                     ]));
                 }
 
                 $stockQuantity = $warehouse->quantity;
-                $priceAtUse    = $warehouse->price !== null
+                $priceAtUse = $warehouse->price !== null
                     ? (float) $warehouse->price
                     : null;
 
@@ -335,7 +335,7 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
                 $warehouse = $this->resolveWarehouse($partCode);
 
                 if ($warehouse) {
-                    $partName   ??= $warehouse->name;
+                    $partName ??= $warehouse->name;
                     $priceAtUse = $warehouse->price !== null
                         ? (float) $warehouse->price
                         : null;
@@ -347,9 +347,9 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         if ($description !== '') {
             $complaint->items()->create([
                 'description' => $description,
-                'type'        => $rowArray['complaint_type'] ?? null,
-                'garage_id'   => $garageId,
-                'company_id'  => $companyId,
+                'type' => $rowArray['complaint_type'] ?? null,
+                'garage_id' => $garageId,
+                'company_id' => $companyId,
             ]);
         }
 
@@ -357,20 +357,20 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         if ($partCode !== '') {
             $sourceType = match (true) {
                 ! $this->deductStock => 'historical',
-                $usedQuantity <= 0   => 'inspection',
-                default              => 'warehouse',
+                $usedQuantity <= 0 => 'inspection',
+                default => 'warehouse',
             };
 
             $complaint->details()->create([
                 'shikayet_index' => 0,
-                'code'           => $partCode,
-                'name'           => $partName ?? $partCode,
+                'code' => $partCode,
+                'name' => $partName ?? $partCode,
                 'stock_quantity' => $stockQuantity,
-                'used_quantity'  => max(0, $usedQuantity),
-                'price_at_use'   => $sourceType === 'inspection' ? 0 : $priceAtUse,
-                'source_type'    => $sourceType,
-                'employee_id'    => $this->resolveEmployeeId($rowArray),
-                'notes'          => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
+                'used_quantity' => max(0, $usedQuantity),
+                'price_at_use' => $sourceType === 'inspection' ? 0 : $priceAtUse,
+                'source_type' => $sourceType,
+                'employee_id' => $this->resolveEmployeeId($rowArray),
+                'notes' => $rowArray['detail_notes'] ?? $rowArray['notes'] ?? null,
             ]);
         }
     }
@@ -466,11 +466,11 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         }
 
         // Azerbaijani/Turkish → ASCII map for both sides.
-        $charMap  = 'əƏıİşŞçÇüÜöÖğĞ';
+        $charMap = 'əƏıİşŞçÇüÜöÖğĞ';
         $asciiMap = 'eEiIsScCuUoOgG';
 
         $columnNorm = "LOWER(TRANSLATE(first_name || ' ' || COALESCE(last_name, ''), '{$charMap}', '{$asciiMap}'))";
-        $inputNorm  = "LOWER(TRANSLATE(?, '{$charMap}', '{$asciiMap}'))";
+        $inputNorm = "LOWER(TRANSLATE(?, '{$charMap}', '{$asciiMap}'))";
 
         // 2. Full name match (normalized).
         $byFullName = (clone $base)

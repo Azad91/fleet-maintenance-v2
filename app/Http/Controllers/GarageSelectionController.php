@@ -122,15 +122,15 @@ class GarageSelectionController extends Controller
                 // Keep companies whose own name matches, even when
                 // the matched garage list below is a subset.
                 $q->where('name', 'ILIKE', "%{$search}%")
-                  ->orWhereHas('garages', function ($gq) use ($search) {
-                      $gq->where('is_active', true)
-                         ->where('name', 'ILIKE', "%{$search}%");
-                  });
+                    ->orWhereHas('garages', function ($gq) use ($search) {
+                        $gq->where('is_active', true)
+                            ->where('name', 'ILIKE', "%{$search}%");
+                    });
             }))
             ->with(['garages' => function ($query) use ($search) {
                 $query->where('is_active', true)
-                      ->when($search !== '', fn ($q) => $q->where('name', 'ILIKE', "%{$search}%"))
-                      ->orderBy('name');
+                    ->when($search !== '', fn ($q) => $q->where('name', 'ILIKE', "%{$search}%"))
+                    ->orderBy('name');
             }])
             ->orderBy('name')
             ->get();
@@ -145,10 +145,10 @@ class GarageSelectionController extends Controller
     {
         $garageAccessFilter = function ($query) use ($user, $search) {
             $query->where('is_active', true)
-                  ->whereHas('users', function ($q) use ($user) {
-                      $q->where('user_id', $user->id)
+                ->whereHas('users', function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
                         ->where('garage_user.is_active', true);
-                  });
+                });
 
             if ($search !== '') {
                 $query->where('name', 'ILIKE', "%{$search}%");

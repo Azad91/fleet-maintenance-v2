@@ -23,9 +23,13 @@ class ComplaintPriceSnapshotTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected Bus $bus;
+
     protected Employee $employee;
+
     protected ComplaintService $service;
 
     protected function setUp(): void
@@ -38,12 +42,12 @@ class ComplaintPriceSnapshotTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->employee = Employee::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
@@ -63,27 +67,27 @@ class ComplaintPriceSnapshotTest extends TestCase
     private function makeWarehouse(string $code, int $qty, ?float $price = null): Warehouse
     {
         return Warehouse::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $qty,
-            'price'      => $price,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $qty,
+            'price' => $price,
         ]);
     }
 
     private function baseData(string $location = 'garage', ?int $vehicleId = null): array
     {
         $data = [
-            'bus_id'         => $this->bus->id,
-            'yer'            => $location,
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'yer' => $location,
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
-            'km'             => 1000,
+            'km' => 1000,
         ];
 
         if ($location === 'road') {
-            $data['driver_name']   = 'Test Driver';
+            $data['driver_name'] = 'Test Driver';
             $data['reported_date'] = now()->toDateString();
             $data['reported_time'] = now()->format('H:i');
         }
@@ -99,10 +103,10 @@ class ComplaintPriceSnapshotTest extends TestCase
     {
         return [
             'shikayet_index' => 0,
-            'code'           => $code,
-            'used_quantity'  => $qty,
-            'employee_id'    => $this->employee->id,
-            'notes'          => 'Test',
+            'code' => $code,
+            'used_quantity' => $qty,
+            'employee_id' => $this->employee->id,
+            'notes' => 'Test',
         ];
     }
 
@@ -165,19 +169,19 @@ class ComplaintPriceSnapshotTest extends TestCase
         $this->makeWarehouse('SNAP-4', 50, 40.00);
 
         $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Vehicle 1',
-            'is_active'  => true,
+            'name' => 'Vehicle 1',
+            'is_active' => true,
         ]);
 
         ServiceVehicleStock::withoutGlobalScopes()->create([
             'service_vehicle_id' => $vehicle->id,
-            'garage_id'          => $this->garage->id,
-            'company_id'         => $this->company->id,
-            'code'               => 'SNAP-4',
-            'name'               => 'Part SNAP-4',
-            'quantity'           => 10,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'code' => 'SNAP-4',
+            'name' => 'Part SNAP-4',
+            'quantity' => 10,
         ]);
 
         $complaint = $this->service->create(
@@ -251,9 +255,9 @@ class ComplaintPriceSnapshotTest extends TestCase
         $this->makeWarehouse('IMP-SNAP-1', 100, 15.00);
 
         Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'IMPORT-PRICE-001',
+            'dqn' => 'IMPORT-PRICE-001',
         ]);
 
         $import = new \App\Imports\ComplaintsImport(
@@ -263,13 +267,13 @@ class ComplaintPriceSnapshotTest extends TestCase
         );
 
         $import->processRow([
-            'dqn'            => 'IMPORT-PRICE-001',
-            'yer'            => 'garage',
+            'dqn' => 'IMPORT-PRICE-001',
+            'yer' => 'garage',
             'complaint_type' => 'breakdown',
-            'complaints'     => 'Historical test',
-            'status'         => 'completed',
-            'part_code'      => 'IMP-SNAP-1',
-            'used_quantity'  => 5,
+            'complaints' => 'Historical test',
+            'status' => 'completed',
+            'part_code' => 'IMP-SNAP-1',
+            'used_quantity' => 5,
         ], 2);
 
         $detail = ComplaintDetail::withoutGlobalScopes()->first();

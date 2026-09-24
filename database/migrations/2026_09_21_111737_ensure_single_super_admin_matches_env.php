@@ -55,12 +55,12 @@ return new class extends Migration
             ->first();
 
         if ($existingSuperAdmin) {
-            \Illuminate\Support\Facades\Log::warning(
+            Illuminate\Support\Facades\Log::warning(
                 'SUPER_ADMIN_EMAIL points to a user that is not the current SuperAdmin. '
                 .'Skipping promotion to avoid violating the single-super-admin rule.',
                 [
-                    'configured_email'      => $email,
-                    'existing_super_admin'  => $existingSuperAdmin->email,
+                    'configured_email' => $email,
+                    'existing_super_admin' => $existingSuperAdmin->email,
                 ]
             );
 
@@ -71,7 +71,7 @@ return new class extends Migration
             ->where('id', $user->id)
             ->update(['role' => 'super_admin']);
 
-        \Illuminate\Support\Facades\Log::info(
+        Illuminate\Support\Facades\Log::info(
             "Promoted user [{$email}] to super_admin via SUPER_ADMIN_EMAIL."
         );
     }

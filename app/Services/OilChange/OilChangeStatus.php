@@ -43,17 +43,17 @@ class OilChangeStatus
     public function bootstrapColor(): string
     {
         return match ($this->status) {
-            'overdue'    => 'danger',
-            'critical'   => 'danger',
-            'due-soon'   => 'warning',
-            'ok'         => 'success',
+            'overdue' => 'danger',
+            'critical' => 'danger',
+            'due-soon' => 'warning',
+            'ok' => 'success',
             'no-history' => 'secondary',
-            default      => 'secondary',
+            default => 'secondary',
         };
     }
 
     public function statusLabel(): string
     {
-        return __('messages.oil_change.status.' . $this->status);
+        return __('messages.oil_change.status.'.$this->status);
     }
 }

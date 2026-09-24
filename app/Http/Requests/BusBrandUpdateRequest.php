@@ -30,7 +30,7 @@ class BusBrandUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $brandId  = $this->route('busBrand');
+        $brandId = $this->route('busBrand');
         $garageId = GarageContext::getGarageId();
 
         return [

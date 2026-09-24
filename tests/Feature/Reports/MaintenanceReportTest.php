@@ -21,10 +21,15 @@ class MaintenanceReportTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected Bus $busA;
+
     protected Bus $busB;
+
     protected MaintenanceReportService $service;
 
     protected function setUp(): void

@@ -2,13 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Enums\TransferStatus;
 use App\Enums\TransferType;
 use App\Models\Company;
 use App\Models\Garage;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Models\WarehouseTransfer;
 use App\Services\GarageContext;
 use App\Services\Warehouse\WarehouseTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,8 +17,11 @@ class DashboardTransferBadgeTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected User $adminA;
 
     protected function setUp(): void
@@ -46,7 +47,7 @@ class DashboardTransferBadgeTest extends TestCase
     protected function sessionFor(Garage $garage): array
     {
         return [
-            'current_garage_id'  => $garage->id,
+            'current_garage_id' => $garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -54,11 +55,11 @@ class DashboardTransferBadgeTest extends TestCase
     protected function makeItem(Garage $garage, string $code = 'FILTER-001', int $qty = 100): Warehouse
     {
         return Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $garage->id,
+            'garage_id' => $garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $qty,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $qty,
         ]);
     }
 
@@ -87,9 +88,9 @@ class DashboardTransferBadgeTest extends TestCase
         $service = app(WarehouseTransferService::class);
         $transfer = $service->create([
             'from_garage_id' => $this->garageB->id,
-            'to_garage_id'   => $this->garageA->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
+            'to_garage_id' => $this->garageA->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         // Dispatch as garage B (the source)
@@ -116,9 +117,9 @@ class DashboardTransferBadgeTest extends TestCase
         $service = app(WarehouseTransferService::class);
         $transfer = $service->create([
             'from_garage_id' => $this->garageA->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         $this->actingAs($this->adminA);
@@ -140,9 +141,9 @@ class DashboardTransferBadgeTest extends TestCase
         $service = app(WarehouseTransferService::class);
         $transfer = $service->create([
             'from_garage_id' => $this->garageA->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $item->id, 'declared_quantity' => 10]],
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $item->id, 'declared_quantity' => 10]],
         ], $this->company->id);
 
         $this->actingAs($this->adminA);
@@ -182,9 +183,9 @@ class DashboardTransferBadgeTest extends TestCase
         $service = app(WarehouseTransferService::class);
         $transfer = $service->create([
             'from_garage_id' => $garageC->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         $adminC = User::factory()->create(['role' => 'user']);

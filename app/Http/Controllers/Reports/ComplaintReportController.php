@@ -16,7 +16,7 @@ class ComplaintReportController extends ReportController
     public function summary(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint', $request);
+        $scope = $this->scope('complaint', $request);
 
         $summary = $this->service->summary($period, $scope);
 
@@ -45,7 +45,7 @@ class ComplaintReportController extends ReportController
     public function topTypes(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint', $request);
+        $scope = $this->scope('complaint', $request);
 
         $items = $this->service->topTypes($period, $scope);
 
@@ -80,7 +80,7 @@ class ComplaintReportController extends ReportController
     public function workerActivity(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint', $request);
+        $scope = $this->scope('complaint', $request);
 
         $rows = $this->service->workerActivity($period, $scope);
 
@@ -113,7 +113,7 @@ class ComplaintReportController extends ReportController
     public function byBus(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint', $request);
+        $scope = $this->scope('complaint', $request);
 
         $items = $this->service->byBus($period, $scope);
 
@@ -146,7 +146,7 @@ class ComplaintReportController extends ReportController
     public function avgCloseTime(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('complaint', $request);
+        $scope = $this->scope('complaint', $request);
 
         $data = $this->service->avgCloseTime($period, $scope);
 

@@ -210,7 +210,8 @@ class ComplaintController extends Controller
             ->route('complaints.index')
             ->with('success', __('messages.flash.deleted', ['Item' => 'Card']));
     }
-        /**
+
+    /**
      * Bulk soft-delete ALL complaints matching the current filter.
      *
      * Memory-safe: the ID stream is pulled from the database in
@@ -256,6 +257,7 @@ class ComplaintController extends Controller
                 'items' => 'cards',
             ]));
     }
+
     /**
      * Bulk soft-delete an explicit list of complaints (checkbox selection).
      *
@@ -321,9 +323,9 @@ class ComplaintController extends Controller
             // message instead of a raw 500 stack trace.
             \Log::error('Complaint PDF generation failed', [
                 'complaint_id' => $complaint->id,
-                'error'        => $e->getMessage(),
-                'user_id'      => auth()->id(),
-                'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
             ]);
 
             abort(500, __('messages.flash.pdf_generation_failed'));

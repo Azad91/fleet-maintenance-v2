@@ -17,6 +17,7 @@ class EmailVerificationEnforcementTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
 
     protected function setUp(): void
@@ -24,7 +25,7 @@ class EmailVerificationEnforcementTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         GarageContext::set($this->garage->id, $this->company->id);
     }
@@ -38,7 +39,7 @@ class EmailVerificationEnforcementTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -136,10 +137,10 @@ class EmailVerificationEnforcementTest extends TestCase
                 'is_active' => true,
             ],
             directorData: [
-                'name'     => 'Test Director',
-                'email'    => 'director-test@verify.com',
+                'name' => 'Test Director',
+                'email' => 'director-test@verify.com',
                 'password' => 'Str0ngPass!',
-                'pin'      => '1234',
+                'pin' => '1234',
             ],
         );
 
@@ -159,15 +160,15 @@ class EmailVerificationEnforcementTest extends TestCase
         $service->createWithAdmin(
             garageData: [
                 'company_id' => $this->company->id,
-                'name'       => 'Test Garage',
-                'code'       => 'TG-AUTO-VERIFY',
-                'is_active'  => true,
+                'name' => 'Test Garage',
+                'code' => 'TG-AUTO-VERIFY',
+                'is_active' => true,
             ],
             adminData: [
-                'name'     => 'Test Admin',
-                'email'    => 'admin-test@verify.com',
+                'name' => 'Test Admin',
+                'email' => 'admin-test@verify.com',
                 'password' => 'Str0ngPass!',
-                'pin'      => '1234',
+                'pin' => '1234',
             ],
         );
 
@@ -186,10 +187,10 @@ class EmailVerificationEnforcementTest extends TestCase
 
         $user = $service->createUserWithGarageRole(
             data: [
-                'name'     => 'Test Worker',
-                'email'    => 'worker-test@verify.com',
+                'name' => 'Test Worker',
+                'email' => 'worker-test@verify.com',
                 'password' => 'password123',
-                'role'     => 'warehouse_worker',
+                'role' => 'warehouse_worker',
             ],
             garageId: $this->garage->id,
         );

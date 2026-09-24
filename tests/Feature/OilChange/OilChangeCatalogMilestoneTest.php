@@ -4,8 +4,8 @@ namespace Tests\Feature\OilChange;
 
 use App\Enums\OilType;
 use App\Models\Bus;
-use App\Models\BusOilChange;
 use App\Models\BusBrand;
+use App\Models\BusOilChange;
 use App\Models\Company;
 use App\Models\Garage;
 use App\Models\MotorOilDetail;

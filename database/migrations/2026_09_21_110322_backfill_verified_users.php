@@ -29,7 +29,7 @@ return new class extends Migration
             // Laravel 11+ uses `Context` for logging metadata, but this
             // migration also runs in console context where request_id
             // is not set. Keep it simple.
-            \Illuminate\Support\Facades\Log::info(
+            Illuminate\Support\Facades\Log::info(
                 "Backfill: {$updated} user(s) marked as email-verified."
             );
         }

@@ -75,7 +75,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
         $cacheKey = 'km_mapping:'.$this->garageId.':'.($this->companyId ?? 0).':'.$this->importToken;
 
         if ($isFirstChunk) {
-            $dateRow   = $rows->get(0)->toArray();
+            $dateRow = $rows->get(0)->toArray();
             $headerRow = $rows->get(1)->toArray();
 
             $kmColumns = [];
@@ -114,7 +114,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
             $dataRows = $rows->slice(2);
         } else {
             $kmColumns = Cache::get($cacheKey, []);
-            $dataRows  = $rows;
+            $dataRows = $rows;
         }
 
         if (empty($kmColumns)) {
@@ -143,7 +143,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
         // wins — this prevents the partial unique index from being
         // violated by duplicate rows inside the same chunk.
         $records = [];
-        $now     = now();
+        $now = now();
 
         foreach ($dataRows as $row) {
             $dqn = trim((string) ($row[2] ?? ''));
@@ -170,11 +170,11 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
                 $key = $bus->id.'|'.$dateString;
 
                 $records[$key] = [
-                    'bus_id'     => $bus->id,
-                    'garage_id'  => $bus->garage_id  ?? $this->garageId,
+                    'bus_id' => $bus->id,
+                    'garage_id' => $bus->garage_id ?? $this->garageId,
                     'company_id' => $bus->company_id ?? $this->companyId,
-                    'date'       => $dateString,
-                    'km'         => (int) $km,
+                    'date' => $dateString,
+                    'km' => (int) $km,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -204,7 +204,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
         // $pairSet to avoid soft-deleting rows that happen to share a
         // bus_id or a date with this chunk but are not part of it.
         $busIds = array_values(array_unique(array_column($records, 'bus_id')));
-        $dates  = array_values(array_unique(array_column($records, 'date')));
+        $dates = array_values(array_unique(array_column($records, 'date')));
 
         $pairSet = [];
         foreach ($records as $r) {
@@ -231,7 +231,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
                 ));
 
             $toInsert = [];
-            $now      = now();
+            $now = now();
 
             foreach ($records as $record) {
                 $key = $record['bus_id'].'|'.$record['date'];
@@ -240,7 +240,7 @@ class DailyKmRecordsImport extends AbstractImport implements ToCollection, WithC
                     DailyKmRecord::withoutGlobalScopes()
                         ->where('id', $existing->get($key)->id)
                         ->update([
-                            'km'         => $record['km'],
+                            'km' => $record['km'],
                             'updated_at' => $now,
                         ]);
                 } else {

@@ -73,12 +73,12 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
         // repeats the same (bus, date) inside one chunk, the last
         // value wins instead of triggering a unique-constraint error.
         $records = [];
-        $now     = now();
+        $now = now();
 
         foreach ($rows as $row) {
             $currentRow = $this->nextRowIndex();
 
-            $dqn    = trim((string) ($row['dqn'] ?? ''));
+            $dqn = trim((string) ($row['dqn'] ?? ''));
             $status = $row['status'] ?? null;
 
             if ($dqn === '') {
@@ -100,12 +100,12 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
             $key = $bus->id.'|'.$date;
 
             $records[$key] = [
-                'bus_id'     => $bus->id,
-                'garage_id'  => $bus->garage_id  ?? $this->garageId,
+                'bus_id' => $bus->id,
+                'garage_id' => $bus->garage_id ?? $this->garageId,
                 'company_id' => $bus->company_id ?? $this->companyId,
-                'date'       => $date,
-                'status'     => $status ?? 'NO DATA',
-                'notes'      => $row['notes'] ?? $row['qeyd'] ?? null,
+                'date' => $date,
+                'status' => $status ?? 'NO DATA',
+                'notes' => $row['notes'] ?? $row['qeyd'] ?? null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -131,7 +131,7 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
         // "soft-delete + insert" pattern that would bloat the table
         // with tens of thousands of dead rows over a year.
         $busIds = array_values(array_unique(array_column($records, 'bus_id')));
-        $dates  = array_values(array_unique(array_column($records, 'date')));
+        $dates = array_values(array_unique(array_column($records, 'date')));
 
         $pairSet = [];
         foreach ($records as $r) {
@@ -161,7 +161,7 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
                 ));
 
             $toInsert = [];
-            $now      = now();
+            $now = now();
 
             foreach ($records as $record) {
                 $key = $record['bus_id'].'|'.$record['date'];
@@ -171,8 +171,8 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
                     BusDailyStatus::withoutGlobalScopes()
                         ->where('id', $existing->get($key)->id)
                         ->update([
-                            'status'     => $record['status'],
-                            'notes'      => $record['notes'],
+                            'status' => $record['status'],
+                            'notes' => $record['notes'],
                             'updated_at' => $now,
                         ]);
                 } else {

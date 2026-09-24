@@ -29,7 +29,9 @@ class WarehouseReportExportTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
 
     protected function setUp(): void
@@ -37,11 +39,11 @@ class WarehouseReportExportTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -57,7 +59,7 @@ class WarehouseReportExportTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -65,14 +67,14 @@ class WarehouseReportExportTest extends TestCase
     protected function makeWarehouse(array $overrides = []): Warehouse
     {
         return Warehouse::withoutGlobalScopes()->create(array_merge([
-            'garage_id'        => $this->garage->id,
-            'company_id'       => $this->company->id,
-            'code'             => 'W-'.uniqid(),
-            'name'             => 'Widget',
-            'quantity'         => 50,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'code' => 'W-'.uniqid(),
+            'name' => 'Widget',
+            'quantity' => 50,
             'minimum_quantity' => 10,
-            'unit'             => 'piece',
-            'price'            => 15.50,
+            'unit' => 'piece',
+            'price' => 15.50,
         ], $overrides));
     }
 
@@ -134,8 +136,8 @@ class WarehouseReportExportTest extends TestCase
     public function test_low_stock_export_downloads_xlsx(): void
     {
         $this->makeWarehouse([
-            'code'             => 'LOW-1',
-            'quantity'         => 3,
+            'code' => 'LOW-1',
+            'quantity' => 3,
             'minimum_quantity' => 10,
         ]);
 
@@ -249,7 +251,7 @@ class WarehouseReportExportTest extends TestCase
     {
         $director = User::factory()->create(['role' => 'user']);
         $this->company->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 

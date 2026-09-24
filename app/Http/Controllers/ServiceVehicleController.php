@@ -7,8 +7,6 @@ use App\Http\Requests\ServiceVehicleUpdateRequest;
 use App\Models\ServiceVehicle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
-use App\Models\ServiceVehicleStock;
-use Illuminate\Http\Request;
 
 class ServiceVehicleController extends Controller
 {

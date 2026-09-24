@@ -54,11 +54,32 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function forgetRoleCache(): static
     {
-        $this->cachedIsDirector   = null;
-        $this->cachedGarageRoles  = [];
+        $this->cachedIsDirector = null;
+        $this->cachedGarageRoles = [];
 
         return $this;
     }
+
+    /**
+     * Invalidate ONLY the isDirector() cache.
+     *
+     * The sidebar layout and PostLoginRedirector call isDirector()
+     * on every request. When a caller mutates the `company_user`
+     * pivot on this same instance (assign / remove / change director),
+     * it must call this method so the next isDirector() check sees
+     * the new state instead of the cached value.
+     *
+     * Kept separate from forgetRoleCache() so a caller who only
+     * touched company-level data does not need to invalidate the
+     * (potentially expensive to rebuild) garage-role cache.
+     */
+    public function forgetDirectorCache(): static
+    {
+        $this->cachedIsDirector = null;
+
+        return $this;
+    }
+
     /**
      * Mass-assignable attributes.
      *

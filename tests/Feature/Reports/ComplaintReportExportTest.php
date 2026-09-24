@@ -17,9 +17,13 @@ class ComplaintReportExportTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected User $admin;
+
     protected Bus $bus;
 
     protected function setUp(): void
@@ -32,18 +36,18 @@ class ComplaintReportExportTest extends TestCase
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garageA->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
         GarageContext::set($this->garageA->id, $this->company->id);
 
         $this->bus = Bus::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageA->id,
-            'company_id'   => $this->company->id,
-            'dqn'          => 'CMP-001',
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'dqn' => 'CMP-001',
             'route_number' => '101',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
     }
 
@@ -56,7 +60,7 @@ class ComplaintReportExportTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -64,13 +68,13 @@ class ComplaintReportExportTest extends TestCase
     protected function makeComplaint(array $overrides = []): Complaint
     {
         return Complaint::withoutGlobalScopes()->create(array_merge([
-            'bus_id'         => $this->bus->id,
-            'garage_id'      => $this->garageA->id,
-            'company_id'     => $this->company->id,
-            'yer'            => 'garage',
-            'status'         => 'pending',
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'yer' => 'garage',
+            'status' => 'pending',
             'complaint_type' => 'breakdown',
-            'created_at'     => now(),
+            'created_at' => now(),
         ], $overrides));
     }
 
@@ -160,7 +164,7 @@ class ComplaintReportExportTest extends TestCase
     public function test_avg_close_time_export_downloads_xlsx(): void
     {
         $this->makeComplaint([
-            'status'    => 'completed',
+            'status' => 'completed',
             'closed_at' => now(),
         ]);
 
@@ -196,7 +200,7 @@ class ComplaintReportExportTest extends TestCase
     {
         $director = User::factory()->create(['role' => 'user']);
         $this->company->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
@@ -221,7 +225,7 @@ class ComplaintReportExportTest extends TestCase
     {
         $manager = User::factory()->create(['role' => 'user']);
         $manager->garages()->attach($this->garageA->id, [
-            'role'      => 'warehouse_manager',
+            'role' => 'warehouse_manager',
             'is_active' => true,
         ]);
 

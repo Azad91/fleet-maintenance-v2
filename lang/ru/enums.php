@@ -17,18 +17,18 @@ return [
         'garage' => 'Гараж',
     ],
     'transfer_status' => [
-        'draft'      => 'Черновик',
+        'draft' => 'Черновик',
         'dispatched' => 'Отправлено',
-        'received'   => 'Получено',
-        'disputed'   => 'Оспорено',
-        'rejected'   => 'Отклонено',
-        'cancelled'  => 'Отменено',
-        'resolved'   => 'Решено',
+        'received' => 'Получено',
+        'disputed' => 'Оспорено',
+        'rejected' => 'Отклонено',
+        'cancelled' => 'Отменено',
+        'resolved' => 'Решено',
     ],
 
     'transfer_type' => [
-        'garage_to_garage'    => 'Из гаража в гараж',
-        'to_service_vehicle'  => 'На сервисный автомобиль',
+        'garage_to_garage' => 'Из гаража в гараж',
+        'to_service_vehicle' => 'На сервисный автомобиль',
         'return_to_quarantine' => 'Возврат / Карантин',
     ],
 ];

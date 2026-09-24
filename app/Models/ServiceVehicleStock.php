@@ -45,7 +45,7 @@ class ServiceVehicleStock extends Model
 
         return $query->where(function ($q) use ($search) {
             $q->where('code', 'ILIKE', "%{$search}%")
-              ->orWhere('name', 'ILIKE', "%{$search}%");
+                ->orWhere('name', 'ILIKE', "%{$search}%");
         });
     }
 }

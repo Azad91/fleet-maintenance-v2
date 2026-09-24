@@ -65,10 +65,10 @@ class MaintenanceReportController extends ReportController
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.maintenance.{$view}", array_merge($data, [
-            'domain'       => 'maintenance',
+            'domain' => 'maintenance',
             'activeReport' => $view,
-            'period'       => $period,
-            'scope'        => $scope,
+            'period' => $period,
+            'scope' => $scope,
         ]));
     }
 }

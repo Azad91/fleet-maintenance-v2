@@ -93,6 +93,7 @@ class ComplaintDetail extends Model
         return in_array($this->source_type, ['warehouse', 'service_vehicle'], true)
             && $this->used_quantity > 0;
     }
+
     /**
      * Total cost of this detail line — used_quantity × price_at_use.
      *

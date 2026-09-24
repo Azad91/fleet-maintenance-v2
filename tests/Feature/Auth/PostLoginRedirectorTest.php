@@ -300,7 +300,7 @@ class PostLoginRedirectorTest extends TestCase
         $emailResponse->assertRedirect(route('dashboard'));
         $pinResponse->assertRedirect(route('dashboard'));
     }
-        // ==================================================================
+    // ==================================================================
     // 9. DIRECTOR CACHE
     // ==================================================================
 

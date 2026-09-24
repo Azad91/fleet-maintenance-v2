@@ -34,10 +34,10 @@ class DashboardController extends Controller
             ->selectRaw('SUM(CASE WHEN is_active THEN 1 ELSE 0 END) as active')
             ->first();
 
-        $totalBuses  = (int) ($busStats->total  ?? 0);
+        $totalBuses = (int) ($busStats->total ?? 0);
         $activeBuses = (int) ($busStats->active ?? 0);
 
-        $activeComplaints    = Complaint::where('status', '!=', 'completed')->count();
+        $activeComplaints = Complaint::where('status', '!=', 'completed')->count();
         $totalWarehouseItems = Warehouse::sum('quantity');
 
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();
@@ -68,7 +68,7 @@ class DashboardController extends Controller
         });
 
         $busesWithoutKmTodayCount = $busesWithoutKmTodayQuery->count();
-        $busesWithoutKmToday      = (clone $busesWithoutKmTodayQuery)->limit(10)->get();
+        $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();
 
         // ─── Transfer notifications ───
         $garageId = GarageContext::getGarageId();
@@ -130,11 +130,11 @@ class DashboardController extends Controller
     private function computeOilChangeData(int $alertLimit = 15): array
     {
         $stats = [
-            'overdue'         => 0,
-            'critical'        => 0,
-            'due-soon'        => 0,
-            'ok'              => 0,
-            'no-history'      => 0,
+            'overdue' => 0,
+            'critical' => 0,
+            'due-soon' => 0,
+            'ok' => 0,
+            'no-history' => 0,
             'total_attention' => 0,
         ];
 
@@ -148,7 +148,7 @@ class DashboardController extends Controller
         }
 
         $service = app(OilChangeStatusService::class);
-        $alerts  = collect();
+        $alerts = collect();
 
         foreach ($buses as $bus) {
             $busStatuses = collect();
@@ -169,8 +169,8 @@ class DashboardController extends Controller
 
             if ($busStatuses->isNotEmpty()) {
                 $alerts->push([
-                    'bus'           => $bus,
-                    'statuses'      => $busStatuses,
+                    'bus' => $bus,
+                    'statuses' => $busStatuses,
                     'min_remaining' => $minRemaining,
                 ]);
             }

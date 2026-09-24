@@ -182,7 +182,7 @@ class ComplaintZeroQuantityTest extends TestCase
 
         $byCode = collect($processed)->keyBy('code');
         $this->assertSame('inspection', $byCode['D-A']['source_type']);
-        $this->assertSame('warehouse',  $byCode['D-B']['source_type']);
+        $this->assertSame('warehouse', $byCode['D-B']['source_type']);
 
         $this->assertEquals(10, $warehouseA->fresh()->quantity, 'Zero-qty part must be untouched');
         $this->assertEquals(15, $warehouseB->fresh()->quantity, 'Positive-qty part was deducted');
@@ -219,7 +219,7 @@ class ComplaintZeroQuantityTest extends TestCase
         $details = $complaint->details()->orderBy('code')->get();
         $this->assertCount(2, $details);
         $this->assertSame('inspection', $details[0]->source_type); // MIX-1
-        $this->assertSame('warehouse',  $details[1]->source_type); // MIX-2
+        $this->assertSame('warehouse', $details[1]->source_type); // MIX-2
     }
 
     public function test_complaint_creation_with_all_zero_quantities_creates_inspection_rows(): void

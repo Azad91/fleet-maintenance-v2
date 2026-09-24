@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BusDailyStatusesExport;
 use App\Http\Requests\BusDailyStatusStoreRequest;
 use App\Http\Requests\BusDailyStatusUpdateRequest;
 use App\Imports\BusDailyStatusesImport;
 use App\Models\Bus;
-use App\Exports\BusDailyStatusesExport;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use App\Models\BusDailyStatus;
 use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class BusDailyStatusController extends Controller
 {
@@ -27,7 +27,7 @@ class BusDailyStatusController extends Controller
         $dateWasExplicit = $request->filled('date');
         $date = $dateWasExplicit ? $request->input('date') : now()->toDateString();
 
-        $dqn    = $request->input('dqn');
+        $dqn = $request->input('dqn');
         $status = $request->input('status');
 
         $query = BusDailyStatus::with('bus');

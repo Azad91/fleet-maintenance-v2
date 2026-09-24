@@ -27,9 +27,13 @@ class ComplaintPdfInvalidationTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected Bus $bus;
+
     protected Employee $employee;
+
     protected ComplaintService $service;
 
     protected function setUp(): void

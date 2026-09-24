@@ -9,8 +9,8 @@ use App\Models\ServiceVehicleStock;
 use App\Models\Warehouse;
 use App\Models\WarehouseTransfer;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Business logic for warehouse transfers.
@@ -105,22 +105,22 @@ class WarehouseTransferService
             }
 
             $transfer = WarehouseTransfer::create([
-                'company_id'            => $companyId,
-                'from_garage_id'        => $data['from_garage_id'],
-                'to_garage_id'          => $type->isGarageToGarage() ? $data['to_garage_id'] : null,
+                'company_id' => $companyId,
+                'from_garage_id' => $data['from_garage_id'],
+                'to_garage_id' => $type->isGarageToGarage() ? $data['to_garage_id'] : null,
                 'to_service_vehicle_id' => $type->isToServiceVehicle() ? $data['to_service_vehicle_id'] : null,
-                'type'                  => $type->value,
-                'status'                => TransferStatus::Draft->value,
-                'declared_total'        => $total,
-                'notes'                 => $data['notes'] ?? null,
-                'created_by'            => auth()->id(),
+                'type' => $type->value,
+                'status' => TransferStatus::Draft->value,
+                'declared_total' => $total,
+                'notes' => $data['notes'] ?? null,
+                'created_by' => auth()->id(),
             ]);
 
             foreach ($data['items'] as $item) {
                 $transfer->items()->create([
-                    'warehouse_id'      => $item['warehouse_id'],
+                    'warehouse_id' => $item['warehouse_id'],
                     'declared_quantity' => (int) $item['declared_quantity'],
-                    'notes'             => $item['notes'] ?? null,
+                    'notes' => $item['notes'] ?? null,
                 ]);
             }
 
@@ -172,7 +172,7 @@ class WarehouseTransferService
                 if ($warehouse->quantity < $item->declared_quantity) {
                     throw ValidationException::withMessages([
                         'items' => __('messages.flash.stock_insufficient', [
-                            'name'      => $warehouse->name,
+                            'name' => $warehouse->name,
                             'requested' => $item->declared_quantity,
                             'available' => $warehouse->quantity,
                         ]),
@@ -183,7 +183,7 @@ class WarehouseTransferService
             }
 
             $transfer->update([
-                'status'        => TransferStatus::Dispatched->value,
+                'status' => TransferStatus::Dispatched->value,
                 'dispatched_by' => auth()->id(),
                 'dispatched_at' => now(),
             ]);
@@ -206,9 +206,9 @@ class WarehouseTransferService
         DB::transaction(function () use ($transfer, $receivedQuantities) {
             $transfer->load('items');
 
-            $receivedTotal  = 0;
+            $receivedTotal = 0;
             $hasDiscrepancy = false;
-            $discrepancies  = [];
+            $discrepancies = [];
 
             foreach ($transfer->items as $item) {
                 $received = $receivedQuantities[$item->id] ?? null;
@@ -261,13 +261,13 @@ class WarehouseTransferService
                 : TransferStatus::Received->value;
 
             $transfer->update([
-                'status'            => $newStatus,
-                'received_total'    => $receivedTotal,
+                'status' => $newStatus,
+                'received_total' => $receivedTotal,
                 'discrepancy_notes' => $hasDiscrepancy
                     ? implode("\n", $discrepancies)
                     : null,
-                'received_by'       => auth()->id(),
-                'received_at'       => now(),
+                'received_by' => auth()->id(),
+                'received_at' => now(),
             ]);
         });
     }
@@ -299,11 +299,11 @@ class WarehouseTransferService
             }
 
             $transfer->update([
-                'status'             => TransferStatus::Rejected->value,
-                'received_total'     => 0,
-                'discrepancy_notes'  => $reason,
-                'received_by'        => auth()->id(),
-                'received_at'        => now(),
+                'status' => TransferStatus::Rejected->value,
+                'received_total' => 0,
+                'discrepancy_notes' => $reason,
+                'received_by' => auth()->id(),
+                'received_at' => now(),
             ]);
         });
     }
@@ -350,9 +350,9 @@ class WarehouseTransferService
 
                     if ($missing > 0) {
                         $missingItems[] = [
-                            'warehouse_id'      => $item->warehouse_id,
+                            'warehouse_id' => $item->warehouse_id,
                             'declared_quantity' => $missing,
-                            'notes'             => __('messages.transfers.retransfer_note', [
+                            'notes' => __('messages.transfers.retransfer_note', [
                                 'original' => $transfer->id,
                             ]),
                         ];
@@ -362,7 +362,7 @@ class WarehouseTransferService
                 if (! empty($nullReceived)) {
                     Log::warning('Disputed transfer has items with null received_quantity', [
                         'transfer_id' => $transfer->id,
-                        'item_ids'    => $nullReceived,
+                        'item_ids' => $nullReceived,
                     ]);
                 }
 
@@ -377,19 +377,19 @@ class WarehouseTransferService
                     ]);
                 } else {
                     $this->create([
-                        'from_garage_id'        => $transfer->from_garage_id,
-                        'to_garage_id'          => $transfer->to_garage_id,
+                        'from_garage_id' => $transfer->from_garage_id,
+                        'to_garage_id' => $transfer->to_garage_id,
                         'to_service_vehicle_id' => $transfer->to_service_vehicle_id,
-                        'type'                  => $transfer->type->value,
-                        'notes'                 => __('messages.transfers.retransfer_note', ['original' => $transfer->id]),
-                        'items'                 => $missingItems,
+                        'type' => $transfer->type->value,
+                        'notes' => __('messages.transfers.retransfer_note', ['original' => $transfer->id]),
+                        'items' => $missingItems,
                     ], $transfer->company_id);
                 }
             }
 
             $transfer->update([
-                'status'      => TransferStatus::Resolved->value,
-                'resolution'  => $resolution,
+                'status' => TransferStatus::Resolved->value,
+                'resolution' => $resolution,
                 'resolved_by' => auth()->id(),
                 'resolved_at' => now(),
             ]);
@@ -460,16 +460,16 @@ class WarehouseTransferService
             ->first();
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $transfer->to_garage_id,
-            'company_id'       => $destinationGarage?->company_id ?? $transfer->company_id,
-            'code'             => $source->code,
-            'name'             => $source->name,
-            'category'         => $source->category,
-            'unit'             => $source->unit,
-            'quantity'         => $quantity,
+            'garage_id' => $transfer->to_garage_id,
+            'company_id' => $destinationGarage?->company_id ?? $transfer->company_id,
+            'code' => $source->code,
+            'name' => $source->name,
+            'category' => $source->category,
+            'unit' => $source->unit,
+            'quantity' => $quantity,
             'minimum_quantity' => $source->minimum_quantity,
-            'price'            => $source->price,
-            'supplier'         => $source->supplier,
+            'price' => $source->price,
+            'supplier' => $source->supplier,
         ]);
     }
 
@@ -532,20 +532,20 @@ class WarehouseTransferService
             }
 
             $transfer = WarehouseTransfer::create([
-                'company_id'            => $companyId,
-                'from_garage_id'        => $data['from_garage_id'],
-                'to_garage_id'          => null,
+                'company_id' => $companyId,
+                'from_garage_id' => $data['from_garage_id'],
+                'to_garage_id' => null,
                 'to_service_vehicle_id' => $type->isToServiceVehicle() ? ($data['to_service_vehicle_id'] ?? null) : null,
-                'type'                  => $type->value,
-                'status'                => TransferStatus::Received->value,
-                'declared_total'        => $total,
-                'received_total'        => $total,
-                'notes'                 => $data['notes'] ?? null,
-                'created_by'            => auth()->id(),
-                'dispatched_by'         => auth()->id(),
-                'dispatched_at'         => now(),
-                'received_by'           => auth()->id(),
-                'received_at'           => now(),
+                'type' => $type->value,
+                'status' => TransferStatus::Received->value,
+                'declared_total' => $total,
+                'received_total' => $total,
+                'notes' => $data['notes'] ?? null,
+                'created_by' => auth()->id(),
+                'dispatched_by' => auth()->id(),
+                'dispatched_at' => now(),
+                'received_by' => auth()->id(),
+                'received_at' => now(),
             ]);
 
             foreach ($data['items'] as $item) {
@@ -554,7 +554,7 @@ class WarehouseTransferService
                 if ($source->quantity < $item['declared_quantity']) {
                     throw ValidationException::withMessages([
                         'items' => __('messages.flash.stock_insufficient', [
-                            'name'      => $source->name,
+                            'name' => $source->name,
                             'requested' => $item['declared_quantity'],
                             'available' => $source->quantity,
                         ]),
@@ -562,10 +562,10 @@ class WarehouseTransferService
                 }
 
                 $transfer->items()->create([
-                    'warehouse_id'      => $source->id,
+                    'warehouse_id' => $source->id,
                     'declared_quantity' => $item['declared_quantity'],
                     'received_quantity' => $item['declared_quantity'],
-                    'notes'             => $item['notes'] ?? null,
+                    'notes' => $item['notes'] ?? null,
                 ]);
 
                 $source->decrement('quantity', $item['declared_quantity']);
@@ -607,17 +607,17 @@ class WarehouseTransferService
         }
 
         Warehouse::withoutGlobalScopes()->create([
-            'garage_id'        => $source->garage_id,
-            'company_id'       => $source->company_id,
-            'code'             => $quarantineCode,
-            'name'             => $source->name,
-            'category'         => $source->category,
-            'unit'             => $source->unit,
-            'is_quarantine'    => true,
-            'quantity'         => $quantity,
+            'garage_id' => $source->garage_id,
+            'company_id' => $source->company_id,
+            'code' => $quarantineCode,
+            'name' => $source->name,
+            'category' => $source->category,
+            'unit' => $source->unit,
+            'is_quarantine' => true,
+            'quantity' => $quantity,
             'minimum_quantity' => 0,
-            'price'            => $source->price,
-            'supplier'         => $source->supplier,
+            'price' => $source->price,
+            'supplier' => $source->supplier,
         ]);
     }
 
@@ -641,13 +641,13 @@ class WarehouseTransferService
 
         ServiceVehicleStock::withoutGlobalScopes()->create([
             'service_vehicle_id' => $serviceVehicleId,
-            'garage_id'          => $source->garage_id,
-            'company_id'         => $source->company_id,
-            'code'               => $source->code,
-            'name'               => $source->name,
-            'category'           => $source->category,
-            'unit'               => $source->unit,
-            'quantity'           => $quantity,
+            'garage_id' => $source->garage_id,
+            'company_id' => $source->company_id,
+            'code' => $source->code,
+            'name' => $source->name,
+            'category' => $source->category,
+            'unit' => $source->unit,
+            'quantity' => $quantity,
         ]);
     }
 }

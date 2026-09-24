@@ -16,7 +16,7 @@ class MaintenanceReportService
             ->whereIn('id', $complaintIds)
             ->select(
                 DB::raw('COUNT(*) as opened'),
-                DB::raw("SUM(CASE WHEN closed_at IS NOT NULL THEN 1 ELSE 0 END) as closed"),
+                DB::raw('SUM(CASE WHEN closed_at IS NOT NULL THEN 1 ELSE 0 END) as closed'),
                 DB::raw("SUM(CASE WHEN complaint_type = 'maintenance' AND service_km IS NOT NULL THEN 1 ELSE 0 END) as motor_oil_count")
             )
             ->first();
@@ -68,17 +68,17 @@ class MaintenanceReportService
         }
 
         return [
-            'opened'          => (int) ($stats->opened ?? 0),
-            'closed'          => (int) ($stats->closed ?? 0),
-            'parts_lines'     => (int) $partsAgg->line_count,
-            'distinct_parts'  => (int) $partsAgg->distinct_parts,
-            'total_quantity'  => (int) $partsAgg->total_quantity,
-            'total_cost'      => (float) $partsAgg->total_cost,
-            'motor_oil'       => (int) ($stats->motor_oil_count ?? 0),
+            'opened' => (int) ($stats->opened ?? 0),
+            'closed' => (int) ($stats->closed ?? 0),
+            'parts_lines' => (int) $partsAgg->line_count,
+            'distinct_parts' => (int) $partsAgg->distinct_parts,
+            'total_quantity' => (int) $partsAgg->total_quantity,
+            'total_cost' => (float) $partsAgg->total_cost,
+            'motor_oil' => (int) ($stats->motor_oil_count ?? 0),
             'avg_close_hours' => $avgHours,
-            'by_type'         => $byType,
-            'by_location'     => $byLocation,
-            'top_bus'         => $topBus,
+            'by_type' => $byType,
+            'by_location' => $byLocation,
+            'top_bus' => $topBus,
         ];
     }
 
@@ -128,7 +128,7 @@ class MaintenanceReportService
             if (! isset($partStatsPerBus[$busId])) {
                 $partStatsPerBus[$busId] = ['total_qty' => 0, 'total_cost' => 0];
             }
-            $partStatsPerBus[$busId]['total_qty']  += (int) $p->total_qty;
+            $partStatsPerBus[$busId]['total_qty'] += (int) $p->total_qty;
             $partStatsPerBus[$busId]['total_cost'] += (float) $p->total_cost;
         }
 
@@ -149,12 +149,12 @@ class MaintenanceReportService
                 $p = $partStatsPerBus[$busId] ?? ['total_qty' => 0, 'total_cost' => 0];
 
                 return (object) [
-                    'bus'             => $bus,
-                    'cards_opened'    => (int) ($c->cards_opened ?? 0),
-                    'cards_closed'    => (int) ($c->cards_closed ?? 0),
+                    'bus' => $bus,
+                    'cards_opened' => (int) ($c->cards_opened ?? 0),
+                    'cards_closed' => (int) ($c->cards_closed ?? 0),
                     'motor_oil_count' => (int) ($c->motor_oil_count ?? 0),
-                    'total_qty'       => $p['total_qty'],
-                    'total_cost'      => $p['total_cost'],
+                    'total_qty' => $p['total_qty'],
+                    'total_cost' => $p['total_cost'],
                 ];
             })
             ->filter()
@@ -225,13 +225,14 @@ class MaintenanceReportService
 
         return $complaints->map(function ($complaint) use ($buses, $details) {
             $lines = collect($details->get($complaint->id, []));
+
             return (object) [
-                'complaint'   => $complaint,
-                'bus'         => $buses->get($complaint->bus_id),
-                'details'     => $lines,
+                'complaint' => $complaint,
+                'bus' => $buses->get($complaint->bus_id),
+                'details' => $lines,
                 'parts_count' => $lines->count(),
-                'total_qty'   => (int) $lines->sum('used_quantity'),
-                'total_cost'  => (float) $lines->sum(fn ($d) => (float) $d->used_quantity * (float) ($d->price_at_use ?? 0)),
+                'total_qty' => (int) $lines->sum('used_quantity'),
+                'total_cost' => (float) $lines->sum(fn ($d) => (float) $d->used_quantity * (float) ($d->price_at_use ?? 0)),
             ];
         });
     }
@@ -250,7 +251,7 @@ class MaintenanceReportService
                 'bus_id',
                 DB::raw('COUNT(*) as cards_count'),
                 DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count"),
-                DB::raw("SUM(CASE WHEN closed_at IS NOT NULL THEN EXTRACT(EPOCH FROM (closed_at - created_at)) / 3600 ELSE 0 END) as total_hours")
+                DB::raw('SUM(CASE WHEN closed_at IS NOT NULL THEN EXTRACT(EPOCH FROM (closed_at - created_at)) / 3600 ELSE 0 END) as total_hours')
             )
             ->groupBy('bus_id')
             ->orderByDesc('cards_count')
@@ -290,11 +291,11 @@ class MaintenanceReportService
 
         return $rows->map(function ($row) use ($buses, $costRollup) {
             return (object) [
-                'bus'             => $buses->get($row->bus_id),
-                'cards_count'     => (int) $row->cards_count,
+                'bus' => $buses->get($row->bus_id),
+                'cards_count' => (int) $row->cards_count,
                 'completed_count' => (int) $row->completed_count,
-                'total_hours'     => round((float) $row->total_hours, 1),
-                'total_cost'      => (float) ($costRollup[$row->bus_id] ?? 0),
+                'total_hours' => round((float) $row->total_hours, 1),
+                'total_cost' => (float) ($costRollup[$row->bus_id] ?? 0),
             ];
         });
     }
@@ -316,10 +317,10 @@ class MaintenanceReportService
     {
         if (empty($complaintIds)) {
             return (object) [
-                'line_count'     => 0,
+                'line_count' => 0,
                 'distinct_parts' => 0,
                 'total_quantity' => 0,
-                'total_cost'     => 0,
+                'total_cost' => 0,
             ];
         }
 
@@ -336,10 +337,10 @@ class MaintenanceReportService
             ->first();
 
         return $row ?: (object) [
-            'line_count'     => 0,
+            'line_count' => 0,
             'distinct_parts' => 0,
             'total_quantity' => 0,
-            'total_cost'     => 0,
+            'total_cost' => 0,
         ];
     }
 }

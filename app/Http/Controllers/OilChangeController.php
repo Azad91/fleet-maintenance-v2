@@ -84,10 +84,10 @@ class OilChangeController extends Controller
             ?? OilType::Motor;
 
         $filters = [
-            'dqn'          => trim((string) $request->input('dqn', '')),
+            'dqn' => trim((string) $request->input('dqn', '')),
             'route_number' => trim((string) $request->input('route_number', '')),
-            'km_min'       => $request->filled('km_min') ? max(0, (int) $request->input('km_min')) : null,
-            'km_max'       => $request->filled('km_max') ? max(0, (int) $request->input('km_max')) : null,
+            'km_min' => $request->filled('km_min') ? max(0, (int) $request->input('km_min')) : null,
+            'km_max' => $request->filled('km_max') ? max(0, (int) $request->input('km_max')) : null,
         ];
 
         $rows = $this->buildStatusRows($filters);
@@ -136,12 +136,12 @@ class OilChangeController extends Controller
         )->count();
 
         return [
-            'rows'         => $sectionRows,
+            'rows' => $sectionRows,
             'statusFilter' => $statusFilter,
-            'activeType'   => $activeType,
-            'typeCounts'   => $typeCounts,
-            'urgentCount'  => $urgentCount,
-            'filters'      => $filters,
+            'activeType' => $activeType,
+            'typeCounts' => $typeCounts,
+            'urgentCount' => $urgentCount,
+            'filters' => $filters,
         ];
     }
 
@@ -241,9 +241,9 @@ class OilChangeController extends Controller
         }
 
         return view('oil-changes.create', [
-            'buses'                => $buses,
-            'selectedBusId'        => $selectedBusId,
-            'selectedOilType'      => $selectedOilType->value,
+            'buses' => $buses,
+            'selectedBusId' => $selectedBusId,
+            'selectedOilType' => $selectedOilType->value,
             'suggestedScheduledKm' => $suggestedScheduledKm,
         ]);
     }
@@ -286,7 +286,7 @@ class OilChangeController extends Controller
 
         return view('oil-changes.edit', [
             'change' => $oilChange,
-            'buses'  => $buses,
+            'buses' => $buses,
         ]);
     }
 
@@ -322,10 +322,10 @@ class OilChangeController extends Controller
      * Build one row per active bus, with all three oil-type statuses.
      *
      * @param  array{dqn?: string, route_number?: string}  $filters
-     *         DQN and route filters are applied at the DB level so
-     *         PostgreSQL does the work before Laravel collects rows.
-     *         KM and status filters are applied later in PHP because
-     *         they depend on computed OilChangeStatus values.
+     *                                                               DQN and route filters are applied at the DB level so
+     *                                                               PostgreSQL does the work before Laravel collects rows.
+     *                                                               KM and status filters are applied later in PHP because
+     *                                                               they depend on computed OilChangeStatus values.
      */
     private function buildStatusRows(array $filters = []): Collection
     {
@@ -353,10 +353,10 @@ class OilChangeController extends Controller
 
         $priority = [
             'no-history' => 5,
-            'ok'         => 4,
-            'due-soon'   => 3,
-            'critical'   => 2,
-            'overdue'    => 1,
+            'ok' => 4,
+            'due-soon' => 3,
+            'critical' => 2,
+            'overdue' => 1,
         ];
 
         return $buses->map(function (Bus $bus) use ($priority) {

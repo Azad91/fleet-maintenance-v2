@@ -16,7 +16,7 @@ class DailyStatusReportController extends ReportController
     public function distribution(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_status', $request);
+        $scope = $this->scope('daily_status', $request);
 
         $data = $this->service->distribution($period, $scope);
 
@@ -43,7 +43,7 @@ class DailyStatusReportController extends ReportController
     public function changes(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_status', $request);
+        $scope = $this->scope('daily_status', $request);
 
         $logs = $this->service->changes($period, $scope);
 
@@ -86,7 +86,7 @@ class DailyStatusReportController extends ReportController
     public function workerActivity(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_status', $request);
+        $scope = $this->scope('daily_status', $request);
 
         $rows = $this->service->workerActivity($period, $scope);
 
@@ -119,11 +119,11 @@ class DailyStatusReportController extends ReportController
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.daily-status.{$view}", array_merge($data, [
-            'domain'       => 'daily_status',
+            'domain' => 'daily_status',
             'activeReport' => $view,
-            'period'       => $period,
-            'scope'        => $scope,
-            'exportUrl'    => request()->fullUrlWithQuery(['export' => 'xlsx']),
+            'period' => $period,
+            'scope' => $scope,
+            'exportUrl' => request()->fullUrlWithQuery(['export' => 'xlsx']),
         ]));
     }
 }

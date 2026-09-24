@@ -34,7 +34,7 @@ class ComplaintStockService
      * Deduct stock for the given detail payloads.
      *
      * @param  array<int, array<string, mixed>>  $details
-     * @param  string  $location        'road' | 'garage'
+     * @param  string  $location  'road' | 'garage'
      * @param  int|null  $serviceVehicleId  Required when $location === 'road'
      * @return array<int, array<string, mixed>> Only rows that actually affect stock
      */
@@ -58,14 +58,14 @@ class ComplaintStockService
             if ($usedQuantity <= 0) {
                 $processed[] = [
                     'shikayet_index' => $detail['shikayet_index'] ?? 0,
-                    'code'           => $code,
-                    'name'           => $detail['name'] ?? $code,
+                    'code' => $code,
+                    'name' => $detail['name'] ?? $code,
                     'stock_quantity' => 0,
-                    'used_quantity'  => 0,
-                    'price_at_use'   => 0,           // ← YENİ
-                    'employee_id'    => $detail['employee_id'] ?? null,
-                    'notes'          => $detail['notes'] ?? null,
-                    'source_type'    => 'inspection',
+                    'used_quantity' => 0,
+                    'price_at_use' => 0,           // ← YENİ
+                    'employee_id' => $detail['employee_id'] ?? null,
+                    'notes' => $detail['notes'] ?? null,
+                    'source_type' => 'inspection',
                 ];
 
                 continue;
@@ -76,6 +76,7 @@ class ComplaintStockService
                 $processed[] = $this->deductFromServiceVehicle(
                     $detail, $code, $usedQuantity, $serviceVehicleId
                 );
+
                 continue;
             }
 
@@ -113,7 +114,7 @@ class ComplaintStockService
         $sortedDetails = collect($details)
             ->filter(function ($detail) {
                 $code = $detail['code'] ?? null;
-                $qty  = (int) ($detail['used_quantity'] ?? 0);
+                $qty = (int) ($detail['used_quantity'] ?? 0);
 
                 return ! empty($code) && $qty > 0;
             })
@@ -122,9 +123,9 @@ class ComplaintStockService
             ->all();
 
         foreach ($sortedDetails as $detail) {
-            $code         = $detail['code'];
+            $code = $detail['code'];
             $usedQuantity = (int) $detail['used_quantity'];
-            $sourceType   = $detail['source_type'] ?? 'warehouse';
+            $sourceType = $detail['source_type'] ?? 'warehouse';
 
             // Historical imports and inspection rows never touched
             // stock on creation, so there is nothing to restore.
@@ -139,7 +140,7 @@ class ComplaintStockService
                     // service_vehicle_id column existed — cannot
                     // restore automatically. Log and skip.
                     Log::warning('Service vehicle id missing — stock restore skipped', [
-                        'code'     => $code,
+                        'code' => $code,
                         'quantity' => $usedQuantity,
                     ]);
 
@@ -184,8 +185,8 @@ class ComplaintStockService
             // Warehouse row not found — this should not happen if the
             // original deduction succeeded, but log it for safety.
             Log::warning('Warehouse row not found — stock restore skipped', [
-                'code'      => $code,
-                'quantity'  => $usedQuantity,
+                'code' => $code,
+                'quantity' => $usedQuantity,
                 'garage_id' => $garageId,
             ]);
         }
@@ -246,7 +247,7 @@ class ComplaintStockService
         if ($warehouse->quantity < $usedQuantity) {
             throw ValidationException::withMessages([
                 'details' => __('messages.flash.stock_insufficient', [
-                    'name'      => $warehouse->name,
+                    'name' => $warehouse->name,
                     'requested' => $usedQuantity,
                     'available' => $warehouse->quantity,
                 ]),
@@ -318,7 +319,7 @@ class ComplaintStockService
         if (! $stock) {
             throw ValidationException::withMessages([
                 'details' => __('messages.flash.service_vehicle_part_not_found', [
-                    'code'    => $code,
+                    'code' => $code,
                     'vehicle' => $vehicle->name,
                 ]),
             ]);
@@ -327,8 +328,8 @@ class ComplaintStockService
         if ($stock->quantity < $usedQuantity) {
             throw ValidationException::withMessages([
                 'details' => __('messages.flash.service_vehicle_stock_insufficient', [
-                    'name'      => $stock->name,
-                    'vehicle'   => $vehicle->name,
+                    'name' => $stock->name,
+                    'vehicle' => $vehicle->name,
                     'requested' => $usedQuantity,
                     'available' => $stock->quantity,
                 ]),
@@ -396,12 +397,12 @@ class ComplaintStockService
 
         ServiceVehicleStock::withoutGlobalScopes()->create([
             'service_vehicle_id' => $serviceVehicleId,
-            'garage_id'          => $vehicle->garage_id,
-            'company_id'         => $vehicle->company_id,
-            'code'               => $code,
-            'name'               => $warehouse->name ?? $nameFromDetail ?? $code,
-            'unit'               => $warehouse->unit ?? null,
-            'quantity'           => $quantity,
+            'garage_id' => $vehicle->garage_id,
+            'company_id' => $vehicle->company_id,
+            'code' => $code,
+            'name' => $warehouse->name ?? $nameFromDetail ?? $code,
+            'unit' => $warehouse->unit ?? null,
+            'quantity' => $quantity,
         ]);
     }
 
@@ -423,16 +424,16 @@ class ComplaintStockService
 
         return [
             'shikayet_index' => $detail['shikayet_index'] ?? 0,
-            'code'           => $code,
-            'name'           => $name,
+            'code' => $code,
+            'name' => $name,
             'stock_quantity' => $sourceType === 'warehouse'
                 ? ($warehouse?->quantity ?? 0)
                 : ($stock?->quantity ?? 0),
-            'used_quantity'  => $usedQuantity,
-            'price_at_use'   => $priceAtUse,
-            'employee_id'    => $detail['employee_id'] ?? null,
-            'notes'          => $detail['notes'] ?? null,
-            'source_type'    => $sourceType,
+            'used_quantity' => $usedQuantity,
+            'price_at_use' => $priceAtUse,
+            'employee_id' => $detail['employee_id'] ?? null,
+            'notes' => $detail['notes'] ?? null,
+            'source_type' => $sourceType,
         ];
     }
 

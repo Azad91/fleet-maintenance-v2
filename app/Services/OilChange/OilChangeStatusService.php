@@ -48,10 +48,10 @@ class OilChangeStatusService
         //               (motor: 18m = 30,000 km, 12m = 36,000 km)
         $interval = match ($type) {
             OilType::Gearbox => 180000,
-            default          => $last->interval_km,
+            default => $last->interval_km,
         };
 
-        $nextDueKm   = $last->actual_km + $interval;
+        $nextDueKm = $last->actual_km + $interval;
         $remainingKm = $nextDueKm - $currentKm;
 
         // For motor oil, look up the next service milestone in the
@@ -78,8 +78,8 @@ class OilChangeStatusService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Bus>  $buses
-     * @return \Illuminate\Support\Collection<int, OilChangeStatus>
+     * @param  Collection<int, Bus>  $buses
+     * @return Collection<int, OilChangeStatus>
      */
     public function priorityFor(Collection $buses, OilType $type): Collection
     {
@@ -140,13 +140,13 @@ class OilChangeStatusService
     private function classify(int $remainingKm): string
     {
         $critical = (int) config('oil.thresholds.critical_km', 1000);
-        $dueSoon  = (int) config('oil.thresholds.due_soon_km', 5000);
+        $dueSoon = (int) config('oil.thresholds.due_soon_km', 5000);
 
         return match (true) {
-            $remainingKm < 0          => 'overdue',
+            $remainingKm < 0 => 'overdue',
             $remainingKm <= $critical => 'critical',
-            $remainingKm <= $dueSoon  => 'due-soon',
-            default                   => 'ok',
+            $remainingKm <= $dueSoon => 'due-soon',
+            default => 'ok',
         };
     }
 }

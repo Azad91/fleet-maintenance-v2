@@ -35,7 +35,7 @@ class Warehouse extends Model
         'is_quarantine' => 'boolean',
     ];
 
-        public function scopeActiveStock($query)
+    public function scopeActiveStock($query)
     {
         return $query->where('is_quarantine', false);
     }

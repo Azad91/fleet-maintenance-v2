@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Reports;
 
-use App\Enums\TransferStatus;
 use App\Enums\TransferType;
 use App\Models\Company;
 use App\Models\Garage;
@@ -22,8 +21,11 @@ class TransferReportTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected Garage $garageC;
 
     protected function setUp(): void
@@ -52,11 +54,11 @@ class TransferReportTest extends TestCase
     protected function makeItem(Garage $garage, string $code = 'FILTER-001', int $qty = 100): Warehouse
     {
         return Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $garage->id,
+            'garage_id' => $garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $qty,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $qty,
         ]);
     }
 
@@ -70,9 +72,9 @@ class TransferReportTest extends TestCase
 
         return $service->create([
             'from_garage_id' => $from->id,
-            'to_garage_id'   => $to->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $item->id, 'declared_quantity' => $qty]],
+            'to_garage_id' => $to->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $item->id, 'declared_quantity' => $qty]],
         ], $this->company->id);
     }
 
@@ -150,9 +152,9 @@ class TransferReportTest extends TestCase
         for ($i = 0; $i < 3; $i++) {
             $service->create([
                 'from_garage_id' => $this->garageA->id,
-                'to_garage_id'   => $this->garageB->id,
-                'type'           => TransferType::GarageToGarage->value,
-                'items'          => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
+                'to_garage_id' => $this->garageB->id,
+                'type' => TransferType::GarageToGarage->value,
+                'items' => [['warehouse_id' => $item->id, 'declared_quantity' => 5]],
             ], $this->company->id);
         }
 
@@ -161,9 +163,9 @@ class TransferReportTest extends TestCase
 
         $service->create([
             'from_garage_id' => $this->garageA->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $item2->id, 'declared_quantity' => 2]],
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $item2->id, 'declared_quantity' => 2]],
         ], $this->company->id);
 
         $scope = new ReportScope([$this->garageA->id], null, false);
@@ -187,7 +189,7 @@ class TransferReportTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->withSession([
-                'current_garage_id'  => $this->garageA->id,
+                'current_garage_id' => $this->garageA->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('reports.transfer.summary'));
@@ -202,7 +204,7 @@ class TransferReportTest extends TestCase
 
         $this->actingAs($worker)
             ->withSession([
-                'current_garage_id'  => $this->garageA->id,
+                'current_garage_id' => $this->garageA->id,
                 'current_company_id' => $this->company->id,
             ])
             ->get(route('reports.transfer.summary'))

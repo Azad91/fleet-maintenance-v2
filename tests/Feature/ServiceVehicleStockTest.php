@@ -21,10 +21,15 @@ class ServiceVehicleStockTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
+
     protected ServiceVehicle $vehicle;
+
     protected Warehouse $warehouse;
+
     protected WarehouseTransferService $service;
 
     protected function setUp(): void
@@ -32,7 +37,7 @@ class ServiceVehicleStockTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, ['role' => 'admin', 'is_active' => true]);
@@ -40,19 +45,19 @@ class ServiceVehicleStockTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Service Vehicle 1',
-            'is_active'  => true,
+            'name' => 'Service Vehicle 1',
+            'is_active' => true,
         ]);
 
         $this->warehouse = Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => 'FILTER-001',
-            'name'       => 'Oil Filter',
-            'unit'       => 'piece',
-            'quantity'   => 50,
+            'code' => 'FILTER-001',
+            'name' => 'Oil Filter',
+            'unit' => 'piece',
+            'quantity' => 50,
         ]);
 
         $this->service = app(WarehouseTransferService::class);
@@ -67,7 +72,7 @@ class ServiceVehicleStockTest extends TestCase
     protected function sessionFor(Garage $garage): array
     {
         return [
-            'current_garage_id'  => $garage->id,
+            'current_garage_id' => $garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -81,10 +86,10 @@ class ServiceVehicleStockTest extends TestCase
         $this->actingAs($this->admin);
 
         $transfer = $this->service->createAndComplete([
-            'from_garage_id'        => $this->garage->id,
+            'from_garage_id' => $this->garage->id,
             'to_service_vehicle_id' => $this->vehicle->id,
-            'type'                  => TransferType::ToServiceVehicle->value,
-            'items'                 => [
+            'type' => TransferType::ToServiceVehicle->value,
+            'items' => [
                 ['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 10],
             ],
         ], $this->company->id);
@@ -112,10 +117,10 @@ class ServiceVehicleStockTest extends TestCase
 
         foreach ([5, 3, 2] as $qty) {
             $this->service->createAndComplete([
-                'from_garage_id'        => $this->garage->id,
+                'from_garage_id' => $this->garage->id,
                 'to_service_vehicle_id' => $this->vehicle->id,
-                'type'                  => TransferType::ToServiceVehicle->value,
-                'items'                 => [
+                'type' => TransferType::ToServiceVehicle->value,
+                'items' => [
                     ['warehouse_id' => $this->warehouse->id, 'declared_quantity' => $qty],
                 ],
             ], $this->company->id);
@@ -140,24 +145,24 @@ class ServiceVehicleStockTest extends TestCase
         $this->actingAs($this->admin);
 
         $vehicle2 = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Service Vehicle 2',
-            'is_active'  => true,
+            'name' => 'Service Vehicle 2',
+            'is_active' => true,
         ]);
 
         $this->service->createAndComplete([
-            'from_garage_id'        => $this->garage->id,
+            'from_garage_id' => $this->garage->id,
             'to_service_vehicle_id' => $this->vehicle->id,
-            'type'                  => TransferType::ToServiceVehicle->value,
-            'items'                 => [['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 5]],
+            'type' => TransferType::ToServiceVehicle->value,
+            'items' => [['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 5]],
         ], $this->company->id);
 
         $this->service->createAndComplete([
-            'from_garage_id'        => $this->garage->id,
+            'from_garage_id' => $this->garage->id,
             'to_service_vehicle_id' => $vehicle2->id,
-            'type'                  => TransferType::ToServiceVehicle->value,
-            'items'                 => [['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 7]],
+            'type' => TransferType::ToServiceVehicle->value,
+            'items' => [['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 7]],
         ], $this->company->id);
 
         $this->assertSame(5, ServiceVehicleStock::withoutGlobalScopes()->where('service_vehicle_id', $this->vehicle->id)->sum('quantity'));
@@ -176,10 +181,10 @@ class ServiceVehicleStockTest extends TestCase
         $this->expectException(ValidationException::class);
 
         $this->service->createAndComplete([
-            'from_garage_id'        => $this->garage->id,
+            'from_garage_id' => $this->garage->id,
             'to_service_vehicle_id' => $this->vehicle->id,
-            'type'                  => TransferType::ToServiceVehicle->value,
-            'items'                 => [
+            'type' => TransferType::ToServiceVehicle->value,
+            'items' => [
                 ['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 100],
             ],
         ], $this->company->id);
@@ -196,9 +201,9 @@ class ServiceVehicleStockTest extends TestCase
         // createAndComplete is only for immediate transfers
         $this->service->createAndComplete([
             'from_garage_id' => $this->garage->id,
-            'to_garage_id'   => $otherGarage->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 5]],
+            'to_garage_id' => $otherGarage->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 5]],
         ], $this->company->id);
     }
 
@@ -211,9 +216,9 @@ class ServiceVehicleStockTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->sessionFor($this->garage))
             ->post(route('warehouse-transfers.store'), [
-                'type'                  => TransferType::ToServiceVehicle->value,
+                'type' => TransferType::ToServiceVehicle->value,
                 'to_service_vehicle_id' => $this->vehicle->id,
-                'items'                 => [
+                'items' => [
                     ['warehouse_id' => $this->warehouse->id, 'declared_quantity' => 3],
                 ],
             ]);
@@ -233,12 +238,12 @@ class ServiceVehicleStockTest extends TestCase
 
         ServiceVehicleStock::withoutGlobalScopes()->create([
             'service_vehicle_id' => $this->vehicle->id,
-            'garage_id'          => $this->garage->id,
-            'company_id'         => $this->company->id,
-            'code'               => 'FILTER-001',
-            'name'               => 'Oil Filter',
-            'unit'               => 'piece',
-            'quantity'           => 15,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'code' => 'FILTER-001',
+            'name' => 'Oil Filter',
+            'unit' => 'piece',
+            'quantity' => 15,
         ]);
 
         $response = $this->actingAs($this->admin)

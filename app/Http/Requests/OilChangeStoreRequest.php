@@ -31,9 +31,9 @@ class OilChangeStoreRequest extends FormRequest
                 Rule::requiredIf(fn () => $this->input('oil_type') === OilType::Gearbox->value),
             ],
             'scheduled_km' => 'nullable|integer|min:0',
-            'actual_km'    => 'required|integer|min:0',
-            'changed_at'   => 'nullable|date',
-            'notes'        => 'nullable|string|max:2000',
+            'actual_km' => 'required|integer|min:0',
+            'changed_at' => 'nullable|date',
+            'notes' => 'nullable|string|max:2000',
         ];
     }
 

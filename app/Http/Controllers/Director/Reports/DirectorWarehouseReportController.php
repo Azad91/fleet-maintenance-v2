@@ -26,7 +26,7 @@ class DirectorWarehouseReportController extends ReportController
     public function receipt(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         $items = $this->service->receipt($period, $scope);
 
@@ -63,7 +63,7 @@ class DirectorWarehouseReportController extends ReportController
     public function usage(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         $items = $this->service->usage($period, $scope);
 
@@ -94,7 +94,7 @@ class DirectorWarehouseReportController extends ReportController
     public function workerActivity(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         $rows = $this->service->workerActivity($period, $scope);
 
@@ -127,7 +127,7 @@ class DirectorWarehouseReportController extends ReportController
     public function lowStock(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         $items = $this->service->lowStock($scope);
 
@@ -162,7 +162,7 @@ class DirectorWarehouseReportController extends ReportController
     public function movement(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         $logs = $this->service->movement($period, $scope);
 
@@ -197,7 +197,7 @@ class DirectorWarehouseReportController extends ReportController
     public function serviceVehicleUsage(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('warehouse');
+        $scope = $this->scope('warehouse');
 
         $rows = $this->service->serviceVehicleUsage($period, $scope);
 

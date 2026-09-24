@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\OilChange;
 
-use App\Enums\OilType;
 use App\Models\Bus;
 use App\Models\Company;
 use App\Models\DailyKmRecord;
@@ -17,7 +16,9 @@ class OilChangeSearchTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
 
     protected function setUp(): void
@@ -25,11 +26,11 @@ class OilChangeSearchTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
@@ -51,7 +52,7 @@ class OilChangeSearchTest extends TestCase
     private function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -71,19 +72,19 @@ class OilChangeSearchTest extends TestCase
         $route ??= 'R-'.substr(md5($dqn), 0, 8);
 
         $bus = Bus::factory()->create([
-            'garage_id'    => $this->garage->id,
-            'company_id'   => $this->company->id,
-            'dqn'          => $dqn,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'dqn' => $dqn,
             'route_number' => $route,
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         DailyKmRecord::withoutGlobalScopes()->create([
-            'bus_id'     => $bus->id,
-            'garage_id'  => $this->garage->id,
+            'bus_id' => $bus->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'km'         => $km,
+            'date' => now()->toDateString(),
+            'km' => $km,
         ]);
 
         return $bus;
@@ -167,7 +168,7 @@ class OilChangeSearchTest extends TestCase
 
     public function test_search_filters_by_km_min(): void
     {
-        $this->makeBus('LOW-KM',  '100', 50_000);
+        $this->makeBus('LOW-KM', '100', 50_000);
         $this->makeBus('HIGH-KM', '200', 500_000);
 
         $response = $this->actingAs($this->admin)
@@ -182,7 +183,7 @@ class OilChangeSearchTest extends TestCase
 
     public function test_search_filters_by_km_max(): void
     {
-        $this->makeBus('LOW-KM',  '100', 50_000);
+        $this->makeBus('LOW-KM', '100', 50_000);
         $this->makeBus('HIGH-KM', '200', 500_000);
 
         $response = $this->actingAs($this->admin)
@@ -197,7 +198,7 @@ class OilChangeSearchTest extends TestCase
 
     public function test_search_filters_by_combined_km_range(): void
     {
-        $this->makeBus('TOO-LOW',  '100', 30_000);
+        $this->makeBus('TOO-LOW', '100', 30_000);
         $this->makeBus('IN-RANGE', '200', 250_000);
         $this->makeBus('TOO-HIGH', '300', 800_000);
 
@@ -220,13 +221,13 @@ class OilChangeSearchTest extends TestCase
     {
         $this->makeBus('MATCH-001', '100', 300_000); // dqn ok, km ok
         $this->makeBus('MATCH-002', '200', 50_000);  // dqn ok, km too low
-        $this->makeBus('NOPE-001',  '300', 300_000); // dqn fails
+        $this->makeBus('NOPE-001', '300', 300_000); // dqn fails
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
             ->get(route('oil-changes.search', [
-                'dqn'    => 'MATCH',
+                'dqn' => 'MATCH',
                 'km_min' => 200_000,
             ]));
 
@@ -247,11 +248,11 @@ class OilChangeSearchTest extends TestCase
         $this->makeBus('OWN-001', '100', 100_000);
 
         Bus::factory()->create([
-            'garage_id'    => $otherGarage->id,
-            'company_id'   => $this->company->id,
-            'dqn'          => 'FOREIGN-001',
+            'garage_id' => $otherGarage->id,
+            'company_id' => $this->company->id,
+            'dqn' => 'FOREIGN-001',
             'route_number' => '100',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($this->admin)
@@ -295,7 +296,7 @@ class OilChangeSearchTest extends TestCase
     {
         $worker = User::factory()->create(['role' => 'user']);
         $worker->garages()->attach($this->garage->id, [
-            'role'      => 'complaint_worker',
+            'role' => 'complaint_worker',
             'is_active' => true,
         ]);
 

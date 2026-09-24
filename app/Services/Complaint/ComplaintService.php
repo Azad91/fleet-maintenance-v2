@@ -182,8 +182,7 @@ class ComplaintService
      * inside delete()->restoreStock().
      *
      * @param  array<int>  $ids
-     * @param  int  $chunkSize
-     * @return int  Number of complaints actually deleted
+     * @return int Number of complaints actually deleted
      */
     public function bulkDelete(array $ids, int $chunkSize = 100): int
     {
@@ -221,13 +220,12 @@ class ComplaintService
      * entry records which chunk failed.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<Complaint>  $query
-     * @param  int  $chunkSize
      * @return array{deleted: int, error: ?string}
      */
     public function bulkDeleteByQuery($query, int $chunkSize = 100): array
     {
         $deleted = 0;
-        $error   = null;
+        $error = null;
 
         $idQuery = $query->clone()
             ->reorder()
@@ -259,9 +257,9 @@ class ComplaintService
 
             Log::error('Bulk complaint delete aborted mid-run', [
                 'deleted_so_far' => $deleted,
-                'error'          => $error,
-                'user_id'        => auth()->id(),
-                'request_id'     => Context::get('request_id'),
+                'error' => $error,
+                'user_id' => auth()->id(),
+                'request_id' => Context::get('request_id'),
             ]);
         }
 
@@ -303,8 +301,8 @@ class ComplaintService
         } catch (\Throwable $e) {
             Log::warning('Failed to invalidate stale complaint PDF', [
                 'complaint_id' => $complaint->id,
-                'error'        => $e->getMessage(),
-                'request_id'   => Context::get('request_id'),
+                'error' => $e->getMessage(),
+                'request_id' => Context::get('request_id'),
             ]);
         }
     }

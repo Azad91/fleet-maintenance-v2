@@ -16,7 +16,7 @@ class WarehouseTransferStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $garageId  = GarageContext::getGarageId();
+        $garageId = GarageContext::getGarageId();
         $companyId = GarageContext::resolveCompanyId();
 
         return [
@@ -41,17 +41,17 @@ class WarehouseTransferStoreRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
 
-            'type'  => ['required', Rule::in(TransferType::values())],
+            'type' => ['required', Rule::in(TransferType::values())],
             'notes' => 'nullable|string|max:2000',
 
-            'items'                    => 'required|array|min:1',
-            'items.*.warehouse_id'     => [
+            'items' => 'required|array|min:1',
+            'items.*.warehouse_id' => [
                 'required',
                 'integer',
                 Rule::exists('warehouses', 'id')->where('garage_id', $garageId),
             ],
             'items.*.declared_quantity' => 'required|integer|min:1',
-            'items.*.notes'             => 'nullable|string|max:500',
+            'items.*.notes' => 'nullable|string|max:500',
         ];
     }
 

@@ -139,9 +139,9 @@ class ComplaintController extends Controller
         } catch (\Throwable $e) {
             \Log::error('Complaint PDF generation failed', [
                 'complaint_id' => $complaint->id,
-                'error'        => $e->getMessage(),
-                'user_id'      => auth()->id(),
-                'request_id'   => \Illuminate\Support\Facades\Context::get('request_id'),
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
             ]);
 
             return response()->json([

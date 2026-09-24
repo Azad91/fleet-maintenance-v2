@@ -22,7 +22,9 @@ class ComplaintsImportHistoricalTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected Bus $bus;
 
     protected function setUp(): void

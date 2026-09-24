@@ -16,7 +16,9 @@ class BusDailyKmColumnTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
 
     protected function setUp(): void
@@ -222,6 +224,7 @@ class BusDailyKmColumnTest extends TestCase
 
         $response->assertViewHas('kmRecords', function ($paginator) {
             $items = $paginator->items();
+
             return count($items) === 3
                 && $items[0]->daily_km === 250
                 && $items[1]->daily_km === 4750
@@ -269,7 +272,7 @@ class BusDailyKmColumnTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('kmRecords', function ($paginator) {
             $items = $paginator->items();
-            $last  = end($items);
+            $last = end($items);
 
             // All records grow by 100 per day, so the page-boundary
             // item must also have a diff of exactly 100 — proving the

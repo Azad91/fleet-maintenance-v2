@@ -19,7 +19,7 @@ class WarehouseController extends Controller
         $this->authorize('viewAny', Warehouse::class);
 
         $search = $request->search;
-        $view   = $request->input('view', 'active');
+        $view = $request->input('view', 'active');
 
         $query = Warehouse::query();
 
@@ -48,7 +48,7 @@ class WarehouseController extends Controller
         $this->authorize('viewAny', Warehouse::class);
 
         $search = $request->search;
-        $view   = $request->input('view', 'active');
+        $view = $request->input('view', 'active');
 
         $query = Warehouse::query();
 
@@ -152,7 +152,7 @@ class WarehouseController extends Controller
 
         // Default to OVERWRITE so the historical behaviour is preserved
         // for any client that does not send the mode field.
-        $mode = $request->input('mode', \App\Imports\WarehouseImport::MODE_OVERWRITE);
+        $mode = $request->input('mode', WarehouseImport::MODE_OVERWRITE);
 
         try {
             Excel::import(

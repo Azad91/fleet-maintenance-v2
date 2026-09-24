@@ -26,7 +26,7 @@ class GenericReportExport implements FromArray, WithColumnWidths, WithHeadings, 
 {
     /**
      * @param  array<int, array<int, mixed>>  $rows
-     * @param  array<int, string>             $headings
+     * @param  array<int, string>  $headings
      */
     public function __construct(
         protected array $rows,

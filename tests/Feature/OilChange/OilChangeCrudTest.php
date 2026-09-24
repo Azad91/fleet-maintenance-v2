@@ -17,8 +17,11 @@ class OilChangeCrudTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
+
     protected Bus $bus;
 
     protected function setUp(): void
@@ -26,7 +29,7 @@ class OilChangeCrudTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
@@ -37,10 +40,10 @@ class OilChangeCrudTest extends TestCase
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'uzunluq'    => 12,
-            'is_active'  => true,
+            'uzunluq' => 12,
+            'is_active' => true,
         ]);
     }
 
@@ -53,7 +56,7 @@ class OilChangeCrudTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -67,9 +70,9 @@ class OilChangeCrudTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'     => $this->bus->id,
-                'oil_type'   => OilType::Motor->value,
-                'actual_km'  => 100000,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Motor->value,
+                'actual_km' => 100000,
                 'changed_at' => now()->toDateString(),
             ]);
 
@@ -77,7 +80,7 @@ class OilChangeCrudTest extends TestCase
         $response->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('bus_oil_changes', [
-            'bus_id'   => $this->bus->id,
+            'bus_id' => $this->bus->id,
             'oil_type' => OilType::Motor->value,
             'actual_km' => 100000,
         ]);
@@ -102,8 +105,8 @@ class OilChangeCrudTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Gearbox->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Gearbox->value,
                 'actual_km' => 100000,
                 // oil_brand yoxdur — MÜTLƏQ xəta verməlidir
             ]);
@@ -113,7 +116,7 @@ class OilChangeCrudTest extends TestCase
         // ✅ FIX: assertDatabaseMissing() RedirectResponse-də deyil,
         // TestCase üzərində çağırılır.
         $this->assertDatabaseMissing('bus_oil_changes', [
-            'bus_id'   => $this->bus->id,
+            'bus_id' => $this->bus->id,
             'oil_type' => OilType::Gearbox->value,
         ]);
     }
@@ -123,8 +126,8 @@ class OilChangeCrudTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Gearbox->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Gearbox->value,
                 'oil_brand' => 'shell',
                 'actual_km' => 100000,
             ]);
@@ -132,8 +135,8 @@ class OilChangeCrudTest extends TestCase
         $response->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('bus_oil_changes', [
-            'bus_id'    => $this->bus->id,
-            'oil_type'  => OilType::Gearbox->value,
+            'bus_id' => $this->bus->id,
+            'oil_type' => OilType::Gearbox->value,
             'oil_brand' => 'SHELL', // prepareForValidation() → uppercase
         ]);
     }
@@ -150,8 +153,8 @@ class OilChangeCrudTest extends TestCase
         $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Gearbox->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Gearbox->value,
                 'oil_brand' => '  shell  ', // lowercase + whitespace
                 'actual_km' => 100000,
             ]);
@@ -170,7 +173,7 @@ class OilChangeCrudTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'   => $this->bus->id,
+                'bus_id' => $this->bus->id,
                 'oil_type' => OilType::Motor->value,
             ]);
 
@@ -182,8 +185,8 @@ class OilChangeCrudTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Motor->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Motor->value,
                 'actual_km' => -500,
             ]);
 
@@ -195,8 +198,8 @@ class OilChangeCrudTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => 'transmission',
+                'bus_id' => $this->bus->id,
+                'oil_type' => 'transmission',
                 'actual_km' => 100000,
             ]);
 
@@ -210,19 +213,19 @@ class OilChangeCrudTest extends TestCase
     public function test_can_update_oil_change(): void
     {
         $change = BusOilChange::withoutGlobalScopes()->create([
-            'bus_id'      => $this->bus->id,
-            'garage_id'   => $this->garage->id,
-            'company_id'  => $this->company->id,
-            'oil_type'    => OilType::Motor->value,
-            'actual_km'   => 100000,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'oil_type' => OilType::Motor->value,
+            'actual_km' => 100000,
             'interval_km' => 36000,
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('oil-changes.update', $change), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Motor->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Motor->value,
                 'actual_km' => 110000,
             ]);
 
@@ -233,20 +236,20 @@ class OilChangeCrudTest extends TestCase
     public function test_update_gearbox_requires_oil_brand(): void
     {
         $change = BusOilChange::withoutGlobalScopes()->create([
-            'bus_id'      => $this->bus->id,
-            'garage_id'   => $this->garage->id,
-            'company_id'  => $this->company->id,
-            'oil_type'    => OilType::Gearbox->value,
-            'oil_brand'   => 'SHELL',
-            'actual_km'   => 100000,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'oil_type' => OilType::Gearbox->value,
+            'oil_brand' => 'SHELL',
+            'actual_km' => 100000,
             'interval_km' => 180000,
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('oil-changes.update', $change), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Gearbox->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Gearbox->value,
                 // oil_brand yoxdur
                 'actual_km' => 110000,
             ]);
@@ -261,11 +264,11 @@ class OilChangeCrudTest extends TestCase
     public function test_can_soft_delete_oil_change(): void
     {
         $change = BusOilChange::withoutGlobalScopes()->create([
-            'bus_id'      => $this->bus->id,
-            'garage_id'   => $this->garage->id,
-            'company_id'  => $this->company->id,
-            'oil_type'    => OilType::Motor->value,
-            'actual_km'   => 100000,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'oil_type' => OilType::Motor->value,
+            'actual_km' => 100000,
             'interval_km' => 36000,
         ]);
 
@@ -284,8 +287,8 @@ class OilChangeCrudTest extends TestCase
     public function test_guest_cannot_create_oil_change(): void
     {
         $this->post(route('oil-changes.store'), [
-            'bus_id'    => $this->bus->id,
-            'oil_type'  => OilType::Motor->value,
+            'bus_id' => $this->bus->id,
+            'oil_type' => OilType::Motor->value,
             'actual_km' => 100000,
         ])->assertRedirect(route('login'));
     }
@@ -301,8 +304,8 @@ class OilChangeCrudTest extends TestCase
         $this->actingAs($worker)
             ->withSession($this->garageSession())
             ->post(route('oil-changes.store'), [
-                'bus_id'    => $this->bus->id,
-                'oil_type'  => OilType::Motor->value,
+                'bus_id' => $this->bus->id,
+                'oil_type' => OilType::Motor->value,
                 'actual_km' => 100000,
             ])
             ->assertForbidden();

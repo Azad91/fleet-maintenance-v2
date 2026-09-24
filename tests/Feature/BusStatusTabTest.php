@@ -16,8 +16,11 @@ class BusStatusTabTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
+
     protected Bus $bus;
 
     protected function setUp(): void
@@ -121,7 +124,7 @@ class BusStatusTabTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
-            ->get(route('buses.show', $this->bus) . '?status_month=2026-08');
+            ->get(route('buses.show', $this->bus).'?status_month=2026-08');
 
         $response->assertOk();
 
@@ -140,7 +143,7 @@ class BusStatusTabTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
-            ->get(route('buses.show', $this->bus) . '?status_month=not-a-month');
+            ->get(route('buses.show', $this->bus).'?status_month=not-a-month');
 
         $response->assertOk();
         $response->assertSee('READY FOR ROUTE');
@@ -160,13 +163,14 @@ class BusStatusTabTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
-            ->get(route('buses.show', $this->bus) . '?status_month=2026-09');
+            ->get(route('buses.show', $this->bus).'?status_month=2026-09');
 
         $response->assertOk();
         $response->assertSee(__('messages.buses.status_summary'), false);
 
         $response->assertViewHas('monthlySummary', function ($summary) {
             $byStatus = $summary->pluck('days', 'status')->toArray();
+
             return $byStatus['READY FOR ROUTE'] === 3
                 && $byStatus['IN MAINTENANCE'] === 2;
         });
@@ -179,7 +183,7 @@ class BusStatusTabTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
-            ->get(route('buses.show', $this->bus) . '?status_month=2026-09');
+            ->get(route('buses.show', $this->bus).'?status_month=2026-09');
 
         $response->assertOk();
 
@@ -200,7 +204,7 @@ class BusStatusTabTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
-            ->get(route('buses.show', $this->bus) . '?status_month=2026-08');
+            ->get(route('buses.show', $this->bus).'?status_month=2026-08');
 
         $response->assertOk();
 

@@ -17,8 +17,11 @@ class OilChangeIndexDailyStatusTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
+
     protected Bus $bus;
 
     protected function setUp(): void
@@ -26,21 +29,21 @@ class OilChangeIndexDailyStatusTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'dqn'        => 'DAILY-STATUS-001',
-            'is_active'  => true,
+            'dqn' => 'DAILY-STATUS-001',
+            'is_active' => true,
         ]);
     }
 
@@ -53,7 +56,7 @@ class OilChangeIndexDailyStatusTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -75,11 +78,11 @@ class OilChangeIndexDailyStatusTest extends TestCase
     public function test_index_displays_latest_daily_status_for_bus(): void
     {
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->bus->id,
-            'garage_id'  => $this->garage->id,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'XƏTTƏ ÇIXMAĞA UYĞUN',
+            'date' => now()->toDateString(),
+            'status' => 'XƏTTƏ ÇIXMAĞA UYĞUN',
         ]);
 
         $response = $this->actingAs($this->admin)
@@ -109,11 +112,11 @@ class OilChangeIndexDailyStatusTest extends TestCase
     {
         // Simulate a catalog milestone at 540000
         \App\Models\BusOilChange::withoutGlobalScopes()->create([
-            'bus_id'      => $this->bus->id,
-            'garage_id'   => $this->garage->id,
-            'company_id'  => $this->company->id,
-            'oil_type'    => OilType::Motor->value,
-            'actual_km'   => 470383,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'oil_type' => OilType::Motor->value,
+            'actual_km' => 470383,
             'interval_km' => 36000,
         ]);
 
@@ -121,7 +124,7 @@ class OilChangeIndexDailyStatusTest extends TestCase
             ->withSession($this->garageSession())
             ->get(route('oil-changes.create', [
                 'bus_id' => $this->bus->id,
-                'type'   => OilType::Motor->value,
+                'type' => OilType::Motor->value,
             ]));
 
         $response->assertOk();

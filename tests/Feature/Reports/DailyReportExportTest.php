@@ -18,8 +18,11 @@ class DailyReportExportTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected User $admin;
+
     protected Bus $bus;
 
     protected function setUp(): void
@@ -27,22 +30,22 @@ class DailyReportExportTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garage->id, [
-            'role'      => 'admin',
+            'role' => 'admin',
             'is_active' => true,
         ]);
 
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garage->id,
-            'company_id'   => $this->company->id,
-            'dqn'          => 'EXP-001',
+            'garage_id' => $this->garage->id,
+            'company_id' => $this->company->id,
+            'dqn' => 'EXP-001',
             'route_number' => '101',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
     }
 
@@ -55,7 +58,7 @@ class DailyReportExportTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garage->id,
+            'current_garage_id' => $this->garage->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -93,11 +96,11 @@ class DailyReportExportTest extends TestCase
         // Seed a couple of KM records so the report has data.
         foreach ([100000, 100500] as $i => $km) {
             DailyKmRecord::withoutGlobalScopes()->create([
-                'bus_id'     => $this->bus->id,
-                'garage_id'  => $this->garage->id,
+                'bus_id' => $this->bus->id,
+                'garage_id' => $this->garage->id,
                 'company_id' => $this->company->id,
-                'date'       => now()->subDays(1 - $i)->toDateString(),
-                'km'         => $km,
+                'date' => now()->subDays(1 - $i)->toDateString(),
+                'km' => $km,
             ]);
         }
 
@@ -126,11 +129,11 @@ class DailyReportExportTest extends TestCase
     public function test_daily_status_distribution_export_downloads_xlsx(): void
     {
         BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->bus->id,
-            'garage_id'  => $this->garage->id,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY FOR ROUTE',
+            'date' => now()->toDateString(),
+            'status' => 'READY FOR ROUTE',
         ]);
 
         $response = $this->actingAs($this->admin)
@@ -145,11 +148,11 @@ class DailyReportExportTest extends TestCase
     {
         // Create a status change so the audit log has a row.
         $status = BusDailyStatus::withoutGlobalScopes()->create([
-            'bus_id'     => $this->bus->id,
-            'garage_id'  => $this->garage->id,
+            'bus_id' => $this->bus->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'date'       => now()->toDateString(),
-            'status'     => 'READY FOR ROUTE',
+            'date' => now()->toDateString(),
+            'status' => 'READY FOR ROUTE',
         ]);
 
         $status->update(['status' => 'IN MAINTENANCE']);
@@ -180,7 +183,7 @@ class DailyReportExportTest extends TestCase
     {
         $director = User::factory()->create(['role' => 'user']);
         $this->company->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
@@ -195,7 +198,7 @@ class DailyReportExportTest extends TestCase
     {
         $director = User::factory()->create(['role' => 'user']);
         $this->company->users()->attach($director->id, [
-            'role'      => 'director',
+            'role' => 'director',
             'is_active' => true,
         ]);
 
@@ -244,7 +247,7 @@ class DailyReportExportTest extends TestCase
     {
         $manager = User::factory()->create(['role' => 'user']);
         $manager->garages()->attach($this->garage->id, [
-            'role'      => 'warehouse_manager',
+            'role' => 'warehouse_manager',
             'is_active' => true,
         ]);
 

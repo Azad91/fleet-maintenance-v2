@@ -16,11 +16,11 @@ class ServiceVehicleStoreRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'name'         => trim((string) $this->input('name')),
+            'name' => trim((string) $this->input('name')),
             'plate_number' => $this->filled('plate_number')
                 ? mb_strtoupper(trim((string) $this->input('plate_number')))
                 : null,
-            'driver_name'  => $this->filled('driver_name')
+            'driver_name' => $this->filled('driver_name')
                 ? trim((string) $this->input('driver_name'))
                 : null,
         ]);
@@ -41,9 +41,9 @@ class ServiceVehicleStoreRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'driver_name' => 'nullable|string|max:255',
-            'phone'       => 'nullable|string|max:50',
-            'is_active'   => 'nullable|boolean',
-            'notes'       => 'nullable|string|max:2000',
+            'phone' => 'nullable|string|max:50',
+            'is_active' => 'nullable|boolean',
+            'notes' => 'nullable|string|max:2000',
         ];
     }
 }

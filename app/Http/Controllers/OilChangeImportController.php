@@ -35,9 +35,9 @@ class OilChangeImportController extends Controller
         $this->authorize('import', BusOilChange::class);
 
         $validated = $request->validate([
-            'type'       => ['required', \Illuminate\Validation\Rule::in(OilType::values())],
+            'type' => ['required', \Illuminate\Validation\Rule::in(OilType::values())],
             'bus_length' => ['nullable', 'integer', \Illuminate\Validation\Rule::in([12, 18])],
-            'file'       => ['required', 'mimes:xlsx,xls,csv', 'max:10240'],
+            'file' => ['required', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
         $type = OilType::from($validated['type']);
@@ -47,10 +47,10 @@ class OilChangeImportController extends Controller
 
         // ─── Debug: log start of import ───
         Log::info('Oil import started', [
-            'type'       => $type->value,
+            'type' => $type->value,
             'bus_length' => $busLengthM,
-            'file'       => $request->file('file')->getClientOriginalName(),
-            'garage_id'  => $garageId,
+            'file' => $request->file('file')->getClientOriginalName(),
+            'garage_id' => $garageId,
         ]);
 
         try {
@@ -68,9 +68,9 @@ class OilChangeImportController extends Controller
 
             // ─── Debug: log result ───
             Log::info('Oil import finished', [
-                'type'     => $type->value,
+                'type' => $type->value,
                 'imported' => $imported,
-                'skipped'  => count($skipped),
+                'skipped' => count($skipped),
             ]);
 
             if (empty($skipped)) {
@@ -90,11 +90,11 @@ class OilChangeImportController extends Controller
         } catch (\Throwable $e) {
             // ─── Debug: log full failure ───
             Log::error('Oil import failed', [
-                'type'       => $type->value,
-                'error'      => $e->getMessage(),
-                'file'       => $e->getFile(),
-                'line'       => $e->getLine(),
-                'trace'      => $e->getTraceAsString(),
+                'type' => $type->value,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             report($e);

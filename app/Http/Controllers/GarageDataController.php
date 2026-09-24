@@ -237,7 +237,7 @@ class GarageDataController extends Controller
     {
         $request->validate([
             'service_vehicle_id' => 'required|integer',
-            'code'               => 'required|string',
+            'code' => 'required|string',
         ]);
 
         $stock = \App\Models\ServiceVehicleStock::withoutGlobalScopes()
@@ -246,11 +246,11 @@ class GarageDataController extends Controller
             ->first();
 
         return response()->json([
-            'found'          => (bool) $stock,
-            'part_code'      => $stock?->code,
-            'part_name'      => $stock?->name,
+            'found' => (bool) $stock,
+            'part_code' => $stock?->code,
+            'part_name' => $stock?->name,
             'stock_quantity' => $stock?->quantity ?? 0,
-            'unit'           => $stock?->unit,
+            'unit' => $stock?->unit,
         ]);
     }
 

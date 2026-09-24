@@ -15,18 +15,22 @@ class ServiceVehicleTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected User $admin;
+
     protected User $otherAdmin;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->company  = Company::factory()->create();
-        $this->garageA  = Garage::factory()->create(['company_id' => $this->company->id]);
-        $this->garageB  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->company = Company::factory()->create();
+        $this->garageA = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garageB = Garage::factory()->create(['company_id' => $this->company->id]);
 
         $this->admin = User::factory()->create(['role' => 'user']);
         $this->admin->garages()->attach($this->garageA->id, ['role' => 'admin', 'is_active' => true]);
@@ -46,7 +50,7 @@ class ServiceVehicleTest extends TestCase
     protected function garageSession(): array
     {
         return [
-            'current_garage_id'  => $this->garageA->id,
+            'current_garage_id' => $this->garageA->id,
             'current_company_id' => $this->company->id,
         ];
     }
@@ -89,21 +93,21 @@ class ServiceVehicleTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('service-vehicles.store'), [
-                'name'         => 'Service Vehicle 1',
+                'name' => 'Service Vehicle 1',
                 'plate_number' => '90-AA-123',
-                'driver_name'  => 'Elshad Mammadov',
-                'phone'        => '+994 50 123 45 67',
-                'is_active'    => 1,
+                'driver_name' => 'Elshad Mammadov',
+                'phone' => '+994 50 123 45 67',
+                'is_active' => 1,
             ]);
 
         $response->assertRedirect(route('service-vehicles.index'));
 
         $this->assertDatabaseHas('service_vehicles', [
-            'name'         => 'Service Vehicle 1',
+            'name' => 'Service Vehicle 1',
             'plate_number' => '90-AA-123',
-            'garage_id'    => $this->garageA->id,
-            'company_id'   => $this->company->id,
-            'is_active'    => true,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'is_active' => true,
         ]);
     }
 
@@ -123,7 +127,7 @@ class ServiceVehicleTest extends TestCase
         $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('service-vehicles.store'), [
-                'name'         => 'Vehicle',
+                'name' => 'Vehicle',
                 'plate_number' => '90-aa-123',
             ]);
 
@@ -135,17 +139,17 @@ class ServiceVehicleTest extends TestCase
     public function test_duplicate_plate_number_in_same_garage_is_rejected(): void
     {
         ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageA->id,
-            'company_id'   => $this->company->id,
-            'name'         => 'Existing',
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'name' => 'Existing',
             'plate_number' => '90-AA-123',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('service-vehicles.store'), [
-                'name'         => 'Duplicate',
+                'name' => 'Duplicate',
                 'plate_number' => '90-AA-123',
             ]);
 
@@ -155,17 +159,17 @@ class ServiceVehicleTest extends TestCase
     public function test_same_plate_number_allowed_in_different_garages(): void
     {
         ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageB->id,
-            'company_id'   => $this->company->id,
-            'name'         => 'Other garage vehicle',
+            'garage_id' => $this->garageB->id,
+            'company_id' => $this->company->id,
+            'name' => 'Other garage vehicle',
             'plate_number' => '90-AA-123',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('service-vehicles.store'), [
-                'name'         => 'Same plate here',
+                'name' => 'Same plate here',
                 'plate_number' => '90-AA-123',
             ]);
 
@@ -179,19 +183,19 @@ class ServiceVehicleTest extends TestCase
     public function test_admin_can_update_own_vehicle(): void
     {
         $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageA->id,
-            'company_id'   => $this->company->id,
-            'name'         => 'Old Name',
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'name' => 'Old Name',
             'plate_number' => '90-AA-111',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('service-vehicles.update', $vehicle), [
-                'name'         => 'New Name',
+                'name' => 'New Name',
                 'plate_number' => '90-AA-111',
-                'is_active'    => 1,
+                'is_active' => 1,
             ]);
 
         $response->assertSessionHasNoErrors();
@@ -201,17 +205,17 @@ class ServiceVehicleTest extends TestCase
     public function test_admin_cannot_update_other_garage_vehicle(): void
     {
         $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageB->id,
+            'garage_id' => $this->garageB->id,
             'company_id' => $this->company->id,
-            'name'       => 'B garage vehicle',
-            'is_active'  => true,
+            'name' => 'B garage vehicle',
+            'is_active' => true,
         ]);
 
         // Global scope hides it → 404
         $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->put(route('service-vehicles.update', $vehicle), [
-                'name'      => 'Hacked',
+                'name' => 'Hacked',
                 'is_active' => 1,
             ])
             ->assertNotFound();
@@ -220,10 +224,10 @@ class ServiceVehicleTest extends TestCase
     public function test_admin_can_soft_delete_vehicle(): void
     {
         $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garageA->id,
+            'garage_id' => $this->garageA->id,
             'company_id' => $this->company->id,
-            'name'       => 'To delete',
-            'is_active'  => true,
+            'name' => 'To delete',
+            'is_active' => true,
         ]);
 
         $this->actingAs($this->admin)
@@ -241,11 +245,11 @@ class ServiceVehicleTest extends TestCase
     public function test_plate_number_can_be_reused_after_soft_delete(): void
     {
         $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'    => $this->garageA->id,
-            'company_id'   => $this->company->id,
-            'name'         => 'Old vehicle',
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'name' => 'Old vehicle',
             'plate_number' => '90-AA-555',
-            'is_active'    => true,
+            'is_active' => true,
         ]);
 
         $vehicle->delete();
@@ -253,7 +257,7 @@ class ServiceVehicleTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->withSession($this->garageSession())
             ->post(route('service-vehicles.store'), [
-                'name'         => 'New vehicle',
+                'name' => 'New vehicle',
                 'plate_number' => '90-AA-555',
             ]);
 

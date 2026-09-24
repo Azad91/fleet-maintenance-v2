@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Bus;
 
 class BusOilChange extends Model
 {
@@ -30,11 +29,11 @@ class BusOilChange extends Model
     ];
 
     protected $casts = [
-        'oil_type'     => OilType::class,
+        'oil_type' => OilType::class,
         'scheduled_km' => 'integer',
-        'actual_km'    => 'integer',
-        'interval_km'  => 'integer',
-        'changed_at'   => 'date',
+        'actual_km' => 'integer',
+        'interval_km' => 'integer',
+        'changed_at' => 'date',
     ];
 
     public function bus()
@@ -99,7 +98,7 @@ class BusOilChange extends Model
         // ─── Fallback to config ───
         return match ($type) {
             OilType::Motor => $bus->motorOilIntervalKm(),
-            OilType::Axle  => $bus->axleOilIntervalKm(),
+            OilType::Axle => $bus->axleOilIntervalKm(),
             OilType::Gearbox => Bus::gearboxIntervalForBrand(
                 static::withoutGlobalScopes()
                     ->where('bus_id', $bus->id)

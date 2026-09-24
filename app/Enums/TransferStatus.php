@@ -55,13 +55,13 @@ enum TransferStatus: string
     public function bootstrapColor(): string
     {
         return match ($this) {
-            self::Draft      => 'secondary',
+            self::Draft => 'secondary',
             self::Dispatched => 'info',
-            self::Received   => 'success',
-            self::Disputed   => 'warning',
-            self::Rejected   => 'danger',
-            self::Cancelled  => 'secondary',
-            self::Resolved   => 'success',
+            self::Received => 'success',
+            self::Disputed => 'warning',
+            self::Rejected => 'danger',
+            self::Cancelled => 'secondary',
+            self::Resolved => 'success',
         };
     }
 

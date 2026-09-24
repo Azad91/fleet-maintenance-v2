@@ -44,7 +44,7 @@ class TransferReportService
             ->all();
 
         $outbound = (clone $base)->whereIn('from_garage_id', $scope->garageIds)->count();
-        $inbound  = (clone $base)->whereIn('to_garage_id', $scope->garageIds)->count();
+        $inbound = (clone $base)->whereIn('to_garage_id', $scope->garageIds)->count();
 
         $totalItemsMoved = (int) WarehouseTransferItem::query()
             ->whereIn('transfer_id', (clone $base)->pluck('id'))
@@ -58,16 +58,16 @@ class TransferReportService
         $disputeRate = $total > 0 ? round(($disputedCount / $total) * 100, 1) : 0.0;
 
         return [
-            'total'            => $total,
-            'outbound'         => $outbound,
-            'inbound'          => $inbound,
-            'items_moved'      => $totalItemsMoved,
-            'disputed'         => $disputedCount,
-            'received'         => $receivedCount,
-            'rejected'         => $rejectedCount,
-            'dispute_rate'     => $disputeRate,
-            'by_status'        => $byStatus,
-            'by_type'          => $byType,
+            'total' => $total,
+            'outbound' => $outbound,
+            'inbound' => $inbound,
+            'items_moved' => $totalItemsMoved,
+            'disputed' => $disputedCount,
+            'received' => $receivedCount,
+            'rejected' => $rejectedCount,
+            'dispute_rate' => $disputeRate,
+            'by_status' => $byStatus,
+            'by_type' => $byType,
         ];
     }
 
@@ -156,11 +156,11 @@ class TransferReportService
             ->keyBy('id');
 
         return $rows->map(fn ($row) => (object) [
-            'user'           => $users->get($row->user_id),
-            'total_actions'  => (int) $row->total_actions,
-            'created_count'  => (int) $row->created_count,
-            'updated_count'  => (int) $row->updated_count,
-            'deleted_count'  => (int) $row->deleted_count,
+            'user' => $users->get($row->user_id),
+            'total_actions' => (int) $row->total_actions,
+            'created_count' => (int) $row->created_count,
+            'updated_count' => (int) $row->updated_count,
+            'deleted_count' => (int) $row->deleted_count,
         ]);
     }
 
@@ -241,7 +241,7 @@ class TransferReportService
             ->whereBetween('warehouse_transfers.created_at', [$period->from, $period->to])
             ->where(function ($q) use ($scope) {
                 $q->whereIn('warehouse_transfers.from_garage_id', $scope->garageIds)
-                  ->orWhereIn('warehouse_transfers.to_garage_id', $scope->garageIds);
+                    ->orWhereIn('warehouse_transfers.to_garage_id', $scope->garageIds);
             });
     }
 }

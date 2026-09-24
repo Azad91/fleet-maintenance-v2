@@ -116,6 +116,7 @@ class WarehouseReportService
             ->limit(200)
             ->get();
     }
+
     /**
      * Per-vehicle part usage — "which service vehicle consumed how many
      * parts, and which parts specifically".
@@ -133,8 +134,8 @@ class WarehouseReportService
             ->where('complaint_details.source_type', 'service_vehicle')
             ->whereHas('complaint', function ($q) use ($period) {
                 $q->whereBetween('complaints.created_at', [$period->from, $period->to])
-                ->whereNull('complaints.deleted_at')
-                ->whereNotNull('complaints.service_vehicle_id');
+                    ->whereNull('complaints.deleted_at')
+                    ->whereNotNull('complaints.service_vehicle_id');
             })
             ->join('complaints', 'complaints.id', '=', 'complaint_details.complaint_id')
             ->join('service_vehicles', 'service_vehicles.id', '=', 'complaints.service_vehicle_id')

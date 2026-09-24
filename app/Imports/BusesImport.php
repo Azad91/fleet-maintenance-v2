@@ -30,9 +30,9 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class BusesImport extends AbstractImport implements ToCollection, WithChunkReading, WithHeadingRow
 {
     /**
-     * @param  int|null  $garageId   Positive for tenant imports.
+     * @param  int|null  $garageId  Positive for tenant imports.
      * @param  int|null  $companyId  Optional, used for strict company scoping.
-     * @param  int|null  $brandId    Optional default brand for every imported bus.
+     * @param  int|null  $brandId  Optional default brand for every imported bus.
      */
     public function __construct(
         ?int $garageId = null,
@@ -66,7 +66,7 @@ class BusesImport extends AbstractImport implements ToCollection, WithChunkReadi
         //                soft-deleted ones (so we can restore them
         //                instead of inserting a duplicate).
         $foreignDqns = [];
-        $localBuses  = collect();
+        $localBuses = collect();
 
         if (! empty($dqnList)) {
             $foreignDqns = Bus::withoutGlobalScopes()
@@ -115,17 +115,17 @@ class BusesImport extends AbstractImport implements ToCollection, WithChunkReadi
             $isNew = ! $bus->exists;
 
             $bus->fill([
-                'garage_id'     => $this->garageId,
-                'company_id'    => $this->companyId,
-                'brand_id'      => $this->brandId,
-                'dqn'           => $dqn,
-                'bus_project'   => $data['bus_project'] ?? null,
-                'vin'           => $data['vin'] ?? null,
-                'uzunluq'       => $data['uzunluq'] ?? null,
-                'route_number'  => $data['route_number'] ?? null,
+                'garage_id' => $this->garageId,
+                'company_id' => $this->companyId,
+                'brand_id' => $this->brandId,
+                'dqn' => $dqn,
+                'bus_project' => $data['bus_project'] ?? null,
+                'vin' => $data['vin'] ?? null,
+                'uzunluq' => $data['uzunluq'] ?? null,
+                'route_number' => $data['route_number'] ?? null,
                 'engine_number' => $data['engine_number'] ?? null,
-                'date'          => now()->format('Y-m-d'),
-                'km'            => isset($data['km']) ? (int) $data['km'] : null,
+                'date' => now()->format('Y-m-d'),
+                'km' => isset($data['km']) ? (int) $data['km'] : null,
             ]);
 
             // Only set is_active on creation. Preserving the existing

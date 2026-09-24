@@ -41,6 +41,7 @@ class ServiceVehicle extends Model
     {
         return $query->where('is_active', true);
     }
+
     /**
      * Stock currently held on this service vehicle.
      * Ordered by name for stable UI presentation.

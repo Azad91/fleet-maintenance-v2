@@ -16,7 +16,7 @@ class DailyKmReportController extends ReportController
     public function missing(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_km', $request);
+        $scope = $this->scope('daily_km', $request);
 
         $buses = $this->service->missing($period, $scope);
 
@@ -47,7 +47,7 @@ class DailyKmReportController extends ReportController
     public function topBuses(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_km', $request);
+        $scope = $this->scope('daily_km', $request);
 
         $buses = $this->service->topBuses($period, $scope);
 
@@ -82,7 +82,7 @@ class DailyKmReportController extends ReportController
     public function workerActivity(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope  = $this->scope('daily_km', $request);
+        $scope = $this->scope('daily_km', $request);
 
         $rows = $this->service->workerActivity($period, $scope);
 
@@ -115,11 +115,11 @@ class DailyKmReportController extends ReportController
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.daily-km.{$view}", array_merge($data, [
-            'domain'       => 'daily_km',
+            'domain' => 'daily_km',
             'activeReport' => $view,
-            'period'       => $period,
-            'scope'        => $scope,
-            'exportUrl'    => request()->fullUrlWithQuery(['export' => 'xlsx']),
+            'period' => $period,
+            'scope' => $scope,
+            'exportUrl' => request()->fullUrlWithQuery(['export' => 'xlsx']),
         ]));
     }
 }

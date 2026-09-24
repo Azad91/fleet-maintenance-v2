@@ -9,12 +9,12 @@ use App\Models\Bus;
 use App\Models\BusBrand;
 use App\Services\BusService;
 use App\Services\GarageContext;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class BusController extends Controller
 {
@@ -101,7 +101,7 @@ class BusController extends Controller
         }
 
         try {
-            $monthStart = Carbon::parse($statusMonth . '-01')->startOfMonth();
+            $monthStart = Carbon::parse($statusMonth.'-01')->startOfMonth();
         } catch (\Throwable $e) {
             $statusMonth = now()->format('Y-m');
             $monthStart = now()->startOfMonth();

@@ -68,7 +68,7 @@ class IdempotencyMiddleware
             $response = $next($request);
 
             // 4. UĞURLU CAVABI KEŞLƏ
-            $status              = $response->getStatusCode();
+            $status = $response->getStatusCode();
             $hasValidationErrors = $this->responseHasValidationErrors($response);
 
             if ($status >= 200 && $status < 400 && ! $hasValidationErrors) {
@@ -80,7 +80,7 @@ class IdempotencyMiddleware
                 // request that touches the same key.
                 if (strlen($content) <= self::MAX_CACHEABLE_RESPONSE_BYTES) {
                     Cache::put($cacheKey, [
-                        'status'  => $status,
+                        'status' => $status,
                         'headers' => $this->filterHeaders($response->headers->all()),
                         'content' => $content,
                     ], now()->addHours(self::CACHE_TTL_HOURS));

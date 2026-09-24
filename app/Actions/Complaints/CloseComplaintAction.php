@@ -81,8 +81,8 @@ class CloseComplaintAction
             } catch (\Throwable $deleteFailure) {
                 Log::warning('Failed to clean up stale complaint PDF after generation failure', [
                     'complaint_id' => $complaint->id,
-                    'error'        => $deleteFailure->getMessage(),
-                    'request_id'   => Context::get('request_id'),
+                    'error' => $deleteFailure->getMessage(),
+                    'request_id' => Context::get('request_id'),
                 ]);
             }
 

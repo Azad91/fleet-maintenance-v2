@@ -64,10 +64,10 @@ class ComplaintUpdateRequest extends FormRequest
 
             'reported_date' => ['required_if:yer,road', 'nullable', 'date'],
             'reported_time' => ['required_if:yer,road', 'nullable', 'date_format:H:i'],
-            'start_date'    => ['nullable', 'date'],
-            'start_time'    => ['nullable', 'date_format:H:i'],
-            'end_date'      => ['nullable', 'date'],
-            'end_time'      => ['nullable', 'date_format:H:i'],
+            'start_date' => ['nullable', 'date'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'end_date' => ['nullable', 'date'],
+            'end_time' => ['nullable', 'date_format:H:i'],
 
             'details' => 'nullable|array',
             'details.*.code' => 'nullable|string',
