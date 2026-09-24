@@ -53,12 +53,30 @@ class DashboardController extends Controller
 
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();
 
-        // Use each item's own minimum_quantity threshold instead of a hardcoded value.
-        $lowStockItems = Warehouse::activeStock()
-            ->whereColumn('quantity', '<=', 'minimum_quantity')
+        // ────────────────────────────────────────────────────────
+        // Low-stock panel: two separate queries.
+        //
+        // The DISPLAY list is capped at 10 rows for the dashboard
+        // panel, but the COUNT shown to the user must reflect the
+        // total number of low-stock items — otherwise a garage with
+        // 42 low-stock items would only see "10 items at critical
+        // level" and underestimate the problem.
+        // ────────────────────────────────────────────────────────
+        $lowStockItemsQuery = Warehouse::activeStock()
+            ->whereColumn('quantity', '<=', 'minimum_quantity');
+
+        $lowStockItemsCount = $lowStockItemsQuery->count();
+
+        $lowStockItems = (clone $lowStockItemsQuery)
             ->orderBy('quantity', 'asc')
             ->limit(10)
             ->get();
+
+        // ────────────────────────────────────────────────────────────────
+        // 
+        // ────────────────────────────────────────────────────────────────
+        $busesWithoutKmTodayCount = $busesWithoutKmTodayQuery->count();   // ✅ düzgün say
+        $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();  // ⚠️ limit 10
 
         $recentComplaints = Complaint::with('bus', 'items')
             ->where('status', '!=', 'completed')
@@ -120,6 +138,7 @@ class DashboardController extends Controller
             'totalWarehouseItems',
             'recentBuses',
             'lowStockItems',
+            'lowStockItemsCount', 
             'recentComplaints',
             'recurringIssues',
             'busesWithoutKmToday',

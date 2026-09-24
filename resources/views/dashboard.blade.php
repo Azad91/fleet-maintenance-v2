@@ -337,7 +337,8 @@
                         <span class="fleet-attention-item__icon fleet-attention-item__icon--red"><i class="fas fa-box-open"></i></span>
                         <span>
                             <strong>{{ __('messages.dashboard.low_stock_alert') }}</strong>
-                            <small>{{ __('messages.dashboard.low_stock_desc', ['count' => $lowStockItems->count()]) }}</small>
+                            {{-- Use the pre-computed total, not the limited collection's count. --}}
+                            <small>{{ __('messages.dashboard.low_stock_desc', ['count' => $lowStockItemsCount]) }}</small>
                         </span>
                         <i class="fas fa-chevron-right"></i>
                     </a>
@@ -345,15 +346,8 @@
                         <span class="fleet-attention-item__icon fleet-attention-item__icon--amber"><i class="fas fa-gauge-high"></i></span>
                         <span>
                             <strong>{{ __('messages.dashboard.km_records') }}</strong>
-                            <small>{{ __('messages.dashboard.km_records_desc', ['count' => $busesWithoutKmToday->count()]) }}</small>
-                        </span>
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                    <a href="{{ route('complaints.index') }}" class="fleet-attention-item text-decoration-none">
-                        <span class="fleet-attention-item__icon fleet-attention-item__icon--blue"><i class="fas fa-repeat"></i></span>
-                        <span>
-                            <strong>{{ __('messages.dashboard.recurring_issues') }}</strong>
-                            <small>{{ __('messages.dashboard.recurring_desc', ['count' => $recurringIssues->count()]) }}</small>
+                            {{-- The controller already computes this total — use it. --}}
+                            <small>{{ __('messages.dashboard.km_records_desc', ['count' => $busesWithoutKmTodayCount]) }}</small>
                         </span>
                         <i class="fas fa-chevron-right"></i>
                     </a>
