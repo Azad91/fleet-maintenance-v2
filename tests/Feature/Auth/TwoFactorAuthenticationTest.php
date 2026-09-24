@@ -145,6 +145,36 @@ class TwoFactorAuthenticationTest extends TestCase
     }
 
     // ==================================================================
+    // 3b. CHALLENGE — TOTP replay defense
+    // ==================================================================
+
+    public function test_totp_code_cannot_be_reused_within_its_validity_window(): void
+    {
+        $sa = $this->makeSuperAdminWithMfa();
+
+        $code = app(Google2FA::class)->getCurrentOtp($sa->two_factor_secret);
+
+        // First use: succeeds.
+        $this->withSession(['two_factor.user_id' => $sa->id])
+            ->post(route('two-factor.challenge.store'), ['code' => $code])
+            ->assertRedirect(route('super-admin.dashboard'));
+
+        $this->assertAuthenticatedAs($sa);
+
+        // Log out so we can re-attempt.
+        $this->post('/logout');
+        $this->assertGuest();
+
+        // Second use of the SAME code (still inside the 90-second
+        // acceptance window): must be rejected by the replay guard.
+        $response = $this->withSession(['two_factor.user_id' => $sa->id])
+            ->post(route('two-factor.challenge.store'), ['code' => $code]);
+
+        $response->assertSessionHasErrors('code');
+        $this->assertGuest();
+    }
+
+    // ==================================================================
     // 4. SETUP MIDDLEWARE — unverified SA forced into setup
     // ==================================================================
 

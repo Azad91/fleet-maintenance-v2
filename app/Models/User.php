@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
@@ -414,6 +415,25 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Verify a TOTP code against this user's secret.
+     *
+     * REPLAY DEFENSE
+     * --------------
+     * A TOTP code is valid for a sliding window of ±30 seconds (see
+     * TwoFactorManager::verifyCode, window: 1). Without a replay
+     * guard the same 6-digit code could be reused inside that window
+     * — an attacker who captures a code via network sniffing,
+     * shoulder-surfing, or a compromised browser session could log
+     * in a second time after the legitimate user has already done so.
+     *
+     * We mark every accepted code in the cache for 120 seconds — the
+     * widest possible window in which a code could still be valid.
+     * Once marked, the same code is rejected for the rest of its
+     * lifetime. A fresh code (30 seconds later) gets a new cache key
+     * and works normally.
+     *
+     * The cache key includes the user id so two users whose secrets
+     * happen to produce the same 6-digit value at the same instant do
+     * not block each other.
      */
     public function verifyTwoFactorCode(string $code): bool
     {
@@ -421,10 +441,32 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return app(TwoFactorManager::class)->verifyCode(
+        // Quick syntactical guard before touching the cache.
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return false;
+        }
+
+        $cacheKey = 'totp_used:'.$this->getKey().':'.hash('sha256', $code);
+
+        // Already consumed inside the acceptance window → reject.
+        if (Cache::has($cacheKey)) {
+            return false;
+        }
+
+        $valid = app(TwoFactorManager::class)->verifyCode(
             $this->two_factor_secret,
             $code,
         );
+
+        if ($valid) {
+            // 120 seconds covers the widest possible TOTP window
+            // (30s current step + 30s past + 30s future) with a
+            // 30-second safety margin. After that the code cannot
+            // be reused anyway because it has naturally expired.
+            Cache::put($cacheKey, true, now()->addSeconds(120));
+        }
+
+        return $valid;
     }
 
     /**
