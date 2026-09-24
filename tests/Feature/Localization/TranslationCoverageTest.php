@@ -120,7 +120,7 @@ class TranslationCoverageTest extends TestCase
 
             $this->assertEmpty(
                 $extra,
-                "Locale [{$locale}] has " . count($extra) . " keys that do not "
+                "Locale [{$locale}] has ".count($extra).' keys that do not '
                 ."exist in [{$locale}]'s reference (en):\n - "
                 .implode("\n - ", array_slice($extra, 0, 20))
             );
@@ -161,7 +161,7 @@ class TranslationCoverageTest extends TestCase
         }
 
         $lines = [
-            'Translation Coverage Report — ' . now()->toIso8601String(),
+            'Translation Coverage Report — '.now()->toIso8601String(),
             str_repeat('=', 70),
             '',
         ];
@@ -179,14 +179,14 @@ class TranslationCoverageTest extends TestCase
             if (! empty($data['missing_sample'])) {
                 $lines[] = '  Missing (first 20):';
                 foreach ($data['missing_sample'] as $key) {
-                    $lines[] = '    - ' . $key;
+                    $lines[] = '    - '.$key;
                 }
             }
 
             if (! empty($data['extra_sample'])) {
                 $lines[] = '  Extra (first 20):';
                 foreach ($data['extra_sample'] as $key) {
-                    $lines[] = '    + ' . $key;
+                    $lines[] = '    + '.$key;
                 }
             }
 
@@ -288,7 +288,7 @@ class TranslationCoverageTest extends TestCase
         }
     }
 
-        /**
+    /**
      * Format a "missing keys per locale" map for the assertion message.
      *
      * @param  array<string, array<int, string>>  $allMissing

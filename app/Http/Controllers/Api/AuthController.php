@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Auth\TimingAttackDefense;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,21 +15,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Dummy bcrypt hash used for timing-attack defense.
-     *
-     * When a login attempt targets an email that does not exist, we
-     * still run Hash::check() against this constant value so that the
-     * response time is indistinguishable from a real "wrong password"
-     * attempt. Without this, an attacker can enumerate valid emails
-     * by measuring response latency.
-     *
-     * The value below is the bcrypt hash of the string "password"
-     * (used by Laravel's UserFactory) — a well-known constant that
-     * contains no real secret.
-     */
-    private const DUMMY_HASH = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
-
     /**
      * Authenticate via email + password and issue a Sanctum token.
      *
@@ -66,7 +52,7 @@ class AuthController extends Controller
 
         // Timing-attack defense: always run a bcrypt comparison, even
         // when the user does not exist.
-        $hashToCheck = $user?->password ?? self::DUMMY_HASH;
+        $hashToCheck = $user?->password ?? TimingAttackDefense::DUMMY_HASH;
         $passwordValid = Hash::check($request->password, $hashToCheck);
 
         // Generic error to prevent user enumeration. The same message

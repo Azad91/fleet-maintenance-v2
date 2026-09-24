@@ -146,16 +146,6 @@ class OilChangeController extends Controller
     }
 
     /**
-     * True when the request should receive a partial view instead of
-     * the full page. Same detection pattern used across the codebase.
-     */
-    private function isAjaxRequest(Request $request): bool
-    {
-        return $request->header('X-Requested-With') === 'XMLHttpRequest'
-            || $request->boolean('_ajax');
-    }
-
-    /**
      * Urgent-only view.
      */
     public function urgent(): View

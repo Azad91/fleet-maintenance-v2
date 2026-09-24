@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Support\Auth\TimingAttackDefense;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
@@ -12,14 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class PinLoginRequest extends FormRequest
 {
-    /**
-     * Dummy bcrypt hash used for timing-attack defense.
-     *
-     * See Api\AuthController::DUMMY_HASH for the full rationale.
-     * This is the bcrypt hash of "password" — contains no real secret.
-     */
-    private const DUMMY_HASH = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
-
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -55,7 +48,7 @@ class PinLoginRequest extends FormRequest
 
         // Timing-attack defense: always run bcrypt, even when the
         // employee code does not exist. Same cost as a real check.
-        $hashToCheck = $user?->pin ?? self::DUMMY_HASH;
+        $hashToCheck = $user?->pin ?? TimingAttackDefense::DUMMY_HASH;
         $pinValid = Hash::check($pin, $hashToCheck);
 
         // Generic error messages to prevent user/account enumeration.

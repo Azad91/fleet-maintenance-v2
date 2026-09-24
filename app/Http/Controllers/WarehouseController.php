@@ -190,17 +190,6 @@ class WarehouseController extends Controller
     }
 
     /**
-     * True when the request should receive the partial view instead
-     * of the full page. Same detection used by BusController,
-     * ComplaintController and OilChangeController.
-     */
-    private function isAjaxRequest(Request $request): bool
-    {
-        return $request->header('X-Requested-With') === 'XMLHttpRequest'
-            || $request->boolean('_ajax');
-    }
-
-    /**
      * Apply search to query.
      *
      * CRITICAL: `orWhere` must be inside a closure. Otherwise the garage

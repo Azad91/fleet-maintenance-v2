@@ -128,30 +128,44 @@ class TimingAttackDefenseTest extends TestCase
     // 3. No timing-specific leaks in log messages
     // ==================================================================
 
-    public function test_api_login_failure_does_not_include_pin_or_mfa_in_log(): void
+    /**
+     * Regression guard: the API login failure path must never log
+     * the submitted password or any MFA-related field.
+     *
+     * Instead of reading the log FILE (which fails on Windows when
+     * the file is locked by another process), we spy on the Log
+     * facade and inspect the recorded calls in memory. This is both
+     * platform-independent AND faster — no disk I/O at all.
+     */
+    public function test_api_login_failure_does_not_log_sensitive_data(): void
     {
-        // Sanity: the log context written by the controller must never
-        // contain the submitted PIN or any MFA secret field. This is a
-        // regression guard around future refactors that might add
-        // debugging payloads.
-        $logPath = storage_path('logs/laravel.log');
-
-        if (file_exists($logPath)) {
-            unlink($logPath);
-        }
+        \Illuminate\Support\Facades\Log::spy();
 
         $this->postJson('/api/login', [
             'email' => 'nobody@test.com',
             'password' => 'secret-guess-1234',
         ]);
 
-        if (file_exists($logPath)) {
-            $log = file_get_contents($logPath);
+        // Collect every value passed to Log::warning() during this
+        // request and assert that none of them contains the password
+        // or any MFA secret field name.
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')
+            ->withArgs(function ($message, array $context = []) {
+                $encoded = json_encode([$message, $context]);
 
-            $this->assertStringNotContainsString('secret-guess-1234', $log);
-            $this->assertStringNotContainsString('two_factor_secret', $log);
-        } else {
-            $this->assertTrue(true, 'No log written — nothing to check');
-        }
+                $this->assertStringNotContainsString(
+                    'secret-guess-1234',
+                    $encoded,
+                    'Submitted password must not appear in log context'
+                );
+
+                $this->assertStringNotContainsString(
+                    'two_factor_secret',
+                    $encoded,
+                    'MFA secret field must not appear in log context'
+                );
+
+                return true;
+            });
     }
 }

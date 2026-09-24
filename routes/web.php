@@ -355,7 +355,6 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
         Route::get('/urgent', [App\Http\Controllers\OilChangeController::class, 'urgent'])->name('urgent');
         Route::get('/search', [App\Http\Controllers\OilChangeController::class, 'search'])->name('search'); // ← YENİ
         Route::post('/', [App\Http\Controllers\OilChangeController::class, 'store'])->name('store');
-        Route::get('/daily', [App\Http\Controllers\OilChangeController::class, 'daily'])->name('daily');
         Route::get('/{oilChange}/edit', [App\Http\Controllers\OilChangeController::class, 'edit'])->name('edit');
         Route::put('/{oilChange}', [App\Http\Controllers\OilChangeController::class, 'update'])->name('update');
         Route::delete('/{oilChange}', [App\Http\Controllers\OilChangeController::class, 'destroy'])->name('destroy');

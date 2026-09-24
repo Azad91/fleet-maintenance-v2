@@ -63,12 +63,6 @@ class BusController extends Controller
         return view('buses.index', compact('buses', 'brands', 'isEmpty', 'hasActiveFilters'));
     }
 
-    private function isAjaxRequest(Request $request): bool
-    {
-        return $request->header('X-Requested-With') === 'XMLHttpRequest'
-            || $request->boolean('_ajax');
-    }
-
     public function show(Request $request, int $id): View
     {
         $bus = Bus::with(['brand', 'latestDailyStatus'])->findOrFail($id);

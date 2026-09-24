@@ -217,3 +217,14 @@
         </div>
     </div>
 </div>
+
+{{-- ─────────────────────────────────────────────────────────────── --}}
+{{-- Total count — read by the parent page's JS after every AJAX   --}}
+{{-- swap to keep the header counter in sync.                      --}}
+{{--                                                                --}}
+{{-- Without this element, index.blade.php's `syncBulkDeleteAllButton()` --}}
+{{-- silently bails out (it does `querySelector('.total-count')` and    --}}
+{{-- gets null), so the header count and the "delete all" button       --}}
+{{-- number never update after a filter change.                        --}}
+{{-- ─────────────────────────────────────────────────────────────── --}}
+<span class="total-count d-none" data-count="{{ $rows->count() }}"></span>

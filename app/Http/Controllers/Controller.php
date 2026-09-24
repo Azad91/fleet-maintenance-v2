@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\GarageContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 
 abstract class Controller
 {
@@ -53,6 +54,29 @@ abstract class Controller
     {
         return $e instanceof QueryException
             && ($e->errorInfo[0] ?? null) === '23505';
+    }
+
+    /**
+     * True when the request should receive a partial view instead of
+     * the full page.
+     *
+     * The project has two AJAX detection conventions:
+     *   1. The standard `X-Requested-With: XMLHttpRequest` header
+     *      (sent automatically by jQuery/Axios/Alpine).
+     *   2. A fallback `_ajax=1` query/body parameter used by a few
+     *      legacy front-end scripts that do not set the header.
+     *
+     * `$request->ajax()` is deprecated in Laravel 11+, so we check
+     * the header directly.
+     *
+     * Centralized here so every AJAX-aware controller shares the
+     * exact same detection rule. Before this refactor the same
+     * 3-line method was duplicated across five controllers.
+     */
+    protected function isAjaxRequest(Request $request): bool
+    {
+        return $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->boolean('_ajax');
     }
 
     /**

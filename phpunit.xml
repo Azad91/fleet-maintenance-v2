@@ -32,5 +32,19 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+
+        <!-- ════════════════════════════════════════════════════════
+             LOG CHANNEL — tests never write to disk.
+             
+             The default `stack` channel writes to
+             storage/logs/laravel.log. On Windows that file is often
+             locked by an IDE or antivirus, and every Log::* call
+             throws UnexpectedValueException. Using the `null` channel
+             short-circuits the logger entirely.
+             
+             Tests that need to assert on log calls use Log::spy(),
+             which intercepts before the channel is even consulted.
+             ════════════════════════════════════════════════════════ -->
+        <env name="LOG_CHANNEL" value="null"/>
     </php>
 </phpunit>

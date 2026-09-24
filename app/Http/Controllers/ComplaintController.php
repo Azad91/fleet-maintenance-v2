@@ -166,6 +166,8 @@ class ComplaintController extends Controller
         $drivers = Driver::active()->orderBy('code')->get();
         $serviceVehicles = ServiceVehicle::active()->orderBy('name')->get();
 
+        // The shared form partial expects a `$details` array in the
+        // same shape the create() method uses for old() input.
         $details = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,
@@ -180,8 +182,6 @@ class ComplaintController extends Controller
             ];
         })->toArray();
 
-        $complaints = $complaint->items->pluck('description')->toArray();
-
         return view('complaints.edit', compact(
             'complaint',
             'buses',
@@ -190,7 +190,6 @@ class ComplaintController extends Controller
             'employees',
             'drivers',
             'serviceVehicles',
-            'complaints'
         ));
     }
 
@@ -482,16 +481,6 @@ class ComplaintController extends Controller
         }
 
         return $query;
-    }
-
-    /**
-     * True when the request should receive a partial view instead of
-     * the full page.
-     */
-    private function isAjaxRequest(Request $request): bool
-    {
-        return $request->header('X-Requested-With') === 'XMLHttpRequest'
-            || $request->boolean('_ajax');
     }
 
     /**
