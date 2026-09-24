@@ -43,9 +43,33 @@ class ComplaintStockService
         string $location = 'garage',
         ?int $serviceVehicleId = null
     ): array {
+        // ── DEADLOCK GUARD: deterministic lock order ──
+        //
+        // Both this method and restoreStock() acquire row-level locks
+        // (lockForUpdate) on warehouse / service-vehicle rows. If two
+        // concurrent transactions touch the SAME set of codes in
+        // different orders — e.g. one user reordered the parts while
+        // another user updated the complaint — PostgreSQL detects a
+        // cycle and aborts one of them with a deadlock error.
+        //
+        // Sorting the input by `code` guarantees that every
+        // transaction acquires locks in the same alphabetical order,
+        // regardless of the order the operator entered the rows.
+        //
+        // The output array ($processed) is built in sorted order,
+        // which is safe because:
+        //   - each code is unique (FormRequest rejects duplicates),
+        //   - ComplaintService::syncDetails() keys by code,
+        //   - restoreStock() already uses the same sort order, so
+        //     the diff walks the rows on both sides identically.
+        $sorted = collect($details)
+            ->sortBy(fn ($detail) => (string) ($detail['code'] ?? ''))
+            ->values()
+            ->all();
+
         $processed = [];
 
-        foreach ($details as $detail) {
+        foreach ($sorted as $detail) {
             $code = $detail['code'] ?? null;
 
             if (empty($code)) {
@@ -58,14 +82,14 @@ class ComplaintStockService
             if ($usedQuantity <= 0) {
                 $processed[] = [
                     'shikayet_index' => $detail['shikayet_index'] ?? 0,
-                    'code' => $code,
-                    'name' => $detail['name'] ?? $code,
+                    'code'           => $code,
+                    'name'           => $detail['name'] ?? $code,
                     'stock_quantity' => 0,
-                    'used_quantity' => 0,
-                    'price_at_use' => 0,           // ← YENİ
-                    'employee_id' => $detail['employee_id'] ?? null,
-                    'notes' => $detail['notes'] ?? null,
-                    'source_type' => 'inspection',
+                    'used_quantity'  => 0,
+                    'price_at_use'   => 0,
+                    'employee_id'    => $detail['employee_id'] ?? null,
+                    'notes'          => $detail['notes'] ?? null,
+                    'source_type'    => 'inspection',
                 ];
 
                 continue;
@@ -76,7 +100,6 @@ class ComplaintStockService
                 $processed[] = $this->deductFromServiceVehicle(
                     $detail, $code, $usedQuantity, $serviceVehicleId
                 );
-
                 continue;
             }
 
