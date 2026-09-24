@@ -32,6 +32,23 @@ class AuthController extends Controller
     /**
      * Authenticate via email + password and issue a Sanctum token.
      *
+     * ─── SUPERADMIN MFA ENFORCEMENT ────────────────────────────────
+     * The web login flow forces SuperAdmin through a TOTP challenge
+     * (see AuthenticatedSessionController). The API must enforce the
+     * same rule — otherwise a leaked password grants full platform
+     * access via /api without ever touching MFA.
+     *
+     * Two-step flow:
+     *
+     *   1. First call: password only → if SuperAdmin has MFA enabled,
+     *      return {requires_2fa: true} and DO NOT issue a token.
+     *
+     *   2. Second call: password + two_factor_code → verify the TOTP
+     *      code (or a recovery code), then issue the token.
+     *
+     * The `two_factor_code` parameter is ignored for every other user
+     * role, so the standard flow is unchanged for regular users.
+     *
      * @throws ValidationException
      */
     public function login(Request $request): JsonResponse
@@ -40,6 +57,7 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:255'],
+            'two_factor_code' => ['nullable', 'string'],
         ]);
 
         $this->ensureIsNotRateLimited($request);
@@ -47,8 +65,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         // Timing-attack defense: always run a bcrypt comparison, even
-        // when the user does not exist. The response time then depends
-        // only on the hash cost, not on whether the email is valid.
+        // when the user does not exist.
         $hashToCheck = $user?->password ?? self::DUMMY_HASH;
         $passwordValid = Hash::check($request->password, $hashToCheck);
 
@@ -88,6 +105,57 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
+        }
+
+        // ────────────────────────────────────────────────────────────
+        // SUPERADMIN MFA GATE
+        // ────────────────────────────────────────────────────────────
+        if ($user->isSuperAdmin() && $user->hasTwoFactorEnabled()) {
+            $code = trim((string) $request->input('two_factor_code', ''));
+
+            if ($code === '') {
+                // Step 1: password was correct, but MFA is required.
+                // Do NOT issue a token yet. The client must retry with
+                // the TOTP code in the `two_factor_code` field.
+                Log::info('API login requires 2FA', [
+                    'user_id' => $user->id,
+                    'ip' => $request->ip(),
+                    'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
+                ]);
+
+                return response()->json([
+                    'requires_2fa' => true,
+                    'message' => __('messages.two_factor.subtitle'),
+                ], 200);
+            }
+
+            // Step 2: verify the TOTP code or a recovery code.
+            $verified = false;
+
+            if (preg_match('/^\d{6}$/', $code)) {
+                $verified = $user->verifyTwoFactorCode($code);
+            }
+
+            if (! $verified && str_contains($code, '-')) {
+                $verified = $user->useRecoveryCode($code);
+            }
+
+            if (! $verified) {
+                RateLimiter::hit(
+                    $this->throttleKey($request),
+                    (int) config('rate_limits.login_decay_seconds', 900)
+                );
+
+                Log::warning('API login failed — invalid 2FA code', [
+                    'user_id' => $user->id,
+                    'ip' => $request->ip(),
+                    'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
+                ]);
+
+                throw ValidationException::withMessages([
+                    'two_factor_code' => [__('messages.two_factor.invalid_code')],
+                ]);
+            }
         }
 
         // Successful login — clear the limiter.
