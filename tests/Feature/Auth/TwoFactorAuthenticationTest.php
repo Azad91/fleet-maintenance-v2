@@ -312,4 +312,26 @@ class TwoFactorAuthenticationTest extends TestCase
 
         return $sa->fresh();
     }
+    public function test_soft_deleted_user_cannot_use_recovery_code(): void
+    {
+        $sa = $this->makeSuperAdminWithMfa();
+
+        $plainCode = 'ABCDE-FGHIJ';
+        $sa->forceFill([
+            'two_factor_recovery_codes' => [Hash::make($plainCode)],
+        ])->save();
+
+        $sa->delete(); // soft delete
+
+        // Attempting to consume a recovery code on a soft-deleted
+        // user must fail — the query respects the SoftDeletes scope.
+        $result = $sa->useRecoveryCode($plainCode);
+
+        $this->assertFalse($result);
+
+        // The code must still be present in the (soft-deleted) row.
+        $raw = \DB::table('users')->where('id', $sa->id)->value('two_factor_recovery_codes');
+        $codes = json_decode($raw, true);
+        $this->assertCount(1, $codes);
+    }
 }

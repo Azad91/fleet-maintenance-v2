@@ -490,7 +490,14 @@ class User extends Authenticatable implements MustVerifyEmail
             // one blocks until the first commits, then re-reads the
             // already-updated list and correctly rejects the reused
             // code.
-            $fresh = static::withoutGlobalScopes()
+            //
+            // We deliberately use `static::query()` instead of
+            // `withoutGlobalScopes()` — the User model only registers
+            // the SoftDeletes global scope, so a plain query preserves
+            // it and correctly excludes soft-deleted accounts. A
+            // soft-deleted user must never be able to consume a
+            // recovery code.
+            $fresh = static::query()
                 ->whereKey($this->getKey())
                 ->lockForUpdate()
                 ->first();
