@@ -38,7 +38,15 @@ class DirectorController extends Controller
             'active_garages' => $company->garages()->where('is_active', true)->count(),
             'total_buses' => $this->busQuery($garageIds)->count(),
             'active_buses' => $this->busQuery($garageIds)->where('is_active', true)->count(),
-            'open_complaints' => $this->complaintQuery($garageIds)->open()->count(),            'total_warehouse_items' => $this->warehouseQuery($garageIds)->sum('quantity'),
+            'open_complaints' => $this->complaintQuery($garageIds)->open()->count(),
+
+            // Only active (non-quarantine) stock counts toward the KPI.
+            // Mirrors DashboardController::index() — see the quarantine
+            // guard comment there. Quarantine rows represent defective /
+            // unusable stock and must not inflate the total.
+            'total_warehouse_items' => $this->warehouseQuery($garageIds)
+                ->activeStock()
+                ->sum('quantity'),
         ];
 
         $garages = $company->garages()
