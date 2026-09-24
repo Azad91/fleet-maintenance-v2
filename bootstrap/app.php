@@ -52,6 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.garage' => App\Http\Middleware\EnsureApiGarageContext::class,
             'super.admin' => App\Http\Middleware\EnsureSuperAdmin::class,
             'pin.enforced' => App\Http\Middleware\EnforcePinChange::class,
+            'director' => App\Http\Middleware\EnsureDirector::class,
             '2fa.verified' => App\Http\Middleware\EnsureTwoFactorVerified::class,
         ]);
     })

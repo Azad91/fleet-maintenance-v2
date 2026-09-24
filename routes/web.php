@@ -86,7 +86,7 @@ Route::middleware('guest')->group(function () {
 | structure (reports.*) but lives under director.reports.* so the shell
 | can detect the Director context and adjust the tab route prefix.
 */
-Route::middleware(['auth'])
+Route::middleware(['auth', 'director'])
     ->prefix('director')
     ->name('director.')
     ->group(function () {
