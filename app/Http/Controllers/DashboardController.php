@@ -38,12 +38,24 @@ class DashboardController extends Controller
         $activeBuses = (int) ($busStats->active ?? 0);
 
         $activeComplaints = Complaint::where('status', '!=', 'completed')->count();
-        $totalWarehouseItems = Warehouse::sum('quantity');
+
+        // ────────────────────────────────────────────────────────
+        // Quarantine guard
+        // ────────────────────────────────────────────────────────
+        // Quarantine rows represent DEFECTIVE / unusable stock —
+        // see Warehouse::scopeQuarantine() and the migration
+        // 2026_09_16_110930. They must not contribute to the active
+        // stock KPI, and they must not appear in the low-stock
+        // alert list (which is a restocking signal for usable
+        // parts). Both queries therefore go through the
+        // activeStock() scope.
+        $totalWarehouseItems = Warehouse::activeStock()->sum('quantity');
 
         $recentBuses = Bus::orderBy('id', 'desc')->limit(5)->get();
 
         // Use each item's own minimum_quantity threshold instead of a hardcoded value.
-        $lowStockItems = Warehouse::whereColumn('quantity', '<=', 'minimum_quantity')
+        $lowStockItems = Warehouse::activeStock()
+            ->whereColumn('quantity', '<=', 'minimum_quantity')
             ->orderBy('quantity', 'asc')
             ->limit(10)
             ->get();
