@@ -131,6 +131,76 @@ Avtobus idxalında `DQN` məcburidir. Eyni DQN cari qarajda yenilənir; başqa q
 4. Həmin intervalın detallar siyahısı avtomatik əlavə edilir.
 5. Dəyişməyəcək detal varsa, kartdakı **Detalı sil** düyməsi ilə çıxarılır. Silinən detal anbardan düşmür.
 
+## Database Backup
+
+Production-da avtomatik DB backup **backup sidecar** konteyneri vasitəsilə işləyir
+(`docker-compose.prod.yml`).
+
+### Necə işləyir
+
+1. Hər gecə saat **02:00**-da (konfiqurasiya olunur — `BACKUP_HOUR`) `pg_dump`
+   işə düşür və PostgreSQL-i `./backups/` qovluğuna `.sql.gz` formatında yazır.
+2. Uğurlu dump-dan sonra `.last-success` marker faylı yenilənir.
+3. `BACKUP_RETENTION_DAYS`-dən (default: 14 gün) köhnə fayllar avtomatik silinir.
+4. `/health` endpoint hər dəfə `.last-success`-in yaşını yoxlayır; backup
+   25 saatdan köhnədirsə, `503 unhealthy` qaytarır.
+
+### Backup faylları hara düşür
+
+Host-da: `./backups/fleet_YYYY-MM-DD_HH-MM-SS.sql.gz`
+
+Bu qovluq **host bind mount**-dur (`docker-compose.prod.yml`-də
+`./backups:/backups`), ona görə Docker-dan asılı olmayaraq hər hansı
+rsync/scp aləti ilə oxuna bilər.
+
+### Off-site kopyalama (tövsiyə olunur)
+
+Backup-ı yalnız serverdə saxlamaq **kifayət deyil** — server yansa və ya
+hardware failure olsa, backup da itər. Hər gecə backup-ı başqa yerə
+kopyalayın:
+
+```bash
+# Nümunə: S3-ə (aws-cli quraşdırılmış olmalı)
+aws s3 sync /path/to/fleet/backups s3://my-fleet-backups/ \
+    --exclude '*' --include 'fleet_*.sql.gz'
+```
+
+Bunu host-un `crontab`-ına backup-dan **1 saat sonra** (03:00) əlavə edin.
+
+### Bərpa (restore)
+
+```bash
+# 1. Backup faylını seçin
+ls -lh backups/
+
+# 2. Database-i bərpa edin (DİQQƏT: mövcud data üzərinə yazır!)
+gunzip -c backups/fleet_2026-09-24_02-00-01.sql.gz \
+    | docker exec -i fleet-prod-postgres \
+        psql -U fleet_prod -d fleet_maintenance_production
+
+# 3. Uğurlu bərpadan sonra app-i yenidən başladın
+docker compose -f docker-compose.prod.yml restart app scheduler
+```
+
+### Backup-ı yoxlamaq
+
+```bash
+# Son backup-ın yaşını gör
+ls -lh backups/ | tail -5
+
+# Health endpoint-ə bax
+curl -s http://127.0.0.1:8080/health | jq '.services.backup'
+
+# Backup sidecar-ın loglarına bax
+docker logs fleet-prod-backup --tail 50
+```
+
+### Manual backup almaq
+
+```bash
+docker exec fleet-prod-backup /usr/local/bin/backup-run.sh
+```
+
 ## Testlər
 
 ```bash

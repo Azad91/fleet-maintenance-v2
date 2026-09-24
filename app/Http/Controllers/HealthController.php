@@ -146,6 +146,63 @@ class HealthController extends Controller
             Log::error('HealthCheck Disk Error: '.$e->getMessage());
             $status['services']['disk'] = ['status' => 'down', 'error' => 'Disk check failed.'];
         }
+        // 6. Backup freshness
+        //
+        // A stale backup is a data-loss risk that no other probe
+        // catches — the app can be perfectly healthy while its last
+        // successful backup is three weeks old. The backup sidecar
+        // touches a marker file after every successful dump; we alert
+        // when that marker is older than the configured window.
+        //
+        // Skipped gracefully when the marker does not exist: local
+        // development has no backup sidecar, and a fresh production
+        // deployment has not yet taken its first backup.
+        try {
+            $maxAgeHours = (int) config('health.backup_max_age_hours', 25);
+            $markerPath = (string) config('health.backup_marker_path');
+
+            if ($maxAgeHours <= 0) {
+                $status['services']['backup'] = [
+                    'status' => 'skipped',
+                    'reason' => 'check disabled',
+                ];
+            } elseif ($markerPath === '' || ! file_exists($markerPath)) {
+                $status['services']['backup'] = [
+                    'status' => 'skipped',
+                    'reason' => 'marker not found',
+                ];
+            } else {
+                $ageHours = (time() - filemtime($markerPath)) / 3600;
+
+                if ($ageHours > $maxAgeHours) {
+                    $isHealthy = false;
+
+                    $status['services']['backup'] = [
+                        'status' => 'down',
+                        'age_hours' => round($ageHours, 1),
+                        'error' => 'Backup is stale.',
+                    ];
+
+                    Log::error('HealthCheck Backup Error: stale backup', [
+                        'age_hours' => round($ageHours, 1),
+                        'threshold_hours' => $maxAgeHours,
+                        'marker' => $markerPath,
+                    ]);
+                } else {
+                    $status['services']['backup'] = [
+                        'status' => 'up',
+                        'age_hours' => round($ageHours, 1),
+                    ];
+                }
+            }
+        } catch (Throwable $e) {
+            // Never fail health on a backup-probe bug. Log and move on.
+            Log::warning('HealthCheck Backup Error: '.$e->getMessage());
+            $status['services']['backup'] = [
+                'status' => 'skipped',
+                'reason' => 'probe error',
+            ];
+        }
 
         $statusCode = $isHealthy ? 200 : 503;
         $status['status'] = $isHealthy ? 'healthy' : 'unhealthy';

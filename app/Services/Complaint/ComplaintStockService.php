@@ -31,7 +31,6 @@ use Illuminate\Validation\ValidationException;
  */
 class ComplaintStockService
 {
-
     /**
      * Fail-closed guard for every stock mutation in this service.
      *
@@ -69,6 +68,7 @@ class ComplaintStockService
 
         return (int) $garageId;
     }
+
     /**
      * Deduct stock for the given detail payloads.
      *
@@ -425,20 +425,20 @@ class ComplaintStockService
      * the detail's metadata so the quantity is never silently lost.
      */
     private function restoreToSpecificVehicle(
-            string $code,
-            int $quantity,
-            int $serviceVehicleId,
-            ?string $nameFromDetail = null
-        ): void {
-            // Fail-closed: only restore to a vehicle that belongs to the
-            // current garage. A stale complaint referencing a foreign
-            // vehicle must never silently credit a foreign tenant.
-            $currentGarageId = $this->requireGarageId();
+        string $code,
+        int $quantity,
+        int $serviceVehicleId,
+        ?string $nameFromDetail = null
+    ): void {
+        // Fail-closed: only restore to a vehicle that belongs to the
+        // current garage. A stale complaint referencing a foreign
+        // vehicle must never silently credit a foreign tenant.
+        $currentGarageId = $this->requireGarageId();
 
-            $vehicle = ServiceVehicle::withoutGlobalScopes()
-                ->whereKey($serviceVehicleId)
-                ->where('garage_id', $currentGarageId)
-                ->first();
+        $vehicle = ServiceVehicle::withoutGlobalScopes()
+            ->whereKey($serviceVehicleId)
+            ->where('garage_id', $currentGarageId)
+            ->first();
         if (! $vehicle) {
             Log::warning('Service vehicle not found — stock restore skipped', [
                 'service_vehicle_id' => $serviceVehicleId,

@@ -30,3 +30,6 @@ Thumbs.db
 "cookies.txt"
 
 .env.docker
+# Backups — never committed; store off-site on production
+/backups/*
+!/backups/.gitkeep
