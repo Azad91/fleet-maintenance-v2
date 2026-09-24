@@ -1,0 +1,130 @@
+# =============================================================================
+# Recommended production Nginx configuration for Fleet Maintenance.
+#
+# Copy to /etc/nginx/sites-available/fleet and adjust:
+#   - server_name     (currently fleet.yourdomain.com)
+#   - TLS cert paths  (currently Let's Encrypt defaults)
+#   - upstream host   (default: 127.0.0.1:8080, matching the docker
+#                      compose "127.0.0.1:8080:80" port binding)
+#
+# This file is NOT consumed by Docker — it is a template for the
+# operator to review and adapt. Renaming it to .conf (without .example)
+# has no effect on the application or the compose stack.
+# =============================================================================
+
+upstream fleet_backend {
+    server 127.0.0.1:8080;
+    keepalive 32;
+}
+
+# ────────────────────────────────────────────────────────────────
+# HTTP → HTTPS redirect + ACME challenge passthrough
+# ────────────────────────────────────────────────────────────────
+server {
+    listen 80;
+    listen [::]:80;
+    server_name fleet.yourdomain.com;
+
+    # Let's Encrypt HTTP-01 challenge — must be reachable over plain
+    # HTTP, before the redirect.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ────────────────────────────────────────────────────────────────
+# HTTPS server
+# ────────────────────────────────────────────────────────────────
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name fleet.yourdomain.com;
+
+    ssl_certificate     /etc/letsencrypt/live/fleet.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/fleet.yourdomain.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Security headers. HSTS is intentionally long (1 year) — remove
+    # the preload directive until you are confident the domain will
+    # stay HTTPS-only forever.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Import files are limited to 10 MB in the app; leave headroom.
+    client_max_body_size 20M;
+
+    # ────────────────────────────────────────────────────────────────
+    # /health — monitoring endpoint
+    #
+    # Deliberately public in the application (no auth middleware), so
+    # external uptime checkers can reach it without credentials.
+    #
+    # That openness exposes a small amount of operational info to
+    # anonymous visitors:
+    #   - database / cache / storage status
+    #   - queue driver name
+    #   - free disk space percentage
+    #   - age of the last successful backup
+    #
+    # None of that is sensitive on its own, but aggregated over time
+    # it reveals your deployment cadence and infrastructure shape.
+    # Restrict it to your monitoring network.
+    # ────────────────────────────────────────────────────────────────
+    location = /health {
+        allow 127.0.0.1;       # loopback (local check)
+        allow 10.0.0.0/8;      # private network — adjust to your VPC
+        allow 172.16.0.0/12;   # docker bridge networks
+        allow 192.168.0.0/16;  # LAN
+        deny all;
+
+        # If your monitoring tool runs from a dynamic IP (UptimeRobot
+        # free tier, Cloudflare Health Checks), you cannot whitelist
+        # it. Two options:
+        #
+        #   1. Replace the allow/deny block with a shared-secret check:
+        #        if ($arg_token != "CHANGE_ME_TO_A_LONG_RANDOM_STRING") {
+        #            return 403;
+        #        }
+        #      and point the monitor at /health?token=...
+        #
+        #   2. Add a second endpoint /health/public in Laravel that
+        #      returns a bare 200 without any service details, and let
+        #      the monitor hit that instead.
+
+        proxy_pass http://fleet_backend;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # ────────────────────────────────────────────────────────────────
+    # Everything else
+    # ────────────────────────────────────────────────────────────────
+    location / {
+        proxy_pass http://fleet_backend;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
+
+        # WebSocket support (kept for future live-update features;
+        # harmless if unused).
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade    $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_read_timeout    300;
+        proxy_connect_timeout  60;
+    }
+}

@@ -253,6 +253,63 @@ php artisan test
 SESSION_SECURE_COOKIE=true
 SESSION_HTTP_ONLY=true
 SESSION_SAME_SITE=lax
+
+### 5. `/health` Endpoint Security
+
+`/health` **auth tələb etmir** — çünki monitoring tool-lar (UptimeRobot,
+Kubernetes liveness probes, internal checks) onu autentifikasiya olmadan
+çağırmalıdır.
+
+Bu, kiçik bir **information disclosure** riskidir: cavab ehtiva edir
+
+```json
+{
+  "services": {
+    "queue":  { "driver": "database" },
+    "disk":   { "free_percent": 62.4 },
+    "backup": { "age_hours": 4.2 }
+  }
+}
+```
+
+Aqreqat olaraq bu məlumat deployment ritmini və infrastruktur formasını
+ifşa edir. **Production-da reverse proxy səviyyəsində məhdudlaşdırın.**
+
+Hazır Nginx konfiqurasiyası: [`docker/nginx/fleet.conf.example`](docker/nginx/fleet.conf.example)
+
+Əsas hissə:
+
+```nginx
+location = /health {
+    allow 127.0.0.1;       # loopback
+    allow 10.0.0.0/8;      # private network
+    allow 172.16.0.0/12;   # docker bridge
+    allow 192.168.0.0/16;  # LAN
+    deny all;
+    proxy_pass http://fleet_backend;
+}
+```
+
+**Dinamik IP-dən monitorinq edirsinizsə** (UptimeRobot free tier kimi),
+whitelist mümkün deyil. Əvəzinə shared-secret query string istifadə edin:
+
+```nginx
+if ($arg_token != "CHANGE_ME_TO_A_LONG_RANDOM_STRING") {
+    return 403;
+}
+```
+
+və monitor-u `/health?token=...` ünvanına yönəldin.
+
+**Backup freshness probe-unu söndürmək** üçün (məsələn backup sidecar
+işlətmirsizsə) `.env.production`-da:
+
+```dotenv
+HEALTH_BACKUP_MAX_AGE_HOURS=0
+```
+
+Bu, probe-u tamamilə `skipped` edir — `/health` yenə 200 qaytarır.
+
 ## Təhlükəsizlik qeydləri
 
 - `.env` faylını GitHub-a göndərməyin.
