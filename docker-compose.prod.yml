@@ -18,6 +18,10 @@ services:
     volumes:
       - ./storage:/var/www/html/storage
       - ./public/storage:/var/www/html/public/storage
+      # Read-only view of the backup directory so /health can read the
+      # freshness marker written by the backup sidecar. Mounted at a
+      # fixed path that config/health.php points to.
+      - ./backups:/var/www/html/storage/app/backups:ro
 
     depends_on:
       postgres:
@@ -39,38 +43,76 @@ services:
         max-size: "10m"
         max-file: "5"
 
-    # ────────────────────────────────────────────────────────────────
-    # Laravel scheduler — runs every minute and dispatches due tasks
-    # (see routes/console.php). `php artisan schedule:work` is Laravel's
-    # own long-running loop, so no system cron is needed inside the
-    # container.
-    #
-    # Uses the same image as the app service so the exact PHP version
-    # and extensions are guaranteed to match. Shares the storage volume
-    # so scheduled jobs (audit archive, PDF cleanup) write to the same
-    # files the app reads.
-    # ────────────────────────────────────────────────────────────────
-    scheduler:
-      image: ${FLEET_IMAGE:-fleet-v2-app:latest}
-      container_name: fleet-prod-scheduler
-      restart: unless-stopped
-      env_file:
-        - .env.production
-      volumes:
-        - ./storage:/var/www/html/storage
-      depends_on:
-        postgres:
-          condition: service_healthy
-      networks:
-        - fleet
-      command: ["php", "/var/www/html/artisan", "schedule:work"]
-      logging:
-        driver: json-file
-        options:
-          max-size: "10m"
-          max-file: "3"
+  # ────────────────────────────────────────────────────────────────
+  # Laravel scheduler — runs every minute and dispatches due tasks
+  # (see routes/console.php). `php artisan schedule:work` is Laravel's
+  # own long-running loop, so no system cron is needed inside the
+  # container.
+  #
+  # Uses the same image as the app service so the exact PHP version
+  # and extensions are guaranteed to match. Shares the storage volume
+  # so scheduled jobs (audit archive, PDF cleanup) write to the same
+  # files the app reads.
+  # ────────────────────────────────────────────────────────────────
+  scheduler:
+    image: ${FLEET_IMAGE:-fleet-v2-app:latest}
+    container_name: fleet-prod-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./backups:/var/www/html/storage/app/backups:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fleet
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ────────────────────────────────────────────────────────────────
+  # Backup sidecar — daily PostgreSQL dump + retention sweep.
+  #
+  # Runs on the same postgres:17-alpine image as the database so the
+  # bundled pg_dump binary always matches the server major version.
+  # Version skew between pg_dump and the server (e.g. pg_dump 16
+  # against a 17 server) silently drops features and, on the reverse
+  # direction, is flatly refused by the server.
+  #
+  # The /backups directory is a HOST BIND MOUNT (./backups), not a
+  # named volume, so the operator can copy backups off-site with
+  # rsync/scp without touching Docker at all.
+  # ────────────────────────────────────────────────────────────────
+  backup:
+    image: postgres:17-alpine
+    container_name: fleet-prod-backup
+    restart: unless-stopped
+    env_file:
+      - .env.production.db
+    volumes:
+      - ./backups:/backups
+      - ./docker/backup/entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+      - ./docker/backup/backup-run.sh:/usr/local/bin/backup-run.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fleet
+    entrypoint: ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
 
+  # ────────────────────────────────────────────────────────────────
+  # PostgreSQL 17 — production database
+  # ────────────────────────────────────────────────────────────────
   postgres:
     image: postgres:17-alpine
     container_name: fleet-prod-postgres
