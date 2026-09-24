@@ -43,7 +43,7 @@ class WarehouseController extends Controller
         return view('warehouses.index', compact('warehouses', 'search', 'view', 'quarantineCount'));
     }
 
-    public function search(Request $request): View
+    public function search(Request $request): View|string
     {
         $this->authorize('viewAny', Warehouse::class);
 
@@ -62,7 +62,19 @@ class WarehouseController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(config('settings.pagination', 15));
 
-        return view('warehouses.partials.table', compact('warehouses', 'search', 'view'));
+        // Mirror the pattern used by BusController::search() and
+        // ComplaintController::search(): an AJAX request receives the
+        // partial only, everything else gets the full page with
+        // layout, sidebar and pagination. Without this fallback a
+        // direct URL visit (or a middle-click "open in new tab")
+        // rendered a bare table fragment with no navigation.
+        if ($this->isAjaxRequest($request)) {
+            return view('warehouses.partials.table', compact('warehouses', 'search', 'view'))->render();
+        }
+
+        $quarantineCount = Warehouse::query()->quarantine()->count();
+
+        return view('warehouses.index', compact('warehouses', 'search', 'view', 'quarantineCount'));
     }
 
     public function create(): View
@@ -175,6 +187,17 @@ class WarehouseController extends Controller
             return redirect()->route('warehouses.index')
                 ->with('error', __('messages.flash.import_error'));
         }
+    }
+
+    /**
+     * True when the request should receive the partial view instead
+     * of the full page. Same detection used by BusController,
+     * ComplaintController and OilChangeController.
+     */
+    private function isAjaxRequest(Request $request): bool
+    {
+        return $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->boolean('_ajax');
     }
 
     /**

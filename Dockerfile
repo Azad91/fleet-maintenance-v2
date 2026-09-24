@@ -47,6 +47,15 @@ RUN { \
     } > /usr/local/etc/php/conf.d/opcache.ini
 
 # ────────────────────────────────────────────────────────────────
+# max_input_vars — enforced at the INI layer (PHP_INI_PERDIR)
+#
+# This directive cannot be changed with ini_set() at runtime. The
+# image ships with the value raised so large complaint forms and
+# bulk imports do not hit PHP's default 1000-input cap. FPM/CGI
+# deployments can also ship a public/.user.ini with the same value.
+# ────────────────────────────────────────────────────────────────
+RUN printf 'max_input_vars = 3000\n' > /usr/local/etc/php/conf.d/max_input_vars.ini
+# ────────────────────────────────────────────────────────────────
 # Composer binary
 # ────────────────────────────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

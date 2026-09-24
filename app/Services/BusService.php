@@ -72,14 +72,32 @@ class BusService
             $query->where('brand_id', (int) $filters['brand_id']);
         }
 
-        $searchableFields = [
-            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+        // Text fields support a case-insensitive partial match through
+        // ILIKE. These columns are all varchar / text in PostgreSQL.
+        $textFields = [
+            'bus_project', 'vin', 'route_number', 'dqn', 'engine_number',
         ];
 
-        foreach ($searchableFields as $field) {
+        foreach ($textFields as $field) {
             if (! empty($filters[$field])) {
                 $query->where($field, 'ILIKE', '%'.$filters[$field].'%');
             }
+        }
+
+        // `uzunluq` is decimal(5,2). PostgreSQL rejects ILIKE on
+        // numeric columns with SQLSTATE 42883 ("operator does not
+        // exist: numeric ~~* unknown"), which used to surface as a
+        // 500 error every time the operator typed anything into the
+        // "Length..." filter field.
+        //
+        // We cast to text so the substring semantics match what the
+        // UI actually offers: the user types "12" and expects every
+        // bus whose length renders as "...12..." to appear.
+        if (! empty($filters['uzunluq'])) {
+            $query->whereRaw(
+                'CAST(uzunluq AS TEXT) ILIKE ?',
+                ['%'.$filters['uzunluq'].'%']
+            );
         }
 
         return $query->orderBy('id', 'desc')->paginate($perPage);
