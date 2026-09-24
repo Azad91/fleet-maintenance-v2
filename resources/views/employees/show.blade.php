@@ -3,64 +3,123 @@
 @section('title', __('messages.employees.details'))
 
 @section('content')
-<div class="container">
-    <h1>👤 {{ __('messages.employees.details') }}</h1>
+<div class="fleet-dashboard">
+    {{-- ─── Page Heading ─── --}}
+    <section class="fleet-page-heading">
+        <div>
+            <span class="fleet-eyebrow">{{ __('messages.nav.data') }}</span>
+            <h1>{{ $employee->full_name }}</h1>
+            <p>
+                @if($employee->code)
+                    <code>{{ $employee->code }}</code> ·
+                @endif
+                {{ $employee->position ?? '—' }}
+            </p>
+        </div>
+        <div class="fleet-page-heading__actions">
+            <a href="{{ route('employees.index') }}" class="fleet-button fleet-button--secondary">
+                <i class="fas fa-arrow-left"></i> {{ __('messages.common.back') }}
+            </a>
+            <a href="{{ route('employees.edit', $employee) }}" class="fleet-button fleet-button--primary">
+                <i class="fas fa-pencil"></i> {{ __('messages.common.edit') }}
+            </a>
+        </div>
+    </section>
 
-    <div class="section-title">📋 {{ __('messages.warehouse.basic_info') }}</div>
+    {{-- ─── Employee Info Panel ─── --}}
+    <section class="fleet-panel mb-4">
+        <header class="fleet-panel__header">
+            <div>
+                <span class="fleet-eyebrow">{{ __('messages.employees.details') }}</span>
+                <h2>{{ __('messages.warehouse.basic_info') }}</h2>
+            </div>
+        </header>
 
-    <div class="field">
-        <span class="label">{{ __('messages.employees.code') }}:</span>
-        <span class="value"><strong>{{ $employee->code ?? '—' }}</strong></span>
-    </div>
-    <div class="field">
-        <span class="label">ID:</span>
-        <span class="value">{{ $employee->id }}</span>
-    </div>
-    <div class="field">
-        <span class="label">{{ __('messages.employees.first_name') }}:</span>
-        <span class="value">{{ $employee->first_name }}</span>
-    </div>
-    <div class="field">
-        <span class="label">{{ __('messages.employees.last_name') }}:</span>
-        <span class="value">{{ $employee->last_name }}</span>
-    </div>
-    <div class="field">
-        <span class="label">{{ __('messages.employees.position') }}:</span>
-        <span class="value">{{ $employee->position }}</span>
-    </div>
+        <div class="fleet-list">
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-id-badge"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.employees.code') }}</strong>
+                    <small>{{ $employee->code ?? '—' }}</small>
+                </span>
+            </div>
 
-    <div class="section-title">📊 {{ __('messages.common.status') }}</div>
-    <div class="field">
-        <span class="label">{{ __('messages.common.active') }}:</span>
-        <span class="value {{ $employee->is_active ? 'active-yes' : 'active-no' }}">
-            {{ $employee->is_active ? '✅ ' . __('messages.common.active') : '❌ ' . __('messages.common.inactive') }}
-        </span>
-    </div>
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-hashtag"></i></span>
+                <span class="fleet-list__content">
+                    <strong>ID</strong>
+                    <small>{{ $employee->id }}</small>
+                </span>
+            </div>
 
-    <div class="section-title">📝 {{ __('messages.warehouse.notes_section') }}</div>
-    <div class="field">
-        <span class="label">{{ __('messages.common.notes') }}:</span>
-        <span class="value">{{ $employee->notes ?? '-' }}</span>
-    </div>
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-user"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.employees.first_name') }}</strong>
+                    <small>{{ $employee->first_name }}</small>
+                </span>
+            </div>
 
-    <div class="section-title">📅 {{ __('messages.complaints.info') }}</div>
-    <div class="field">
-        <span class="label">{{ __('messages.complaints.created') }}:</span>
-        <span class="value">{{ $employee->created_at ? $employee->created_at->format('d.m.Y H:i') : '-' }}</span>
-    </div>
-    <div class="field">
-        <span class="label">{{ __('messages.complaints.last_updated') }}:</span>
-        <span class="value">{{ $employee->updated_at ? $employee->updated_at->format('d.m.Y H:i') : '-' }}</span>
-    </div>
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-user"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.employees.last_name') }}</strong>
+                    <small>{{ $employee->last_name }}</small>
+                </span>
+            </div>
 
-    <br>
-    <div class="d-flex gap-2">
-        <a href="{{ route('employees.edit', $employee) }}" class="btn btn-warning">
-            <i class="bi bi-pencil"></i> {{ __('messages.common.edit') }}
-        </a>
-        <a href="{{ route('employees.index') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> {{ __('messages.common.back') }}
-        </a>
-    </div>
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-briefcase"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.employees.position') }}</strong>
+                    <small>{{ $employee->position }}</small>
+                </span>
+            </div>
+
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-circle-check"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.common.status') }}</strong>
+                    <small>
+                        @if($employee->is_active)
+                            <span class="fleet-status fleet-status--success">
+                                {{ __('messages.common.active') }}
+                            </span>
+                        @else
+                            <span class="fleet-status fleet-status--muted">
+                                {{ __('messages.common.inactive') }}
+                            </span>
+                        @endif
+                    </small>
+                </span>
+            </div>
+
+            @if($employee->notes)
+                <div class="fleet-list__item">
+                    <span class="fleet-list__icon"><i class="fas fa-comment"></i></span>
+                    <span class="fleet-list__content">
+                        <strong>{{ __('messages.common.notes') }}</strong>
+                        <small>{{ $employee->notes }}</small>
+                    </span>
+                </div>
+            @endif
+
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-calendar-plus"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.complaints.created') }}</strong>
+                    <small>{{ $employee->created_at?->format('d.m.Y H:i') ?? '—' }}</small>
+                </span>
+            </div>
+
+            <div class="fleet-list__item">
+                <span class="fleet-list__icon"><i class="fas fa-calendar-check"></i></span>
+                <span class="fleet-list__content">
+                    <strong>{{ __('messages.complaints.last_updated') }}</strong>
+                    <small>{{ $employee->updated_at?->format('d.m.Y H:i') ?? '—' }}</small>
+                </span>
+            </div>
+        </div>
+    </section>
 </div>
 @endsection

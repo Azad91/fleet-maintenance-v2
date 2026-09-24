@@ -69,11 +69,6 @@ class Bus extends Model
         return $this->hasOne(BusDailyStatus::class)->latestOfMany('date');
     }
 
-    public function getLatestKmAttribute()
-    {
-        return $this->latestKmRecord?->km;
-    }
-
     /**
      * Daily distance driven — the difference between the two most
      * recent KM records for this bus.

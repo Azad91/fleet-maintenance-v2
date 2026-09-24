@@ -160,14 +160,29 @@ class ComplaintController extends Controller
 
         $this->authorize('update', $complaint);
 
+        // ────────────────────────────────────────────────────────
+        // Reference data for the shared form partial.
+        //
+        // The partial expects the same variable names the create()
+        // method uses, so both views can `@include` the same
+        // `complaints.partials.form` without branching.
+        // ────────────────────────────────────────────────────────
         $buses = Bus::orderBy('route_number')->get();
         $complaintTypes = ComplaintType::orderBy('name')->get();
         $employees = Employee::active()->orderBy('first_name')->get();
         $drivers = Driver::active()->orderBy('code')->get();
         $serviceVehicles = ServiceVehicle::active()->orderBy('name')->get();
 
-        // The shared form partial expects a `$details` array in the
-        // same shape the create() method uses for old() input.
+        // ────────────────────────────────────────────────────────
+        // Shape the existing details into the same array format the
+        // create form expects. Each row carries BOTH the raw
+        // employee_id (used as a hidden input) and the resolved
+        // employee_code / employee_name (rendered as visible inputs).
+        //
+        // `$detail->employee` uses withTrashed() on the relation, so a
+        // soft-deleted employee still renders correctly on historical
+        // cards — matching ComplaintPdfService::generate().
+        // ────────────────────────────────────────────────────────
         $details = $complaint->details->map(function ($detail) {
             return [
                 'shikayet_index' => $detail->shikayet_index,

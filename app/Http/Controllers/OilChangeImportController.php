@@ -23,7 +23,9 @@ class OilChangeImportController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        // Resolve garage context BEFORE authorization.
+        // Garage context must be resolved BEFORE authorization.
+        // If no garage is active, redirect to the selection page
+        // instead of triggering a 403 in the policy.
         $garageId = GarageContext::resolveGarageId();
 
         if ($garageId === null || $garageId <= 0) {
@@ -41,12 +43,18 @@ class OilChangeImportController extends Controller
         ]);
 
         $type = OilType::from($validated['type']);
+
+        // The bus length only applies to motor oil imports — the
+        // gearbox and axle schedules are brand-driven and do not
+        // depend on the bus's physical length.
         $busLengthM = $type === OilType::Motor
             ? (int) ($validated['bus_length'] ?? 12)
             : null;
 
-        // ─── Debug: log start of import ───
-        Log::info('Oil import started', [
+        // Debug-level: useful when diagnosing a failed import in
+        // development. Hidden in production because LOG_LEVEL=warning
+        // (see .env.production.example).
+        Log::debug('Oil import started', [
             'type' => $type->value,
             'bus_length' => $busLengthM,
             'file' => $request->file('file')->getClientOriginalName(),
@@ -66,8 +74,7 @@ class OilChangeImportController extends Controller
             $skipped = $import->skipped;
             $imported = $import->importedCount;
 
-            // ─── Debug: log result ───
-            Log::info('Oil import finished', [
+            Log::debug('Oil import finished', [
                 'type' => $type->value,
                 'imported' => $imported,
                 'skipped' => count($skipped),
@@ -88,13 +95,18 @@ class OilChangeImportController extends Controller
                 ->with('import_report', $this->buildImportReport($imported, $skipped, collect()));
 
         } catch (\Throwable $e) {
-            // ─── Debug: log full failure ───
+            // ERROR level: the import failed and the operator needs
+            // to know. The full stack trace is NOT logged here —
+            // Laravel's exception handler already forwards it to
+            // Sentry (config/sentry.php), and duplicating a multi-KB
+            // trace into the local log file adds noise without value.
             Log::error('Oil import failed', [
                 'type' => $type->value,
+                'file' => $request->file('file')?->getClientOriginalName(),
+                'garage_id' => $garageId,
                 'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
             ]);
 
             report($e);

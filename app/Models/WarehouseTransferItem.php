@@ -54,10 +54,4 @@ class WarehouseTransferItem extends Model
 
         return $this->received_quantity - $this->declared_quantity;
     }
-
-    public function hasDiscrepancy(): bool
-    {
-        return $this->received_quantity !== null
-            && $this->received_quantity !== $this->declared_quantity;
-    }
 }

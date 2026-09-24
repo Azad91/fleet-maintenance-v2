@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\GarageContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -25,23 +24,6 @@ abstract class Controller
             403,
             __('messages.flash.permission_denied')
         );
-    }
-
-    protected function addGarageContext(array $data): array
-    {
-        $data['garage_id'] = GarageContext::resolveGarageId();
-        $data['company_id'] = GarageContext::resolveCompanyId();
-
-        return $data;
-    }
-
-    protected function getRoleString(array|string $roles): string
-    {
-        if (is_string($roles)) {
-            return $roles;
-        }
-
-        return implode(',', $roles);
     }
 
     /**
