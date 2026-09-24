@@ -330,8 +330,14 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertFalse($result);
 
         // The code must still be present in the (soft-deleted) row.
-        $raw = \DB::table('users')->where('id', $sa->id)->value('two_factor_recovery_codes');
-        $codes = json_decode($raw, true);
-        $this->assertCount(1, $codes);
+        //
+        // We read through Eloquent with withTrashed() so the
+        // `encrypted:array` cast decrypts the value for us — a raw
+        // DB read returns the ciphertext and json_decode() would
+        // simply return null.
+        $softDeleted = \App\Models\User::withTrashed()->find($sa->id);
+
+        $this->assertNotNull($softDeleted);
+        $this->assertCount(1, $softDeleted->two_factor_recovery_codes);
     }
 }
