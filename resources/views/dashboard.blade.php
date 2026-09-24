@@ -56,6 +56,11 @@
         </section>
         {{-- ═══════════════════════════════════════════════════ --}}
         {{-- OIL CHANGE ALERTS                                 --}}
+        {{--                                                    --}}
+        {{-- This panel contains the KPI cards AND the list of  --}}
+        {{-- overdue/critical buses, so the alerts are always   --}}
+        {{-- visible whenever the totals are non-zero —         --}}
+        {{-- independent of warehouse transfer activity.        --}}
         {{-- ═══════════════════════════════════════════════════ --}}
         @if(($oilStats['total_attention'] ?? 0) > 0)
             <section class="fleet-panel mb-4">
@@ -127,8 +132,56 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- ─────────────────────────────────────────────────── --}}
+                {{-- OVERDUE / CRITICAL BUSES LIST                      --}}
+                {{--                                                    --}}
+                {{-- Lives inside the oil panel so it renders whenever   --}}
+                {{-- $oilStats['total_attention'] > 0 — regardless of   --}}
+                {{-- whether any warehouse transfers are pending.       --}}
+                {{-- ─────────────────────────────────────────────────── --}}
+                @if(($oilAlerts ?? collect())->isNotEmpty())
+                    <div class="fleet-list" style="border-top: 1px solid #eef2f7;">
+                        @foreach($oilAlerts as $alert)
+                            <a href="{{ route('oil-changes.show', $alert['bus']) }}"
+                               class="fleet-list__item text-decoration-none">
+                                <span class="fleet-list__icon" style="background: #fee2e2; color: #dc2626;">
+                                    <i class="fas fa-bus"></i>
+                                </span>
+                                <span class="fleet-list__content">
+                                    <strong>
+                                        {{ $alert['bus']->dqn }}
+                                        @if($alert['bus']->route_number)
+                                            · {{ __('messages.daily_km.route_label', ['route' => $alert['bus']->route_number]) }}
+                                        @endif
+                                    </strong>
+                                    <small>
+                                        @foreach($alert['statuses'] as $status)
+                                            {{ $status->type->icon() }} {{ $status->type->label() }}:
+                                            @if($status->isOverdue())
+                                                <span class="text-danger fw-bold">
+                                                    −{{ number_format($status->overdueByKm(), 0, '', '.') }} km
+                                                </span>
+                                            @else
+                                                <span style="color: #ea580c;" class="fw-bold">
+                                                    {{ number_format($status->remainingKm, 0, '', '.') }} km
+                                                </span>
+                                            @endif
+                                            @if(! $loop->last) · @endif
+                                        @endforeach
+                                    </small>
+                                </span>
+                                <span class="fleet-status {{ $alert['statuses']->first()->isOverdue() ? 'fleet-status--muted' : 'fleet-status--warning' }}">
+                                    {{ $alert['statuses']->first()->statusLabel() }}
+                                </span>
+                                <i class="fas fa-chevron-right fleet-list__arrow"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </section>
         @endif
+
         {{-- ═══════════════════════════════════════════════════ --}}
         {{-- TRANSFER NOTIFICATIONS                             --}}
         {{-- ═══════════════════════════════════════════════════ --}}
@@ -245,46 +298,6 @@
                                 <i class="fas fa-chevron-right fleet-list__arrow"></i>
                             </a>
                         @endforeach
-                        {{-- Recent overdue/critical buses list --}}
-                        @if(($oilAlerts ?? collect())->isNotEmpty())
-                            <div class="fleet-list" style="border-top: 1px solid #eef2f7;">
-                                @foreach($oilAlerts as $alert)
-                                    <a href="{{ route('oil-changes.show', $alert['bus']) }}"
-                                    class="fleet-list__item text-decoration-none">
-                                        <span class="fleet-list__icon" style="background: #fee2e2; color: #dc2626;">
-                                            <i class="fas fa-bus"></i>
-                                        </span>
-                                        <span class="fleet-list__content">
-                                            <strong>
-                                                {{ $alert['bus']->dqn }}
-                                                @if($alert['bus']->route_number)
-                                                    · {{ __('messages.daily_km.route_label', ['route' => $alert['bus']->route_number]) }}
-                                                @endif
-                                            </strong>
-                                            <small>
-                                                @foreach($alert['statuses'] as $status)
-                                                    {{ $status->type->icon() }} {{ $status->type->label() }}:
-                                                    @if($status->isOverdue())
-                                                        <span class="text-danger fw-bold">
-                                                            −{{ number_format($status->overdueByKm(), 0, '', '.') }} km
-                                                        </span>
-                                                    @else
-                                                        <span style="color: #ea580c;" class="fw-bold">
-                                                            {{ number_format($status->remainingKm, 0, '', '.') }} km
-                                                        </span>
-                                                    @endif
-                                                    @if(! $loop->last) · @endif
-                                                @endforeach
-                                            </small>
-                                        </span>
-                                        <span class="fleet-status {{ $alert['statuses']->first()->isOverdue() ? 'fleet-status--muted' : 'fleet-status--warning' }}">
-                                            {{ $alert['statuses']->first()->statusLabel() }}
-                                        </span>
-                                        <i class="fas fa-chevron-right fleet-list__arrow"></i>
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endif
                     </div>
                 @endif
             </section>
