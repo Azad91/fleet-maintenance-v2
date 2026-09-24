@@ -393,6 +393,11 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
         $warehouse = Warehouse::withoutGlobalScopes()
             ->where('code', $code)
             ->where('garage_id', $this->garageId)
+            // Quarantine rows must not be consumed via import — an
+            // operator with a stale spreadsheet could otherwise wipe
+            // the quarantine bucket and re-inflate the active stock
+            // through the audit trail.
+            ->where('is_quarantine', false)
             ->first();
 
         $this->warehouseCache[$key] = $warehouse;

@@ -188,10 +188,16 @@ class ComplaintStockService
             // it. This keeps the operation correct when the service is
             // called from a queue job or artisan command where the
             // global scope may be inactive.
+            //
+            // Quarantine rows are excluded: crediting a restored
+            // quantity to a quarantine bucket would silently "clean"
+            // defective stock and corrupt the active inventory
+            // balance.
             $garageId = \App\Services\GarageContext::resolveGarageId();
 
             $warehouseQuery = Warehouse::withoutGlobalScopes()
                 ->where('code', $code)
+                ->where('is_quarantine', false)
                 ->whereNull('deleted_at');   // ← only live warehouse rows
 
             if ($garageId !== null) {
@@ -248,13 +254,17 @@ class ComplaintStockService
      * it. This keeps the deduction correct when the service is invoked
      * from a queue job, artisan command, or an import where the global
      * scope may be inactive.
+     *
+     * Quarantine rows (is_quarantine = true) are excluded: defective
+     * parts must never enter the active ledger through a complaint.
      */
     private function deductFromWarehouse(array $detail, string $code, int $usedQuantity): array
     {
         $garageId = \App\Services\GarageContext::resolveGarageId();
 
         $warehouseQuery = Warehouse::withoutGlobalScopes()
-            ->where('code', $code);
+            ->where('code', $code)
+            ->where('is_quarantine', false);
 
         if ($garageId !== null) {
             $warehouseQuery->where('garage_id', $garageId);
@@ -416,6 +426,7 @@ class ComplaintStockService
         $warehouse = Warehouse::withoutGlobalScopes()
             ->where('garage_id', $vehicle->garage_id)
             ->where('code', $code)
+            ->where('is_quarantine', false)
             ->whereNull('deleted_at')
             ->first();
 
@@ -482,6 +493,7 @@ class ComplaintStockService
             $fallback = Warehouse::withoutGlobalScopes()
                 ->where('garage_id', $stock->garage_id)
                 ->where('code', $code)
+                ->where('is_quarantine', false)
                 ->whereNull('deleted_at')
                 ->value('price');
 

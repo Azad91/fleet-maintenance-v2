@@ -65,14 +65,30 @@ class ComplaintService
 
     public function update(Complaint $complaint, array $data, ?array $detallar = null, array $shikayet = []): Complaint
     {
-        if (isset($data['status'])) {
-            $this->transitionService->validateTransition($complaint, $data['status']);
-        }
-
         $this->applyLocationContext($data);
 
         $updated = DB::transaction(function () use ($complaint, $data, $detallar, $shikayet) {
-            $oldDetails = $complaint->details()->orderBy('id')->get()->toArray();
+            // ── CONCURRENCY GUARD ──
+            // Lock the complaint row FIRST so concurrent updates on
+            // the same complaint are serialized. Without this, two
+            // admins editing the same card simultaneously each read
+            // the same "old" details, each compute a stock diff
+            // against those details, and each write back — corrupting
+            // the stock ledger with a double restore + double deduct.
+            $locked = Complaint::withoutGlobalScopes()
+                ->whereKey($complaint->getKey())
+                ->whereNull('deleted_at')
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Re-validate the transition INSIDE the lock so the
+            // current status is the one we are actually transitioning
+            // from, not a snapshot that could be stale by now.
+            if (isset($data['status'])) {
+                $this->transitionService->validateTransition($locked, $data['status']);
+            }
+
+            $oldDetails = $locked->details()->orderBy('id')->get()->toArray();
 
             // Historical complaints (imported for archival) must never
             // trigger a stock diff — their details were saved without
@@ -94,20 +110,20 @@ class ComplaintService
                     $detallar,
                     $location,
                     $data['service_vehicle_id'] ?? null,
-                    $complaint->service_vehicle_id
+                    $locked->service_vehicle_id
                 );
             }
 
-            $complaint->update($data);
+            $locked->update($data);
 
             // Historical complaints keep their original details untouched.
             if ($processedDetails !== null) {
-                $this->syncDetails($complaint, $processedDetails);
+                $this->syncDetails($locked, $processedDetails);
             }
 
-            $this->itemService->syncItems($complaint, $shikayet, $data['complaint_type'] ?? null);
+            $this->itemService->syncItems($locked, $shikayet, $data['complaint_type'] ?? null);
 
-            return $complaint->fresh(['details', 'items']);
+            return $locked->fresh(['details', 'items']);
         });
 
         // The PDF (if any) now shows an outdated snapshot. Delete it
@@ -120,57 +136,88 @@ class ComplaintService
 
     public function close(Complaint $complaint, array $data): Complaint
     {
-        $this->transitionService->validateTransition(
-            $complaint,
-            ComplaintStatus::Completed
-        );
+        return DB::transaction(function () use ($complaint, $data) {
+            // ── CONCURRENCY GUARD ──
+            // Lock the complaint row so two concurrent close attempts
+            // are serialized. Without this, both could pass the
+            // "isCompleted?" pre-check outside the transaction and
+            // both succeed — the second one silently overwriting the
+            // first one's end_date / end_time / closed_by values.
+            $locked = Complaint::withoutGlobalScopes()
+                ->whereKey($complaint->getKey())
+                ->whereNull('deleted_at')
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $complaint->update([
-            'status' => ComplaintStatus::Completed,
-            'end_date' => $data['end_date'],
-            'end_time' => $data['end_time'],
-            'work_done_by' => $data['work_done'],
-            'closed_at' => now(),
-            'closed_by' => auth()->id(),
-        ]);
+            $this->transitionService->validateTransition(
+                $locked,
+                ComplaintStatus::Completed
+            );
 
-        return $complaint;
+            $locked->update([
+                'status' => ComplaintStatus::Completed,
+                'end_date' => $data['end_date'],
+                'end_time' => $data['end_time'],
+                'work_done_by' => $data['work_done'],
+                'closed_at' => now(),
+                'closed_by' => auth()->id(),
+            ]);
+
+            return $locked;
+        });
     }
 
     public function delete(Complaint $complaint): void
     {
         DB::transaction(function () use ($complaint) {
+            // ── CONCURRENCY GUARD ──
+            // Lock the complaint row so a concurrent update / close /
+            // delete on the same row is serialized. Without this, a
+            // delete could run in parallel with an update that has
+            // already read the "old" details — both would restore
+            // stock for the same rows, doubling the credited quantity.
+            $locked = Complaint::withoutGlobalScopes()
+                ->whereKey($complaint->getKey())
+                ->whereNull('deleted_at')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $locked) {
+                // Already deleted by another process. Nothing to do.
+                return;
+            }
+
             // Restore stock for all details. For road complaints, the
             // stock goes back to the specific service vehicle that was
             // linked to this complaint.
-            if ($complaint->details->isNotEmpty()) {
+            if ($locked->details->isNotEmpty()) {
                 $this->stockService->restoreStock(
-                    $complaint->details->toArray(),
-                    $complaint->service_vehicle_id
+                    $locked->details->toArray(),
+                    $locked->service_vehicle_id
                 );
             }
 
             // AUDIT NOTE
             // ----------
-            // `$complaint->details()->delete()` is a Builder-level bulk
+            // `$locked->details()->delete()` is a Builder-level bulk
             // delete — it bypasses Eloquent's `deleted` event, so the
             // Auditable trait writes NO log for the details. We take
             // an explicit audit snapshot first, mirroring the pattern
             // used by BusService::bulkDelete().
             //
-            // The complaint row itself is deleted via `$complaint->delete()`
+            // The complaint row itself is deleted via `$locked->delete()`
             // (per-model), so its audit entry is written normally.
-            $detailIds = $complaint->details()->pluck('id')->all();
+            $detailIds = $locked->details()->pluck('id')->all();
 
             if (! empty($detailIds)) {
                 ComplaintDetail::auditBulkDelete($detailIds);
             }
 
             // Soft-delete details
-            $complaint->details()->delete();
+            $locked->details()->delete();
 
             // Soft-delete complaint
-            $complaint->delete();
+            $locked->delete();
         });
 
         $this->invalidatePdfAfterCommit($complaint);

@@ -83,11 +83,17 @@ class WarehouseTransferService
 
             // Item rows must exist and belong to the source garage.
             // We lock them now so nobody can delete them mid-create.
+            //
+            // Quarantine rows are explicitly excluded: defective parts
+            // must never enter the normal transfer workflow — they are
+            // reserved for inspection, disposal, or the dedicated
+            // return-to-quarantine transfer type.
             $warehouseIds = array_column($data['items'], 'warehouse_id');
 
             $warehouses = Warehouse::withoutGlobalScopes()
                 ->whereIn('id', $warehouseIds)
                 ->where('garage_id', $data['from_garage_id'])
+                ->where('is_quarantine', false)
                 ->whereNull('deleted_at')
                 ->lockForUpdate()
                 ->get()
@@ -172,6 +178,7 @@ class WarehouseTransferService
             foreach ($sortedItems as $item) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('id', $item->warehouse_id)
+                    ->where('is_quarantine', false)
                     ->whereNull('deleted_at')
                     ->lockForUpdate()
                     ->first();
