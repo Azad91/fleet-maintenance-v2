@@ -297,6 +297,21 @@ class DailyKmRecordController extends Controller
      * If no explicit date filter is present in the request, the date
      * filter is IGNORED — the operation then wipes every KM record
      * for the current garage, not just today's.
+     *
+     * AUDIT NOTE
+     * ----------
+     * A raw `$query->delete()` bypasses Eloquent per-model events,
+     * so the Auditable trait's `deleted` handler never runs and no
+     * audit log is written. We mirror the pattern used by
+     * BusService::bulkDeleteAllByFilters():
+     *
+     *   1. Stream IDs from the database via cursor() in chunks of 500.
+     *   2. Write the audit snapshot BEFORE each chunk's delete.
+     *   3. Delete the chunk in one query.
+     *
+     * Chunking keeps memory usage flat for very large datasets (a
+     * garage can accumulate hundreds of thousands of KM rows) and
+     * keeps the audit snapshot in sync with what was actually deleted.
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
@@ -317,7 +332,25 @@ class DailyKmRecordController extends Controller
             $query->whereHas('bus', fn ($q) => $q->where('dqn', 'ILIKE', "%{$dqn}%"));
         }
 
-        $count = $query->delete();
+        $count = 0;
+        $buffer = [];
+
+        foreach ($query->select('id')->cursor() as $row) {
+            $buffer[] = $row->id;
+
+            if (count($buffer) >= 500) {
+                DailyKmRecord::auditBulkDelete($buffer);
+                DailyKmRecord::whereIn('id', $buffer)->delete();
+                $count += count($buffer);
+                $buffer = [];
+            }
+        }
+
+        if (! empty($buffer)) {
+            DailyKmRecord::auditBulkDelete($buffer);
+            DailyKmRecord::whereIn('id', $buffer)->delete();
+            $count += count($buffer);
+        }
 
         if ($count === 0) {
             return redirect()
@@ -331,5 +364,5 @@ class DailyKmRecordController extends Controller
                 'count' => $count,
                 'items' => 'KM records',
             ]));
-    }
+}
 }

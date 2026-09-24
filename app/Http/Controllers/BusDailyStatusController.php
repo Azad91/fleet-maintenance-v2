@@ -260,8 +260,17 @@ class BusDailyStatusController extends Controller
      * Bulk soft-delete bus daily statuses matching the current filter.
      *
      * If no explicit date filter is present in the request, the date
-     * filter is IGNORED — the operation then wipes every status record
-     * for the current garage, not just today's.
+     * filter is IGNORED — the operation then wipes every status
+     * record for the current garage, not just today's.
+     *
+     * AUDIT NOTE
+     * ----------
+     * See DailyKmRecordController::bulkDeleteAll() for the full
+     * rationale. A raw `$query->delete()` skips Eloquent events and
+     * therefore the Auditable trait's `deleted` handler — no audit
+     * log would be written. This method streams IDs in chunks and
+     * writes the audit snapshot before each chunk's delete, mirroring
+     * BusService::bulkDeleteAllByFilters().
      */
     public function bulkDeleteAll(Request $request): RedirectResponse
     {
@@ -287,7 +296,25 @@ class BusDailyStatusController extends Controller
             $query->where('status', $status);
         }
 
-        $count = $query->delete();
+        $count = 0;
+        $buffer = [];
+
+        foreach ($query->select('id')->cursor() as $row) {
+            $buffer[] = $row->id;
+
+            if (count($buffer) >= 500) {
+                BusDailyStatus::auditBulkDelete($buffer);
+                BusDailyStatus::whereIn('id', $buffer)->delete();
+                $count += count($buffer);
+                $buffer = [];
+            }
+        }
+
+        if (! empty($buffer)) {
+            BusDailyStatus::auditBulkDelete($buffer);
+            BusDailyStatus::whereIn('id', $buffer)->delete();
+            $count += count($buffer);
+        }
 
         if ($count === 0) {
             return redirect()
