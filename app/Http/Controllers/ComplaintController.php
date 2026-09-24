@@ -129,10 +129,26 @@ class ComplaintController extends Controller
 
         $this->authorize('view', $complaint);
 
-        $employeesById = Employee::whereIn(
-            'id',
-            $complaint->details->pluck('employee_id')->filter()->unique()
-        )->get()->keyBy('id');
+        // ────────────────────────────────────────────────────────
+        // Soft-deleted employee guard
+        // ────────────────────────────────────────────────────────
+        // A complaint detail is a historical record: if the employee
+        // who performed the work later leaves the company (and is
+        // soft-deleted), their name must still appear on past
+        // complaint cards. ComplaintPdfService::generate() already
+        // resolves soft-deleted employees; the show page must match
+        // so the on-screen card and the printed PDF agree.
+        //
+        // HasGarageScope remains active — cross-tenant references
+        // are still filtered out.
+        // ────────────────────────────────────────────────────────
+        $employeesById = Employee::withTrashed()
+            ->whereIn(
+                'id',
+                $complaint->details->pluck('employee_id')->filter()->unique()
+            )
+            ->get()
+            ->keyBy('id');
 
         return view('complaints.show', compact('complaint', 'employeesById'));
     }

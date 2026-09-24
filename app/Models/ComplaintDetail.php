@@ -44,9 +44,23 @@ class ComplaintDetail extends Model
         return $this->belongsTo(Complaint::class);
     }
 
+    /**
+     * The employee that performed this work.
+     *
+     * Uses withTrashed() because a complaint detail is a HISTORICAL
+     * record — an employee who later leaves the company (and is
+     * soft-deleted) must still render their original name on every
+     * past complaint. This mirrors ComplaintPdfService::generate(),
+     * which already resolves soft-deleted employees so that the
+     * generated PDF matches what the show page displays.
+     *
+     * HasGarageScope remains active, so a cross-tenant reference
+     * (which should not exist, but is protected against anyway)
+     * still cannot leak an employee from another garage.
+     */
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class)->withTrashed();
     }
 
     /**

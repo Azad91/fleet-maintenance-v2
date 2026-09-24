@@ -58,9 +58,17 @@ class Complaint extends Model
         return $this->belongsTo(Bus::class);
     }
 
+    /**
+     * The employee associated with the complaint header.
+     *
+     * Uses withTrashed() for the same reason as
+     * ComplaintDetail::employee() — see that method for the full
+     * rationale. Historical complaints must render the employee's
+     * name even after they have been soft-deleted.
+     */
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class)->withTrashed();
     }
 
     public function driver()
