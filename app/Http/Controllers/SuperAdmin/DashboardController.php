@@ -38,7 +38,7 @@ class DashboardController extends Controller
             // Only the 'garage' scope is removed — SoftDeletes stays active.
             'buses_total' => Bus::withoutGlobalScope('garage')->count(),
             'complaints_open' => Complaint::withoutGlobalScope('garage')
-                ->where('status', '!=', 'completed')
+                ->open()
                 ->count(),
         ];
 

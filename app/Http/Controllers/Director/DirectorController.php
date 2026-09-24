@@ -38,14 +38,13 @@ class DirectorController extends Controller
             'active_garages' => $company->garages()->where('is_active', true)->count(),
             'total_buses' => $this->busQuery($garageIds)->count(),
             'active_buses' => $this->busQuery($garageIds)->where('is_active', true)->count(),
-            'open_complaints' => $this->complaintQuery($garageIds)->where('status', '!=', 'completed')->count(),
-            'total_warehouse_items' => $this->warehouseQuery($garageIds)->sum('quantity'),
+            'open_complaints' => $this->complaintQuery($garageIds)->open()->count(),            'total_warehouse_items' => $this->warehouseQuery($garageIds)->sum('quantity'),
         ];
 
         $garages = $company->garages()
             ->withCount([
                 'buses',
-                'complaints as open_complaints_count' => fn ($q) => $q->where('status', '!=', 'completed'),
+                'complaints as open_complaints_count' => fn ($q) => $q->open(),
             ])
             ->orderBy('name')
             ->get();
@@ -88,7 +87,7 @@ class DirectorController extends Controller
         $stats = [
             'total_buses' => $this->busQuery([$garage->id])->count(),
             'active_buses' => $this->busQuery([$garage->id])->where('is_active', true)->count(),
-            'open_complaints' => $this->complaintQuery([$garage->id])->where('status', '!=', 'completed')->count(),
+            'open_complaints' => $this->complaintQuery([$garage->id])->open()->count(),
             'total_employees' => $garage->employees()->count(),
             'total_drivers' => $garage->drivers()->count(),
         ];

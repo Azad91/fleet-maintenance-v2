@@ -37,8 +37,7 @@ class DashboardController extends Controller
         $totalBuses = (int) ($busStats->total ?? 0);
         $activeBuses = (int) ($busStats->active ?? 0);
 
-        $activeComplaints = Complaint::where('status', '!=', 'completed')->count();
-
+        $activeComplaints = Complaint::open()->count();
         // ────────────────────────────────────────────────────────
         // Quarantine guard
         // ────────────────────────────────────────────────────────
@@ -79,7 +78,7 @@ class DashboardController extends Controller
         $busesWithoutKmToday = (clone $busesWithoutKmTodayQuery)->limit(10)->get();  // ⚠️ limit 10
 
         $recentComplaints = Complaint::with('bus', 'items')
-            ->where('status', '!=', 'completed')
+            ->open()
             ->orderBy('id', 'desc')
             ->limit(10)
             ->get();
