@@ -251,17 +251,59 @@ class BusOilChangesImport extends AbstractImport implements ToCollection, WithCh
         }
     }
 
+    /**
+     * Resolve the interval (km) to snapshot for a specific import row.
+     *
+     * Must match OilChangeService::resolveInterval() so that an oil
+     * change created via the import has the SAME interval_km as one
+     * created manually through the form. Previously this method used
+     * hardcoded literals (30000 / 36000 / 180000), which silently
+     * diverged from the config-driven values whenever an operator
+     * tuned the intervals in config/oil.php.
+     *
+     * Motor oil still uses the length the operator selected on the
+     * import form (12m or 18m) because the import file itself does
+     * not carry that information — the operator chooses one length
+     * for the whole file. We look up the config value for that
+     * length instead of hardcoding it.
+     *
+     * Gearbox and Axle now use the same resolvers as the manual
+     * path — gearbox is brand-aware (SHELL vs LUK), axle reads the
+     * config default.
+     */
     protected function resolveInterval(Bus $bus, ?string $brand): int
     {
         return match ($this->type) {
-            OilType::Motor => match ($this->busLengthM) {
-                18 => 30000,
-                12 => 36000,
-                default => $bus->motorOilIntervalKm(),
-            },
-            OilType::Gearbox => 180000,
-            OilType::Axle => 180000,
+            OilType::Motor => $this->resolveMotorInterval($bus),
+            OilType::Gearbox => Bus::gearboxIntervalForBrand($brand),
+            OilType::Axle => $bus->axleOilIntervalKm(),
         };
+    }
+
+    /**
+     * Resolve the motor-oil interval for this import.
+     *
+     * If the operator selected a bus length (12 or 18) on the import
+     * form, use that length's config value — every bus in the file
+     * is treated as having this length, because the file itself does
+     * not carry per-row length information.
+     *
+     * If no length was selected, fall back to the bus's own
+     * config-driven interval (motorOilIntervalKm() reads
+     * config/oil.intervals.motor.{12m|18m}).
+     */
+    private function resolveMotorInterval(Bus $bus): int
+    {
+        if ($this->busLengthM === 12 || $this->busLengthM === 18) {
+            $fallback = $this->busLengthM === 18 ? 30000 : 36000;
+
+            return (int) config(
+                "oil.intervals.motor.{$this->busLengthM}m",
+                $fallback,
+            );
+        }
+
+        return $bus->motorOilIntervalKm();
     }
 
     public function chunkSize(): int

@@ -28,12 +28,14 @@ class CompanyStoreRequest extends SuperAdminRequest
             'is_active' => ['nullable', 'boolean'],
 
             // ─── First Director (required — see SuperAdmin spec) ───
-            'director_name' => ['required', 'string', 'max:255'],
             'director_email' => [
                 'required',
                 'email',
                 'max:255',
-                'unique:users,email',
+                // See UserStoreRequest for the rationale — the partial
+                // unique index users_email_active_unique allows reuse
+                // after soft-delete.
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
             ],
             'director_password' => ['required', 'string', 'min:8', 'confirmed'],
             'director_pin' => [

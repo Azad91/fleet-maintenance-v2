@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
 {
@@ -152,7 +153,13 @@ class UserManagementController extends Controller
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($user?->id),
+                // Ignore the current user AND only check active rows —
+                // mirrors the partial unique index users_email_active_unique
+                // so that emails belonging to soft-deleted accounts can
+                // be reused.
+                Rule::unique('users', 'email')
+                    ->ignore($user?->id)
+                    ->whereNull('deleted_at'),
             ],
             'role' => ['required', Rule::in(RoleEnum::garageRoles())],
             'password' => $passwordRules,

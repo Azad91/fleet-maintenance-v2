@@ -30,7 +30,8 @@ class GarageStoreRequest extends SuperAdminRequest
                 'required',
                 'email',
                 'max:255',
-                'unique:users,email',
+                // See UserStoreRequest for the rationale.
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
             ],
             'admin_password' => ['required', 'string', 'min:8', 'confirmed'],
             'admin_pin' => [
