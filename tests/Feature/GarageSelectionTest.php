@@ -97,7 +97,7 @@ class GarageSelectionTest extends TestCase
      * "no access" page with a logout button so the user understands
      * why they cannot proceed.
      *
-     * @see \Tests\Feature\GarageNoAccessTest for full coverage of
+     * @see GarageNoAccessTest for full coverage of
      *      this behaviour.
      */
     public function test_regular_user_without_any_garage_sees_no_access_page(): void
