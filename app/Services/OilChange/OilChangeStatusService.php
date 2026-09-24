@@ -42,14 +42,27 @@ class OilChangeStatusService
             );
         }
 
-        // Interval selection:
-        //   - Gearbox → fixed 180,000 km
-        //   - Others  → the interval snapshot stored on the last change
-        //               (motor: 18m = 30,000 km, 12m = 36,000 km)
-        $interval = match ($type) {
-            OilType::Gearbox => 180000,
-            default => $last->interval_km,
-        };
+        // Interval selection.
+        //
+        // The `interval_km` column on BusOilChange is a SNAPSHOT of
+        // the interval that applied when the change was recorded —
+        // see OilChangeService::resolveInterval(), which reads the
+        // config-driven values at creation time.
+        //
+        // Gearbox intervals are brand-dependent (SHELL 180,000 km,
+        // LUK 120,000 km — see config/oil.intervals.gearbox). The
+        // previous implementation hardcoded 180,000 for every gearbox
+        // change, ignoring the snapshot. On a LUK-equipped bus the
+        // computed next_due was 60,000 km too far, so an overdue
+        // gearbox change showed as "OK" on the dashboard and the
+        // index page.
+        //
+        // Reading the snapshot for every oil type keeps the
+        // calculation consistent with OilChangeService (manual
+        // creation) and BusOilChange::effectiveIntervalFor()
+        // (median-of-history fallback), and it preserves historical
+        // accuracy if the config is tuned later.
+        $interval = $last->interval_km;
 
         $nextDueKm = $last->actual_km + $interval;
         $remainingKm = $nextDueKm - $currentKm;
