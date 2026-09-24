@@ -69,6 +69,11 @@ class UserSeeder extends Seeder
             'email' => 'admin@fleet.com',
             'password' => Hash::make($password),
             'is_active' => true,
+            // Admin-created users are considered pre-verified. Self-registration
+            // is disabled, so there is no verification email to send. Without
+            // this flag the user would be locked out by the `verified`
+            // middleware immediately after `migrate:fresh --seed`.
+            'email_verified_at' => now(),
         ]);
 
         $superAdmin->promoteToSuperAdmin()->save();

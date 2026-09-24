@@ -142,6 +142,7 @@ class DemoDataSeeder extends Seeder
                 'pin' => Hash::make('1234'),
                 'pin_is_default' => false,
                 'is_active' => true,
+                'email_verified_at' => now(), // ← YENİ
             ]
         );
 
@@ -248,6 +249,7 @@ class DemoDataSeeder extends Seeder
                 'pin' => Hash::make('1234'),
                 'pin_is_default' => false,
                 'is_active' => true,
+                'email_verified_at' => now(), // ← YENİ
             ]
         );
 
@@ -313,6 +315,7 @@ class DemoDataSeeder extends Seeder
                     'pin' => Hash::make('1234'),
                     'pin_is_default' => false,
                     'is_active' => true,
+                    'email_verified_at' => now(), // ← YENİ
                 ]
             );
 
