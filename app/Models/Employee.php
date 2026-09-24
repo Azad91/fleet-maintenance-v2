@@ -37,7 +37,25 @@ class Employee extends Model
         return $this->first_name.' '.$this->last_name;
     }
 
-    public function getFullNameWithPositionAttribute()
+    /**
+     * Human-readable display name with position label.
+     *
+     * The `position` column stores a config key (e.g. "master",
+     * "electrician"), not the label shown to users. The label lives
+     * in config('settings.employee_positions') so that admins can
+     * update the wording without a migration.
+     *
+     * Resolving the label here means every consumer — the complaint
+     * form's employee dropdown, the show page detail rows, the PDF
+     * act, and every report — displays the same friendly label
+     * ("🔧 Master") instead of the raw key ("master").
+     *
+     * Unknown keys (custom positions typed directly into the DB)
+     * fall through unchanged, preserving the previous behavior.
+     *
+     * @return string e.g. "Əli Məmmədov (🔧 Master)"
+     */
+    public function getFullNameWithPositionAttribute(): string
     {
         $name = $this->first_name;
 
@@ -45,16 +63,16 @@ class Employee extends Model
             $name .= ' '.$this->last_name;
         }
 
-        // Skip the parenthesis entirely when position is empty or
-        // whitespace — avoids "Elshad Mammadov ()" leaking into
-        // dropdowns, PDFs and reports.
-        $position = trim((string) $this->position);
+        $positionKey = trim((string) $this->position);
 
-        if ($position === '') {
+        if ($positionKey === '') {
             return $name;
         }
 
-        return $name.' ('.$position.')';
+        $labels = config('settings.employee_positions', []);
+        $positionLabel = $labels[$positionKey] ?? $positionKey;
+
+        return $name.' ('.$positionLabel.')';
     }
 
     // ==================== RELATIONSHIPS ====================
