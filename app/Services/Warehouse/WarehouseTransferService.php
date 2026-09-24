@@ -132,25 +132,40 @@ class WarehouseTransferService
      * Dispatch a draft transfer: decrement stock on the source garage
      * and move the transfer to "dispatched".
      *
-     * DEADLOCK GUARD: items are sorted by `warehouse_id` before any
-     * lock is acquired. Two concurrent dispatches that reference the
-     * same warehouses in a different order would otherwise deadlock
-     * on PostgreSQL's row-level locks.
+     * ── CONCURRENCY GUARD ──
+     * The transfer row is locked FIRST inside the transaction, and the
+     * status check runs AFTER the lock is held. Two concurrent dispatch
+     * requests for the same transfer are therefore serialized: the
+     * second request sees the updated status (dispatched) and is
+     * rejected before touching stock.
+     *
+     * Without this lock, both requests would pass the initial status
+     * check, then both would decrement the source stock — a double-
+     * deduction that corrupts inventory.
+     *
+     * Items are sorted by warehouse_id before any warehouse lock is
+     * acquired to eliminate deadlocks between concurrent transfers
+     * that reference the same warehouses in different orders.
      */
     public function dispatch(WarehouseTransfer $transfer): void
     {
-        if (! $transfer->status->isDraft()) {
-            throw ValidationException::withMessages([
-                'status' => __('messages.transfers.cannot_dispatch'),
-            ]);
-        }
-
         DB::transaction(function () use ($transfer) {
-            $transfer->load('items.warehouse');
+            // ── Lock the transfer row FIRST ──
+            $locked = WarehouseTransfer::withoutGlobalScopes()
+                ->whereKey($transfer->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            // ── Deterministic lock order ──
-            // Same reasoning as ComplaintStockService::restoreStock().
-            $sortedItems = $transfer->items
+            if (! $locked->status->isDraft()) {
+                throw ValidationException::withMessages([
+                    'status' => __('messages.transfers.cannot_dispatch'),
+                ]);
+            }
+
+            $locked->load('items.warehouse');
+
+            // ── Deterministic lock order for warehouses ──
+            $sortedItems = $locked->items
                 ->sortBy('warehouse_id')
                 ->values();
 
@@ -172,7 +187,7 @@ class WarehouseTransferService
                 if ($warehouse->quantity < $item->declared_quantity) {
                     throw ValidationException::withMessages([
                         'items' => __('messages.flash.stock_insufficient', [
-                            'name' => $warehouse->name,
+                            'name'      => $warehouse->name,
                             'requested' => $item->declared_quantity,
                             'available' => $warehouse->quantity,
                         ]),
@@ -182,8 +197,8 @@ class WarehouseTransferService
                 $warehouse->decrement('quantity', $item->declared_quantity);
             }
 
-            $transfer->update([
-                'status' => TransferStatus::Dispatched->value,
+            $locked->update([
+                'status'        => TransferStatus::Dispatched->value,
                 'dispatched_by' => auth()->id(),
                 'dispatched_at' => now(),
             ]);
@@ -193,24 +208,44 @@ class WarehouseTransferService
     /**
      * Receive a dispatched transfer.
      *
+     * ── CONCURRENCY GUARD ──
+     * Same pattern as dispatch(): the transfer row is locked first,
+     * the status is re-checked under the lock. Two concurrent receive
+     * requests would otherwise both pass the "isDispatched" check and
+     * both increment destination stock — a double-credit.
+     *
+     * Destination warehouse rows are locked in `warehouse_id` order
+     * to eliminate deadlocks between concurrent transfers.
+     *
      * @param  array<int, int>  $receivedQuantities  [transfer_item_id => received_qty]
      */
     public function receive(WarehouseTransfer $transfer, array $receivedQuantities): void
     {
-        if (! $transfer->status->isDispatched()) {
-            throw ValidationException::withMessages([
-                'status' => __('messages.transfers.cannot_receive'),
-            ]);
-        }
-
         DB::transaction(function () use ($transfer, $receivedQuantities) {
-            $transfer->load('items');
+            // ── Lock the transfer row FIRST ──
+            $locked = WarehouseTransfer::withoutGlobalScopes()
+                ->whereKey($transfer->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            $receivedTotal = 0;
+            if (! $locked->status->isDispatched()) {
+                throw ValidationException::withMessages([
+                    'status' => __('messages.transfers.cannot_receive'),
+                ]);
+            }
+
+            $locked->load('items');
+
+            $receivedTotal  = 0;
             $hasDiscrepancy = false;
-            $discrepancies = [];
+            $discrepancies  = [];
 
-            foreach ($transfer->items as $item) {
+            // ── Deterministic lock order for destination warehouses ──
+            $sortedItems = $locked->items
+                ->sortBy('warehouse_id')
+                ->values();
+
+            foreach ($sortedItems as $item) {
                 $received = $receivedQuantities[$item->id] ?? null;
 
                 if ($received === null) {
@@ -235,9 +270,6 @@ class WarehouseTransferService
                 if ($diff !== 0) {
                     $hasDiscrepancy = true;
 
-                    // Record a compact, human-readable line for the
-                    // automatic discrepancy_notes field. Operators can
-                    // still edit it afterwards through the resolve flow.
                     $itemLabel = $item->warehouse?->code
                         ? $item->warehouse->code.' — '.($item->warehouse->name ?? '')
                         : "Item #{$item->id}";
@@ -252,7 +284,7 @@ class WarehouseTransferService
                 }
 
                 if ($received > 0) {
-                    $this->incrementDestinationStock($transfer, $item->warehouse_id, $received);
+                    $this->incrementDestinationStock($locked, $item->warehouse_id, $received);
                 }
             }
 
@@ -260,14 +292,14 @@ class WarehouseTransferService
                 ? TransferStatus::Disputed->value
                 : TransferStatus::Received->value;
 
-            $transfer->update([
-                'status' => $newStatus,
-                'received_total' => $receivedTotal,
+            $locked->update([
+                'status'            => $newStatus,
+                'received_total'    => $receivedTotal,
                 'discrepancy_notes' => $hasDiscrepancy
                     ? implode("\n", $discrepancies)
                     : null,
-                'received_by' => auth()->id(),
-                'received_at' => now(),
+                'received_by'       => auth()->id(),
+                'received_at'       => now(),
             ]);
         });
     }
@@ -275,19 +307,38 @@ class WarehouseTransferService
     /**
      * Reject a dispatched transfer entirely.
      * All quantities are returned to the source garage.
+     *
+     * ── CONCURRENCY GUARD ──
+     * The transfer row is locked first, the status is re-checked under
+     * the lock. Two concurrent rejects would otherwise both restore the
+     * source stock — a double-credit.
+     *
+     * Source warehouse rows are locked in `warehouse_id` order to
+     * eliminate deadlocks.
      */
     public function reject(WarehouseTransfer $transfer, ?string $reason = null): void
     {
-        if (! $transfer->status->isDispatched()) {
-            throw ValidationException::withMessages([
-                'status' => __('messages.transfers.cannot_reject'),
-            ]);
-        }
-
         DB::transaction(function () use ($transfer, $reason) {
-            $transfer->load('items');
+            // ── Lock the transfer row FIRST ──
+            $locked = WarehouseTransfer::withoutGlobalScopes()
+                ->whereKey($transfer->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            foreach ($transfer->items as $item) {
+            if (! $locked->status->isDispatched()) {
+                throw ValidationException::withMessages([
+                    'status' => __('messages.transfers.cannot_reject'),
+                ]);
+            }
+
+            $locked->load('items');
+
+            // ── Deterministic lock order for source warehouses ──
+            $sortedItems = $locked->items
+                ->sortBy('warehouse_id')
+                ->values();
+
+            foreach ($sortedItems as $item) {
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('id', $item->warehouse_id)
                     ->lockForUpdate()
@@ -298,12 +349,12 @@ class WarehouseTransferService
                 }
             }
 
-            $transfer->update([
-                'status' => TransferStatus::Rejected->value,
-                'received_total' => 0,
-                'discrepancy_notes' => $reason,
-                'received_by' => auth()->id(),
-                'received_at' => now(),
+            $locked->update([
+                'status'             => TransferStatus::Rejected->value,
+                'received_total'     => 0,
+                'discrepancy_notes'  => $reason,
+                'received_by'        => auth()->id(),
+                'received_at'        => now(),
             ]);
         });
     }
@@ -311,37 +362,42 @@ class WarehouseTransferService
     /**
      * Resolve a disputed transfer.
      *
+     * ── CONCURRENCY GUARD ──
+     * The transfer row is locked first, the status is re-checked under
+     * the lock. Two concurrent resolves (one choosing `retransfer`, the
+     * other `loss_accepted`) would otherwise both succeed and corrupt
+     * the state — e.g. create TWO follow-up drafts.
+     *
      * @param  string  $resolution  'retransfer' or 'loss_accepted'
      */
     public function resolveDisputed(WarehouseTransfer $transfer, string $resolution): void
     {
-        if (! $transfer->status->isDisputed()) {
-            throw ValidationException::withMessages([
-                'status' => __('messages.transfers.cannot_resolve'),
-            ]);
-        }
-
-        if (! in_array($resolution, ['retransfer', 'loss_accepted'], true)) {
-            throw ValidationException::withMessages([
-                'resolution' => __('messages.transfers.invalid_resolution'),
-            ]);
-        }
-
         DB::transaction(function () use ($transfer, $resolution) {
-            $transfer->load('items');
+            // ── Lock the transfer row FIRST ──
+            $locked = WarehouseTransfer::withoutGlobalScopes()
+                ->whereKey($transfer->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $locked->status->isDisputed()) {
+                throw ValidationException::withMessages([
+                    'status' => __('messages.transfers.cannot_resolve'),
+                ]);
+            }
+
+            if (! in_array($resolution, ['retransfer', 'loss_accepted'], true)) {
+                throw ValidationException::withMessages([
+                    'resolution' => __('messages.transfers.invalid_resolution'),
+                ]);
+            }
+
+            $locked->load('items');
 
             if ($resolution === 'retransfer') {
                 $missingItems = [];
                 $nullReceived = [];
 
-                foreach ($transfer->items as $item) {
-                    // A disputed transfer should always have
-                    // received_quantity set on every item — the
-                    // receive step sets it before switching the status
-                    // to disputed. If it is null, either data was
-                    // manipulated or an upstream bug wrote the row
-                    // half-formed. Log it; the "?? 0" below treats the
-                    // item as fully missing, which is the safe default.
+                foreach ($locked->items as $item) {
                     if ($item->received_quantity === null) {
                         $nullReceived[] = $item->id;
                     }
@@ -350,10 +406,10 @@ class WarehouseTransferService
 
                     if ($missing > 0) {
                         $missingItems[] = [
-                            'warehouse_id' => $item->warehouse_id,
+                            'warehouse_id'      => $item->warehouse_id,
                             'declared_quantity' => $missing,
-                            'notes' => __('messages.transfers.retransfer_note', [
-                                'original' => $transfer->id,
+                            'notes'             => __('messages.transfers.retransfer_note', [
+                                'original' => $locked->id,
                             ]),
                         ];
                     }
@@ -361,35 +417,33 @@ class WarehouseTransferService
 
                 if (! empty($nullReceived)) {
                     Log::warning('Disputed transfer has items with null received_quantity', [
-                        'transfer_id' => $transfer->id,
-                        'item_ids' => $nullReceived,
+                        'transfer_id' => $locked->id,
+                        'item_ids'    => $nullReceived,
                     ]);
                 }
 
                 if (empty($missingItems)) {
-                    // The operator chose "retransfer" but every item's
-                    // received quantity already matches its declared
-                    // quantity. There is nothing to resend. Record
-                    // this unusual state so it is visible in the log
-                    // rather than as a silent no-op.
                     Log::info('Retransfer requested but no missing items found', [
-                        'transfer_id' => $transfer->id,
+                        'transfer_id' => $locked->id,
                     ]);
                 } else {
+                    // Nested create() acquires its own locks on source
+                    // warehouses. Sorting is inherited from dispatch()'s
+                    // deterministic lock order pattern.
                     $this->create([
-                        'from_garage_id' => $transfer->from_garage_id,
-                        'to_garage_id' => $transfer->to_garage_id,
-                        'to_service_vehicle_id' => $transfer->to_service_vehicle_id,
-                        'type' => $transfer->type->value,
-                        'notes' => __('messages.transfers.retransfer_note', ['original' => $transfer->id]),
-                        'items' => $missingItems,
-                    ], $transfer->company_id);
+                        'from_garage_id'        => $locked->from_garage_id,
+                        'to_garage_id'          => $locked->to_garage_id,
+                        'to_service_vehicle_id' => $locked->to_service_vehicle_id,
+                        'type'                  => $locked->type->value,
+                        'notes'                 => __('messages.transfers.retransfer_note', ['original' => $locked->id]),
+                        'items'                 => $missingItems,
+                    ], $locked->company_id);
                 }
             }
 
-            $transfer->update([
-                'status' => TransferStatus::Resolved->value,
-                'resolution' => $resolution,
+            $locked->update([
+                'status'      => TransferStatus::Resolved->value,
+                'resolution'  => $resolution,
                 'resolved_by' => auth()->id(),
                 'resolved_at' => now(),
             ]);
@@ -397,18 +451,34 @@ class WarehouseTransferService
     }
 
     /**
-     * Cancel a draft transfer. No stock has been touched at this
-     * point, so nothing to restore.
+     * Cancel a draft transfer. No stock has been touched at this point,
+     * so nothing to restore.
+     *
+     * ── CONCURRENCY GUARD ──
+     * Even though no stock is mutated, the status check must be
+     * serialized: without the row lock, a concurrent dispatch could
+     * transition the transfer to "dispatched" while this cancel() is
+     * still deciding — and cancel() would then mark a dispatched
+     * transfer as cancelled, orphaning the stock that was already
+     * deducted by the other request.
      */
     public function cancel(WarehouseTransfer $transfer): void
     {
-        if (! $transfer->status->isDraft()) {
-            throw ValidationException::withMessages([
-                'status' => __('messages.transfers.cannot_cancel'),
-            ]);
-        }
+        DB::transaction(function () use ($transfer) {
+            // ── Lock the transfer row FIRST ──
+            $locked = WarehouseTransfer::withoutGlobalScopes()
+                ->whereKey($transfer->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $transfer->update(['status' => TransferStatus::Cancelled->value]);
+            if (! $locked->status->isDraft()) {
+                throw ValidationException::withMessages([
+                    'status' => __('messages.transfers.cannot_cancel'),
+                ]);
+            }
+
+            $locked->update(['status' => TransferStatus::Cancelled->value]);
+        });
     }
 
     // ==================== PRIVATE ====================
