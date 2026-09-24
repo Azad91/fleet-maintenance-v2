@@ -17,5 +17,4 @@ return [
     'daily_km_worker' => 'Günlük KM işçisi',
     'daily_status_manager' => 'Günlük status rəisi',
     'daily_status_worker' => 'Günlük status işçisi',
-    'viewer' => 'İzləyici',
 ];

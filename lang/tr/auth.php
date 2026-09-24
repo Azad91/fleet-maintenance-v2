@@ -4,6 +4,7 @@ return [
     'failed' => 'Bu bilgiler kayıtlarımızla eşleşmiyor.',
     'password' => 'Girilen şifre yanlış.',
     'throttle' => 'Çok fazla giriş denemesi. Lütfen :seconds saniye sonra tekrar deneyin.',
+    'inactive' => 'Hesabınız devre dışı bırakıldı. Lütfen yöneticiyle iletişime geçin.',
 
     'confirm_title' => 'Şifreyi Onayla',
     'confirm_hint' => 'Devam etmeden önce lütfen şifrenizi onaylayın.',

@@ -4,6 +4,7 @@ return [
     'failed' => 'Bu məlumatlar bizim qeydlərimizlə uyğun gəlmir.',
     'password' => 'Daxil edilən şifrə yanlışdır.',
     'throttle' => 'Çox sayda giriş cəhdi. Zəhmət olmasa :seconds saniyə sonra yenidən cəhd edin.',
+    'inactive' => 'Hesabınız deaktiv edilib. Zəhmət olmasa administratorla əlaqə saxlayın.',
 
     'confirm_title' => 'Şifrəni təsdiqlə',
     'confirm_hint' => 'Davam etməzdən əvvəl şifrənizi təsdiqləyin.',

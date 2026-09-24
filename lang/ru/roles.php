@@ -13,5 +13,4 @@ return [
     'daily_km_worker' => 'Сотрудник пробега',
     'daily_status_manager' => 'Менеджер статусов',
     'daily_status_worker' => 'Сотрудник статусов',
-    'viewer' => 'Наблюдатель',
 ];
