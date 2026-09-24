@@ -21,7 +21,7 @@ class OilChangeStatusService
     {
         $last = $bus->relationLoaded('oilChanges')
             ? $bus->oilChanges->where('oil_type', $type)->sortByDesc('actual_km')->first()
-            : $bus->latestOilChange($type);
+            : $bus->latestOilChange($type)->first();
 
         $currentKm = (int) (
             $bus->relationLoaded('latestKmRecord')

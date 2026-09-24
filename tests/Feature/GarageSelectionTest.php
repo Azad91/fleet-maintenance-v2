@@ -87,14 +87,27 @@ class GarageSelectionTest extends TestCase
         $this->assertNull(session('current_garage_id'));
     }
 
-    public function test_regular_user_without_any_garage_is_redirected_to_dashboard_with_error(): void
+    /**
+     * A user with no garage access must NOT be redirected to the
+     * dashboard. The dashboard route is protected by the
+     * `garage.selected` middleware, which would redirect the user
+     * right back to /select-garage — creating an infinite loop.
+     *
+     * Instead, GarageSelectionController::index() renders a dedicated
+     * "no access" page with a logout button so the user understands
+     * why they cannot proceed.
+     *
+     * @see \Tests\Feature\GarageNoAccessTest for full coverage of
+     *      this behaviour.
+     */
+    public function test_regular_user_without_any_garage_sees_no_access_page(): void
     {
         $user = User::factory()->create(['role' => 'user']);
 
         $response = $this->actingAs($user)->get(route('garage.selection'));
 
-        $response->assertRedirect(route('dashboard'));
-        $response->assertSessionHas('error');
+        $response->assertOk();
+        $response->assertViewIs('garage-no-access');
     }
 
     public function test_inactive_garage_not_shown_to_regular_user(): void
