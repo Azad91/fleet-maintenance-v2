@@ -131,6 +131,74 @@ Avtobus idxalında `DQN` məcburidir. Eyni DQN cari qarajda yenilənir; başqa q
 4. Həmin intervalın detallar siyahısı avtomatik əlavə edilir.
 5. Dəyişməyəcək detal varsa, kartdakı **Detalı sil** düyməsi ilə çıxarılır. Silinən detal anbardan düşmür.
 
+## Error Monitoring (Sentry)
+
+Tətbiq **Sentry** ilə inteqrasiya olunub — production-da baş verən
+unhandled exception-ları və yavaş request-ləri avtomatik olaraq
+Sentry dashboard-ına göndərir.
+
+### Aktivləşdirmə
+
+Sentry **default olaraq söndürülmüşdür** — `SENTRY_LARAVEL_DSN` boş
+olduqda SDK heç bir şəbəkə sorğusu etmir və sıfır overhead yaradır.
+Bu, paketi bütün mühitlərdə təhlükəsiz edir.
+
+Production-da aktivləşdirmək üçün:
+
+1. [sentry.io](https://sentry.io) -da **Laravel** layihəsi yaradın
+2. **Project Settings → Client Keys (DSN)** bölməsindən DSN-i kopyalayın
+3. `.env.production`-a əlavə edin:
+
+```dotenv
+SENTRY_LARAVEL_DSN=https://abc123@o12345.ingest.sentry.io/67890
+SENTRY_ENVIRONMENT=production
+```
+
+4. Container-ləri yenidən başladın:
+
+```bash
+docker compose -f docker-compose.prod.yml restart app scheduler
+```
+
+### Nə göndərilir, nə göndərilmir
+
+**Göndərilir:**
+- Unhandled exception-lar (real bug-lar, crash-lər)
+- Infrastructure xətaları (DB connection qırıldı, disk doldu)
+- Performance trace-lər (`SENTRY_TRACES_SAMPLE_RATE` ilə idarə olunur)
+
+**Göndərilmir** (`config/sentry.php` → `before_send` filtri):
+- `ValidationException` — istifadəçi səhvi, bug deyil
+- `AuthenticationException` — giriş cəhdi, normal
+- `AuthorizationException` — icazə rədd edildi, normal
+- `ModelNotFoundException`, `NotFoundHttpException` — 404-lər
+- `GarageAccessDeniedException`, `StockInsufficientException`,
+  `MissingGarageContextException` — tətbiq tərəfindən normal idarə olunan
+  biznes xətaları
+
+Bu filtr sayəsində Sentry dashboard-ı **yalnız real problemləri** göstərir,
+səs-küy yoxdur.
+
+### Sample rate tənzimləməsi
+
+| Dəyişən | Default | Nə üçün |
+|---------|---------|---------|
+| `SENTRY_SAMPLE_RATE` | `1.0` | Xəta event-lərinin faizi. Xətalar nadir olduğu üçün 100% düzgündür. |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Performance trace-lərin faizi. 10% yavaş endpoint-ləri tutmaq üçün kifayətdir. |
+| `SENTRY_SEND_DEFAULT_PII` | `false` | İstifadəçi email/IP göndərilsin? **Production-da `true` etməyin** — privacy policy tələb edir. |
+
+### Self-hosted alternativ
+
+Sentry açıq mənbəlidir. Öz serverinizdə işlətmək üçün:
+
+```bash
+git clone https://github.com/getsentry/self-hosted.git
+cd self-hosted && ./install.sh
+```
+
+Sonra DSN-i öz host-unuza yönəldin. Bu, data suverenliyi tələbləri
+olan müştərilər üçün doğru seçimdir.
+
 ## Database Backup
 
 Production-da avtomatik DB backup **backup sidecar** konteyneri vasitəsilə işləyir

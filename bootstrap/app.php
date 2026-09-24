@@ -12,6 +12,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Sentry\Laravel\Integration as SentryIntegration;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -59,6 +60,19 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // ────────────────────────────────────────────────────────────
+        // SENTRY
+        // ────────────────────────────────────────────────────────────
+        // Wires Laravel's exception pipeline to Sentry. When the DSN
+        // is empty (the default), the integration is a no-op — no
+        // events are sent, no network calls are made.
+        //
+        // The reportable() closure below filters expected application
+        // exceptions (validation, auth, custom domain errors) before
+        // they reach Sentry, so only genuine bugs and infrastructure
+        // failures show up in the dashboard.
+        SentryIntegration::handles($exceptions);
+
         // ============================================================
         // CUSTOM EXCEPTION RENDERERS
         // ============================================================
