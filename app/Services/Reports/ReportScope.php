@@ -85,12 +85,4 @@ class ReportScope
     {
         return ! empty($this->garageIds);
     }
-
-    /**
-     * True when a brand filter is currently active.
-     */
-    public function hasBrandFilter(): bool
-    {
-        return $this->brandId !== null;
-    }
 }

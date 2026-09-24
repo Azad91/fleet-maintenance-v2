@@ -23,12 +23,6 @@ class OilChangeStatus
         public readonly ?int $nextCatalogKm = null,
     ) {}
 
-    /** True when a change is due or overdue. */
-    public function needsAttention(): bool
-    {
-        return in_array($this->status, ['overdue', 'critical', 'due-soon'], true);
-    }
-
     public function isOverdue(): bool
     {
         return $this->status === 'overdue';

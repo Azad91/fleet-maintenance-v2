@@ -6,7 +6,6 @@ use App\Enums\OilType;
 use App\Models\Bus;
 use App\Models\BusOilChange;
 use App\Models\MotorOilDetail;
-use Illuminate\Support\Collection;
 
 class OilChangeStatusService
 {
@@ -87,18 +86,6 @@ class OilChangeStatusService
             status: $this->classify($remainingKm),
             nextCatalogKm: $nextCatalogKm,
         );
-    }
-
-    /**
-     * @param  Collection<int, Bus>  $buses
-     * @return Collection<int, OilChangeStatus>
-     */
-    public function priorityFor(Collection $buses, OilType $type): Collection
-    {
-        return $buses
-            ->map(fn (Bus $bus) => $this->forBus($bus, $type))
-            ->sortBy(fn (OilChangeStatus $s) => $s->remainingKm ?? PHP_INT_MAX)
-            ->values();
     }
 
     /**
