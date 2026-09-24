@@ -65,6 +65,14 @@
 
             <div class="mb-3">
                 <div class="form-check">
+                    {{-- Hidden input ensures a value is sent even when the
+                         checkbox is unchecked. An unchecked HTML checkbox
+                         submits nothing, so without this the server fell
+                         back to the DB default (is_active = true) and
+                         unchecking the box had no effect. This matches
+                         the pattern already used by bus-brands,
+                         service-vehicles and users forms. --}}
+                    <input type="hidden" name="is_active" value="0">
                     <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
                            {{ old('is_active', '1') == '1' ? 'checked' : '' }}>
                     <label class="form-check-label" for="is_active">✅ {{ __('messages.common.active') }}</label>

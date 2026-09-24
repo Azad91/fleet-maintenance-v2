@@ -33,20 +33,34 @@ class EmployeesImport extends AbstractImport implements SkipsEmptyRows, ToModel,
             return null;
         }
 
-        $employee = Employee::withoutGlobalScopes()->updateOrCreate(
-            [
-                'code' => $code,
-                'garage_id' => $this->garageId,
-            ],
-            [
-                'company_id' => $this->companyId,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'position' => $position,
-                'is_active' => true,
-                'notes' => $row['notes'] ?? null,
-            ]
-        );
+        // See DriversImport for the full rationale — we must search
+        // without global scopes so a soft-deleted employee with the
+        // same (garage_id, code) is found and then explicitly
+        // restored. A plain updateOrCreate would leave deleted_at
+        // set while flipping is_active back to true.
+        $employee = Employee::withoutGlobalScopes()
+            ->where('code', $code)
+            ->where('garage_id', $this->garageId)
+            ->first();
+
+        if ($employee === null) {
+            $employee = new Employee;
+            $employee->code = $code;
+            $employee->garage_id = $this->garageId;
+        } elseif ($employee->trashed()) {
+            $employee->restore();
+        }
+
+        $employee->fill([
+            'company_id' => $this->companyId,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'position' => $position,
+            'is_active' => true,
+            'notes' => $row['notes'] ?? null,
+        ]);
+
+        $employee->save();
 
         $this->incrementImported();
 

@@ -86,14 +86,23 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
                 continue;
             }
 
+            // See DriversImport for the full rationale — searching
+            // without global scopes is required to detect the
+            // soft-deleted row, but we must explicitly restore it
+            // so the update actually brings the row back to life.
             $warehouse = Warehouse::withoutGlobalScopes()
                 ->where('garage_id', $this->garageId)
                 ->where('code', $code)
                 ->first();
 
             if ($warehouse) {
-                // Existing item — update catalog fields, and combine
-                // the quantity according to the selected mode.
+                // Restore BEFORE computing the new quantity, so
+                // MODE_ADD accumulates on top of the previous
+                // quantity rather than on top of a hidden row.
+                if ($warehouse->trashed()) {
+                    $warehouse->restore();
+                }
+
                 $newQuantity = $this->mode === self::MODE_ADD
                     ? $warehouse->quantity + $quantity
                     : $quantity;
