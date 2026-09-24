@@ -1207,6 +1207,7 @@ return [
         'invalid_resolution' => 'Invalid resolution choice.',
         'missing_received_quantity' => 'Received quantity is required for every item.',
         'negative_quantity' => 'Received quantity cannot be negative.',
+        'received_exceeds_declared' => 'Received quantity (:received) exceeds declared quantity (:declared).',
         'invalid_warehouse_items' => 'One or more items do not belong to this garage.',
         'retransfer_note' => 'Re-transfer from #:original',
         'delete_confirm' => 'Cancel this transfer?',

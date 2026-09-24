@@ -187,7 +187,7 @@ class WarehouseTransferService
                 if ($warehouse->quantity < $item->declared_quantity) {
                     throw ValidationException::withMessages([
                         'items' => __('messages.flash.stock_insufficient', [
-                            'name'      => $warehouse->name,
+                            'name' => $warehouse->name,
                             'requested' => $item->declared_quantity,
                             'available' => $warehouse->quantity,
                         ]),
@@ -198,7 +198,7 @@ class WarehouseTransferService
             }
 
             $locked->update([
-                'status'        => TransferStatus::Dispatched->value,
+                'status' => TransferStatus::Dispatched->value,
                 'dispatched_by' => auth()->id(),
                 'dispatched_at' => now(),
             ]);
@@ -216,6 +216,13 @@ class WarehouseTransferService
      *
      * Destination warehouse rows are locked in `warehouse_id` order
      * to eliminate deadlocks between concurrent transfers.
+     *
+     * ── SURPLUS GUARD ──
+     * The source garage only ever dispatched `declared` units, and
+     * dispatch() already deducted exactly that many from the source
+     * stock. Crediting MORE than `declared` to the destination would
+     * create stock out of thin air — the exact same physical unit
+     * would be counted in two places at once.
      *
      * @param  array<int, int>  $receivedQuantities  [transfer_item_id => received_qty]
      */
@@ -236,9 +243,9 @@ class WarehouseTransferService
 
             $locked->load('items');
 
-            $receivedTotal  = 0;
+            $receivedTotal = 0;
             $hasDiscrepancy = false;
-            $discrepancies  = [];
+            $discrepancies = [];
 
             // ── Deterministic lock order for destination warehouses ──
             $sortedItems = $locked->items
@@ -259,6 +266,22 @@ class WarehouseTransferService
                 if ($received < 0) {
                     throw ValidationException::withMessages([
                         'received' => __('messages.transfers.negative_quantity'),
+                    ]);
+                }
+
+                // ── SURPLUS GUARD ──
+                // The source garage only ever dispatched `declared`
+                // units and the dispatch step already deducted exactly
+                // that many from the source stock. Crediting MORE than
+                // `declared` to the destination would create stock out
+                // of thin air — the exact same physical unit would be
+                // counted in two places at once.
+                if ($received > $item->declared_quantity) {
+                    throw ValidationException::withMessages([
+                        'received' => __('messages.transfers.received_exceeds_declared', [
+                            'declared' => $item->declared_quantity,
+                            'received' => $received,
+                        ]),
                     ]);
                 }
 
@@ -293,13 +316,13 @@ class WarehouseTransferService
                 : TransferStatus::Received->value;
 
             $locked->update([
-                'status'            => $newStatus,
-                'received_total'    => $receivedTotal,
+                'status' => $newStatus,
+                'received_total' => $receivedTotal,
                 'discrepancy_notes' => $hasDiscrepancy
                     ? implode("\n", $discrepancies)
                     : null,
-                'received_by'       => auth()->id(),
-                'received_at'       => now(),
+                'received_by' => auth()->id(),
+                'received_at' => now(),
             ]);
         });
     }
@@ -350,11 +373,11 @@ class WarehouseTransferService
             }
 
             $locked->update([
-                'status'             => TransferStatus::Rejected->value,
-                'received_total'     => 0,
-                'discrepancy_notes'  => $reason,
-                'received_by'        => auth()->id(),
-                'received_at'        => now(),
+                'status' => TransferStatus::Rejected->value,
+                'received_total' => 0,
+                'discrepancy_notes' => $reason,
+                'received_by' => auth()->id(),
+                'received_at' => now(),
             ]);
         });
     }
@@ -406,9 +429,9 @@ class WarehouseTransferService
 
                     if ($missing > 0) {
                         $missingItems[] = [
-                            'warehouse_id'      => $item->warehouse_id,
+                            'warehouse_id' => $item->warehouse_id,
                             'declared_quantity' => $missing,
-                            'notes'             => __('messages.transfers.retransfer_note', [
+                            'notes' => __('messages.transfers.retransfer_note', [
                                 'original' => $locked->id,
                             ]),
                         ];
@@ -418,7 +441,7 @@ class WarehouseTransferService
                 if (! empty($nullReceived)) {
                     Log::warning('Disputed transfer has items with null received_quantity', [
                         'transfer_id' => $locked->id,
-                        'item_ids'    => $nullReceived,
+                        'item_ids' => $nullReceived,
                     ]);
                 }
 
@@ -431,19 +454,19 @@ class WarehouseTransferService
                     // warehouses. Sorting is inherited from dispatch()'s
                     // deterministic lock order pattern.
                     $this->create([
-                        'from_garage_id'        => $locked->from_garage_id,
-                        'to_garage_id'          => $locked->to_garage_id,
+                        'from_garage_id' => $locked->from_garage_id,
+                        'to_garage_id' => $locked->to_garage_id,
                         'to_service_vehicle_id' => $locked->to_service_vehicle_id,
-                        'type'                  => $locked->type->value,
-                        'notes'                 => __('messages.transfers.retransfer_note', ['original' => $locked->id]),
-                        'items'                 => $missingItems,
+                        'type' => $locked->type->value,
+                        'notes' => __('messages.transfers.retransfer_note', ['original' => $locked->id]),
+                        'items' => $missingItems,
                     ], $locked->company_id);
                 }
             }
 
             $locked->update([
-                'status'      => TransferStatus::Resolved->value,
-                'resolution'  => $resolution,
+                'status' => TransferStatus::Resolved->value,
+                'resolution' => $resolution,
                 'resolved_by' => auth()->id(),
                 'resolved_at' => now(),
             ]);

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\TransferStatus;
 use App\Enums\TransferType;
 use App\Models\Company;
 use App\Models\Garage;
@@ -36,10 +35,15 @@ class WarehouseTransferLockTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garageA;
+
     protected Garage $garageB;
+
     protected User $adminA;
+
     protected User $adminB;
+
     protected WarehouseTransferService $service;
 
     protected function setUp(): void
@@ -74,11 +78,11 @@ class WarehouseTransferLockTest extends TestCase
     protected function makeWarehouse(Garage $garage, string $code = 'W-001', int $qty = 100): Warehouse
     {
         return Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $garage->id,
+            'garage_id' => $garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $qty,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $qty,
         ]);
     }
 
@@ -90,9 +94,9 @@ class WarehouseTransferLockTest extends TestCase
 
         return $this->service->create([
             'from_garage_id' => $this->garageA->id,
-            'to_garage_id'   => $this->garageB->id,
-            'type'           => TransferType::GarageToGarage->value,
-            'items'          => [['warehouse_id' => $source->id, 'declared_quantity' => 5]],
+            'to_garage_id' => $this->garageB->id,
+            'type' => TransferType::GarageToGarage->value,
+            'items' => [['warehouse_id' => $source->id, 'declared_quantity' => 5]],
         ], $this->company->id);
     }
 

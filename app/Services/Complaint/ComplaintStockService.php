@@ -82,14 +82,14 @@ class ComplaintStockService
             if ($usedQuantity <= 0) {
                 $processed[] = [
                     'shikayet_index' => $detail['shikayet_index'] ?? 0,
-                    'code'           => $code,
-                    'name'           => $detail['name'] ?? $code,
+                    'code' => $code,
+                    'name' => $detail['name'] ?? $code,
                     'stock_quantity' => 0,
-                    'used_quantity'  => 0,
-                    'price_at_use'   => 0,
-                    'employee_id'    => $detail['employee_id'] ?? null,
-                    'notes'          => $detail['notes'] ?? null,
-                    'source_type'    => 'inspection',
+                    'used_quantity' => 0,
+                    'price_at_use' => 0,
+                    'employee_id' => $detail['employee_id'] ?? null,
+                    'notes' => $detail['notes'] ?? null,
+                    'source_type' => 'inspection',
                 ];
 
                 continue;
@@ -100,6 +100,7 @@ class ComplaintStockService
                 $processed[] = $this->deductFromServiceVehicle(
                     $detail, $code, $usedQuantity, $serviceVehicleId
                 );
+
                 continue;
             }
 

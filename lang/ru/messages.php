@@ -964,6 +964,7 @@ return [
         'invalid_resolution' => 'Неверный выбор решения.',
         'missing_received_quantity' => 'Для каждой позиции укажите принятое количество.',
         'negative_quantity' => 'Принятое количество не может быть отрицательным.',
+        'received_exceeds_declared' => 'Полученное количество (:received) превышает заявленное количество (:declared).',
         'invalid_warehouse_items' => 'Одна или несколько позиций не принадлежат этому гаражу.',
         'retransfer_note' => 'Повторная отправка из #:original',
         'delete_confirm' => 'Отменить это перемещение?',

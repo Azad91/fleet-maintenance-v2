@@ -1208,6 +1208,7 @@ return [
         'invalid_resolution' => 'Yanlış həll seçimi.',
         'missing_received_quantity' => 'Hər detal üçün qəbul edilən miqdar tələb olunur.',
         'negative_quantity' => 'Qəbul edilən miqdar mənfi ola bilməz.',
+        'received_exceeds_declared' => 'Qəbul edilən miqdar (:received) bəyan edilən miqdardan (:declared) çoxdur.',
         'invalid_warehouse_items' => 'Bir və ya bir neçə detal bu qaraja aid deyil.',
         'retransfer_note' => '#:original transferindən təkrar göndəriş',
         'delete_confirm' => 'Bu transferi ləğv etmək istəyirsiniz?',

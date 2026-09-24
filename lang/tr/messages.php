@@ -1078,6 +1078,7 @@ return [
         'invalid_resolution' => 'Geçersiz çözüm seçimi.',
         'missing_received_quantity' => 'Her kalem için teslim alınan miktar gereklidir.',
         'negative_quantity' => 'Teslim alınan miktar negatif olamaz.',
+        'received_exceeds_declared' => 'Teslim alınan miktar (:received) bildirilen miktardan (:declared) fazla.',
         'invalid_warehouse_items' => 'Bir veya daha fazla ürün bu garaja ait değil.',
         'retransfer_note' => '#:original transferinden yeniden gönderim',
         'delete_confirm' => 'Bu transferi iptal etmek istiyor musunuz?',

@@ -34,9 +34,13 @@ class ComplaintStockDeadlockOrderTest extends TestCase
     use RefreshDatabase;
 
     protected Company $company;
+
     protected Garage $garage;
+
     protected Bus $bus;
+
     protected Employee $employee;
+
     protected ComplaintStockService $stockService;
 
     protected function setUp(): void
@@ -44,17 +48,17 @@ class ComplaintStockDeadlockOrderTest extends TestCase
         parent::setUp();
 
         $this->company = Company::factory()->create();
-        $this->garage  = Garage::factory()->create(['company_id' => $this->company->id]);
+        $this->garage = Garage::factory()->create(['company_id' => $this->company->id]);
 
         GarageContext::set($this->garage->id, $this->company->id);
 
         $this->bus = Bus::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
         $this->employee = Employee::factory()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
         ]);
 
@@ -74,11 +78,11 @@ class ComplaintStockDeadlockOrderTest extends TestCase
     protected function makeWarehouse(string $code, int $qty = 100): Warehouse
     {
         return Warehouse::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'code'       => $code,
-            'name'       => "Part {$code}",
-            'quantity'   => $qty,
+            'code' => $code,
+            'name' => "Part {$code}",
+            'quantity' => $qty,
         ]);
     }
 
@@ -86,10 +90,10 @@ class ComplaintStockDeadlockOrderTest extends TestCase
     {
         return [
             'shikayet_index' => 0,
-            'code'           => $code,
-            'used_quantity'  => $qty,
-            'employee_id'    => $this->employee->id,
-            'notes'          => 'Test',
+            'code' => $code,
+            'used_quantity' => $qty,
+            'employee_id' => $this->employee->id,
+            'notes' => 'Test',
         ];
     }
 
@@ -176,20 +180,20 @@ class ComplaintStockDeadlockOrderTest extends TestCase
     public function test_deduct_stock_locks_service_vehicle_rows_in_sorted_order(): void
     {
         $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
-            'garage_id'  => $this->garage->id,
+            'garage_id' => $this->garage->id,
             'company_id' => $this->company->id,
-            'name'       => 'Test Vehicle',
-            'is_active'  => true,
+            'name' => 'Test Vehicle',
+            'is_active' => true,
         ]);
 
         foreach (['A-001', 'M-001', 'Z-001'] as $code) {
             ServiceVehicleStock::withoutGlobalScopes()->create([
                 'service_vehicle_id' => $vehicle->id,
-                'garage_id'          => $this->garage->id,
-                'company_id'         => $this->company->id,
-                'code'               => $code,
-                'name'               => "Part {$code}",
-                'quantity'           => 50,
+                'garage_id' => $this->garage->id,
+                'company_id' => $this->company->id,
+                'code' => $code,
+                'name' => "Part {$code}",
+                'quantity' => 50,
             ]);
         }
 
@@ -255,9 +259,9 @@ class ComplaintStockDeadlockOrderTest extends TestCase
             array_column($processed, 'code')
         );
 
-        $this->assertSame('warehouse',  $processed[0]['source_type']);
+        $this->assertSame('warehouse', $processed[0]['source_type']);
         $this->assertSame('inspection', $processed[1]['source_type']);
-        $this->assertSame('warehouse',  $processed[2]['source_type']);
+        $this->assertSame('warehouse', $processed[2]['source_type']);
         $this->assertSame('inspection', $processed[3]['source_type']);
     }
 
