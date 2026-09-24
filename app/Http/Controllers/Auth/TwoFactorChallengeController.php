@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Second step of the SuperAdmin login flow.
@@ -52,8 +54,30 @@ class TwoFactorChallengeController extends Controller
         /** @var User|null $user */
         $user = User::find($userId);
 
-        if (! $user) {
+        // ────────────────────────────────────────────────────────────
+        // INACTIVE-USER GUARD
+        //
+        // The password step verified that this account was active at
+        // that moment, but an administrator can deactivate the account
+        // in the window between the password POST and this TOTP POST.
+        //
+        // Without this check the user would be logged in one more time
+        // (the next request would then trigger EnsureActiveUser to log
+        // them out). Closing the gap here avoids that needless session.
+        // ────────────────────────────────────────────────────────────
+        if (! $user || ! $user->is_active) {
             $request->session()->forget('two_factor.user_id');
+
+            if ($user && ! $user->is_active) {
+                Log::warning('Inactive user blocked at 2FA challenge', [
+                    'user_id' => $user->id,
+                    'ip' => $request->ip(),
+                    'request_id' => Context::get('request_id'),
+                ]);
+
+                return redirect()->route('login')
+                    ->with('error', __('auth.inactive'));
+            }
 
             return redirect()->route('login');
         }
