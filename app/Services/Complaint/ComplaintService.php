@@ -9,6 +9,7 @@ use App\Models\Driver;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\ComplaintDetail;
 
 class ComplaintService
 {
@@ -147,6 +148,22 @@ class ComplaintService
                     $complaint->details->toArray(),
                     $complaint->service_vehicle_id
                 );
+            }
+
+            // AUDIT NOTE
+            // ----------
+            // `$complaint->details()->delete()` is a Builder-level bulk
+            // delete — it bypasses Eloquent's `deleted` event, so the
+            // Auditable trait writes NO log for the details. We take
+            // an explicit audit snapshot first, mirroring the pattern
+            // used by BusService::bulkDelete().
+            //
+            // The complaint row itself is deleted via `$complaint->delete()`
+            // (per-model), so its audit entry is written normally.
+            $detailIds = $complaint->details()->pluck('id')->all();
+
+            if (! empty($detailIds)) {
+                ComplaintDetail::auditBulkDelete($detailIds);
             }
 
             // Soft-delete details
