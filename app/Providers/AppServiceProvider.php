@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
                 ? Password::min(10)->letters()->numbers()->mixedCase()->symbols()
                 : Password::min(8);
         });
+
+        // ✅ Auto-revoke API tokens when a user is deactivated.
+        User::observe(UserObserver::class);
 
         $this->registerRateLimiters();
         $this->registerSuperAdminAuthListeners();

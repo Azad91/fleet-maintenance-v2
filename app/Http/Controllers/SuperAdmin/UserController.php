@@ -138,23 +138,10 @@ class UserController extends Controller
             $updateData['pin_is_default'] = false;
         }
 
-        // Detect the deactivation transition so we can revoke every
-        // outstanding API token. Without this, an operator could
-        // deactivate a user and still see their API calls in the logs
-        // until every single token expired or was revoked manually.
-        $wasActive = (bool) $user->is_active;
-
+        // Token revocation on the is_active true → false transition is
+        // handled automatically by UserObserver — see
+        // app/Observers/UserObserver.php for the full rationale.
         $user->update($updateData);
-
-        if ($wasActive && ! $user->is_active) {
-            $user->tokens()->delete();
-
-            \Illuminate\Support\Facades\Log::info('Revoked all API tokens for deactivated user', [
-                'user_id' => $user->id,
-                'deactivated_by' => auth()->id(),
-                'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
-            ]);
-        }
 
         return redirect()
             ->route('super-admin.users.index')
