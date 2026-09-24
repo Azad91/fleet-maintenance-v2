@@ -139,35 +139,36 @@ class GarageSelectionTest extends TestCase
         $this->assertEquals($this->company->id, $superAdmin->current_company_id);
         $this->assertNotNull($superAdmin->last_selected_garage_at);
     }
-public function test_director_is_redirected_to_director_dashboard(): void
-{
-    $director = User::factory()->create(['role' => 'user']);
 
-    // Directors are attached via company_user, NOT garage_user.
-    $this->company->users()->attach($director->id, [
-        'role' => 'director',
-        'is_active' => true,
-    ]);
+    public function test_director_is_redirected_to_director_dashboard(): void
+    {
+        $director = User::factory()->create(['role' => 'user']);
 
-    $response = $this->actingAs($director)
-        ->get(route('garage.selection'));
+        // Directors are attached via company_user, NOT garage_user.
+        $this->company->users()->attach($director->id, [
+            'role' => 'director',
+            'is_active' => true,
+        ]);
 
-    $response->assertRedirect(route('director.dashboard'));
-}
+        $response = $this->actingAs($director)
+            ->get(route('garage.selection'));
 
-public function test_director_does_not_see_no_access_page(): void
-{
-    $director = User::factory()->create(['role' => 'user']);
-    $this->company->users()->attach($director->id, [
-        'role' => 'director',
-        'is_active' => true,
-    ]);
+        $response->assertRedirect(route('director.dashboard'));
+    }
 
-    $response = $this->actingAs($director)
-        ->get(route('garage.selection'));
+    public function test_director_does_not_see_no_access_page(): void
+    {
+        $director = User::factory()->create(['role' => 'user']);
+        $this->company->users()->attach($director->id, [
+            'role' => 'director',
+            'is_active' => true,
+        ]);
 
-    // Must never render the "no access" view — that view is only
-    // correct for regular users with zero garage memberships.
-    $response->assertRedirect(route('director.dashboard'));
-}
+        $response = $this->actingAs($director)
+            ->get(route('garage.selection'));
+
+        // Must never render the "no access" view — that view is only
+        // correct for regular users with zero garage memberships.
+        $response->assertRedirect(route('director.dashboard'));
+    }
 }

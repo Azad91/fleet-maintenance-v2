@@ -1108,7 +1108,7 @@ return [
         'garage_info' => 'GARAJ BİLGİSİ',
         'reports' => [
             'company_scope' => 'Şirket geneli',
-            'subtitle'      => 'Şirketinizdeki tüm garajlar için toplu gösterim.',
+            'subtitle' => 'Şirketinizdeki tüm garajlar için toplu gösterim.',
         ],
     ],
 ];

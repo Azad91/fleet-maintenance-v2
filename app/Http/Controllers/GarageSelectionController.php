@@ -11,45 +11,45 @@ use Illuminate\View\View;
 
 class GarageSelectionController extends Controller
 {
-public function index(Request $request): View|RedirectResponse
-{
-    $user = auth()->user();
+    public function index(Request $request): View|RedirectResponse
+    {
+        $user = auth()->user();
 
-    // Directors operate at the company level and never hold a
-    // garage membership. Redirect them to their own dashboard
-    // instead of showing the "no access" screen, which is only
-    // correct for regular users with zero garage memberships.
-    // This mirrors the behavior already enforced by the
-    // EnsureGarageSelected middleware.
-    if ($user->isDirector()) {
-        return redirect()->route('director.dashboard');
+        // Directors operate at the company level and never hold a
+        // garage membership. Redirect them to their own dashboard
+        // instead of showing the "no access" screen, which is only
+        // correct for regular users with zero garage memberships.
+        // This mirrors the behavior already enforced by the
+        // EnsureGarageSelected middleware.
+        if ($user->isDirector()) {
+            return redirect()->route('director.dashboard');
+        }
+
+        // Optional case-insensitive substring filter applied to both
+        // company names and garage names. When empty, the full list is
+        // shown — the previous behaviour, kept for backwards
+        // compatibility and for the SuperAdmin "show everything" case.
+        $search = trim((string) $request->input('q', ''));
+
+        if ($user->isSuperAdmin()) {
+            $companies = $this->superAdminCompanies($search);
+        } else {
+            $companies = $this->userCompanies($user, $search);
+        }
+
+        // ───────────────────────────────────────────────────────────
+        // FIX P0-2: Infinite redirect loop
+        // (şərh saxlanılır, dəyişmir)
+        // ───────────────────────────────────────────────────────────
+        $hasNoGarages = $companies->isEmpty()
+            || $companies->every(fn ($c) => $c->garages->isEmpty());
+
+        if ($hasNoGarages && ! $user->isSuperAdmin() && $search === '') {
+            return view('garage-no-access');
+        }
+
+        return view('garage-selection', compact('companies', 'search'));
     }
-
-    // Optional case-insensitive substring filter applied to both
-    // company names and garage names. When empty, the full list is
-    // shown — the previous behaviour, kept for backwards
-    // compatibility and for the SuperAdmin "show everything" case.
-    $search = trim((string) $request->input('q', ''));
-
-    if ($user->isSuperAdmin()) {
-        $companies = $this->superAdminCompanies($search);
-    } else {
-        $companies = $this->userCompanies($user, $search);
-    }
-
-    // ───────────────────────────────────────────────────────────
-    // FIX P0-2: Infinite redirect loop
-    // (şərh saxlanılır, dəyişmir)
-    // ───────────────────────────────────────────────────────────
-    $hasNoGarages = $companies->isEmpty()
-        || $companies->every(fn ($c) => $c->garages->isEmpty());
-
-    if ($hasNoGarages && ! $user->isSuperAdmin() && $search === '') {
-        return view('garage-no-access');
-    }
-
-    return view('garage-selection', compact('companies', 'search'));
-}
 
     public function selectGarage(Request $request): RedirectResponse
     {

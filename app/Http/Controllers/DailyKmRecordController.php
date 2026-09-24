@@ -364,5 +364,5 @@ class DailyKmRecordController extends Controller
                 'count' => $count,
                 'items' => 'KM records',
             ]));
-}
+    }
 }

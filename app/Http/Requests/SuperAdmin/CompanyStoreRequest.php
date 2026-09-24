@@ -28,6 +28,7 @@ class CompanyStoreRequest extends SuperAdminRequest
             'is_active' => ['nullable', 'boolean'],
 
             // ─── First Director (required — see SuperAdmin spec) ───
+            'director_name' => ['required', 'string', 'max:255'],
             'director_email' => [
                 'required',
                 'email',

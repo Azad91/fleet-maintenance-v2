@@ -672,7 +672,7 @@ return [
         'garage_info' => 'QARAJ MƏLUMATI',
         'reports' => [
             'company_scope' => 'Şirkət üzrə',
-            'subtitle'      => 'Şirkətinizdəki bütün qarajlar üzrə cəmlənmiş.',
+            'subtitle' => 'Şirkətinizdəki bütün qarajlar üzrə cəmlənmiş.',
         ],
     ],
 

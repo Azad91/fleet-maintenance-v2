@@ -5,11 +5,11 @@ namespace App\Services\Complaint;
 use App\Enums\ComplaintStatus;
 use App\Enums\Location;
 use App\Models\Complaint;
+use App\Models\ComplaintDetail;
 use App\Models\Driver;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\ComplaintDetail;
 
 class ComplaintService
 {
@@ -390,7 +390,7 @@ class ComplaintService
         // ==================== 1. UPDATE EXISTING ====================
         $codesToUpdate = array_intersect($existingCodes, $newCodes);
         foreach ($codesToUpdate as $code) {
-            /** @var \App\Models\ComplaintDetail $detail */
+            /** @var ComplaintDetail $detail */
             $detail = $existingByCode[$code];
             $payload = $newByCode[$code];
 
@@ -410,7 +410,7 @@ class ComplaintService
         // ==================== 3. SOFT-DELETE REMOVED ====================
         $codesToDelete = array_diff($existingCodes, $newCodes);
         foreach ($codesToDelete as $code) {
-            /** @var \App\Models\ComplaintDetail $detail */
+            /** @var ComplaintDetail $detail */
             $detail = $existingByCode[$code];
             $detail->delete();
         }

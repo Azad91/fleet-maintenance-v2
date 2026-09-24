@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
-use Illuminate\Validation\Rule;
 
 class UserManagementController extends Controller
 {
