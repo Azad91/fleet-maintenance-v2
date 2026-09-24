@@ -973,4 +973,28 @@ return [
         'completed' => 'Перемещение завершено.',
         'type_requires_workflow' => 'Этот тип перемещения требует полного цикла отправить → принять.',
     ],
+
+    // ==================== DIRECTOR ====================
+    'director' => [
+        'menu_label' => 'ДИРЕКТОР',
+        'eyebrow' => 'ОБЗОР КОМПАНИИ',
+        'dashboard_title' => 'Панель компании',
+        'subtitle' => 'Обзор всех гаражей в вашей компании.',
+        'view_garages' => 'Гаражи',
+        'total_garages' => 'Всего гаражей',
+        'active_count' => ':count активных',
+        'garages_eyebrow' => 'ВАШИ ГАРАЖИ',
+        'garages_title' => 'Гаражи',
+        'garages_subtitle' => 'Все гаражи в вашей компании.',
+        'no_garages' => 'В вашей компании пока нет гаражей.',
+        'complaints' => 'Жалобы',
+        'warehouses' => 'Склады',
+        'employees_label' => 'Всего сотрудников',
+        'drivers_label' => 'Всего водителей',
+        'garage_info' => 'ИНФОРМАЦИЯ О ГАРАЖЕ',
+        'reports' => [
+            'company_scope' => 'По компании',
+            'subtitle'      => 'Агрегировано по всем гаражам вашей компании.',
+        ],
+    ],
 ];

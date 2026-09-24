@@ -668,6 +668,10 @@ return [
         'employees_label' => 'Total employees',
         'drivers_label' => 'Total drivers',
         'garage_info' => 'GARAGE INFO',
+        'reports' => [
+            'company_scope' => 'Company-wide',
+            'subtitle'      => 'Aggregated across every garage in your company.',
+        ],
     ],
 
     // ==================== IMPORTS ====================

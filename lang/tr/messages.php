@@ -1087,4 +1087,28 @@ return [
         'completed' => 'Transfer tamamlandı.',
         'type_requires_workflow' => 'Bu transfer türü tam gönder → teslim al iş akışını gerektirir.',
     ],
+
+    // ==================== DIRECTOR ====================
+    'director' => [
+        'menu_label' => 'DİREKTÖR',
+        'eyebrow' => 'ŞİRKET GENEL BAKIŞI',
+        'dashboard_title' => 'Şirket Kontrol Paneli',
+        'subtitle' => 'Şirketinizdeki tüm garajların genel görünümü.',
+        'view_garages' => 'Garajları Gör',
+        'total_garages' => 'Toplam Garaj',
+        'active_count' => ':count aktif',
+        'garages_eyebrow' => 'GARAJLARINIZ',
+        'garages_title' => 'Garajlar',
+        'garages_subtitle' => 'Şirketinizdeki tüm garajlar.',
+        'no_garages' => 'Şirketinizde henüz garaj yok.',
+        'complaints' => 'Şikayetler',
+        'warehouses' => 'Depolar',
+        'employees_label' => 'Toplam çalışan',
+        'drivers_label' => 'Toplam sürücü',
+        'garage_info' => 'GARAJ BİLGİSİ',
+        'reports' => [
+            'company_scope' => 'Şirket geneli',
+            'subtitle'      => 'Şirketinizdeki tüm garajlar için toplu gösterim.',
+        ],
+    ],
 ];
