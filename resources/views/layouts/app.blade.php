@@ -74,47 +74,53 @@
 
             <nav class="fleet-nav" aria-label="{{ __('messages.nav.main_navigation') }}">
                 @php
+                    /**
+                     * Resolve "may the current user see this domain?".
+                     *
+                     * A user can view any domain if they are a SuperAdmin or a
+                     * garage Admin. Otherwise they must hold at least one of the
+                     * domain's roles (e.g. warehouse_manager, warehouse_worker).
+                     *
+                     * Centralizing the rule here means that adding a new role to a
+                     * domain only requires updating RoleEnum::*Roles() — every
+                     * sidebar entry picks it up automatically.
+                     *
+                     * @param array<int, string> $roles
+                     */
+                    $canViewDomain = static function (array $roles) use ($isSuperAdmin, $isAdmin, $currentUser): bool {
+                        if ($isSuperAdmin || $isAdmin) {
+                            return true;
+                        }
+
+                        return $currentUser?->hasGarageRole($roles) ?? false;
+                    };
+
                     // ---- Operations ----
+                    // Buses, Motor Oil and Oil Changes are admin-only domains — they
+                    // have no manager/worker split, so they are checked directly.
                     $canViewBuses      = $isSuperAdmin || $isAdmin;
-                    $canViewComplaints = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::complaintRoles()) ?? false);
-                    $canViewWarehouse  = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::warehouseRoles()) ?? false);
                     $canViewMotorOil   = $isSuperAdmin || $isAdmin;
                     $canViewOilChanges = $isSuperAdmin || $isAdmin;
+
+                    $canViewComplaints  = $canViewDomain(RoleEnum::complaintRoles());
+                    $canViewWarehouse   = $canViewDomain(RoleEnum::warehouseRoles());
+
                     // ---- Daily records ----
-                    $canViewDailyStatus = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyStatusRoles()) ?? false);
-                    $canViewDailyKm     = $isSuperAdmin || $isAdmin || ($currentUser?->hasGarageRole(RoleEnum::dailyKmRoles()) ?? false);
+                    $canViewDailyStatus = $canViewDomain(RoleEnum::dailyStatusRoles());
+                    $canViewDailyKm     = $canViewDomain(RoleEnum::dailyKmRoles());
 
                     // ---- Admin-only sections ----
                     $canManage = $isAdmin;
+
                     // ---- Reports ----
-                    $canViewWarehouseReports = $isSuperAdmin || $isAdmin
-                        || ($currentUser?->hasGarageRole(array_merge(
-                            [RoleEnum::WAREHOUSE_MANAGER->value],
-                            [RoleEnum::WAREHOUSE_WORKER->value]
-                        )) ?? false);
-                    $canViewComplaintReports = $isSuperAdmin || $isAdmin
-                        || ($currentUser?->hasGarageRole(array_merge(
-                            [RoleEnum::COMPLAINT_MANAGER->value],
-                            [RoleEnum::COMPLAINT_WORKER->value]
-                        )) ?? false);
-                    $canViewDailyKmReports = $isSuperAdmin || $isAdmin
-                        || ($currentUser?->hasGarageRole(array_merge(
-                            [RoleEnum::DAILY_KM_MANAGER->value],
-                            [RoleEnum::DAILY_KM_WORKER->value]
-                        )) ?? false);
-                    $canViewDailyStatusReports = $isSuperAdmin || $isAdmin
-                        || ($currentUser?->hasGarageRole(array_merge(
-                            [RoleEnum::DAILY_STATUS_MANAGER->value],
-                            [RoleEnum::DAILY_STATUS_WORKER->value]
-                        )) ?? false);
-                    $canViewTransferReports = $isSuperAdmin || $isAdmin
-                        || ($currentUser?->hasGarageRole(array_merge(
-                            RoleEnum::warehouseRoles()
-                        )) ?? false);
-                    $canViewMaintenanceReports = $isSuperAdmin || $isAdmin
-                        || ($currentUser?->hasGarageRole(array_merge(
-                            RoleEnum::complaintRoles()
-                        )) ?? false);
+                    // Transfer and Maintenance reports reuse the roles of the
+                    // domain they summarize: warehouse and complaint respectively.
+                    $canViewWarehouseReports    = $canViewDomain(RoleEnum::warehouseRoles());
+                    $canViewComplaintReports    = $canViewDomain(RoleEnum::complaintRoles());
+                    $canViewDailyKmReports      = $canViewDomain(RoleEnum::dailyKmRoles());
+                    $canViewDailyStatusReports  = $canViewDomain(RoleEnum::dailyStatusRoles());
+                    $canViewTransferReports     = $canViewDomain(RoleEnum::warehouseRoles());
+                    $canViewMaintenanceReports  = $canViewDomain(RoleEnum::complaintRoles());
                 @endphp
 
                 {{-- ==================== SUPER ADMIN MENU ==================== --}}
