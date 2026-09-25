@@ -133,6 +133,7 @@
                     $canViewWarehouseAnalytics = $isSuperAdmin
                         || $isAdmin
                         || $currentUser?->hasGarageRole(RoleEnum::WAREHOUSE_MANAGER->value);
+                        $canViewMaintenanceReports = $canViewDomain(RoleEnum::complaintRoles());
                 @endphp
 
                 {{-- ==================== SUPER ADMIN MENU ==================== --}}
