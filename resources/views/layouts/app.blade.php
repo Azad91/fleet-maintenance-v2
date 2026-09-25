@@ -120,7 +120,19 @@
                     $canViewDailyKmReports      = $canViewDomain(RoleEnum::dailyKmRoles());
                     $canViewDailyStatusReports  = $canViewDomain(RoleEnum::dailyStatusRoles());
                     $canViewTransferReports     = $canViewDomain(RoleEnum::warehouseRoles());
-                    $canViewMaintenanceReports  = $canViewDomain(RoleEnum::complaintRoles());
+                    // ---- Manager-level-only report domains ----
+                    // Parts Usage and Warehouse Analytics intentionally
+                    // exclude worker roles: the routes are restricted to
+                    // ADMIN + MANAGER level, so exposing the sidebar
+                    // link to workers would only lead to a 403.
+                    $canViewPartsUsage = $isSuperAdmin
+                        || $isAdmin
+                        || $currentUser?->hasGarageRole(RoleEnum::WAREHOUSE_MANAGER->value)
+                        || $currentUser?->hasGarageRole(RoleEnum::COMPLAINT_MANAGER->value);
+
+                    $canViewWarehouseAnalytics = $isSuperAdmin
+                        || $isAdmin
+                        || $currentUser?->hasGarageRole(RoleEnum::WAREHOUSE_MANAGER->value);
                 @endphp
 
                 {{-- ==================== SUPER ADMIN MENU ==================== --}}
@@ -286,30 +298,25 @@
                     </a>
                 @endif
 
-                {{-- Parts Usage Reports — Admin + Warehouse/Complaint managers --}}
-                @if($canViewWarehouseReports || $canViewComplaintReports)
+                {{-- Parts Usage Reports — Admin + Warehouse/Complaint managers.
+                     Workers are excluded on purpose: the underlying routes
+                     are manager-level and would return 403. --}}
+                @if($canViewPartsUsage)
                     <a href="{{ route('reports.parts-usage.per-bus') }}" class="fleet-nav__link {{ request()->routeIs('reports.parts-usage.*') ? 'is-active' : '' }}">
                         <i class="fas fa-puzzle-piece"></i><span>{{ __('messages.reports.parts_usage.title') }}</span>
                     </a>
                 @endif
-                @if($canManage)
-                    <a href="{{ route('reports.oil-change.history') }}" class="fleet-nav__link {{ request()->routeIs('reports.oil-change.*') ? 'is-active' : '' }}">
-                        <i class="fas fa-oil-can-drip"></i><span>{{ __('messages.reports.oil_change.title') }}</span>
-                    </a>
-                @endif
-                @if($canViewWarehouseReports || $canViewComplaintReports)
-                    <a href="{{ route('reports.parts-usage.per-bus') }}" class="fleet-nav__link {{ request()->routeIs('reports.parts-usage.*') ? 'is-active' : '' }}">
-                        <i class="fas fa-puzzle-piece"></i><span>{{ __('messages.reports.parts_usage.title') }}</span>
-                    </a>
-                @endif
+
                 {{-- Fleet Health Reports --}}
                 @if($canManage || $canViewComplaintReports || $canViewDailyKmReports)
                     <a href="{{ route('reports.fleet-health.cost-per-km') }}" class="fleet-nav__link {{ request()->routeIs('reports.fleet-health.*') ? 'is-active' : '' }}">
                         <i class="fas fa-heart-pulse"></i><span>{{ __('messages.reports.fleet_health.title') }}</span>
                     </a>
                 @endif
-                {{-- Warehouse Analytics --}}
-                @if($canManage || $canViewWarehouseReports)
+
+                {{-- Warehouse Analytics — Admin + Warehouse Manager only.
+                     Workers are excluded for the same reason as Parts Usage. --}}
+                @if($canViewWarehouseAnalytics)
                     <a href="{{ route('reports.warehouse-analytics.slow-moving') }}" class="fleet-nav__link {{ request()->routeIs('reports.warehouse-analytics.*') ? 'is-active' : '' }}">
                         <i class="fas fa-chart-pie"></i><span>{{ __('messages.reports.warehouse_analytics.title') }}</span>
                     </a>
