@@ -93,6 +93,52 @@
     </div>
 @endif
 
+{{-- ─── Transfer Lifecycle Timeline ─── --}}
+@php
+    $status = $transfer->status;
+    $steps = [
+        'draft' => [
+            'label' => __('messages.transfers.action_dispatch'),
+            'icon'  => 'fa-file-pen',
+            'done'  => ! $status->isDraft(),
+            'active' => $status->isDraft(),
+        ],
+        'dispatched' => [
+            'label' => __('messages.transfers.action_receive'),
+            'icon'  => 'fa-truck-fast',
+            'done'  => in_array($status->value, ['received', 'disputed', 'resolved'], true),
+            'active' => $status->isDispatched(),
+        ],
+        'received' => [
+            'label' => __('messages.transfers.received'),
+            'icon'  => 'fa-circle-check',
+            'done'  => $status->isReceived(),
+            'active' => in_array($status->value, ['received', 'disputed', 'resolved'], true),
+        ],
+    ];
+@endphp
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between">
+            @foreach($steps as $key => $step)
+                <div class="text-center flex-fill">
+                    <div class="timeline-circle {{ $step['done'] ? 'is-done' : ($step['active'] ? 'is-active' : '') }}">
+                        <i class="fas {{ $step['icon'] }}"></i>
+                    </div>
+                    <div class="mt-2 small fw-bold {{ $step['active'] ? 'text-primary' : 'text-muted' }}">
+                        {{ $step['label'] }}
+                    </div>
+                </div>
+
+                @if(! $loop->last)
+                    <div class="timeline-bar {{ $step['done'] ? 'is-done' : '' }}"></div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+</div>
+
 <div class="row g-4 mb-4">
     {{-- ─── Source / Destination card ─── --}}
     <div class="col-md-6">
@@ -361,3 +407,46 @@
     </div>
 @endif
 @endsection
+@push('styles')
+<style>
+    .timeline-circle {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        color: #9ca3af;
+        font-size: 20px;
+        transition: all 0.3s;
+    }
+    .timeline-circle.is-active {
+        background: #2563eb;
+        color: #fff;
+        box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.15);
+    }
+    .timeline-circle.is-done {
+        background: #10b981;
+        color: #fff;
+    }
+    .timeline-bar {
+        flex: 1;
+        height: 3px;
+        margin-top: 25px;
+        background: #e5e7eb;
+        border-radius: 3px;
+    }
+    .timeline-bar.is-done {
+        background: #10b981;
+    }
+    html[data-fleet-theme="dark"] .timeline-circle {
+        background: #2c3c51;
+        color: #a8b9ce;
+    }
+    html[data-fleet-theme="dark"] .timeline-bar {
+        background: #2c3c51;
+    }
+</style>
+@endpush
