@@ -44,7 +44,7 @@ class OilChangeReportTest extends TestCase
         parent::tearDown();
     }
 
-    private function session(): array
+    private function garageSession(): array
     {
         return [
             'current_garage_id' => $this->garage->id,
@@ -75,7 +75,7 @@ class OilChangeReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.history'));
 
         $response->assertOk();
@@ -109,7 +109,7 @@ class OilChangeReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.history', ['oil_type' => 'motor']));
 
         $response->assertOk();
@@ -124,7 +124,7 @@ class OilChangeReportTest extends TestCase
     public function test_upcoming_page_loads(): void
     {
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.upcoming'));
 
         $response->assertOk();
@@ -151,7 +151,7 @@ class OilChangeReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.counts'));
 
         $response->assertOk();
@@ -165,7 +165,7 @@ class OilChangeReportTest extends TestCase
     public function test_adherence_page_loads(): void
     {
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.adherence'));
 
         $response->assertOk();
@@ -199,7 +199,7 @@ class OilChangeReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.adherence'));
 
         $response->assertOk();
@@ -218,7 +218,7 @@ class OilChangeReportTest extends TestCase
     public function test_catalog_usage_page_loads(): void
     {
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.catalog-usage'));
 
         $response->assertOk();
@@ -243,7 +243,7 @@ class OilChangeReportTest extends TestCase
         ]);
 
         $this->actingAs($worker)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.history'))
             ->assertForbidden();
     }
@@ -255,7 +255,7 @@ class OilChangeReportTest extends TestCase
     public function test_history_export_returns_xlsx(): void
     {
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.oil-change.history', ['export' => 'xlsx']));
 
         $response->assertOk();

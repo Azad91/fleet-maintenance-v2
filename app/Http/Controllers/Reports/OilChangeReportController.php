@@ -14,11 +14,13 @@ class OilChangeReportController extends ReportController
         protected OilChangeReportService $service
     ) {}
 
-    // #11 — History
+    // ==================================================================
+    // #11 — Oil Change History
+    // ==================================================================
     public function history(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
-        $scope = $this->scope('daily_km', $request); // daily_km uses bus scope
+        $scope = $this->scope('daily_km', $request);
 
         $type = OilType::tryFrom((string) $request->input('oil_type', ''));
 
@@ -53,7 +55,9 @@ class OilChangeReportController extends ReportController
         ]);
     }
 
-    // #12 — Upcoming
+    // ==================================================================
+    // #12 — Upcoming (next 30 days)
+    // ==================================================================
     public function upcoming(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
@@ -89,7 +93,9 @@ class OilChangeReportController extends ReportController
         ]);
     }
 
-    // #13 — Counts
+    // ==================================================================
+    // #13 — Monthly / Quarterly Count
+    // ==================================================================
     public function counts(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
@@ -110,11 +116,19 @@ class OilChangeReportController extends ReportController
                 __('messages.oil_change.type'),
                 __('messages.reports.content.total'),
             ],
-            rows: $rows->map(fn ($r) => [
-                \Carbon\Carbon::parse($r->period_start)->format('Y-m'),
-                OilType::from($r->oil_type)->label(),
-                (int) $r->total,
-            ])->all(),
+            rows: $rows->map(function ($r) {
+                // The model casts `oil_type` to an OilType enum, so
+                // `$r->oil_type` is already an enum instance here.
+                $type = $r->oil_type instanceof OilType
+                    ? $r->oil_type
+                    : OilType::from($r->oil_type);
+
+                return [
+                    \Carbon\Carbon::parse($r->period_start)->format('Y-m'),
+                    $type->label(),
+                    (int) $r->total,
+                ];
+            })->all(),
         )) {
             return $export;
         }
@@ -125,7 +139,9 @@ class OilChangeReportController extends ReportController
         ]);
     }
 
-    // #14 — Adherence
+    // ==================================================================
+    // #14 — Schedule Adherence
+    // ==================================================================
     public function adherence(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
@@ -141,9 +157,9 @@ class OilChangeReportController extends ReportController
                 __('messages.reports.content.total'),
             ],
             rows: [
-                [__('messages.oil_change.status.early'), $data['early']],
-                [__('messages.oil_change.status.on_time'), $data['on_time']],
-                [__('messages.oil_change.status.late'), $data['late']],
+                [__('messages.reports.content.early'), $data['early']],
+                [__('messages.reports.content.on_time'), $data['on_time']],
+                [__('messages.reports.content.late'), $data['late']],
             ],
         )) {
             return $export;
@@ -154,7 +170,9 @@ class OilChangeReportController extends ReportController
         ]);
     }
 
-    // #15 — Catalog Usage
+    // ==================================================================
+    // #15 — Motor Oil Catalog Usage
+    // ==================================================================
     public function catalogUsage(Request $request): View|BinaryFileResponse
     {
         $period = $this->period($request);
@@ -190,6 +208,9 @@ class OilChangeReportController extends ReportController
         ]);
     }
 
+    // ==================================================================
+    // Shared render helper
+    // ==================================================================
     private function render(string $view, $period, $scope, array $data): View
     {
         return view("reports.oil-change.{$view}", array_merge($data, [

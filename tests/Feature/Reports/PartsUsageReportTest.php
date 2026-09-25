@@ -51,7 +51,7 @@ class PartsUsageReportTest extends TestCase
         parent::tearDown();
     }
 
-    private function session(): array
+    private function garageSession(): array
     {
         return [
             'current_garage_id' => $this->garage->id,
@@ -93,7 +93,7 @@ class PartsUsageReportTest extends TestCase
         $this->makeComplaintWithDetail('P-001', 3, 25.00);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.per-bus'));
 
         $response->assertOk();
@@ -109,7 +109,7 @@ class PartsUsageReportTest extends TestCase
         $this->makeComplaintWithDetail('P-002', 5, 10.00);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.top-consumed'));
 
         $response->assertOk();
@@ -125,7 +125,7 @@ class PartsUsageReportTest extends TestCase
         $this->makeComplaintWithDetail('P-003', 2, 50.00); // 100 ₼
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.bus-cost'));
 
         $response->assertOk();
@@ -145,7 +145,7 @@ class PartsUsageReportTest extends TestCase
         $this->makeComplaintWithDetail('P-005', 2, 10.00);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.per-complaint'));
 
         $response->assertOk();
@@ -176,7 +176,7 @@ class PartsUsageReportTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.dead-stock'));
 
         $response->assertOk();
@@ -187,7 +187,7 @@ class PartsUsageReportTest extends TestCase
     public function test_dead_stock_page_loads_when_no_dead_stock(): void
     {
         $response = $this->actingAs($this->admin)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.dead-stock'));
 
         $response->assertOk();
@@ -213,7 +213,7 @@ class PartsUsageReportTest extends TestCase
         ]);
 
         $this->actingAs($worker)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.bus-cost'))
             ->assertForbidden();
     }
@@ -227,7 +227,7 @@ class PartsUsageReportTest extends TestCase
         ]);
 
         $this->actingAs($manager)
-            ->withSession($this->session())
+            ->withSession($this->garageSession())
             ->get(route('reports.parts-usage.per-bus'))
             ->assertOk();
     }

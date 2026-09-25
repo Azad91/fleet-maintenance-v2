@@ -549,19 +549,52 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
 
         // ==================================================================
         // PARTS USAGE REPORTS  (#16–#19, #27)
+        //
+        // The routes are split into three middleware groups because the
+        // reports have different audiences:
+        //   - Operational reports (per-bus, top-consumed)
+        //     → admin + warehouse manager + complaint manager
+        //   - Financial reports (bus-cost, dead-stock)
+        //     → admin + warehouse manager (contain cost / capital data)
+        //   - Complaint-domain report (per-complaint)
+        //     → admin + complaint manager
+        //
+        // The garage Worker roles (warehouse_worker, complaint_worker)
+        // are intentionally excluded — these reports aggregate across
+        // the whole garage, which is a manager-level view.
         // ==================================================================
+
+        // ── Group A: Operational (admin + managers of both domains) ──
         Route::prefix('parts-usage')->name('parts-usage.')
-            ->middleware(['role:'.implode(',', array_merge(
-                [RoleEnum::ADMIN->value],
-                RoleEnum::warehouseRoles(),
-                RoleEnum::complaintRoles()
-            ))])
+            ->middleware(['role:'.implode(',', [
+                RoleEnum::ADMIN->value,
+                RoleEnum::WAREHOUSE_MANAGER->value,
+                RoleEnum::COMPLAINT_MANAGER->value,
+            ])])
             ->group(function () {
-                Route::get('/per-bus',        [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perBus'])->name('per-bus');
-                Route::get('/top-consumed',   [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'topConsumed'])->name('top-consumed');
-                Route::get('/bus-cost',       [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'busCost'])->name('bus-cost');
-                Route::get('/per-complaint',  [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perComplaint'])->name('per-complaint');
-                Route::get('/dead-stock',     [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'deadStock'])->name('dead-stock');
+                Route::get('/per-bus',       [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perBus'])->name('per-bus');
+                Route::get('/top-consumed',  [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'topConsumed'])->name('top-consumed');
+            });
+
+        // ── Group B: Financial / inventory-capital (admin + warehouse manager) ──
+        Route::prefix('parts-usage')->name('parts-usage.')
+            ->middleware(['role:'.implode(',', [
+                RoleEnum::ADMIN->value,
+                RoleEnum::WAREHOUSE_MANAGER->value,
+            ])])
+            ->group(function () {
+                Route::get('/bus-cost',    [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'busCost'])->name('bus-cost');
+                Route::get('/dead-stock',  [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'deadStock'])->name('dead-stock');
+            });
+
+        // ── Group C: Complaint-domain report (admin + complaint manager) ──
+        Route::prefix('parts-usage')->name('parts-usage.')
+            ->middleware(['role:'.implode(',', [
+                RoleEnum::ADMIN->value,
+                RoleEnum::COMPLAINT_MANAGER->value,
+            ])])
+            ->group(function () {
+                Route::get('/per-complaint', [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perComplaint'])->name('per-complaint');
             });
     });
 

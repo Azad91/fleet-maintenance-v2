@@ -2,8 +2,14 @@
 
 @php
     use App\Enums\OilType;
+
+    // The model casts `oil_type` to an enum, so we normalise the key
+    // here to use the enum's VALUE (string) as the group key.
     $byPeriod = $rows->groupBy(fn ($r) => \Carbon\Carbon::parse($r->period_start)->format('Y-m'));
-    $totalsByType = $rows->groupBy('oil_type')->map->sum('total');
+
+    $totalsByType = $rows
+        ->groupBy(fn ($r) => $r->oil_type instanceof OilType ? $r->oil_type->value : $r->oil_type)
+        ->map->sum('total');
 @endphp
 
 @section('report-content')
@@ -56,8 +62,13 @@
                             <tr>
                                 <td><strong>{{ $periodKey }}</strong></td>
                                 <td>
-                                    <span class="badge bg-{{ OilType::from($row->oil_type)->bootstrapColor() }}">
-                                        {{ OilType::from($row->oil_type)->label() }}
+                                    @php
+                                        $typeEnum = $row->oil_type instanceof OilType
+                                            ? $row->oil_type
+                                            : OilType::from($row->oil_type);
+                                    @endphp
+                                    <span class="badge bg-{{ $typeEnum->bootstrapColor() }}">
+                                        {{ $typeEnum->label() }}
                                     </span>
                                 </td>
                                 <td class="text-center">
