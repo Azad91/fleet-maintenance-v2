@@ -165,16 +165,16 @@ class WarehouseAnalyticsReportService
                 'w.unit',
                 'w.price',
                 'w.supplier',
-                DB::raw('(
-                    SELECT COALESCE(SUM(cd.used_quantity), 0)
+            )
+            ->selectRaw(
+                '(SELECT COALESCE(SUM(cd.used_quantity), 0)
                     FROM complaint_details cd
                     WHERE cd.code = w.code
                       AND cd.garage_id = w.garage_id
                       AND cd.deleted_at IS NULL
-                      AND cd.created_at >= ?
-                ) as usage_last_30d'),
+                      AND cd.created_at >= ?) as usage_last_30d',
+                [$thirtyDaysAgo]
             )
-            ->addBinding($thirtyDaysAgo, 'select')
             ->orderByRaw('(w.minimum_quantity - w.quantity) DESC')
             ->get()
             ->map(function ($row) {
