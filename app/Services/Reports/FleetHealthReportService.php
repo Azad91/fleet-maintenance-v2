@@ -160,12 +160,15 @@ class FleetHealthReportService
             ->whereNull('ci.deleted_at')
             ->whereBetween('c.created_at', [$period->from, $period->to])
             ->when($scope->brandId, fn ($q) => $q->where('b.brand_id', $scope->brandId))
-            ->where(function ($q) {
-                // Exclude cards that are already resolved: recurring
-                // issues are a signal about ONGOING problems, not a
-                // historical log.
-                $q->where('c.status', '!=', 'completed')
-                    ->orWhereNull('c.status');
+                        ->where(function ($q) {
+                // Recurring issues are a signal about ONGOING problems —
+                // only pending and in_progress cards count. Cancelled
+                // cards were never real problems, and completed cards
+                // were resolved; neither should inflate this report.
+                $q->whereIn('c.status', [
+                    \App\Enums\ComplaintStatus::Pending->value,
+                    \App\Enums\ComplaintStatus::InProgress->value,
+                ]);
             })
             ->select(
                 'ci.description',
