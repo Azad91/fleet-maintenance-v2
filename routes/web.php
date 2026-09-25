@@ -533,6 +533,36 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 Route::get('/motor-oil', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'motorOil'])->name('motor-oil');
                 Route::get('/most-repaired', [App\Http\Controllers\Reports\MaintenanceReportController::class, 'mostRepaired'])->name('most-repaired');
             });
+
+        // ==================================================================
+        // OIL CHANGE REPORTS  (#11–#15)
+        // ==================================================================
+        Route::prefix('oil-change')->name('oil-change.')
+            ->middleware(['role:'.RoleEnum::ADMIN->value])
+            ->group(function () {
+                Route::get('/history',        [\App\Http\Controllers\Reports\OilChangeReportController::class, 'history'])->name('history');
+                Route::get('/upcoming',       [\App\Http\Controllers\Reports\OilChangeReportController::class, 'upcoming'])->name('upcoming');
+                Route::get('/counts',         [\App\Http\Controllers\Reports\OilChangeReportController::class, 'counts'])->name('counts');
+                Route::get('/adherence',      [\App\Http\Controllers\Reports\OilChangeReportController::class, 'adherence'])->name('adherence');
+                Route::get('/catalog-usage',  [\App\Http\Controllers\Reports\OilChangeReportController::class, 'catalogUsage'])->name('catalog-usage');
+            });
+
+        // ==================================================================
+        // PARTS USAGE REPORTS  (#16–#19, #27)
+        // ==================================================================
+        Route::prefix('parts-usage')->name('parts-usage.')
+            ->middleware(['role:'.implode(',', array_merge(
+                [RoleEnum::ADMIN->value],
+                RoleEnum::warehouseRoles(),
+                RoleEnum::complaintRoles()
+            ))])
+            ->group(function () {
+                Route::get('/per-bus',        [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perBus'])->name('per-bus');
+                Route::get('/top-consumed',   [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'topConsumed'])->name('top-consumed');
+                Route::get('/bus-cost',       [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'busCost'])->name('bus-cost');
+                Route::get('/per-complaint',  [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perComplaint'])->name('per-complaint');
+                Route::get('/dead-stock',     [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'deadStock'])->name('dead-stock');
+            });
     });
 
     // ==================== API JSON (Garage Data) ====================

@@ -79,6 +79,62 @@
                 'most-repaired' => ['label' => __('messages.reports.maintenance.most_repaired'), 'route' => 'reports.maintenance.most-repaired', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
             ],
         ],
+        'oil_change' => [
+            'title'   => __('messages.reports.oil_change.title'),
+            'eyebrow' => __('messages.nav.operations'),
+            'icon'    => 'fa-oil-can-drip',
+            'reports' => [
+                'history'         => ['label' => __('messages.reports.oil_change.history'),        'route' => 'reports.oil-change.history',        'roles' => [RoleEnum::ADMIN->value]],
+                'upcoming'        => ['label' => __('messages.reports.oil_change.upcoming'),       'route' => 'reports.oil-change.upcoming',       'roles' => [RoleEnum::ADMIN->value]],
+                'counts'          => ['label' => __('messages.reports.oil_change.counts'),         'route' => 'reports.oil-change.counts',         'roles' => [RoleEnum::ADMIN->value]],
+                'adherence'       => ['label' => __('messages.reports.oil_change.adherence'),      'route' => 'reports.oil-change.adherence',      'roles' => [RoleEnum::ADMIN->value]],
+                'catalog-usage'   => ['label' => __('messages.reports.oil_change.catalog_usage'),  'route' => 'reports.oil-change.catalog-usage',  'roles' => [RoleEnum::ADMIN->value]],
+            ],
+        ],
+
+        'parts_usage' => [
+            'title'   => __('messages.reports.parts_usage.title'),
+            'eyebrow' => __('messages.nav.warehouses'),
+            'icon'    => 'fa-puzzle-piece',
+            'reports' => [
+                'per-bus'        => ['label' => __('messages.reports.parts_usage.per_bus'),        'route' => 'reports.parts-usage.per-bus',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'top-consumed'   => ['label' => __('messages.reports.parts_usage.top_consumed'),   'route' => 'reports.parts-usage.top-consumed',   'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'bus-cost'       => ['label' => __('messages.reports.parts_usage.bus_cost'),       'route' => 'reports.parts-usage.bus-cost',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'per-complaint'  => ['label' => __('messages.reports.parts_usage.per_complaint'),  'route' => 'reports.parts-usage.per-complaint',  'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'dead-stock'     => ['label' => __('messages.reports.parts_usage.dead_stock'),     'route' => 'reports.parts-usage.dead-stock',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+            ],
+        ],
+                // ==================================================================
+        // OIL CHANGE REPORTS  (#11–#15)
+        // ==================================================================
+        'oil_change' => [
+            'title'   => __('messages.reports.oil_change.title'),
+            'eyebrow' => __('messages.nav.operations'),
+            'icon'    => 'fa-oil-can-drip',
+            'reports' => [
+                'history'        => ['label' => __('messages.reports.oil_change.history'),       'route' => 'reports.oil-change.history',       'roles' => [RoleEnum::ADMIN->value]],
+                'upcoming'       => ['label' => __('messages.reports.oil_change.upcoming'),      'route' => 'reports.oil-change.upcoming',      'roles' => [RoleEnum::ADMIN->value]],
+                'counts'         => ['label' => __('messages.reports.oil_change.counts'),        'route' => 'reports.oil-change.counts',        'roles' => [RoleEnum::ADMIN->value]],
+                'adherence'      => ['label' => __('messages.reports.oil_change.adherence'),     'route' => 'reports.oil-change.adherence',     'roles' => [RoleEnum::ADMIN->value]],
+                'catalog-usage'  => ['label' => __('messages.reports.oil_change.catalog_usage'), 'route' => 'reports.oil-change.catalog-usage', 'roles' => [RoleEnum::ADMIN->value]],
+            ],
+        ],
+
+        // ==================================================================
+        // PARTS USAGE REPORTS  (#16–#19, #27)
+        // ==================================================================
+        'parts_usage' => [
+            'title'   => __('messages.reports.parts_usage.title'),
+            'eyebrow' => __('messages.nav.warehouses'),
+            'icon'    => 'fa-puzzle-piece',
+            'reports' => [
+                'per-bus'        => ['label' => __('messages.reports.parts_usage.per_bus'),       'route' => 'reports.parts-usage.per-bus',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'top-consumed'   => ['label' => __('messages.reports.parts_usage.top_consumed'),  'route' => 'reports.parts-usage.top-consumed',  'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'bus-cost'       => ['label' => __('messages.reports.parts_usage.bus_cost'),      'route' => 'reports.parts-usage.bus-cost',      'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'per-complaint'  => ['label' => __('messages.reports.parts_usage.per_complaint'), 'route' => 'reports.parts-usage.per-complaint', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'dead-stock'     => ['label' => __('messages.reports.parts_usage.dead_stock'),    'route' => 'reports.parts-usage.dead-stock',    'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+            ],
+        ],
     ];
 
     $config = $domainConfig[$domain] ?? null;
@@ -109,7 +165,7 @@
 
     // ─── Brand filter support ───
     // Only the three bus-related domains accept a brand filter.
-    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance'];
+    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance', 'oil_change', 'parts_usage'];
     $brandFilterSupported = in_array($domain, $brandSupportedDomains, true);
 
     $reportBrands = collect();

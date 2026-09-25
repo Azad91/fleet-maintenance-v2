@@ -279,6 +279,29 @@
                         <i class="fas fa-wrench"></i><span>{{ __('messages.reports.maintenance.title') }}</span>
                     </a>
                 @endif
+                {{-- Oil Change Reports — Admin only --}}
+                @if($canManage)
+                    <a href="{{ route('reports.oil-change.history') }}" class="fleet-nav__link {{ request()->routeIs('reports.oil-change.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-oil-can-drip"></i><span>{{ __('messages.reports.oil_change.title') }}</span>
+                    </a>
+                @endif
+
+                {{-- Parts Usage Reports — Admin + Warehouse/Complaint managers --}}
+                @if($canViewWarehouseReports || $canViewComplaintReports)
+                    <a href="{{ route('reports.parts-usage.per-bus') }}" class="fleet-nav__link {{ request()->routeIs('reports.parts-usage.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-puzzle-piece"></i><span>{{ __('messages.reports.parts_usage.title') }}</span>
+                    </a>
+                @endif
+                @if($canManage)
+                    <a href="{{ route('reports.oil-change.history') }}" class="fleet-nav__link {{ request()->routeIs('reports.oil-change.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-oil-can-drip"></i><span>{{ __('messages.reports.oil_change.title') }}</span>
+                    </a>
+                @endif
+                @if($canViewWarehouseReports || $canViewComplaintReports)
+                    <a href="{{ route('reports.parts-usage.per-bus') }}" class="fleet-nav__link {{ request()->routeIs('reports.parts-usage.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-puzzle-piece"></i><span>{{ __('messages.reports.parts_usage.title') }}</span>
+                    </a>
+                @endif
             @endif
             </nav>
 
