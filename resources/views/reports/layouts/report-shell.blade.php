@@ -104,7 +104,24 @@
                 'dead-stock'     => ['label' => __('messages.reports.parts_usage.dead_stock'),     'route' => 'reports.parts-usage.dead-stock',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
             ],
         ],
-                // ==================================================================
+
+        // ==================================================================
+        // FLEET HEALTH REPORTS  (#20–#25)
+        // ==================================================================
+        'fleet_health' => [
+            'title'   => __('messages.reports.fleet_health.title'),
+            'eyebrow' => __('messages.nav.operations'),
+            'icon'    => 'fa-heart-pulse',
+            'reports' => [
+                'cost-per-km'          => ['label' => __('messages.reports.fleet_health.cost_per_km'),          'route' => 'reports.fleet-health.cost-per-km',          'roles' => [RoleEnum::ADMIN->value]],
+                'downtime'             => ['label' => __('messages.reports.fleet_health.downtime'),             'route' => 'reports.fleet-health.downtime',             'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'recurring-issues'     => ['label' => __('messages.reports.fleet_health.recurring_issues'),     'route' => 'reports.fleet-health.recurring-issues',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'recurring-complaints' => ['label' => __('messages.reports.fleet_health.recurring_complaints'), 'route' => 'reports.fleet-health.recurring-complaints', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'accidents'            => ['label' => __('messages.reports.fleet_health.accidents'),            'route' => 'reports.fleet-health.accidents',            'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'utilization'          => ['label' => __('messages.reports.fleet_health.utilization'),          'route' => 'reports.fleet-health.utilization',          'roles' => [RoleEnum::ADMIN->value, RoleEnum::DAILY_KM_MANAGER->value]],
+            ],
+        ],
+        // ==================================================================
         // OIL CHANGE REPORTS  (#11–#15)
         // ==================================================================
         'oil_change' => [
@@ -165,7 +182,7 @@
 
     // ─── Brand filter support ───
     // Only the three bus-related domains accept a brand filter.
-    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance', 'oil_change', 'parts_usage'];
+    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance', 'oil_change', 'parts_usage', 'fleet_health'];
     $brandFilterSupported = in_array($domain, $brandSupportedDomains, true);
 
     $reportBrands = collect();

@@ -596,6 +596,24 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
             ->group(function () {
                 Route::get('/per-complaint', [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perComplaint'])->name('per-complaint');
             });
+
+        // ==================================================================
+        // FLEET HEALTH REPORTS  (#20–#25)
+        // ==================================================================
+        Route::prefix('fleet-health')->name('fleet-health.')
+            ->middleware(['role:'.implode(',', [
+                RoleEnum::ADMIN->value,
+                RoleEnum::COMPLAINT_MANAGER->value,
+                RoleEnum::DAILY_KM_MANAGER->value,
+            ])])
+            ->group(function () {
+                Route::get('/cost-per-km',           [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'costPerKm'])->name('cost-per-km');
+                Route::get('/downtime',              [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'downtime'])->name('downtime');
+                Route::get('/recurring-issues',      [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'recurringIssues'])->name('recurring-issues');
+                Route::get('/recurring-complaints',  [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'recurringComplaints'])->name('recurring-complaints');
+                Route::get('/accidents',             [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'accidents'])->name('accidents');
+                Route::get('/utilization',           [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'utilization'])->name('utilization');
+            });
     });
 
     // ==================== API JSON (Garage Data) ====================

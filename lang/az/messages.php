@@ -1009,6 +1009,15 @@ return [
             'per_complaint'  => 'Kart üzrə orta',
             'dead_stock'     => 'Ölü stok',
         ],
+        'fleet_health' => [
+            'title'                => 'Avtoparkın sağlamlığı',
+            'cost_per_km'          => 'KM başına xərc',
+            'downtime'             => 'Boş dayanma analizi',
+            'recurring_issues'     => 'Təkrarlanan problemlər',
+            'recurring_complaints' => 'Təkrarlanan şikayətlər',
+            'accidents'            => 'Qəzalar',
+            'utilization'          => 'İstifadə faizi',
+        ],
 
         'content' => [
             'date' => 'Tarix',
@@ -1096,7 +1105,7 @@ return [
             'qty_service_vehicle' => 'Servis Maşını',
             'qty_historical' => 'Tarixi',
             'rank' => 'Yer',
-                        // ─── Oil Change & Parts Usage reports ───
+            // ─── Oil Change & Parts Usage reports ───
             'days_remaining'          => 'Qalan gün',
             'on_time_rate'            => 'Vaxtında faizi',
             'early'                   => 'Erkən',
@@ -1113,7 +1122,19 @@ return [
             'per_bus'                 => 'Avtobus başına',
             'per_complaint'           => 'Kart başına',
             'per_complaint_hint'      => 'Seçilmiş dövrdə hər kart üzrə orta hesabla istifadə olunan detal sayı.',
-        ],
+            // ─── Fleet Health reports ───
+            'cost_per_km'          => 'KM başına xərc',
+            'days_in_service'      => 'Xidmətdə günlər',
+            'total_days'           => 'Ümumi günlər',
+            'utilization'          => 'İstifadə',
+            'total_hours'          => 'Ümumi saat',
+            'avg_hours'            => 'Orta saat',
+            'max_hours'            => 'Maks. saat',
+            'last_occurrence'      => 'Son təkrarlanma',
+            'recurring_hint'              => 'Son 30 gün ərzində 2+ dəfə təkrarlanan problemlər.',
+            'recurring_same_bus_hint'     => 'Eyni avtobusda 2+ dəfə təkrarlanan problemlər.',
+            'no_accidents'                => 'Bu dövrdə qəza qeydə alınmayıb.',
+            ],
         'oil_change' => [
             'title'          => 'Yağ dəyişmə hesabatları',
             'history'        => 'Tarixçə',

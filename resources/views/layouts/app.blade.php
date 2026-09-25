@@ -302,6 +302,12 @@
                         <i class="fas fa-puzzle-piece"></i><span>{{ __('messages.reports.parts_usage.title') }}</span>
                     </a>
                 @endif
+                {{-- Fleet Health Reports --}}
+                @if($canManage || $canViewComplaintReports || $canViewDailyKmReports)
+                    <a href="{{ route('reports.fleet-health.cost-per-km') }}" class="fleet-nav__link {{ request()->routeIs('reports.fleet-health.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-heart-pulse"></i><span>{{ __('messages.reports.fleet_health.title') }}</span>
+                    </a>
+                @endif
             @endif
             </nav>
 
