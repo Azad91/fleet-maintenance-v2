@@ -3,7 +3,6 @@
 namespace App\Services\Reports;
 
 use App\Models\Complaint;
-use App\Models\ComplaintItem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -125,18 +124,59 @@ class FleetHealthReportService
     // ==================================================================
 
     /**
-     * Descriptions that appear 2+ times within the last N days across
-     * any bus in the current garage.
+     * Complaint descriptions that appear 2+ times within the selected
+     * period, broken down by bus.
      *
-     * Reuses the existing ComplaintItem::scopeRecurring(), which is
-     * the canonical definition and already handles garage scoping.
+     * ────────────────────────────────────────────────────────────────
+     * NOTE: this method deliberately does NOT use
+     * ComplaintItem::scopeRecurring().
+     *
+     * The scope has two limitations that break the report for
+     * Directors:
+     *
+     *   1. It reads GarageContext::resolveGarageId() — a single
+     *      garage id. Directors have no garage context, so the scope
+     *      returns `WHERE 1 = 0` and the report renders empty.
+     *
+     *   2. It ignores $period and $scope->brandId, so changing the
+     *      date range or the brand filter has no effect.
+     *
+     * The query below uses $scope->garageIds (already resolved to the
+     * correct set of garages by ReportScope::for()), respects the
+     * period and the optional brand filter, and returns the same
+     * column shape the blade expects (description, total,
+     * last_occurrence).
+     * ────────────────────────────────────────────────────────────────
      *
      * @return Collection<int, object>
      */
-    public function recurringIssues(ReportPeriod $period, ReportScope $scope, int $minDays = 30): Collection
+    public function recurringIssues(ReportPeriod $period, ReportScope $scope): Collection
     {
-        return ComplaintItem::query()
-            ->recurring($minDays)
+        return DB::table('complaint_items as ci')
+            ->join('complaints as c', 'c.id', '=', 'ci.complaint_id')
+            ->join('buses as b', 'b.id', '=', 'c.bus_id')
+            ->whereIn('c.garage_id', $scope->garageIds)
+            ->whereNull('c.deleted_at')
+            ->whereNull('ci.deleted_at')
+            ->whereBetween('c.created_at', [$period->from, $period->to])
+            ->when($scope->brandId, fn ($q) => $q->where('b.brand_id', $scope->brandId))
+            ->where(function ($q) {
+                // Exclude cards that are already resolved: recurring
+                // issues are a signal about ONGOING problems, not a
+                // historical log.
+                $q->where('c.status', '!=', 'completed')
+                    ->orWhereNull('c.status');
+            })
+            ->select(
+                'ci.description',
+                'b.id as bus_id',
+                'b.dqn',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('MAX(c.created_at) as last_occurrence')
+            )
+            ->groupBy('ci.description', 'b.id', 'b.dqn')
+            ->havingRaw('COUNT(*) >= 2')
+            ->orderByDesc('total')
             ->limit(200)
             ->get();
     }
