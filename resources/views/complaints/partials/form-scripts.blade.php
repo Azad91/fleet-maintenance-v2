@@ -254,11 +254,24 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // COMPLAINT TYPE → LOCATION
+    // COMPLAINT TYPE → LOCATION + DETAILS RESET
+    //
+    // When the user switches TO maintenance, we snapshot the current
+    // contents of #detailsContainer. When they switch back to
+    // accident/breakdown, we restore that snapshot — instead of
+    // leaving the auto-loaded maintenance parts behind.
+    //
+    // Why snapshot instead of just clearing: on an edit page the
+    // user may have existing breakdown details. If they click
+    // maintenance by mistake and then switch back, we must not
+    // lose their work.
     //
     // `resetLocation` — false on page load (so old('yer') survives),
     // true when the user changes a radio (so the location resets).
     // ═══════════════════════════════════════════════════════════════
+    let nonMaintenanceSnapshot = null;
+    let isInitialRender = true;
+
     function handleComplaintTypeChange(resetLocation) {
         if (typeof resetLocation === 'undefined') {
             resetLocation = true;
@@ -269,6 +282,38 @@
         const garageRadio = document.getElementById('yer_garage');
 
         if (! roadRadio || ! garageRadio) return;
+
+        // ─── Snapshot / restore of the details container ───
+        // Skipped on the initial render, because on an edit page the
+        // container already holds DB-loaded details and snapshotting
+        // them would corrupt the restore behaviour.
+        if (! isInitialRender && typeInput) {
+            const container = document.getElementById('detailsContainer');
+
+            if (container) {
+                if (typeInput.value === 'maintenance' && nonMaintenanceSnapshot === null) {
+                    // Entering maintenance — remember the current state.
+                    nonMaintenanceSnapshot = {
+                        html: container.innerHTML,
+                        detailCount: detailCount,
+                    };
+                } else if (typeInput.value !== 'maintenance' && nonMaintenanceSnapshot !== null) {
+                    // Leaving maintenance — restore the pre-maintenance state.
+                    container.innerHTML = nonMaintenanceSnapshot.html;
+                    detailCount = nonMaintenanceSnapshot.detailCount;
+                    nonMaintenanceSnapshot = null;
+
+                    // Re-run part lookups so the "stock" column reflects
+                    // the correct source (warehouse vs service vehicle).
+                    document.querySelectorAll('#detailsContainer input[name*="[code]"]')
+                        .forEach(input => {
+                            if (input.value.trim()) {
+                                getPartByCode(input);
+                            }
+                        });
+                }
+            }
+        }
 
         roadRadio.disabled   = false;
         garageRadio.disabled = false;
@@ -638,6 +683,10 @@
     document.addEventListener('DOMContentLoaded', function () {
         // ⚡ Page load → do NOT reset the location (so old('yer') survives).
         handleComplaintTypeChange(false);
+
+        // After the initial render, enable the snapshot/restore logic.
+        isInitialRender = false;
+
         toggleFields();
 
         // Re-lookup prefilled parts so the stock display reflects the
