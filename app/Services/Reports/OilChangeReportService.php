@@ -178,7 +178,9 @@ class OilChangeReportService
         ReportScope $scope,
         string $bucket = 'month'
     ): Collection {
-        $trunc = $bucket === 'quarter' ? 'quarter' : 'month';
+        // Whitelist guard — $trunc is interpolated into a raw SQL string.
+        // Do NOT remove this check without also parameterizing the call.
+        $trunc = in_array($bucket, ['month', 'quarter'], true) ? $bucket : 'month';
 
         return BusOilChange::withoutGlobalScope('garage')
             ->whereIn('garage_id', $scope->garageIds)
