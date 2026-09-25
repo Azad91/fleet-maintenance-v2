@@ -79,63 +79,7 @@
                 'most-repaired' => ['label' => __('messages.reports.maintenance.most_repaired'), 'route' => 'reports.maintenance.most-repaired', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value, RoleEnum::COMPLAINT_WORKER->value]],
             ],
         ],
-        'oil_change' => [
-            'title'   => __('messages.reports.oil_change.title'),
-            'eyebrow' => __('messages.nav.operations'),
-            'icon'    => 'fa-oil-can-drip',
-            'reports' => [
-                'history'         => ['label' => __('messages.reports.oil_change.history'),        'route' => 'reports.oil-change.history',        'roles' => [RoleEnum::ADMIN->value]],
-                'upcoming'        => ['label' => __('messages.reports.oil_change.upcoming'),       'route' => 'reports.oil-change.upcoming',       'roles' => [RoleEnum::ADMIN->value]],
-                'counts'          => ['label' => __('messages.reports.oil_change.counts'),         'route' => 'reports.oil-change.counts',         'roles' => [RoleEnum::ADMIN->value]],
-                'adherence'       => ['label' => __('messages.reports.oil_change.adherence'),      'route' => 'reports.oil-change.adherence',      'roles' => [RoleEnum::ADMIN->value]],
-                'catalog-usage'   => ['label' => __('messages.reports.oil_change.catalog_usage'),  'route' => 'reports.oil-change.catalog-usage',  'roles' => [RoleEnum::ADMIN->value]],
-            ],
-        ],
 
-        'parts_usage' => [
-            'title'   => __('messages.reports.parts_usage.title'),
-            'eyebrow' => __('messages.nav.warehouses'),
-            'icon'    => 'fa-puzzle-piece',
-            'reports' => [
-                'per-bus'        => ['label' => __('messages.reports.parts_usage.per_bus'),        'route' => 'reports.parts-usage.per-bus',        'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'top-consumed'   => ['label' => __('messages.reports.parts_usage.top_consumed'),   'route' => 'reports.parts-usage.top-consumed',   'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'bus-cost'       => ['label' => __('messages.reports.parts_usage.bus_cost'),       'route' => 'reports.parts-usage.bus-cost',       'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'per-complaint'  => ['label' => __('messages.reports.parts_usage.per_complaint'),  'route' => 'reports.parts-usage.per-complaint',  'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'dead-stock'     => ['label' => __('messages.reports.parts_usage.dead_stock'),     'route' => 'reports.parts-usage.dead-stock',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-            ],
-        ],
-
-        // ==================================================================
-        // FLEET HEALTH REPORTS  (#20–#25)
-        // ==================================================================
-        'fleet_health' => [
-            'title'   => __('messages.reports.fleet_health.title'),
-            'eyebrow' => __('messages.nav.operations'),
-            'icon'    => 'fa-heart-pulse',
-            'reports' => [
-                'cost-per-km'          => ['label' => __('messages.reports.fleet_health.cost_per_km'),          'route' => 'reports.fleet-health.cost-per-km',          'roles' => [RoleEnum::ADMIN->value]],
-                'downtime'             => ['label' => __('messages.reports.fleet_health.downtime'),             'route' => 'reports.fleet-health.downtime',             'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'recurring-issues'     => ['label' => __('messages.reports.fleet_health.recurring_issues'),     'route' => 'reports.fleet-health.recurring-issues',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'recurring-complaints' => ['label' => __('messages.reports.fleet_health.recurring_complaints'), 'route' => 'reports.fleet-health.recurring-complaints', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'accidents'            => ['label' => __('messages.reports.fleet_health.accidents'),            'route' => 'reports.fleet-health.accidents',            'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
-                'utilization'          => ['label' => __('messages.reports.fleet_health.utilization'),          'route' => 'reports.fleet-health.utilization',          'roles' => [RoleEnum::ADMIN->value, RoleEnum::DAILY_KM_MANAGER->value]],
-            ],
-        ],
-        // ==================================================================
-        // WAREHOUSE ANALYTICS REPORTS  (#26, #28, #29, #30, #31)
-        // ==================================================================
-        'warehouse_analytics' => [
-            'title'   => __('messages.reports.warehouse_analytics.title'),
-            'eyebrow' => __('messages.nav.warehouses'),
-            'icon'    => 'fa-chart-pie',
-            'reports' => [
-                'slow-moving'   => ['label' => __('messages.reports.warehouse_analytics.slow_moving'),  'route' => 'reports.warehouse-analytics.slow-moving',  'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'valuation'     => ['label' => __('messages.reports.warehouse_analytics.valuation'),    'route' => 'reports.warehouse-analytics.valuation',    'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'reorder'       => ['label' => __('messages.reports.warehouse_analytics.reorder'),      'route' => 'reports.warehouse-analytics.reorder',      'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'supplier'      => ['label' => __('messages.reports.warehouse_analytics.supplier'),     'route' => 'reports.warehouse-analytics.supplier',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-                'part-history'  => ['label' => __('messages.reports.warehouse_analytics.part_history'), 'route' => 'reports.warehouse-analytics.part-history', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
-            ],
-        ],
         // ==================================================================
         // OIL CHANGE REPORTS  (#11–#15)
         // ==================================================================
@@ -167,6 +111,39 @@
                 'dead-stock'     => ['label' => __('messages.reports.parts_usage.dead_stock'),    'route' => 'reports.parts-usage.dead-stock',    'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
             ],
         ],
+
+        // ==================================================================
+        // FLEET HEALTH REPORTS  (#20–#25)
+        // ==================================================================
+        'fleet_health' => [
+            'title'   => __('messages.reports.fleet_health.title'),
+            'eyebrow' => __('messages.nav.operations'),
+            'icon'    => 'fa-heart-pulse',
+            'reports' => [
+                'cost-per-km'          => ['label' => __('messages.reports.fleet_health.cost_per_km'),          'route' => 'reports.fleet-health.cost-per-km',          'roles' => [RoleEnum::ADMIN->value]],
+                'downtime'             => ['label' => __('messages.reports.fleet_health.downtime'),             'route' => 'reports.fleet-health.downtime',             'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'recurring-issues'     => ['label' => __('messages.reports.fleet_health.recurring_issues'),     'route' => 'reports.fleet-health.recurring-issues',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'recurring-complaints' => ['label' => __('messages.reports.fleet_health.recurring_complaints'), 'route' => 'reports.fleet-health.recurring-complaints', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'accidents'            => ['label' => __('messages.reports.fleet_health.accidents'),            'route' => 'reports.fleet-health.accidents',            'roles' => [RoleEnum::ADMIN->value, RoleEnum::COMPLAINT_MANAGER->value]],
+                'utilization'          => ['label' => __('messages.reports.fleet_health.utilization'),          'route' => 'reports.fleet-health.utilization',          'roles' => [RoleEnum::ADMIN->value, RoleEnum::DAILY_KM_MANAGER->value]],
+            ],
+        ],
+
+        // ==================================================================
+        // WAREHOUSE ANALYTICS REPORTS  (#26, #28, #29, #30, #31)
+        // ==================================================================
+        'warehouse_analytics' => [
+            'title'   => __('messages.reports.warehouse_analytics.title'),
+            'eyebrow' => __('messages.nav.warehouses'),
+            'icon'    => 'fa-chart-pie',
+            'reports' => [
+                'slow-moving'   => ['label' => __('messages.reports.warehouse_analytics.slow_moving'),  'route' => 'reports.warehouse-analytics.slow-moving',  'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'valuation'     => ['label' => __('messages.reports.warehouse_analytics.valuation'),    'route' => 'reports.warehouse-analytics.valuation',    'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'reorder'       => ['label' => __('messages.reports.warehouse_analytics.reorder'),      'route' => 'reports.warehouse-analytics.reorder',      'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'supplier'      => ['label' => __('messages.reports.warehouse_analytics.supplier'),     'route' => 'reports.warehouse-analytics.supplier',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'part-history'  => ['label' => __('messages.reports.warehouse_analytics.part_history'), 'route' => 'reports.warehouse-analytics.part-history', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+            ],
+        ],
     ];
 
     $config = $domainConfig[$domain] ?? null;
@@ -196,8 +173,19 @@
     $queryString = request()->only(['period', 'from', 'to', 'brand_id']);
 
     // ─── Brand filter support ───
-    // Only the three bus-related domains accept a brand filter.
-    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance', 'oil_change', 'parts_usage', 'fleet_health', 'warehouse_analytics'];
+    // Only bus-related domains accept a brand filter. Warehouse and
+    // transfer reports deal with inventory and garages, not buses, so
+    // they are deliberately excluded.
+    $brandSupportedDomains = [
+        'complaint',
+        'daily_km',
+        'daily_status',
+        'maintenance',
+        'oil_change',
+        'parts_usage',
+        'fleet_health',
+        'warehouse_analytics',
+    ];
     $brandFilterSupported = in_array($domain, $brandSupportedDomains, true);
 
     $reportBrands = collect();
@@ -327,12 +315,11 @@
                             }}
                         </small>
 
-                        {{-- ✅ Export button — only rendered for reports
-                             that implement export support (they set the
-                             $exportUrl variable in their render() helper).
-                             The URL is the current filter URL with
-                             ?export=xlsx appended, so the export respects
-                             the same period, brand and custom date range. --}}
+                        {{-- Export button — rendered only when the report
+                             controller sets $exportUrl. The URL is the
+                             current filter URL with ?export=xlsx appended,
+                             so the export respects the same period, brand
+                             and custom date range. --}}
                         @isset($exportUrl)
                             <a href="{{ $exportUrl }}"
                                class="btn btn-sm btn-outline-success"
