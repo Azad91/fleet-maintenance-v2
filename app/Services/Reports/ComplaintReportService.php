@@ -32,9 +32,14 @@ class ComplaintReportService
             ->whereBetween('closed_at', [$period->from, $period->to])
             ->count();
 
-        $openNow = (clone $base)
-            ->where('status', '!=', 'completed')
-            ->count();
+        // ✅ FIX: Use the canonical open() scope so cancelled cards are
+        // excluded from the "open now" count.
+        //
+        // Previously this used `where('status', '!=', 'completed')`, which
+        // incorrectly counted CANCELLED complaints as open. That made the
+        // report disagree with the dashboard, which uses `Complaint::open()`
+        // (a scoped whereIn(['pending', 'in_progress'])).
+        $openNow = (clone $base)->open()->count();
 
         $byStatus = (clone $base)
             ->whereBetween('created_at', [$period->from, $period->to])
