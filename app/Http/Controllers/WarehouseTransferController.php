@@ -88,7 +88,7 @@ class WarehouseTransferController extends Controller
                     $companyId
                 );
 
-                $message = __('messages.transfers.created');
+                $message = __('messages.transfers.created_awaiting_dispatch');
             } else {
                 // Immediate completion for quarantine and (Phase 3.2)
                 // service vehicle transfers.
@@ -130,7 +130,8 @@ class WarehouseTransferController extends Controller
         }
 
         return redirect()->route('warehouse-transfers.show', $transfer)
-            ->with('success', __('messages.transfers.dispatched'));
+            ->with('success', __('messages.transfers.dispatched'))
+            ->with('warning', __('messages.transfers.awaiting_receipt'));
     }
 
     public function receive(WarehouseTransferReceiveRequest $request, WarehouseTransfer $transfer): RedirectResponse

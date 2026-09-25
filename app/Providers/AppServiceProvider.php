@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
-
+use App\View\Composers\PendingTransferComposer;
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -34,7 +34,12 @@ class AppServiceProvider extends ServiceProvider
 
         // ✅ Auto-revoke API tokens when a user is deactivated.
         User::observe(UserObserver::class);
-
+        // Inject the pending-transfer badge count into every page
+        // that uses the main application layout.
+        \Illuminate\Support\Facades\View::composer(
+            'layouts.app',
+            \App\View\Composers\PendingTransferComposer::class,
+        );
         $this->registerRateLimiters();
         $this->registerSuperAdminAuthListeners();
     }

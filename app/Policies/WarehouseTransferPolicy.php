@@ -38,24 +38,31 @@ class WarehouseTransferPolicy
 
     public function dispatch(User $user, WarehouseTransfer $transfer): bool
     {
+        // Status check runs for EVERY user, including SuperAdmin.
+        if (! $transfer->status->isDraft()) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value)
-            && $transfer->isSource(GarageContext::getGarageId())
-            && $transfer->status->isDraft();
+            && $transfer->isSource(GarageContext::getGarageId());
     }
 
     public function receive(User $user, WarehouseTransfer $transfer): bool
     {
+        if (! $transfer->status->isDispatched()) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value)
-            && $transfer->isDestination(GarageContext::getGarageId())
-            && $transfer->status->isDispatched();
+            && $transfer->isDestination(GarageContext::getGarageId());
     }
 
     public function reject(User $user, WarehouseTransfer $transfer): bool
@@ -65,24 +72,30 @@ class WarehouseTransferPolicy
 
     public function resolve(User $user, WarehouseTransfer $transfer): bool
     {
+        if (! $transfer->status->isDisputed()) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value)
-            && $transfer->isSource(GarageContext::getGarageId())
-            && $transfer->status->isDisputed();
+            && $transfer->isSource(GarageContext::getGarageId());
     }
 
     public function cancel(User $user, WarehouseTransfer $transfer): bool
     {
+        if (! $transfer->status->isDraft()) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
 
         return $user->hasGarageRole(RoleEnum::ADMIN->value)
-            && $transfer->isSource(GarageContext::getGarageId())
-            && $transfer->status->isDraft();
+            && $transfer->isSource(GarageContext::getGarageId());
     }
 
     public function delete(User $user, WarehouseTransfer $transfer): bool

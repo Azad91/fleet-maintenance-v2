@@ -1209,6 +1209,7 @@ return [
         'rejected' => 'Transfer rədd edildi.',
         'resolved' => 'Transfer həll olundu.',
         'cancelled' => 'Transfer ləğv edildi.',
+        'pending_attention' => 'Diqqət tələb edən transferlər var',
         'cannot_dispatch' => 'Yalnız qaralama transferlər göndərilə bilər.',
         'cannot_receive' => 'Yalnız göndərilmiş transferlər qəbul edilə bilər.',
         'cannot_reject' => 'Yalnız göndərilmiş transferlər rədd edilə bilər.',

@@ -2108,3 +2108,31 @@ html[data-fleet-theme="dark"] .complaint-show-card__detail--inspection {
     background: #0d2a3a;
     border-left-color: #0dcaf0;
 }
+
+/* ────────────────────────────────────────────────────────────── */
+/* Sidebar nav badge — pending transfer counter                  */
+/* ────────────────────────────────────────────────────────────── */
+.fleet-nav__badge {
+    margin-left: auto;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 22px;
+    text-align: center;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+    animation: fleet-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes fleet-badge-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.05);
+    }
+}

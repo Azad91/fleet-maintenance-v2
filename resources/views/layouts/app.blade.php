@@ -189,7 +189,13 @@
                             <i class="fas fa-boxes-stacked"></i><span>{{ __('messages.nav.warehouses') }}</span>
                         </a>
                         <a href="{{ route('warehouse-transfers.index') }}" class="fleet-nav__link {{ request()->routeIs('warehouse-transfers.*') ? 'is-active' : '' }}">
-                            <i class="fas fa-arrow-right-arrow-left"></i><span>{{ __('messages.transfers.title') }}</span>
+                            <i class="fas fa-arrow-right-arrow-left"></i>
+                            <span>{{ __('messages.transfers.title') }}</span>
+                            @if(($sidebarPendingTransfers ?? 0) > 0)
+                                <span class="fleet-nav__badge" title="{{ __('messages.transfers.pending_attention') }}">
+                                    {{ $sidebarPendingTransfers }}
+                                </span>
+                            @endif
                         </a>
                     @endif
                     @if($canViewMotorOil)
