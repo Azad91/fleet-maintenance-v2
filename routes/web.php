@@ -614,6 +614,22 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 Route::get('/accidents',             [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'accidents'])->name('accidents');
                 Route::get('/utilization',           [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'utilization'])->name('utilization');
             });
+
+        // ==================================================================
+        // WAREHOUSE ANALYTICS REPORTS  (#26, #28, #29, #30, #31)
+        // ==================================================================
+        Route::prefix('warehouse-analytics')->name('warehouse-analytics.')
+            ->middleware(['role:'.implode(',', [
+                RoleEnum::ADMIN->value,
+                RoleEnum::WAREHOUSE_MANAGER->value,
+            ])])
+            ->group(function () {
+                Route::get('/slow-moving',   [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'slowMoving'])->name('slow-moving');
+                Route::get('/valuation',     [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'valuation'])->name('valuation');
+                Route::get('/reorder',       [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'reorder'])->name('reorder');
+                Route::get('/supplier',      [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'supplier'])->name('supplier');
+                Route::get('/part-history',  [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'partHistory'])->name('part-history');
+            });
     });
 
     // ==================== API JSON (Garage Data) ====================

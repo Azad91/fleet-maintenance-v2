@@ -122,6 +122,21 @@
             ],
         ],
         // ==================================================================
+        // WAREHOUSE ANALYTICS REPORTS  (#26, #28, #29, #30, #31)
+        // ==================================================================
+        'warehouse_analytics' => [
+            'title'   => __('messages.reports.warehouse_analytics.title'),
+            'eyebrow' => __('messages.nav.warehouses'),
+            'icon'    => 'fa-chart-pie',
+            'reports' => [
+                'slow-moving'   => ['label' => __('messages.reports.warehouse_analytics.slow_moving'),  'route' => 'reports.warehouse-analytics.slow-moving',  'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'valuation'     => ['label' => __('messages.reports.warehouse_analytics.valuation'),    'route' => 'reports.warehouse-analytics.valuation',    'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'reorder'       => ['label' => __('messages.reports.warehouse_analytics.reorder'),      'route' => 'reports.warehouse-analytics.reorder',      'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'supplier'      => ['label' => __('messages.reports.warehouse_analytics.supplier'),     'route' => 'reports.warehouse-analytics.supplier',     'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+                'part-history'  => ['label' => __('messages.reports.warehouse_analytics.part_history'), 'route' => 'reports.warehouse-analytics.part-history', 'roles' => [RoleEnum::ADMIN->value, RoleEnum::WAREHOUSE_MANAGER->value]],
+            ],
+        ],
+        // ==================================================================
         // OIL CHANGE REPORTS  (#11–#15)
         // ==================================================================
         'oil_change' => [
@@ -182,7 +197,7 @@
 
     // ─── Brand filter support ───
     // Only the three bus-related domains accept a brand filter.
-    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance', 'oil_change', 'parts_usage', 'fleet_health'];
+    $brandSupportedDomains = ['complaint', 'daily_km', 'daily_status', 'maintenance', 'oil_change', 'parts_usage', 'fleet_health', 'warehouse_analytics'];
     $brandFilterSupported = in_array($domain, $brandSupportedDomains, true);
 
     $reportBrands = collect();

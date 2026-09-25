@@ -308,6 +308,12 @@
                         <i class="fas fa-heart-pulse"></i><span>{{ __('messages.reports.fleet_health.title') }}</span>
                     </a>
                 @endif
+                {{-- Warehouse Analytics --}}
+                @if($canManage || $canViewWarehouseReports)
+                    <a href="{{ route('reports.warehouse-analytics.slow-moving') }}" class="fleet-nav__link {{ request()->routeIs('reports.warehouse-analytics.*') ? 'is-active' : '' }}">
+                        <i class="fas fa-chart-pie"></i><span>{{ __('messages.reports.warehouse_analytics.title') }}</span>
+                    </a>
+                @endif
             @endif
             </nav>
 
