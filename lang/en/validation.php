@@ -206,8 +206,6 @@ return [
         'service_km' => 'service KM',
         'reported_date' => 'reported date',
         'reported_time' => 'reported time',
-        'complaints' => 'complaints',
         'complaints.*' => 'complaint',
     ],
-
 ];
