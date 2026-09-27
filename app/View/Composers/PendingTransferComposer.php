@@ -48,10 +48,10 @@ class PendingTransferComposer
                         ->where('status', TransferStatus::Dispatched->value);
                 })
                 // Outbound: disputed, we (source) must resolve.
-                ->orWhere(function ($sub) use ($garageId) {
-                    $sub->where('from_garage_id', $garageId)
-                        ->where('status', TransferStatus::Disputed->value);
-                });
+                    ->orWhere(function ($sub) use ($garageId) {
+                        $sub->where('from_garage_id', $garageId)
+                            ->where('status', TransferStatus::Disputed->value);
+                    });
             })
             ->count();
 

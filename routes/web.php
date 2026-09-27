@@ -540,11 +540,11 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
         Route::prefix('oil-change')->name('oil-change.')
             ->middleware(['role:'.RoleEnum::ADMIN->value])
             ->group(function () {
-                Route::get('/history',        [\App\Http\Controllers\Reports\OilChangeReportController::class, 'history'])->name('history');
-                Route::get('/upcoming',       [\App\Http\Controllers\Reports\OilChangeReportController::class, 'upcoming'])->name('upcoming');
-                Route::get('/counts',         [\App\Http\Controllers\Reports\OilChangeReportController::class, 'counts'])->name('counts');
-                Route::get('/adherence',      [\App\Http\Controllers\Reports\OilChangeReportController::class, 'adherence'])->name('adherence');
-                Route::get('/catalog-usage',  [\App\Http\Controllers\Reports\OilChangeReportController::class, 'catalogUsage'])->name('catalog-usage');
+                Route::get('/history', [App\Http\Controllers\Reports\OilChangeReportController::class, 'history'])->name('history');
+                Route::get('/upcoming', [App\Http\Controllers\Reports\OilChangeReportController::class, 'upcoming'])->name('upcoming');
+                Route::get('/counts', [App\Http\Controllers\Reports\OilChangeReportController::class, 'counts'])->name('counts');
+                Route::get('/adherence', [App\Http\Controllers\Reports\OilChangeReportController::class, 'adherence'])->name('adherence');
+                Route::get('/catalog-usage', [App\Http\Controllers\Reports\OilChangeReportController::class, 'catalogUsage'])->name('catalog-usage');
             });
 
         // ==================================================================
@@ -572,8 +572,8 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 RoleEnum::COMPLAINT_MANAGER->value,
             ])])
             ->group(function () {
-                Route::get('/per-bus',       [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perBus'])->name('per-bus');
-                Route::get('/top-consumed',  [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'topConsumed'])->name('top-consumed');
+                Route::get('/per-bus', [App\Http\Controllers\Reports\PartsUsageReportController::class, 'perBus'])->name('per-bus');
+                Route::get('/top-consumed', [App\Http\Controllers\Reports\PartsUsageReportController::class, 'topConsumed'])->name('top-consumed');
             });
 
         // ── Group B: Financial / inventory-capital (admin + warehouse manager) ──
@@ -583,8 +583,8 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 RoleEnum::WAREHOUSE_MANAGER->value,
             ])])
             ->group(function () {
-                Route::get('/bus-cost',    [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'busCost'])->name('bus-cost');
-                Route::get('/dead-stock',  [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'deadStock'])->name('dead-stock');
+                Route::get('/bus-cost', [App\Http\Controllers\Reports\PartsUsageReportController::class, 'busCost'])->name('bus-cost');
+                Route::get('/dead-stock', [App\Http\Controllers\Reports\PartsUsageReportController::class, 'deadStock'])->name('dead-stock');
             });
 
         // ── Group C: Complaint-domain report (admin + complaint manager) ──
@@ -594,7 +594,7 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 RoleEnum::COMPLAINT_MANAGER->value,
             ])])
             ->group(function () {
-                Route::get('/per-complaint', [\App\Http\Controllers\Reports\PartsUsageReportController::class, 'perComplaint'])->name('per-complaint');
+                Route::get('/per-complaint', [App\Http\Controllers\Reports\PartsUsageReportController::class, 'perComplaint'])->name('per-complaint');
             });
 
         // ==================================================================
@@ -607,12 +607,12 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 RoleEnum::DAILY_KM_MANAGER->value,
             ])])
             ->group(function () {
-                Route::get('/cost-per-km',           [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'costPerKm'])->name('cost-per-km');
-                Route::get('/downtime',              [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'downtime'])->name('downtime');
-                Route::get('/recurring-issues',      [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'recurringIssues'])->name('recurring-issues');
-                Route::get('/recurring-complaints',  [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'recurringComplaints'])->name('recurring-complaints');
-                Route::get('/accidents',             [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'accidents'])->name('accidents');
-                Route::get('/utilization',           [\App\Http\Controllers\Reports\FleetHealthReportController::class, 'utilization'])->name('utilization');
+                Route::get('/cost-per-km', [App\Http\Controllers\Reports\FleetHealthReportController::class, 'costPerKm'])->name('cost-per-km');
+                Route::get('/downtime', [App\Http\Controllers\Reports\FleetHealthReportController::class, 'downtime'])->name('downtime');
+                Route::get('/recurring-issues', [App\Http\Controllers\Reports\FleetHealthReportController::class, 'recurringIssues'])->name('recurring-issues');
+                Route::get('/recurring-complaints', [App\Http\Controllers\Reports\FleetHealthReportController::class, 'recurringComplaints'])->name('recurring-complaints');
+                Route::get('/accidents', [App\Http\Controllers\Reports\FleetHealthReportController::class, 'accidents'])->name('accidents');
+                Route::get('/utilization', [App\Http\Controllers\Reports\FleetHealthReportController::class, 'utilization'])->name('utilization');
             });
 
         // ==================================================================
@@ -624,11 +624,11 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
                 RoleEnum::WAREHOUSE_MANAGER->value,
             ])])
             ->group(function () {
-                Route::get('/slow-moving',   [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'slowMoving'])->name('slow-moving');
-                Route::get('/valuation',     [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'valuation'])->name('valuation');
-                Route::get('/reorder',       [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'reorder'])->name('reorder');
-                Route::get('/supplier',      [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'supplier'])->name('supplier');
-                Route::get('/part-history',  [\App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'partHistory'])->name('part-history');
+                Route::get('/slow-moving', [App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'slowMoving'])->name('slow-moving');
+                Route::get('/valuation', [App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'valuation'])->name('valuation');
+                Route::get('/reorder', [App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'reorder'])->name('reorder');
+                Route::get('/supplier', [App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'supplier'])->name('supplier');
+                Route::get('/part-history', [App\Http\Controllers\Reports\WarehouseAnalyticsReportController::class, 'partHistory'])->name('part-history');
             });
     });
 

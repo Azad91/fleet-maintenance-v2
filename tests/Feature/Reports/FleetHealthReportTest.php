@@ -224,6 +224,7 @@ class FleetHealthReportTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('rows', function ($rows) {
             $r = $rows->first();
+
             return $r && $r->days_in_service === 3 && $r->utilization_percent > 0;
         });
     }

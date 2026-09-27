@@ -229,6 +229,7 @@ class WarehouseAnalyticsReportTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('rows', function ($rows) {
             $bySupplier = $rows->keyBy('supplier');
+
             return isset($bySupplier['Acme'])
                 && (int) $bySupplier['Acme']->total_used === 8
                 && (int) $bySupplier['Acme']->distinct_parts === 2;

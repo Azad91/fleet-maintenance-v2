@@ -5,7 +5,6 @@ namespace App\Services\Reports;
 use App\Enums\OilType;
 use App\Models\Bus;
 use App\Models\BusOilChange;
-use App\Models\MotorOilDetail;
 use App\Services\OilChange\OilChangeStatusService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -227,12 +226,12 @@ class OilChangeReportService
                 'bus',
                 fn ($bq) => $bq->where('brand_id', $scope->brandId)
             ))
-            ->selectRaw("
+            ->selectRaw('
                 SUM(CASE WHEN actual_km <  scheduled_km THEN 1 ELSE 0 END) as early,
                 SUM(CASE WHEN actual_km =  scheduled_km THEN 1 ELSE 0 END) as on_time,
                 SUM(CASE WHEN actual_km >  scheduled_km THEN 1 ELSE 0 END) as late,
                 COUNT(*) as total
-            ")
+            ')
             ->first();
 
         $early = (int) ($row->early ?? 0);
