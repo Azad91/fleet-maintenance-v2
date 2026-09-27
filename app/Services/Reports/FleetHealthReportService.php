@@ -157,14 +157,11 @@ class FleetHealthReportService
             ->join('buses as b', 'b.id', '=', 'c.bus_id')
             ->whereIn('c.garage_id', $scope->garageIds)
             ->whereNull('c.deleted_at')
-            ->whereNull('ci.deleted_at')
+            // NOTE: complaint_items has no soft-delete column. Its lifecycle
+            // is tied to the parent complaint via ON DELETE CASCADE.
             ->whereBetween('c.created_at', [$period->from, $period->to])
             ->when($scope->brandId, fn ($q) => $q->where('b.brand_id', $scope->brandId))
-                        ->where(function ($q) {
-                // Recurring issues are a signal about ONGOING problems —
-                // only pending and in_progress cards count. Cancelled
-                // cards were never real problems, and completed cards
-                // were resolved; neither should inflate this report.
+            ->where(function ($q) {
                 $q->whereIn('c.status', [
                     \App\Enums\ComplaintStatus::Pending->value,
                     \App\Enums\ComplaintStatus::InProgress->value,
