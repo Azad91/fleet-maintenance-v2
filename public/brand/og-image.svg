@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="og-bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#0f1f35"/>
+    </linearGradient>
+    <radialGradient id="og-glow-1" cx="0.2" cy="0.2" r="0.6">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="og-glow-2" cx="0.85" cy="0.8" r="0.55">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="og-mark" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#og-bg)"/>
+  <rect width="1200" height="630" fill="url(#og-glow-1)"/>
+  <rect width="1200" height="630" fill="url(#og-glow-2)"/>
+
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="150" x2="1200" y2="150"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+  </g>
+
+  <g transform="translate(100, 80)">
+    <rect width="88" height="88" rx="22" fill="url(#og-mark)"/>
+    <path d="M30 30h30v10h-20v9h16v10h-16v29h-10V30z" fill="#ffffff"/>
+  </g>
+
+  <text x="100" y="290"
+        font-family="Inter, -apple-system, sans-serif"
+        font-size="86" font-weight="800" fill="#ffffff" letter-spacing="-3">Fleet OS</text>
+
+  <text x="100" y="360"
+        font-family="Inter, -apple-system, sans-serif"
+        font-size="32" font-weight="500" fill="#93c5fd" letter-spacing="-0.8">Avtobus parkınızın əməliyyat sistemi</text>
+
+  <text x="100" y="430"
+        font-family="Inter, -apple-system, sans-serif"
+        font-size="24" font-weight="500" fill="#94a3b8" letter-spacing="-0.4">Kartlar · Anbar · Transferlər · 30+ hesabat · 4 dil</text>
+
+  <line x1="100" y1="500" x2="1100" y2="500" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1"/>
+
+  <text x="100" y="560"
+        font-family="Inter, -apple-system, sans-serif"
+        font-size="22" font-weight="600" fill="#60a5fa" letter-spacing="0.5">fleetos.az</text>
+
+  <g transform="translate(1020, 530)">
+    <rect width="80" height="34" rx="17" fill="#2563eb" fill-opacity="0.15" stroke="#2563eb" stroke-opacity="0.3"/>
+    <text x="40" y="23"
+          font-family="Inter, sans-serif" font-size="14" font-weight="700"
+          fill="#93c5fd" text-anchor="middle" letter-spacing="0.5">SaaS</text>
+  </g>
+</svg>

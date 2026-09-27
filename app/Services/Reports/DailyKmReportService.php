@@ -18,7 +18,11 @@ class DailyKmReportService
      */
     public function missing(ReportPeriod $period, ReportScope $scope): Collection
     {
-        $targetDate = now()->toDateString();
+        // Use the period's end date, not now(), so the date shown in
+        // the view (`$period->to`) always matches what is actually
+        // queried. For daily/weekly/monthly presets these are equal;
+        // for a custom range they previously diverged.
+        $targetDate = $period->to->toDateString();
 
         return Bus::withoutGlobalScope('garage')
             ->whereIn('buses.garage_id', $scope->garageIds)
