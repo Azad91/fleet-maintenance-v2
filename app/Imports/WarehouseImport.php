@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Warehouse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -86,35 +87,35 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
                 continue;
             }
 
-            // See DriversImport for the full rationale — searching
-            // without global scopes is required to detect the
-            // soft-deleted row, but we must explicitly restore it
-            // so the update actually brings the row back to life.
-            $warehouse = Warehouse::withoutGlobalScopes()
-                ->where('garage_id', $this->garageId)
-                ->where('code', $code)
-                ->first();
+            DB::transaction(function () use ($code, $name, $quantity, $unit, $price): void {
+                // Searching without global scopes is required to detect a
+                // soft-deleted row. Lock it before reading its quantity so
+                // simultaneous additive imports cannot lose stock.
+                $warehouse = Warehouse::withoutGlobalScopes()
+                    ->where('garage_id', $this->garageId)
+                    ->where('code', $code)
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($warehouse) {
-                // Restore BEFORE computing the new quantity, so
-                // MODE_ADD accumulates on top of the previous
-                // quantity rather than on top of a hidden row.
-                if ($warehouse->trashed()) {
-                    $warehouse->restore();
+                if ($warehouse) {
+                    if ($warehouse->trashed()) {
+                        $warehouse->restore();
+                    }
+
+                    $newQuantity = $this->mode === self::MODE_ADD
+                        ? $warehouse->quantity + $quantity
+                        : $quantity;
+
+                    $warehouse->update([
+                        'name' => $name,
+                        'quantity' => $newQuantity,
+                        'unit' => $unit,
+                        'price' => $price,
+                    ]);
+
+                    return;
                 }
 
-                $newQuantity = $this->mode === self::MODE_ADD
-                    ? $warehouse->quantity + $quantity
-                    : $quantity;
-
-                $warehouse->update([
-                    'name' => $name,
-                    'quantity' => $newQuantity,
-                    'unit' => $unit,
-                    'price' => $price,
-                ]);
-            } else {
-                // New item — always created with the Excel quantity.
                 Warehouse::create([
                     'code' => $code,
                     'name' => $name,
@@ -124,7 +125,7 @@ class WarehouseImport extends AbstractImport implements ToCollection, WithHeadin
                     'garage_id' => $this->garageId,
                     'company_id' => $this->companyId,
                 ]);
-            }
+            });
 
             $this->incrementImported();
         }

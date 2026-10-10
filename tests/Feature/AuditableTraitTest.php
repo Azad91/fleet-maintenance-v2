@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Bus;
 use App\Models\Company;
 use App\Models\Garage;
+use App\Models\User;
 use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -113,5 +114,24 @@ class AuditableTraitTest extends TestCase
         $this->assertNotNull($log);
         $this->assertNotNull($log->old_values);
         $this->assertNull($log->new_values);
+    }
+
+    public function test_user_two_factor_fields_are_never_written_to_audit_logs(): void
+    {
+        $user = User::factory()->create();
+        AuditLog::query()->delete();
+
+        $user->forceFill([
+            'two_factor_secret' => 'sensitive-secret',
+            'two_factor_recovery_codes' => ['RECOVERY-CODE'],
+            'two_factor_confirmed_at' => now(),
+        ])->save();
+
+        $log = AuditLog::where('auditable_type', User::class)
+            ->where('auditable_id', $user->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNull($log, 'Updating only 2FA fields must not create an audit log.');
     }
 }

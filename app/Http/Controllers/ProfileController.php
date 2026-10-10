@@ -42,6 +42,16 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        if ($user === null) {
+            abort(401);
+        }
+
+        abort_if(
+            $user->isSuperAdmin() || $user->isDirector(),
+            403,
+            __('messages.flash.permission_denied')
+        );
+
         Auth::logout();
 
         $user->delete();

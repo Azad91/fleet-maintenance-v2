@@ -27,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFive();
 
+        if (app()->isProduction()) {
+            \Illuminate\Support\Facades\URL::forceHttps();
+        }
+
         Password::defaults(function () {
             return app()->isProduction()
                 ? Password::min(10)->letters()->numbers()->mixedCase()->symbols()

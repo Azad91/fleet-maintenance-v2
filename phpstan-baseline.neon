@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method App\\Actions\\Complaints\\CloseComplaintAction\:\:execute\(\) should return App\\Models\\Complaint but returns App\\Models\\Complaint\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Actions/Complaints/CloseComplaintAction.php
-
-		-
 			message: '#^Using nullsafe method call on non\-nullable type App\\Enums\\ComplaintStatus\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -1519,12 +1513,6 @@ parameters:
 			path: app/Http/Controllers/GarageDataController.php
 
 		-
-			message: '#^Undefined variable\: \$allDetails$#'
-			identifier: variable.undefined
-			count: 1
-			path: app/Http/Controllers/GarageDataController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>custom_km_interval" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -1534,12 +1522,6 @@ parameters:
 			message: '#^Using nullsafe property access "\?\-\>quantity" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
-			path: app/Http/Controllers/GarageDataController.php
-
-		-
-			message: '#^Variable \$allDetails might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
 			path: app/Http/Controllers/GarageDataController.php
 
 		-
@@ -1713,12 +1695,6 @@ parameters:
 		-
 			message: '#^Cannot access property \$email_verified_at on App\\Models\\User\|null\.$#'
 			identifier: property.nonObject
-			count: 1
-			path: app/Http/Controllers/ProfileController.php
-
-		-
-			message: '#^Cannot call method delete\(\) on App\\Models\\User\|null\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: app/Http/Controllers/ProfileController.php
 

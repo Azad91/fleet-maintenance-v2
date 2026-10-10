@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Garage;
+use App\Models\ServiceVehicle;
+use App\Models\ServiceVehicleStock;
 use App\Models\User;
 use App\Services\GarageContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -146,5 +148,38 @@ class GarageDataAccessTest extends TestCase
                 "Failed for URL: {$url} (got status {$response->status()})"
             );
         }
+    }
+
+    public function test_service_vehicle_lookup_cannot_read_stock_from_another_garage(): void
+    {
+        $otherGarage = Garage::factory()->create(['company_id' => $this->company->id]);
+        $vehicle = ServiceVehicle::withoutGlobalScopes()->create([
+            'garage_id' => $otherGarage->id,
+            'company_id' => $this->company->id,
+            'name' => 'Other garage vehicle',
+            'plate_number' => '99-XX-999',
+        ]);
+        ServiceVehicleStock::withoutGlobalScopes()->create([
+            'service_vehicle_id' => $vehicle->id,
+            'garage_id' => $otherGarage->id,
+            'company_id' => $this->company->id,
+            'code' => 'FOREIGN-001',
+            'name' => 'Foreign stock item',
+            'quantity' => 10,
+        ]);
+
+        $user = $this->userWithRole('complaint_worker');
+
+        $response = $this->actingAs($user)
+            ->withSession([
+                'current_garage_id' => $this->garage->id,
+                'current_company_id' => $this->company->id,
+            ])
+            ->get('/get-service-vehicle-part-by-code?service_vehicle_id='.$vehicle->id.'&code=FOREIGN-001');
+
+        $response->assertOk()->assertJson([
+            'found' => false,
+            'stock_quantity' => 0,
+        ]);
     }
 }

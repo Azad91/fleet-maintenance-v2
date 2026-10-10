@@ -86,8 +86,9 @@ class UserSeeder extends Seeder
      *
      * Priority:
      *   1. SUPER_ADMIN_PASSWORD env var (explicit operator intent)
-     *   2. Production without env var → generate a strong random password
-     *   3. Non-production → 'password' for developer convenience
+     *   2. Local/testing without env var → 'password' for developer convenience
+     *   3. Every other environment without env var → generate a strong
+     *      random password
      *
      * @return string|null The chosen password, or null to signal
      *                     "caller must generate a random one".
@@ -98,11 +99,11 @@ class UserSeeder extends Seeder
             return (string) $env;
         }
 
-        if (app()->environment('production')) {
-            return null; // signal random generation
+        if (app()->environment(['local', 'testing'])) {
+            return 'password';
         }
 
-        return 'password';
+        return null; // signal random generation
     }
 
     /**
@@ -111,6 +112,12 @@ class UserSeeder extends Seeder
      */
     private function reportSuperAdminCredentials(string $password, bool $generated): void
     {
+        if (! $generated) {
+            $this->command->info('Super Admin created with the password from SUPER_ADMIN_PASSWORD.');
+
+            return;
+        }
+
         $this->command->newLine();
         $this->command->info('══════════════════════════════════════════════════════════');
         $this->command->info(' SUPER ADMIN CREDENTIALS (shown ONLY once)');
@@ -119,15 +126,11 @@ class UserSeeder extends Seeder
         $this->command->line('  Password: '.$password);
         $this->command->info('══════════════════════════════════════════════════════════');
 
-        if ($generated) {
-            $this->command->warn('  ⚠️  This password was RANDOMLY generated.');
-            $this->command->warn('  ⚠️  Save it NOW — it will NEVER be shown again.');
-            $this->command->warn('  ⚠️  If lost, run: php artisan tinker');
-            $this->command->warn('      User::where("email","admin@fleet.com")');
-            $this->command->warn('          ->update(["password" => Hash::make("new")]);');
-        } else {
-            $this->command->warn('  ⚠️  Change this password immediately after first login.');
-        }
+        $this->command->warn('  ⚠️  This password was RANDOMLY generated.');
+        $this->command->warn('  ⚠️  Save it NOW — it will NEVER be shown again.');
+        $this->command->warn('  ⚠️  If lost, run: php artisan tinker');
+        $this->command->warn('      User::where("email","admin@fleet.com")');
+        $this->command->warn('          ->update(["password" => Hash::make("new")]);');
 
         $this->command->newLine();
     }

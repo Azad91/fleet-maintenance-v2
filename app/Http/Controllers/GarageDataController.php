@@ -245,9 +245,9 @@ class GarageDataController extends Controller
             'code' => 'required|string',
         ]);
 
-        $stock = \App\Models\ServiceVehicleStock::withoutGlobalScopes()
+        $stock = \App\Models\ServiceVehicleStock::query()
             ->where('service_vehicle_id', $request->integer('service_vehicle_id'))
-            ->where('code', $request->string('code'))
+            ->where('code', (string) $request->string('code'))
             ->first();
 
         return response()->json([

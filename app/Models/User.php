@@ -128,6 +128,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'current_garage_id',
         'current_company_id',
         'last_selected_garage_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
     ];
 
     /**
