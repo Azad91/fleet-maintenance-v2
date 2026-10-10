@@ -178,8 +178,9 @@ class OilChangeController extends Controller
         ]);
     }
 
-    public function show(Bus $bus): View
+    public function show(int $id): View
     {
+        $bus = Bus::findOrFail($id);
         $this->authorize('viewAny', BusOilChange::class);
 
         $bus->load([

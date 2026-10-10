@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Services\GarageContext;
 use Closure;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
@@ -57,7 +58,17 @@ class IdempotencyMiddleware
         $lock = Cache::lock($lockKey, self::LOCK_SECONDS);
 
         try {
-            $lock->block(self::LOCK_SECONDS);
+            // block() waits up to LOCK_SECONDS for the lock. If another request
+            // holding the lock doesn't finish in time, throw 409 (not 500) so
+            // the client can retry rather than receiving a generic server error.
+            try {
+                $lock->block(self::LOCK_SECONDS);
+            } catch (LockTimeoutException) {
+                return response()->json([
+                    'message' => 'Request is already being processed. Please retry.',
+                    'error'   => 'lock_timeout',
+                ], 409);
+            }
 
             $cached = Cache::get($cacheKey);
             if (is_array($cached) && isset($cached['status'])) {
@@ -80,7 +91,7 @@ class IdempotencyMiddleware
                 // request that touches the same key.
                 if (strlen($content) <= self::MAX_CACHEABLE_RESPONSE_BYTES) {
                     Cache::put($cacheKey, [
-                        'status' => $status,
+                        'status'  => $status,
                         'headers' => $this->filterHeaders($response->headers->all()),
                         'content' => $content,
                     ], now()->addHours(self::CACHE_TTL_HOURS));

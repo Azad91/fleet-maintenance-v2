@@ -77,8 +77,18 @@ class DemoDataSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->environment('production')) {
-            $this->command->error('DemoDataSeeder is blocked in production.');
+        // DemoDataSeeder is strictly opt-in.
+        // It must NEVER run in production, staging, or any environment
+        // that is exposed to the public internet.
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command->error('DemoDataSeeder is blocked outside local/testing environments.');
+
+            return;
+        }
+
+        if (env('ALLOW_DEMO_SEED') !== 'true') {
+            $this->command->error('DemoDataSeeder requires ALLOW_DEMO_SEED=true in your .env file.');
+            $this->command->warn('This seeder is for LOCAL DEVELOPMENT ONLY. Never enable on a public server.');
 
             return;
         }
@@ -94,23 +104,24 @@ class DemoDataSeeder extends Seeder
             $this->seedGarage($demo, 'Demo North Garage', 'demo-north', withDomainData: true);
             $this->seedGarage($demo, 'Demo South Garage', 'demo-south', withDomainData: true);
 
-            // ─── Company 2: LEGACY MOTOR and SERVICE (structure only) ───
-            $legacy = $this->createCompany('LEGACY MOTOR and SERVICE', 'legacy-motor');
-            $this->createDirector($legacy, 'Rəşad Direktor', 'director@legacy.test');
+            // ─── Company 2: Sample Company (structure only) ───
+            $legacy = $this->createCompany('Sample Transport Co.', 'sample-transport');
+            $this->createDirector($legacy, 'Sample Director', 'director@sample.test');
 
-            $this->seedGarage($legacy, 'Depo1', 'depo1', withDomainData: false);
-            $this->seedGarage($legacy, 'Depo2', 'depo2', withDomainData: false);
-            $this->seedGarage($legacy, 'DepoGence', 'depogence', withDomainData: false);
+            $this->seedGarage($legacy, 'Depot A', 'depot-a', withDomainData: false);
+            $this->seedGarage($legacy, 'Depot B', 'depot-b', withDomainData: false);
+            $this->seedGarage($legacy, 'Depot C', 'depot-c', withDomainData: false);
         });
 
         $this->command->info('✅ Demo data seeded successfully.');
         $this->command->newLine();
         $this->command->info('Login credentials (all passwords: password):');
-        $this->command->info('  Super Admin    → admin@fleet.com');
-        $this->command->info('  Demo Director  → director@demo.test');
-        $this->command->info('  Legacy Director→ director@legacy.test');
-        $this->command->info('  Garage admins  → {garage.code}.admin@demo.test');
-        $this->command->info('  Workers        → PIN 1234');
+        $this->command->info('  Super Admin       → admin@fleet.com');
+        $this->command->info('  Demo Director     → director@demo.test');
+        $this->command->info('  Sample Director   → director@sample.test');
+        $this->command->info('  Garage admins     → {garage.code}.admin@demo.test');
+        $this->command->warn('  Workers           → PIN 1234 (pin_is_default=true — will be forced to change)');
+        $this->command->warn('⚠️  NEVER run this seeder on a publicly accessible server.');
     }
 
     // ==================================================================
@@ -140,7 +151,7 @@ class DemoDataSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'employee_code' => 'DIR-'.strtoupper(substr(md5($email), 0, 6)),
                 'pin' => Hash::make('1234'),
-                'pin_is_default' => false,
+                'pin_is_default' => true,
                 'is_active' => true,
                 'email_verified_at' => now(), // ← YENİ
             ]
@@ -247,7 +258,7 @@ class DemoDataSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'employee_code' => 'ADM-'.strtoupper(substr(md5($adminEmail), 0, 6)),
                 'pin' => Hash::make('1234'),
-                'pin_is_default' => false,
+                'pin_is_default' => true,
                 'is_active' => true,
                 'email_verified_at' => now(), // ← YENİ
             ]

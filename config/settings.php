@@ -68,4 +68,14 @@ return [
         'painter' => '🎨 Painter',
         'other' => '📌 Other',
     ],
+    // config/settings.php
+    'vehicle_intervals' => [
+        'bus_18m' => [
+            'min_length' => 18,
+            'base_km' => 30000,
+        ],
+        'default' => [
+            'base_km' => 36000,
+        ],
+    ],
 ];

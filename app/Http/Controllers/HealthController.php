@@ -13,10 +13,25 @@ class HealthController extends Controller
 {
     public function check(): JsonResponse
     {
+        // Cache the health check result for 10 seconds to prevent a DoS
+        // where repeated calls hammer the database, cache, and disk on
+        // every request. Monitoring tools typically poll every 30–60 s
+        // anyway, so a 10 s cache has no practical effect on alerting.
+        $ttl = (int) config('health.cache_ttl_seconds', 10);
+
+        [$status, $statusCode] = Cache::remember('_health_check_result', $ttl, function () {
+            return $this->runChecks();
+        });
+
+        return response()->json($status, $statusCode);
+    }
+
+    private function runChecks(): array
+    {
         $status = [
-            'status' => 'ok',
+            'status'    => 'ok',
             'timestamp' => now()->toIso8601String(),
-            'services' => [],
+            'services'  => [],
         ];
 
         $isHealthy = true;
@@ -207,6 +222,6 @@ class HealthController extends Controller
         $statusCode = $isHealthy ? 200 : 503;
         $status['status'] = $isHealthy ? 'healthy' : 'unhealthy';
 
-        return response()->json($status, $statusCode);
+        return [$status, $statusCode];
     }
 }

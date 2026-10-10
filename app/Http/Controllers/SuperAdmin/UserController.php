@@ -145,7 +145,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('super-admin.users.index')
-            ->with('success', __('messages.super_admin.users.updated', ['name' => $user->name]));
+            ->with('success', __('messages.super_admin.users.updated', ['name' => e($user->name)]));
     }
 
     public function destroy(User $user): RedirectResponse
@@ -170,7 +170,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('super-admin.users.index')
-            ->with('success', __('messages.super_admin.users.deleted', ['name' => $user->name]));
+            ->with('success', __('messages.super_admin.users.deleted', ['name' => e($user->name)]));
     }
 
     /**

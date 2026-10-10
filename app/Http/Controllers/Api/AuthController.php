@@ -96,7 +96,22 @@ class AuthController extends Controller
         // ────────────────────────────────────────────────────────────
         // SUPERADMIN MFA GATE
         // ────────────────────────────────────────────────────────────
-        if ($user->isSuperAdmin() && $user->hasTwoFactorEnabled()) {
+        if ($user->isSuperAdmin()) {
+            // SuperAdmin MUST have 2FA configured before receiving an API token.
+            // A freshly seeded account that has never set up 2FA must not be
+            // able to bypass MFA by hitting the API directly.
+            if (! $user->hasTwoFactorEnabled()) {
+                Log::warning('API login blocked — SuperAdmin has no 2FA configured', [
+                    'user_id' => $user->id,
+                    'ip'      => $request->ip(),
+                    'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
+                ]);
+
+                throw ValidationException::withMessages([
+                    'email' => [__('messages.two_factor.setup_required_api')],
+                ]);
+            }
+
             $code = trim((string) $request->input('two_factor_code', ''));
 
             if ($code === '') {

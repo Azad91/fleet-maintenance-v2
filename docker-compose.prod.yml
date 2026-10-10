@@ -58,6 +58,12 @@ services:
     image: ${FLEET_IMAGE:-fleet-v2-app:latest}
     container_name: fleet-prod-scheduler
     restart: unless-stopped
+    # Run as www-data (uid 33) — the same user Apache uses inside the app
+    # container. Without this the scheduler runs as root and creates log
+    # files that Apache (www-data) cannot write to, causing 500 errors.
+    # The host ./storage directory must also be chowned to 33:33:
+    #   sudo chown -R 33:33 ./storage
+    user: "33:33"
     env_file:
       - .env.production
     volumes:

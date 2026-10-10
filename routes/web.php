@@ -32,7 +32,9 @@ Route::get('/', function () {
     return view('landing');
 })->name('landing');
 
-Route::get('/health', [HealthController::class, 'check'])->name('health.check');
+Route::get('/health', [HealthController::class, 'check'])
+    ->middleware('throttle:6,1')
+    ->name('health.check');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'garage.selected'])

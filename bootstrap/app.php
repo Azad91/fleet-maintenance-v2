@@ -58,6 +58,23 @@ return Application::configure(basePath: dirname(__DIR__))
             'active.user' => App\Http\Middleware\EnsureActiveUser::class,
             '2fa.verified' => App\Http\Middleware\EnsureTwoFactorVerified::class,
         ]);
+
+        // ── MIDDLEWARE PRIORITY ───────────────────────────────────────────────
+        // Ensure garage/role context middleware runs BEFORE SubstituteBindings
+        // so that implicit route model binding always sees a populated
+        // GarageContext (preventing cross-tenant resource access via ID guessing).
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: App\Http\Middleware\EnsureGarageSelected::class,
+        );
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: App\Http\Middleware\RoleMiddleware::class,
+        );
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: App\Http\Middleware\EnsureApiGarageContext::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // ────────────────────────────────────────────────────────────

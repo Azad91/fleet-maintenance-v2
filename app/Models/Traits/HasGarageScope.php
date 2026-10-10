@@ -16,17 +16,26 @@ trait HasGarageScope
         static::addGlobalScope('garage', function (Builder $builder) {
             $garageId = GarageContext::getGarageId();
 
-            // In console (without context), do not filter
-            if (app()->runningInConsole() && ! $garageId) {
-                return;
-            }
-
             if ($garageId) {
                 $builder->where(
                     $builder->getModel()->getTable().'.garage_id',
                     $garageId
                 );
+
+                return;
             }
+
+            // No context — allow console commands (migrations, seeders, tinker)
+            // and queue workers to run without a garage filter. Web requests
+            // should ALWAYS have a context set by the middleware stack; if they
+            // reach here without one it means the middleware was bypassed, so
+            // we return zero rows (fail-closed) to prevent cross-tenant leaks.
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            // HTTP request with no garage context → return no rows.
+            $builder->whereRaw('1 = 0');
         });
 
         // ==================== CREATING EVENT ====================

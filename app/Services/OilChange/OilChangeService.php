@@ -45,16 +45,22 @@ class OilChangeService
                 ? ($data['oil_brand'] ?? $change->oil_brand)
                 : null;
 
-            $interval = $this->resolveInterval($change->bus, $type, $brand);
+            $typeChanged = $type->value !== $change->oil_type->value;
+            $brandChanged = $brand !== $change->oil_brand;
+            $shouldRecalculate = $typeChanged || $brandChanged;
+
+            $interval = $shouldRecalculate
+                ? $this->resolveInterval($change->bus, $type, $brand)
+                : $change->interval_km;
 
             $change->update([
-                'oil_type' => $type->value,
-                'oil_brand' => $brand,
-                'scheduled_km' => $data['scheduled_km'] ?? $change->scheduled_km,
-                'actual_km' => (int) ($data['actual_km'] ?? $change->actual_km),
-                'interval_km' => $interval,
-                'changed_at' => $data['changed_at'] ?? $change->changed_at,
-                'notes' => $data['notes'] ?? $change->notes,
+                'oil_type'      => $type->value,
+                'oil_brand'     => $brand,
+                'scheduled_km'  => $data['scheduled_km'] ?? $change->scheduled_km,
+                'actual_km'     => (int) ($data['actual_km'] ?? $change->actual_km),
+                'interval_km'   => $interval,
+                'changed_at'    => $data['changed_at'] ?? $change->changed_at,
+                'notes'         => $data['notes'] ?? $change->notes,
             ]);
 
             return $change->fresh();

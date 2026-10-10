@@ -104,28 +104,28 @@ class GarageDataController extends Controller
         $bus = Bus::findOrFail($busId);
         $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;
 
-        // Cache key MUST include brand_id — same reasoning as above.
-        $brandKey = $bus->brand_id ?? 'none';
-        $cacheKey = "motor_oil_details:garage:{$bus->garage_id}:brand:{$brandKey}";
+        $is18m = $bus->uzunluq && (float) $bus->uzunluq >= config('settings.vehicle_intervals.bus_18m.min_length');
+        $newBaseKm = $is18m
+            ? config('settings.vehicle_intervals.bus_18m.base_km')
+            : config('settings.vehicle_intervals.default.base_km');
+        $ratio = $newBaseKm / 36000;
 
-        $motorOils = Cache::remember($cacheKey, 3600, function () use ($bus) {
-            return MotorOilDetail::where('brand_id', $bus->brand_id)
-                ->orderBy('km')
-                ->orderBy('part_name')
-                ->get();
-        });
-
+        if ($is18m) {
+            $allDetails = $allDetails->map(function ($d) use ($ratio) {
+                $d->km = (int) round($d->km * $ratio);
+                return $d;
+            });
+        }
         return response()->json(
-            $motorOils->where('km', '>', $latestKm)
-                ->groupBy('km')
+            $allDetails->groupBy('km')
                 ->map(fn ($details, $km) => [
                     'km' => (int) $km,
                     'details' => $details->map(fn (MotorOilDetail $detail) => [
-                        'part_code' => $detail->part_code,
-                        'part_name' => $detail->part_name,
-                        'quantity' => $detail->quantity,
-                        'count' => $detail->count,
-                        'unit' => $detail->unit,
+                        'kodu' => $detail->part_code,
+                        'adi' => $detail->part_name,
+                        'miqdar' => $detail->quantity,
+                        'say' => $detail->count,
+                        'olcu_vahidi' => $detail->unit,
                     ])->values(),
                 ])->values()
         );
