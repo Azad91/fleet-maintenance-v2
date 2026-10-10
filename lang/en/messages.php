@@ -1262,6 +1262,7 @@ return [
         'recovery_codes' => 'One-Time Recovery Codes',
         'saved_codes' => 'I Saved the Codes, Continue',
         'recovery_codes_gone' => 'The recovery codes are no longer visible. Reset two-factor authentication to generate new ones.',
+        'setup_required_api' => 'Two-factor authentication is required for API access. Please complete the 2FA setup via the web interface first.',
     ],
 
     // ==================== TRANSFERS ====================

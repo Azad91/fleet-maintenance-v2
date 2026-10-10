@@ -1262,6 +1262,7 @@ return [
         'recovery_codes' => 'Tek Seferlik Kurtarma Kodları',
         'saved_codes' => 'Kodları Kaydettim, Devam Et',
         'recovery_codes_gone' => 'Kurtarma kodları artık görünür değil. Yenilerini oluşturmak için iki faktörlü doğrulamayı sıfırlayın.',
+        'setup_required_api' => 'API erişimi için iki faktörlü doğrulama gereklidir. Lütfen önce web arayüzünden 2FA kurulumunu tamamlayın.',
     ],
 
     // ==================== TRANSFERS ====================

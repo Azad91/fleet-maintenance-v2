@@ -1267,6 +1267,7 @@ return [
         'recovery_codes' => 'Birdəfəlik Recovery Kodları',
         'saved_codes' => 'Kodları Saxladım, Davam Et',
         'recovery_codes_gone' => 'Recovery kodları artıq göstərilməyəcək. Yenidən görmək üçün iki faktorlu təsdiqi sıfırlamalısınız.',
+        'setup_required_api' => 'API girişi üçün iki faktorlu təsdiq məcburidir. Zəhmət olmasa əvvəlcə web interfeysindən 2FA qurulumunu tamamlayın.',
     ],
 
     // ==================== TRANSFERS ====================
