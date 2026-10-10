@@ -1,9 +1,10 @@
 name: fleet-prod
 
 services:
-  # Apply outstanding schema changes before any long-running application
-  # process starts. `migrate --force` is idempotent, so it is safe on both
-  # the initial deployment and subsequent image upgrades.
+  # Apply outstanding schema changes and ensure the platform Super Admin
+  # exists before any long-running application process starts. Both commands
+  # are idempotent: migrations only apply pending files and UserSeeder never
+  # overwrites an existing administrator's password.
   migrate:
     image: ${FLEET_IMAGE:-fleet-v2-app:latest}
     container_name: fleet-prod-migrate
@@ -15,7 +16,12 @@ services:
         condition: service_healthy
     networks:
       - fleet
-    command: ["php", "/var/www/html/artisan", "migrate", "--force", "--no-interaction"]
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        php /var/www/html/artisan migrate --force --no-interaction
+        && php /var/www/html/artisan db:seed --class=Database\Seeders\UserSeeder --force --no-interaction
 
   app:
     image: ${FLEET_IMAGE:-fleet-v2-app:latest}

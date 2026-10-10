@@ -304,8 +304,13 @@ docker compose -f docker-compose.prod.yml ps
 ```
 
 `migrate` xidməti tətbiq və scheduler/queue proseslərindən əvvəl avtomatik
-olaraq `php artisan migrate --force --no-interaction` işlədir. Onun statusu
-`Exited (0)` olmalıdır; başqa statusda tətbiq prosesləri qəsdən başlamaz.
+olaraq migration-ları işlədir və `UserSeeder` ilə platform Super Admin hesabını
+yaradır. Seeder idempotentdir: mövcud adminin şifrəsini və ya məlumatlarını
+dəyişmir. İlk production deploy-da `SUPER_ADMIN_PASSWORD` dəyərini əvvəlcədən
+`.env.production`-da yazın; boş olduqda güclü təsadüfi şifrə yaradılır və yalnız
+`docker compose -f docker-compose.prod.yml logs migrate` çıxışında bir dəfə
+göstərilir. Xidmətin statusu `Exited (0)` olmalıdır; başqa statusda tətbiq
+prosesləri qəsdən başlamaz.
 
 Yeni versiya üçün eyni `docker build` və `docker compose ... up -d` əmrlərini
 işlədin. Migration-lar idempotentdir və yalnız tətbiq edilməmiş dəyişiklikləri
