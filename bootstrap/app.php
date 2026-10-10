@@ -12,7 +12,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Sentry\Laravel\Integration as SentryIntegration;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -88,7 +87,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // exceptions (validation, auth, custom domain errors) before
         // they reach Sentry, so only genuine bugs and infrastructure
         // failures show up in the dashboard.
-        SentryIntegration::handles($exceptions);
+        // Sentry is optional operational tooling. A stale or partially built
+        // production image must not make the entire application unavailable
+        // simply because this SDK is absent. class_exists() also triggers
+        // Composer's autoloader when the dependency is installed.
+        if (class_exists(Sentry\Laravel\Integration::class)) {
+            Sentry\Laravel\Integration::handles($exceptions);
+        }
 
         // ============================================================
         // CUSTOM EXCEPTION RENDERERS
