@@ -82,8 +82,15 @@ COPY . .
 
 # ────────────────────────────────────────────────────────────────
 # Regenerate the Composer autoloader against the full source tree
+#
+# `bootstrap/cache/packages.php` is machine-local state. In particular, a
+# development cache can contain providers from require-dev (Pail, Breeze,
+# Collision, etc.) that do not exist in this production image because Composer
+# is installed with --no-dev. Always discard it and regenerate discovery from
+# the image's actual vendor directory.
 # ────────────────────────────────────────────────────────────────
-RUN composer dump-autoload --optimize --no-dev
+RUN rm -f bootstrap/cache/*.php \
+    && composer dump-autoload --optimize --no-dev
 
 # ────────────────────────────────────────────────────────────────
 # Apache — point DocumentRoot at /public

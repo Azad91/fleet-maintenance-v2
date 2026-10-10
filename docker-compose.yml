@@ -17,7 +17,12 @@ services:
       - ./storage:/var/www/html/storage
       - ./public/storage:/var/www/html/public/storage
       - ./app:/var/www/html/app
-      - ./bootstrap:/var/www/html/bootstrap
+      # Do not mount bootstrap/cache from the host. Local Composer runs include
+      # require-dev packages, while this image is installed with --no-dev;
+      # mounting their discovery cache makes Laravel try to load absent classes
+      # such as Laravel\Pail\PailServiceProvider.
+      - ./bootstrap/app.php:/var/www/html/bootstrap/app.php
+      - ./bootstrap/providers.php:/var/www/html/bootstrap/providers.php
       - ./config:/var/www/html/config
       - ./database:/var/www/html/database
       - ./lang:/var/www/html/lang
