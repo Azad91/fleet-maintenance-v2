@@ -103,7 +103,7 @@ class AuthController extends Controller
             if (! $user->hasTwoFactorEnabled()) {
                 Log::warning('API login blocked — SuperAdmin has no 2FA configured', [
                     'user_id' => $user->id,
-                    'ip'      => $request->ip(),
+                    'ip' => $request->ip(),
                     'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
                 ]);
 

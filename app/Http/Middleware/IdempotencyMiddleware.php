@@ -66,7 +66,7 @@ class IdempotencyMiddleware
             } catch (LockTimeoutException) {
                 return response()->json([
                     'message' => 'Request is already being processed. Please retry.',
-                    'error'   => 'lock_timeout',
+                    'error' => 'lock_timeout',
                 ], 409);
             }
 
@@ -91,7 +91,7 @@ class IdempotencyMiddleware
                 // request that touches the same key.
                 if (strlen($content) <= self::MAX_CACHEABLE_RESPONSE_BYTES) {
                     Cache::put($cacheKey, [
-                        'status'  => $status,
+                        'status' => $status,
                         'headers' => $this->filterHeaders($response->headers->all()),
                         'content' => $content,
                     ], now()->addHours(self::CACHE_TTL_HOURS));

@@ -29,9 +29,9 @@ class HealthController extends Controller
     private function runChecks(): array
     {
         $status = [
-            'status'    => 'ok',
+            'status' => 'ok',
             'timestamp' => now()->toIso8601String(),
-            'services'  => [],
+            'services' => [],
         ];
 
         $isHealthy = true;

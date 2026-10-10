@@ -7,6 +7,5 @@ parameters:
         - routes
         - config
     level: 8
-    checkMissingIterableValueType: false
     excludePaths:
-        - app/Console/Kernel.php
+        - 'app/Console/Kernel.php (?)'

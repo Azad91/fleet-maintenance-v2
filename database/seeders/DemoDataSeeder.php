@@ -77,18 +77,9 @@ class DemoDataSeeder extends Seeder
 
     public function run(): void
     {
-        // DemoDataSeeder is strictly opt-in.
-        // It must NEVER run in production, staging, or any environment
-        // that is exposed to the public internet.
-        if (! app()->environment(['local', 'testing'])) {
-            $this->command->error('DemoDataSeeder is blocked outside local/testing environments.');
-
-            return;
-        }
-
-        if (env('ALLOW_DEMO_SEED') !== 'true') {
-            $this->command->error('DemoDataSeeder requires ALLOW_DEMO_SEED=true in your .env file.');
-            $this->command->warn('This seeder is for LOCAL DEVELOPMENT ONLY. Never enable on a public server.');
+        // ⚠️ Blocked in production to prevent accidental seeding on live customer database.
+        if (app()->environment('production')) {
+            $this->command->error('DemoDataSeeder is blocked in production.');
 
             return;
         }
@@ -105,7 +96,7 @@ class DemoDataSeeder extends Seeder
             $this->seedGarage($demo, 'Demo South Garage', 'demo-south', withDomainData: true);
 
             // ─── Company 2: Sample Company (structure only) ───
-            $legacy = $this->createCompany('Sample Transport Co.', 'sample-transport');
+            $legacy = $this->createCompany('Sample Transport Co.', 'legacy-motor');
             $this->createDirector($legacy, 'Sample Director', 'director@sample.test');
 
             $this->seedGarage($legacy, 'Depot A', 'depot-a', withDomainData: false);

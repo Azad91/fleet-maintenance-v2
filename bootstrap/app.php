@@ -64,15 +64,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // so that implicit route model binding always sees a populated
         // GarageContext (preventing cross-tenant resource access via ID guessing).
         $middleware->prependToPriorityList(
-            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            before: Illuminate\Routing\Middleware\SubstituteBindings::class,
             prepend: App\Http\Middleware\EnsureGarageSelected::class,
         );
         $middleware->prependToPriorityList(
-            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            before: Illuminate\Routing\Middleware\SubstituteBindings::class,
             prepend: App\Http\Middleware\RoleMiddleware::class,
         );
         $middleware->prependToPriorityList(
-            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            before: Illuminate\Routing\Middleware\SubstituteBindings::class,
             prepend: App\Http\Middleware\EnsureApiGarageContext::class,
         );
     })

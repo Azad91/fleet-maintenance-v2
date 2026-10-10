@@ -113,9 +113,11 @@ class GarageDataController extends Controller
         if ($is18m) {
             $allDetails = $allDetails->map(function ($d) use ($ratio) {
                 $d->km = (int) round($d->km * $ratio);
+
                 return $d;
             });
         }
+
         return response()->json(
             $allDetails->groupBy('km')
                 ->map(fn ($details, $km) => [
