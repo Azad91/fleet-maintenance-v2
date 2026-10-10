@@ -35,16 +35,16 @@ class EnsureGarageSelected
                 ->with('error', __('messages.flash.no_garage'));
         }
 
-        // Super admin — verify garage exists, set context
+        // Super admin — verify garage exists and is active, set context
         if ($user->isSuperAdmin()) {
             $garage = Garage::find($garageId);
 
-            if (! $garage) {
+            if (! $garage || ! $garage->is_active) {
                 $this->clearGarageSession($request);
 
                 return redirect()
                     ->route('garage.selection')
-                    ->with('error', __('messages.flash.garage_not_found'));
+                    ->with('error', ! $garage ? __('messages.flash.garage_not_found') : __('messages.flash.garage_access_denied'));
             }
 
             GarageContext::set($garage->id, $garage->company_id);
@@ -52,9 +52,10 @@ class EnsureGarageSelected
             return $next($request);
         }
 
-        // Regular user — verify membership
+        // Regular user — verify membership and garage is active
         $membership = $user->garages()
             ->whereKey($garageId)
+            ->where('garages.is_active', true)
             ->wherePivot('is_active', true)
             ->first();
 

@@ -69,7 +69,7 @@ Admin yeni hesabları **İstifadəçilər** bölməsindən yaradır, cari qaraja
 
 ## Tələblər
 
-- PHP 8.3+
+- PHP 8.4+
 - Composer
 - PostgreSQL 14+
 - PHP genişlənmələri: `pdo_pgsql`, `mbstring`, `xml`, `zip`, `gd`

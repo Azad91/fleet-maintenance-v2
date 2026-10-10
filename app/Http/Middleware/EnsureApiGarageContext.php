@@ -31,9 +31,25 @@ class EnsureApiGarageContext
                     'error' => __('messages.flash.garage_not_found'),
                 ], 404);
             }
+            if (! $garage->is_active) {
+                return response()->json([
+                    'error' => __('messages.flash.garage_access_denied'),
+                ], 403);
+            }
             GarageContext::set((int) $garageId, $garage->company_id);
 
             return $next($request);
+        }
+
+        $garage = Garage::find($garageId);
+        if (! $garage) {
+            return response()->json(['error' => __('messages.flash.garage_not_found')], 404);
+        }
+
+        if (! $garage->is_active) {
+            return response()->json([
+                'error' => __('messages.flash.garage_access_denied'),
+            ], 403);
         }
 
         $hasAccess = $user->garages()
@@ -45,11 +61,6 @@ class EnsureApiGarageContext
             return response()->json([
                 'error' => __('messages.flash.garage_access_denied'),
             ], 403);
-        }
-
-        $garage = Garage::find($garageId);
-        if (! $garage) {
-            return response()->json(['error' => __('messages.flash.garage_not_found')], 404);
         }
 
         GarageContext::set((int) $garageId, $garage->company_id);

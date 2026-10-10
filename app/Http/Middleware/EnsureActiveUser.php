@@ -48,7 +48,7 @@ class EnsureActiveUser
         // ─────────────────────────────────────────────────────────
         // API: revoke the current token and return JSON 401.
         // ─────────────────────────────────────────────────────────
-        if ($request->expectsJson()) {
+        if ($request->is('api/*') || $request->expectsJson()) {
             try {
                 $user->currentAccessToken()?->delete();
             } catch (\Throwable $e) {
