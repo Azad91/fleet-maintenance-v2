@@ -1,6 +1,22 @@
 name: fleet-prod
 
 services:
+  # Apply outstanding schema changes before any long-running application
+  # process starts. `migrate --force` is idempotent, so it is safe on both
+  # the initial deployment and subsequent image upgrades.
+  migrate:
+    image: ${FLEET_IMAGE:-fleet-v2-app:latest}
+    container_name: fleet-prod-migrate
+    restart: "no"
+    env_file:
+      - .env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fleet
+    command: ["php", "/var/www/html/artisan", "migrate", "--force", "--no-interaction"]
+
   app:
     image: ${FLEET_IMAGE:-fleet-v2-app:latest}
     container_name: fleet-prod-app
@@ -26,6 +42,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
     networks:
       - fleet
@@ -42,6 +60,33 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+  # The production environment uses Laravel's database queue. Without a
+  # worker, jobs remain in the `jobs` table indefinitely (for example, queued
+  # notifications introduced later). Restart periodically so deployments pick
+  # up the current code without requiring a separate process supervisor.
+  queue:
+    image: ${FLEET_IMAGE:-fleet-v2-app:latest}
+    container_name: fleet-prod-queue
+    restart: unless-stopped
+    user: "33:33"
+    env_file:
+      - .env.production
+    volumes:
+      - ./storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - fleet
+    command: ["php", "/var/www/html/artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=60", "--max-time=3600"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ────────────────────────────────────────────────────────────────
   # Laravel scheduler — runs every minute and dispatches due tasks
@@ -72,6 +117,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - fleet
     command: ["php", "/var/www/html/artisan", "schedule:work"]

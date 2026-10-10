@@ -287,6 +287,31 @@ php artisan test
 
 ## Production Deploy Checklist
 
+### 0. İlk deploy və yeniləmə əmrləri
+
+Serverdə repozitoriyanı klonladıqdan sonra `.env.production` və
+`.env.production.db` fayllarını nümunələrdən yaradıb real sirlərlə doldurun.
+Bu iki fayl Git-ə daxil edilmir.
+
+```bash
+cp .env.production.example .env.production
+cp .env.production.db.example .env.production.db
+# Faylları redaktə edin: APP_KEY, APP_URL, DB/POSTGRES parolları, SMTP və TRUSTED_PROXIES
+
+docker build -t fleet-v2-app:latest .
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml ps
+```
+
+`migrate` xidməti tətbiq və scheduler/queue proseslərindən əvvəl avtomatik
+olaraq `php artisan migrate --force --no-interaction` işlədir. Onun statusu
+`Exited (0)` olmalıdır; başqa statusda tətbiq prosesləri qəsdən başlamaz.
+
+Yeni versiya üçün eyni `docker build` və `docker compose ... up -d` əmrlərini
+işlədin. Migration-lar idempotentdir və yalnız tətbiq edilməmiş dəyişiklikləri
+yerinə yetirir. Queue worker ayrıca xidmətdir; database queue-dakı işləri
+emal edir və hər saat özünü yenidən başladaraq yeni kodu götürür.
+
 ### 1. Təhlükəsizlik
 
 - `.env.production` faylı **yalnız serverdə** saxlanmalıdır — git-ə heç vaxt commit etmə.
