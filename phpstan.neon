@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - routes
+        - config
+    level: 8
+    checkMissingIterableValueType: false
+    excludePaths:
+        - app/Console/Kernel.php

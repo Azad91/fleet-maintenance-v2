@@ -1,0 +1,118 @@
+ParaTest v7.20.0 upon PHPUnit 12.5.35 by Sebastian Bergmann and contributors.
+
+Processes:     12
+Runtime:       PHP 8.4.24
+Configuration: C:\Projects\fleet-maintenance-v2\phpunit.xml
+
+..............................................................  62 / 906 (  6%)
+.............................................................. 124 / 906 ( 13%)
+.............................................................. 186 / 906 ( 20%)
+.............................................................. 248 / 906 ( 27%)
+.............................................................. 310 / 906 ( 34%)
+.............................................................. 372 / 906 ( 41%)
+.............................................................. 434 / 906 ( 47%)
+.[41;37mF[0m............................................................ 496 / 906 ( 54%)
+.............................................................. 558 / 906 ( 61%)
+[41;37mF[0m............................................................. 620 / 906 ( 68%)
+.............................................................. 682 / 906 ( 75%)
+.............................................................. 744 / 906 ( 82%)
+...................................[41;37mF[0m[33;1mR[0m[33;1mR[0m[33;1mR[0m.[33;1mR[0m[31;1mE[0m[31;1mE[0m[31;1mE[0m[31;1mE[0m[31;1mE[0m[31;1mE[0m[41;37mF[0m.............. 806 / 906 ( 88%)
+.............................................................. 868 / 906 ( 95%)
+......................................                         906 / 906 (100%)
+
+Time: 00:28.863, Memory: 50.00 MB
+
+There were 6 errors:
+
+1) Tests\Feature\Seeders\DemoDataSeederTest::test_demo_garages_have_motor_oil_details
+Error: Call to a member function garages() on null
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:58
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:186
+
+2) Tests\Feature\Seeders\DemoDataSeederTest::test_demo_garages_have_service_templates
+Error: Call to a member function garages() on null
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:58
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:203
+
+3) Tests\Feature\Seeders\DemoDataSeederTest::test_demo_garages_have_buses
+Error: Call to a member function garages() on null
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:58
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:220
+
+4) Tests\Feature\Seeders\DemoDataSeederTest::test_legacy_garages_have_no_motor_oil_details
+Error: Call to a member function garages() on null
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:69
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:241
+
+5) Tests\Feature\Seeders\DemoDataSeederTest::test_legacy_garages_have_no_service_templates
+Error: Call to a member function garages() on null
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:69
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:258
+
+6) Tests\Feature\Seeders\DemoDataSeederTest::test_legacy_garages_have_no_buses
+Error: Call to a member function garages() on null
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:69
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:275
+
+--
+
+There were 4 failures:
+
+1) Tests\Feature\Reports\DailyKmReportTest::test_missing_returns_buses_without_km_on_target_date
+Bus A has entry; Bus B is other garage; nothing should be missing
+Failed asserting that an object is empty.
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Reports\DailyKmReportTest.php:91
+
+2) Tests\Feature\Seeders\DemoDataSeederTest::test_seeds_two_companies_and_six_garages
+Failed asserting that 0 is identical to 2.
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:81
+
+3) Tests\Feature\Seeders\DemoDataSeederTest::test_seeder_is_idempotent
+Re-running must not duplicate companies
+Failed asserting that 0 is identical to 2.
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:297
+
+4) Tests\Feature\Localization\TranslationCoverageTest::test_strict_locales_have_no_extra_keys
+Locale [az] has 3 keys that do not exist in [az]'s reference (en):
+ - messages.transfers.awaiting_receipt
+ - messages.transfers.created_awaiting_dispatch
+ - messages.transfers.pending_attention
+Failed asserting that an array is empty.
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Localization\TranslationCoverageTest.php:121
+
+--
+
+There were 4 risky tests:
+
+1) Tests\Feature\Seeders\DemoDataSeederTest::test_every_company_has_three_garages
+This test did not perform any assertions
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:85
+
+2) Tests\Feature\Seeders\DemoDataSeederTest::test_every_company_has_exactly_one_active_director
+This test did not perform any assertions
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:102
+
+3) Tests\Feature\Seeders\DemoDataSeederTest::test_every_garage_has_exactly_one_active_admin
+This test did not perform any assertions
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:119
+
+4) Tests\Feature\Seeders\DemoDataSeederTest::test_every_garage_has_complaint_types
+This test did not perform any assertions
+
+C:\Projects\fleet-maintenance-v2\tests\Feature\Seeders\DemoDataSeederTest.php:161
+
+[37;41mERRORS![0m
+[37;41mTests: 906[0m[37;41m, Assertions: 2185[0m[37;41m, Errors: 6[0m[37;41m, Failures: 4[0m[37;41m, Risky: 4[0m[37;41m.[0m
