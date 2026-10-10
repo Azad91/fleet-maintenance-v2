@@ -76,3 +76,40 @@ jobs:
 
       - name: Execute Tests
         run: php artisan test
+
+      - name: Run static analysis
+        run: vendor/bin/phpstan analyse --memory-limit=2G --error-format=table
+
+      - name: Check code formatting
+        run: vendor/bin/pint --test
+
+      - name: Audit Composer dependencies
+        run: composer audit --locked
+
+  production-image:
+    name: Production Docker image
+    needs: tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate production Compose configuration
+        run: |
+          cp .env.production.example .env.production
+          cp .env.production.db.example .env.production.db
+          docker compose -f docker-compose.prod.yml config --quiet
+
+      - name: Build production image without development dependencies
+        run: docker build --tag fleet-v2-app:ci .
+
+      - name: Boot production image
+        run: >-
+          docker run --rm
+          --env APP_ENV=production
+          --env APP_DEBUG=false
+          --env APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          --entrypoint php
+          fleet-v2-app:ci
+          artisan about --only=environment --no-ansi
