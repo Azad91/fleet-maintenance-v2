@@ -26,7 +26,7 @@ class BusDailyStatus extends Model
         'date' => 'date',
     ];
 
-    public function bus()
+    public function bus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Bus::class);
     }
