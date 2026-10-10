@@ -18,6 +18,7 @@ return [
     'api' => env('RATE_LIMIT_API', '60,1'),
     'pdf' => env('RATE_LIMIT_PDF', '10,1'),
     'import' => env('RATE_LIMIT_IMPORT', '5,1'),
+    'lookup' => env('RATE_LIMIT_LOOKUP', '120,1'),
 
     /*
     |--------------------------------------------------------------------------

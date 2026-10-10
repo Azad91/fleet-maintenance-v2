@@ -641,7 +641,7 @@ Route::middleware(['auth', 'verified', 'pin.enforced', 'garage.selected', 'idemp
         RoleEnum::warehouseRoles()
     ));
 
-    Route::middleware(['role:'.$garageDataRoles])->group(function () {
+    Route::middleware(['role:'.$garageDataRoles, 'throttle:lookup'])->group(function () {
         Route::get('get-bus-id-by-xett/{xett_no}', [GarageDataController::class, 'busByLine'])->name('get.bus.id.by.xett');
         Route::get('get-bus-by-dqn/{dqn}', [GarageDataController::class, 'busByDqn'])->name('get.bus.by.dqn');
         Route::get('get-bus-km-by-id/{bus_id}', [GarageDataController::class, 'busKm'])->name('get.bus.km.by.id');

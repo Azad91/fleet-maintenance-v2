@@ -57,7 +57,7 @@ class CloseComplaintAction
 
         $this->generatePdf($complaint);
 
-        return $complaint->fresh();
+        return $complaint->fresh() ?? $complaint;
     }
 
     /**

@@ -135,6 +135,13 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinutes($decayMinutes, $attempts)
                 ->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('lookup', function (Request $request) {
+            [$attempts, $decayMinutes] = $this->parseRateLimit('lookup');
+
+            return Limit::perMinutes($decayMinutes, $attempts)
+                ->by($request->user()?->id ?: $request->ip());
+        });
     }
 
     /**

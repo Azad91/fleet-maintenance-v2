@@ -102,7 +102,10 @@ class GarageDataController extends Controller
     public function motorOilServices(int $busId)
     {
         $bus = Bus::findOrFail($busId);
-        $latestKm = $bus->dailyKmRecords()->latest('date')->value('km') ?? $bus->km ?? 0;
+
+        $allDetails = MotorOilDetail::where('brand_id', $bus->brand_id)
+            ->orderBy('km')
+            ->get();
 
         $is18m = $bus->uzunluq && (float) $bus->uzunluq >= config('settings.vehicle_intervals.bus_18m.min_length');
         $newBaseKm = $is18m
