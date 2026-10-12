@@ -448,6 +448,16 @@
     function renderServiceParts(parts) {
         const container = document.getElementById('detailsContainer');
 
+        // Part names/codes originate in imported catalog data. Escape every
+        // value placed into an HTML attribute so a malicious import cannot
+        // become stored XSS when this form is rendered.
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
         if (! parts || parts.length === 0) {
             container.innerHTML = `
                 <div class="alert alert-warning mb-0">
@@ -461,6 +471,11 @@
         let html = '';
 
         parts.forEach((part, idx) => {
+            const partCode = escapeHtml(part.part_code);
+            const partName = escapeHtml(part.part_name);
+            const stockQuantity = escapeHtml(part.stock_quantity);
+            const quantity = escapeHtml(part.quantity);
+
             html += `
                 <div class="detail-item">
                     <div class="row g-3">
@@ -473,22 +488,22 @@
                         <div class="col-md-2">
                             <label class="form-label fw-bold">${@json(__('messages.complaints.part_code'))}</label>
                             <input type="text" class="form-control" name="details[${idx}][code]"
-                                   value="${part.part_code}" readonly>
+                                   value="${partCode}" readonly>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fw-bold">${@json(__('messages.complaints.part_name'))}</label>
                             <input type="text" class="form-control input-disabled" name="details[${idx}][name]"
-                                   value="${part.part_name}" readonly>
+                                   value="${partName}" readonly>
                         </div>
                         <div class="col-md-1">
                             <label class="form-label fw-bold">${@json(__('messages.complaints.stock_qty'))}</label>
                             <input type="text" class="form-control input-disabled" name="details[${idx}][stock_quantity]"
-                                   value="${part.stock_quantity}" readonly>
+                                   value="${stockQuantity}" readonly>
                         </div>
                         <div class="col-md-1">
                             <label class="form-label fw-bold">${@json(__('messages.complaints.used_qty'))}</label>
                             <input type="number" class="form-control" name="details[${idx}][used_quantity]"
-                                   value="${part.quantity}" min="0" required>
+                                   value="${quantity}" min="0" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold">👤 ${@json(__('messages.complaints.employee'))}</label>

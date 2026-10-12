@@ -8,13 +8,12 @@ Seeder Super Admin hesabı yaradır:
 
 - **Email:** `admin@fleet.com`
 - **Parol:**
-  - **Production:** ya `SUPER_ADMIN_PASSWORD` env dəyişəni ilə təyin edin,
-    ya da seeder tərəfindən təsadüfi generasiya olunan güclü parolu
-    konsoldan bir dəfəlik kopyalayın (parol YALNIZ bir dəfə göstərilir!).
+  - **Production:** `SUPER_ADMIN_PASSWORD` env dəyişəni ilə mütləq təyin edin.
+    Təhlükəsizlik üçün seeder heç vaxt parolu console/Docker loglarına yazmır.
   - **Local/dev:** `password`
 
-⚠️ **Diqqət:** Əgər production-da parol konsoldan kopyalanmasa, onu
-`php artisan tinker` vasitəsilə yenidən təyin etməli olacaqsınız:
+⚠️ **Diqqət:** Parol itərsə, onu `php artisan tinker` vasitəsilə yenidən
+təyin etməli olacaqsınız:
 
 \`\`\`
 User::where('email','admin@fleet.com')
@@ -307,10 +306,9 @@ docker compose -f docker-compose.prod.yml ps
 olaraq migration-ları işlədir və `UserSeeder` ilə platform Super Admin hesabını
 yaradır. Seeder idempotentdir: mövcud adminin şifrəsini və ya məlumatlarını
 dəyişmir. İlk production deploy-da `SUPER_ADMIN_PASSWORD` dəyərini əvvəlcədən
-`.env.production`-da yazın; boş olduqda güclü təsadüfi şifrə yaradılır və yalnız
-`docker compose -f docker-compose.prod.yml logs migrate` çıxışında bir dəfə
-göstərilir. Xidmətin statusu `Exited (0)` olmalıdır; başqa statusda tətbiq
-prosesləri qəsdən başlamaz.
+`.env.production`-da yazın; bu dəyər olmadan təzə non-local deploy qəsdən
+dayanır və heç bir parol Docker loglarında göstərilmir. Xidmətin statusu
+`Exited (0)` olmalıdır; başqa statusda tətbiq prosesləri qəsdən başlamaz.
 
 Yeni versiya üçün eyni `docker build` və `docker compose ... up -d` əmrlərini
 işlədin. Migration-lar idempotentdir və yalnız tətbiq edilməmiş dəyişiklikləri
@@ -322,7 +320,8 @@ emal edir və hər saat özünü yenidən başladaraq yeni kodu götürür.
 - `.env.production` faylı **yalnız serverdə** saxlanmalıdır — git-ə heç vaxt commit etmə.
 - `APP_DEBUG=false` **mütləqdir** — stack trace-lər istifadəçiyə göstərilməməlidir.
 - `APP_KEY` `php artisan key:generate --show` ilə yaradılmalı və `.env.production`-a yazılmalıdır.
-- `SUPER_ADMIN_PASSWORD` env dəyişəni ilə təyin et, yoxsa ilk seed təsadüfi güclü parol generasiya edəcək (BİR DƏFƏ konsola çap olunacaq).
+- `SUPER_ADMIN_PASSWORD` env dəyişəni ilə güclü parol təyin edin; non-local
+  deploy-da bu dəyər məcburidir və heç vaxt loglara yazılmır.
 
 ### 2. Reverse Proxy (Nginx / Cloudflare / ALB)
 

@@ -17,13 +17,15 @@ return new class extends Migration
             )
         ");
 
-        // 2. Həqiqətən super admin olmalı olanları əl ilə təyin etmək lazımdır.
-        // Məsələn, sizin admin@fleet.com hesabınız super_admin olsun:
-        DB::statement("
-            UPDATE users
-            SET role = 'super_admin'
-            WHERE email = 'admin@fleet.com'
-        ");
+        // UserSeeder creates the first Super Admin. This legacy migration
+        // must not silently elevate a hard-coded email in another tenant.
+        $email = env('SUPER_ADMIN_EMAIL');
+        if (is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            DB::table('users')
+                ->where('email', $email)
+                ->whereNull('deleted_at')
+                ->update(['role' => 'super_admin']);
+        }
 
         // 3. DB constraint-ı yenilə (əgər varsa)
         // Əgər users_role_check constraint-i varsa, onu yenilə

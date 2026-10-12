@@ -77,9 +77,9 @@ class DemoDataSeeder extends Seeder
 
     public function run(): void
     {
-        // ⚠️ Blocked in production to prevent accidental seeding on live customer database.
-        if (app()->environment('production')) {
-            $this->command->error('DemoDataSeeder is blocked in production.');
+        // Demo credentials are permitted only in local development and tests.
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command->error('DemoDataSeeder is only available in local and testing environments.');
 
             return;
         }

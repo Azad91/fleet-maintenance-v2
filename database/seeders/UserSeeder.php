@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
  * Seeds the platform-level SuperAdmin account.
@@ -58,11 +57,6 @@ class UserSeeder extends Seeder
         }
 
         $password = $this->resolveSuperAdminPassword();
-        $generated = $password === null; // null signals "random was generated"
-
-        if ($generated) {
-            $password = Str::password(24, symbols: true);
-        }
 
         $superAdmin = User::create([
             'name' => 'Super Admin',
@@ -78,7 +72,7 @@ class UserSeeder extends Seeder
 
         $superAdmin->promoteToSuperAdmin()->save();
 
-        $this->reportSuperAdminCredentials($password, $generated);
+        $this->reportSuperAdminCredentials();
     }
 
     /**
@@ -87,13 +81,11 @@ class UserSeeder extends Seeder
      * Priority:
      *   1. SUPER_ADMIN_PASSWORD env var (explicit operator intent)
      *   2. Local/testing without env var → 'password' for developer convenience
-     *   3. Every other environment without env var → generate a strong
-     *      random password
-     *
-     * @return string|null The chosen password, or null to signal
-     *                     "caller must generate a random one".
+     *   3. Every other environment requires an explicit password. Generating a
+     *      password and printing it to container logs would leak a privileged
+     *      secret to every log reader.
      */
-    private function resolveSuperAdminPassword(): ?string
+    private function resolveSuperAdminPassword(): string
     {
         if ($env = env('SUPER_ADMIN_PASSWORD')) {
             return (string) $env;
@@ -103,35 +95,16 @@ class UserSeeder extends Seeder
             return 'password';
         }
 
-        return null; // signal random generation
+        throw new \RuntimeException(
+            'SUPER_ADMIN_PASSWORD must be set before seeding a non-local environment.'
+        );
     }
 
     /**
-     * Print a loud, one-time warning so the operator can copy the
-     * credentials before they scroll off the terminal.
+     * Confirm bootstrap without ever emitting a credential to logs.
      */
-    private function reportSuperAdminCredentials(string $password, bool $generated): void
+    private function reportSuperAdminCredentials(): void
     {
-        if (! $generated) {
-            $this->command->info('Super Admin created with the password from SUPER_ADMIN_PASSWORD.');
-
-            return;
-        }
-
-        $this->command->newLine();
-        $this->command->info('══════════════════════════════════════════════════════════');
-        $this->command->info(' SUPER ADMIN CREDENTIALS (shown ONLY once)');
-        $this->command->info('══════════════════════════════════════════════════════════');
-        $this->command->line('  Email:    admin@fleet.com');
-        $this->command->line('  Password: '.$password);
-        $this->command->info('══════════════════════════════════════════════════════════');
-
-        $this->command->warn('  ⚠️  This password was RANDOMLY generated.');
-        $this->command->warn('  ⚠️  Save it NOW — it will NEVER be shown again.');
-        $this->command->warn('  ⚠️  If lost, run: php artisan tinker');
-        $this->command->warn('      User::where("email","admin@fleet.com")');
-        $this->command->warn('          ->update(["password" => Hash::make("new")]);');
-
-        $this->command->newLine();
+        $this->command->info('Super Admin created. Credentials were read from environment configuration.');
     }
 }

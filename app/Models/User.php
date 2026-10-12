@@ -452,24 +452,19 @@ class User extends Authenticatable implements MustVerifyEmail
         $cacheKey = 'totp_used:'.$this->getKey().':'.hash('sha256', $code);
 
         // Already consumed inside the acceptance window → reject.
-        if (Cache::has($cacheKey)) {
-            return false;
-        }
-
         $valid = app(TwoFactorManager::class)->verifyCode(
             $this->two_factor_secret,
             $code,
         );
 
         if ($valid) {
-            // 120 seconds covers the widest possible TOTP window
-            // (30s current step + 30s past + 30s future) with a
-            // 30-second safety margin. After that the code cannot
-            // be reused anyway because it has naturally expired.
-            Cache::put($cacheKey, true, now()->addSeconds(120));
+            // Atomically reserve an accepted code. Concurrent requests may
+            // both validate the TOTP value, but only the first can log in.
+            // Reserving only after validation prevents invalid-code lockouts.
+            return Cache::add($cacheKey, true, now()->addSeconds(120));
         }
 
-        return $valid;
+        return false;
     }
 
     /**

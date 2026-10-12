@@ -69,7 +69,7 @@ Route::middleware('guest')->group(function () {
     Route::get('two-factor-challenge', [App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'show'])
         ->name('two-factor.challenge');
     Route::post('two-factor-challenge', [App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'store'])
-        ->middleware('throttle:6,1')
+        ->middleware('throttle:two-factor')
         ->name('two-factor.challenge.store');
     Route::post('two-factor-challenge/cancel', [App\Http\Controllers\Auth\TwoFactorChallengeController::class, 'destroy'])
         ->name('two-factor.challenge.cancel');

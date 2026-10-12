@@ -146,6 +146,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinutes($decayMinutes, $attempts)
                 ->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('two-factor', function (Request $request) {
+            $userId = $request->session()->get('two_factor.user_id', 'none');
+
+            return Limit::perMinute(5)->by($userId.'|'.$request->ip());
+        });
     }
 
     /**

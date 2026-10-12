@@ -75,7 +75,7 @@ class DailyKmReportTest extends TestCase
     public function test_missing_returns_buses_without_km_on_target_date(): void
     {
         // Bus A: has a KM entry on target date
-        $targetDate = $this->period()->to->toDateString();
+        $targetDate = now()->toDateString();
 
         DailyKmRecord::withoutGlobalScopes()->create([
             'bus_id' => $this->busA->id,

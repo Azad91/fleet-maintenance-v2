@@ -335,7 +335,7 @@ class ComplaintController extends Controller
             ->with('success', __('messages.flash.closed_success'));
     }
 
-    public function downloadPdf(int $id): BinaryFileResponse
+    public function downloadPdf(int $id): BinaryFileResponse|RedirectResponse
     {
         $complaint = Complaint::with(['bus', 'details.employee', 'serviceVehicle'])
             ->findOrFail($id);
@@ -358,13 +358,13 @@ class ComplaintController extends Controller
                 'request_id' => \Illuminate\Support\Facades\Context::get('request_id'),
             ]);
 
-            abort(500, __('messages.flash.pdf_generation_failed'));
+            return back()->with('error', __('messages.flash.pdf_generation_failed'));
         }
 
         $filePath = $this->pdfService->getFilePath($complaint);
 
         if (! file_exists($filePath)) {
-            abort(404, __('messages.flash.pdf_not_found'));
+            return back()->with('error', __('messages.flash.pdf_not_found'));
         }
 
         return response()->download($filePath, "work-card-{$complaint->id}.pdf", [

@@ -19,9 +19,21 @@ class HealthController extends Controller
         // anyway, so a 10 s cache has no practical effect on alerting.
         $ttl = (int) config('health.cache_ttl_seconds', 10);
 
-        [$status, $statusCode] = Cache::remember('_health_check_result', $ttl, function () {
-            return $this->runChecks();
-        });
+        try {
+            [$status, $statusCode] = Cache::remember('_health_check_result', $ttl, function () {
+                return $this->runChecks();
+            });
+        } catch (Throwable $e) {
+            Log::error('HealthCheck cache bootstrap error: '.$e->getMessage());
+            $status = [
+                'status' => 'unhealthy',
+                'timestamp' => now()->toIso8601String(),
+                'services' => [
+                    'cache' => ['status' => 'down', 'error' => 'Cache service unavailable.'],
+                ],
+            ];
+            $statusCode = 503;
+        }
 
         return response()->json($status, $statusCode);
     }

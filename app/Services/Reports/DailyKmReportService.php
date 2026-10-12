@@ -18,11 +18,13 @@ class DailyKmReportService
      */
     public function missing(ReportPeriod $period, ReportScope $scope): Collection
     {
-        // Use the period's end date, not now(), so the date shown in
-        // the view (`$period->to`) always matches what is actually
-        // queried. For daily/weekly/monthly presets these are equal;
-        // for a custom range they previously diverged.
-        $targetDate = $period->to->toDateString();
+        // Preset periods commonly extend into the future (for example, the
+        // current month ends after today). A missing-KM report can only make a
+        // meaningful claim through today; an explicit historical custom range
+        // still uses its selected end date.
+        $targetDate = $period->to->isFuture()
+            ? now()->toDateString()
+            : $period->to->toDateString();
 
         return Bus::withoutGlobalScope('garage')
             ->whereIn('buses.garage_id', $scope->garageIds)

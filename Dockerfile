@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libjpeg62-turbo-dev \
         libfreetype6-dev \
         libicu-dev \
+        libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         pdo_pgsql \
@@ -30,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
         gd \
         intl \
+        mbstring \
         opcache \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
@@ -54,7 +56,13 @@ RUN { \
 # bulk imports do not hit PHP's default 1000-input cap. FPM/CGI
 # deployments can also ship a public/.user.ini with the same value.
 # ────────────────────────────────────────────────────────────────
-RUN printf 'max_input_vars = 3000\n' > /usr/local/etc/php/conf.d/max_input_vars.ini
+RUN printf '%s\n' \
+        'max_input_vars = 3000' \
+        'upload_max_filesize = 12M' \
+        'post_max_size = 12M' \
+        'memory_limit = 512M' \
+        'max_execution_time = 120' \
+    > /usr/local/etc/php/conf.d/application-limits.ini
 # ────────────────────────────────────────────────────────────────
 # Composer binary
 # ────────────────────────────────────────────────────────────────
