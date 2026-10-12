@@ -7241,9 +7241,3 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: config/sanctum.php
-
-		-
-			message: '#^Instanceof between Sentry\\ExceptionDataBag and ''App\\\\Exceptions\\\\GarageAccessDeniedException''\|''App\\\\Exceptions\\\\MissingGarageContextException''\|''App\\\\Exceptions\\\\StockInsufficientException''\|''Illuminate\\\\Auth\\\\Access\\\\AuthorizationException''\|''Illuminate\\\\Auth\\\\AuthenticationException''\|''Illuminate\\\\Database\\\\Eloquent\\\\ModelNotFoundException''\|''Illuminate\\\\Validation\\\\ValidationException''\|''Symfony\\\\Component\\\\HttpKernel\\\\Exception\\\\HttpExceptionInterface''\|''Symfony\\\\Component\\\\HttpKernel\\\\Exception\\\\NotFoundHttpException'' will always evaluate to false\.$#'
-			identifier: instanceof.alwaysFalse
-			count: 1
-			path: config/sentry.php

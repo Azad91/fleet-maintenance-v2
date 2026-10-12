@@ -104,6 +104,25 @@ class DailyKmReportTest extends TestCase
         $this->assertSame('AAA-001', $buses->first()->dqn);
     }
 
+    public function test_missing_works_without_a_selected_garage_context(): void
+    {
+        DailyKmRecord::withoutGlobalScopes()->create([
+            'bus_id' => $this->busA->id,
+            'garage_id' => $this->garageA->id,
+            'company_id' => $this->company->id,
+            'date' => now()->toDateString(),
+            'km' => 10500,
+        ]);
+
+        // This is the director-report scenario: ReportScope supplies the
+        // authorised garages, while there is intentionally no garage context.
+        GarageContext::clear();
+
+        $buses = $this->service->missing($this->period(), new ReportScope([$this->garageA->id], null, false));
+
+        $this->assertEmpty($buses);
+    }
+
     // ==================== TOP BUSES ====================
 
     public function test_top_buses_computes_distance_correctly(): void

@@ -32,7 +32,11 @@ class DailyKmReportService
             ->whereNull('buses.deleted_at')
             ->when($scope->brandId, fn ($q) => $q->where('buses.brand_id', $scope->brandId))
             ->whereDoesntHave('dailyKmRecords', function ($q) use ($targetDate) {
-                $q->whereDate('date', $targetDate);
+                // Directors have no selected garage context. The relation's
+                // global garage scope would otherwise turn this subquery into
+                // an empty result and mark every bus as missing.
+                $q->withoutGlobalScope('garage')
+                    ->whereDate('date', $targetDate);
             })
             ->orderBy('buses.dqn')
             ->get(['buses.id', 'buses.dqn', 'buses.route_number', 'buses.bus_project', 'buses.km', 'buses.brand_id']);

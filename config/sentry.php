@@ -73,7 +73,10 @@ return [
 
         foreach ($event->getExceptions() as $exception) {
             foreach ($exceptionsToIgnore as $ignored) {
-                if ($exception instanceof $ignored) {
+                // Sentry serializes Throwables into ExceptionDataBag objects
+                // before invoking before_send(), so instanceof can never
+                // match here. Compare the stored original class name instead.
+                if (is_a($exception->getType(), $ignored, true)) {
                     return null; // drop the event
                 }
             }
