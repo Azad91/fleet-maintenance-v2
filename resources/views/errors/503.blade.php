@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', __('messages.errors.maintenance_title'))
+@section('code', '503')
+@section('icon', 'fa-screwdriver-wrench')
+@section('message', __('messages.errors.maintenance_message'))

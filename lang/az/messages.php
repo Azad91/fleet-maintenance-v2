@@ -1454,4 +1454,18 @@ return [
             'no-history' => 'Məlum deyil',
         ],
     ],
+    'errors' => [
+        'forbidden_title' => 'İcazə yoxdur',
+        'forbidden_message' => 'Bu səhifəyə giriş icazəniz yoxdur. Zəhmət olmasa administratorla əlaqə saxlayın.',
+        'not_found_title' => 'Səhifə tapılmadı',
+        'not_found_message' => 'Axtardığınız səhifə mövcud deyil və ya köçürülüb.',
+        'session_expired_title' => 'Sessiya bitdi',
+        'session_expired_message' => 'Təhlükəsizlik üçün səhifəni yeniləyin və yenidən daxil olun.',
+        'rate_limit_title' => 'Çox sorğu göndərdiniz',
+        'rate_limit_message' => 'Çox sayda sorğu göndərdiniz. Zəhmət olmasa bir neçə dəqiqə gözləyin və yenidən cəhd edin.',
+        'server_error_title' => 'Server xətası',
+        'server_error_message' => 'Gözlənilməz xəta baş verdi. Komandamız məlumatlandırıldı. Zəhmət olmasa bir az sonra yenidən cəhd edin.',
+        'maintenance_title' => 'Texniki xidmət',
+        'maintenance_message' => 'Sistem hazırda texniki xidmətdədir. Zəhmət olmasa bir az sonra yenidən cəhd edin.',
+    ],
 ];

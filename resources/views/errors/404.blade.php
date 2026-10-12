@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', __('messages.errors.not_found_title'))
+@section('code', '404')
+@section('icon', 'fa-magnifying-glass')
+@section('message', __('messages.errors.not_found_message'))

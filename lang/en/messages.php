@@ -1449,4 +1449,19 @@ return [
             'no-history' => 'Unknown',
         ],
     ],
+
+    'errors' => [
+        'forbidden_title' => 'Access denied',
+        'forbidden_message' => 'You do not have permission to access this page. Please contact your administrator.',
+        'not_found_title' => 'Page not found',
+        'not_found_message' => 'The page you are looking for does not exist or has been moved.',
+        'session_expired_title' => 'Session expired',
+        'session_expired_message' => 'For security reasons, please refresh the page and log in again.',
+        'rate_limit_title' => 'Too many requests',
+        'rate_limit_message' => 'You have sent too many requests. Please wait a few minutes and try again.',
+        'server_error_title' => 'Server error',
+        'server_error_message' => 'An unexpected error occurred. Our team has been notified. Please try again in a moment.',
+        'maintenance_title' => 'Maintenance',
+        'maintenance_message' => 'The system is currently under maintenance. Please try again shortly.',
+    ],
 ];

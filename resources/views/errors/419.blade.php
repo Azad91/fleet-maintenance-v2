@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', __('messages.errors.session_expired_title'))
+@section('code', '419')
+@section('icon', 'fa-clock-rotate-left')
+@section('message', __('messages.errors.session_expired_message'))

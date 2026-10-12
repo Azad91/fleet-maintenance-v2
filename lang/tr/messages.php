@@ -1446,4 +1446,18 @@ return [
             'no-history' => 'Bilinmiyor',
         ],
     ],
+    'errors' => [
+        'forbidden_title' => 'Erişim engellendi',
+        'forbidden_message' => 'Bu sayfaya erişim izniniz yok. Lütfen yöneticinizle iletişime geçin.',
+        'not_found_title' => 'Sayfa bulunamadı',
+        'not_found_message' => 'Aradığınız sayfa mevcut değil veya taşınmış.',
+        'session_expired_title' => 'Oturum süresi doldu',
+        'session_expired_message' => 'Güvenlik nedeniyle sayfayı yenileyin ve tekrar giriş yapın.',
+        'rate_limit_title' => 'Çok fazla istek',
+        'rate_limit_message' => 'Çok fazla istek gönderdiniz. Lütfen birkaç dakika bekleyip tekrar deneyin.',
+        'server_error_title' => 'Sunucu hatası',
+        'server_error_message' => 'Beklenmeyen bir hata oluştu. Ekibimiz bilgilendirildi. Lütfen biraz sonra tekrar deneyin.',
+        'maintenance_title' => 'Bakım',
+        'maintenance_message' => 'Sistem şu anda bakımda. Lütfen kısa süre sonra tekrar deneyin.',
+    ],
 ];

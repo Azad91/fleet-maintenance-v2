@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', __('messages.errors.rate_limit_title'))
+@section('code', '429')
+@section('icon', 'fa-hourglass-half')
+@section('message', __('messages.errors.rate_limit_message'))

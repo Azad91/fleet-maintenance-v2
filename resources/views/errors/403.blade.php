@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('title', __('messages.errors.forbidden_title'))
+@section('code', '403')
+@section('icon', 'fa-shield-halved')
+@section('message', __('messages.errors.forbidden_message'))
