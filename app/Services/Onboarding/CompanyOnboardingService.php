@@ -8,6 +8,7 @@ use App\Services\PivotAuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Handles atomic creation of a Company together with its first Director.
@@ -20,6 +21,15 @@ class CompanyOnboardingService
 
     public function createWithDirector(array $companyData, array $directorData): Company
     {
+        $existingUser = User::where('email', $directorData['email'])
+            ->whereNull('deleted_at')
+            ->first();
+
+        if ($existingUser && $existingUser->isDirector()) {
+            throw ValidationException::withMessages([
+                'director_email' => __('messages.super_admin.companies.director_already_assigned'),
+            ]);
+        }
         return DB::transaction(function () use ($companyData, $directorData) {
             $company = Company::create([
                 'name' => $companyData['name'],

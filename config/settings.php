@@ -11,7 +11,6 @@ return [
     'app_name' => env('APP_NAME', 'Fleet Maintenance'),
     'version' => '1.0.0',
     'pagination' => env('APP_PAGINATION', 25),
-    'timezone' => env('APP_TIMEZONE', 'Asia/Baku'),
     'locale' => env('APP_LOCALE', 'en'),
 
     /*

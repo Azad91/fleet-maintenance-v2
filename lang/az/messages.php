@@ -713,6 +713,7 @@ return [
         'eyebrow' => 'PLATFORMA İDARƏETMƏSİ',
 
         'companies' => [
+            'director_already_assigned' => 'Bu istifadəçi artıq başqa şirkətin direktorudur.',
             'title' => 'Şirkətlər',
             'subtitle' => 'Platformadakı şirkətləri idarə edin.',
             'new' => 'Yeni şirkət',
@@ -765,6 +766,7 @@ return [
         ],
 
         'garages' => [
+            'admin_already_assigned' => 'Bu istifadəçi artıq başqa qarajın adminidir.',
             'title' => 'Qarajlar',
             'subtitle' => 'Şirkətlər üzrə qarajları idarə edin.',
             'new' => 'Yeni qaraj',

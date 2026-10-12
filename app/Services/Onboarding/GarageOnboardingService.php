@@ -9,6 +9,7 @@ use App\Services\PivotAuditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Handles atomic creation of a Garage together with its first Admin
@@ -42,6 +43,15 @@ class GarageOnboardingService
 
     public function createWithAdmin(array $garageData, array $adminData): Garage
     {
+        $existingUser = User::where('email', $adminData['email'])
+            ->whereNull('deleted_at')
+            ->first();
+
+        if ($existingUser && $existingUser->isGarageAdmin()) {
+            throw ValidationException::withMessages([
+                'admin_email' => __('messages.super_admin.garages.admin_already_assigned'),
+            ]);
+        }
         return DB::transaction(function () use ($garageData, $adminData) {
             $garage = Garage::create([
                 'company_id' => $garageData['company_id'],

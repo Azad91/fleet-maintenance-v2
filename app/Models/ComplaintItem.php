@@ -6,10 +6,11 @@ use App\Models\Traits\Auditable;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ComplaintItem extends Model
 {
-    use Auditable, HasGarageScope;
+    use Auditable, HasGarageScope, SoftDeletes;
 
     protected $fillable = [
         'complaint_id',
