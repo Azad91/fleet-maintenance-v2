@@ -757,6 +757,7 @@ return [
 
             'director_name_required' => 'Director name is required.',
             'director_email_required' => 'Director email is required.',
+            'director_already_assigned' => 'This user is already a director of another company.',
             'director_email_taken' => 'This email is already in use.',
             'director_password_required' => 'Director password is required.',
             'director_pin_required' => 'Director PIN is required.',
@@ -814,6 +815,7 @@ return [
 
             'admin_name_required' => 'Admin name is required.',
             'admin_email_required' => 'Admin email is required.',
+            'admin_already_assigned' => 'This user is already an admin of another garage.',
             'admin_email_taken' => 'This email is already in use.',
             'admin_password_required' => 'Admin password is required.',
             'admin_pin_required' => 'Admin PIN is required.',

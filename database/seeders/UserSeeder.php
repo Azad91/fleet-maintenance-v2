@@ -95,6 +95,7 @@ class UserSeeder extends Seeder
             if (Str::contains($pwd, 'CHANGE_ME')) {
                 throw new \RuntimeException('SUPER_ADMIN_PASSWORD must be set to a strong value before seeding production.');
             }
+
             return (string) $pwd;
         }
 

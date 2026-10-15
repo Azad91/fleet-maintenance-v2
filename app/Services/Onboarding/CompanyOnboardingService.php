@@ -30,6 +30,7 @@ class CompanyOnboardingService
                 'director_email' => __('messages.super_admin.companies.director_already_assigned'),
             ]);
         }
+
         return DB::transaction(function () use ($companyData, $directorData) {
             $company = Company::create([
                 'name' => $companyData['name'],

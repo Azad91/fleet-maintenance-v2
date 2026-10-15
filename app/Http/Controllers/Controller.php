@@ -85,8 +85,6 @@ abstract class Controller
             ];
         }
 
-        $failures = is_iterable($failures) ? $failures : [];
-
         foreach ($failures as $failure) {
             $values = $failure->values();
             $report['failed'][] = [

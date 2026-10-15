@@ -4500,11 +4500,6 @@ parameters:
 			count: 4
 			path: app/Models/ComplaintItem.php
 
-		-
-			message: '#^Call to an undefined static method App\\Models\\ComplaintItem\:\:restored\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: app/Models/ComplaintItem.php
 
 		-
 			message: '#^Method App\\Models\\ComplaintItem\:\:auditBulkDelete\(\) has parameter \$ids with no value type specified in iterable type array\.$#'

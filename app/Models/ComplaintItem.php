@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\HasGarageScope;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class ComplaintItem extends Model
 {

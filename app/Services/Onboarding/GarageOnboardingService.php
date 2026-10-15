@@ -52,6 +52,7 @@ class GarageOnboardingService
                 'admin_email' => __('messages.super_admin.garages.admin_already_assigned'),
             ]);
         }
+
         return DB::transaction(function () use ($garageData, $adminData) {
             $garage = Garage::create([
                 'company_id' => $garageData['company_id'],
