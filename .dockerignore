@@ -62,6 +62,9 @@ Thumbs.db
 # Docker meta — not part of the application
 # ────────────────────────────────────────────────────────────────
 Dockerfile
+repopack-output.txt
+redirect
+user
 docker-compose*.yml
 .dockerignore
 

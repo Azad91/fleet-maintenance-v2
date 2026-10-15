@@ -7,6 +7,9 @@
 .env.production.local
 .phpactor.json
 .phpunit.result.cache
+repopack-output.txt
+redirect
+user
 /.codex
 /.cursor/
 /.idea

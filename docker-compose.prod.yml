@@ -6,6 +6,9 @@ services:
   # are idempotent: migrations only apply pending files and UserSeeder never
   # overwrites an existing administrator's password.
   migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ${FLEET_IMAGE:-fleet-v2-app:latest}
     container_name: fleet-prod-migrate
     restart: "no"
@@ -24,7 +27,26 @@ services:
         && php /var/www/html/artisan db:seed --class=Database\Seeders\UserSeeder --force --no-interaction
 
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ${FLEET_IMAGE:-fleet-v2-app:latest}
+    container_name: fleet-prod-app
+    restart: unless-stopped
+    # Production env faylı — sirləri bu fayldan oxuyur
+    env_file:
+      - .env.production
+    # Yalnız reverse proxy (nginx/traefik/caddy) bu porta qoşula bilər.
+    # Host-da birbaşa açmırıq — 127.0.0.1 ilə məhdudlaşdırırıq.
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./storage:/var/www/html/storage
+      # Removed public/storage mount to avoid symlink clash
+      # Read-only view of the backup directory so /health can read the
+      # freshness marker written by the backup sidecar. Mounted at a
+      # fixed path that config/health.php points to.
+      - ./backups:/var/www/html/storage/app/backups:ro
     container_name: fleet-prod-app
     restart: unless-stopped
 

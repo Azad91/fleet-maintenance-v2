@@ -15,7 +15,7 @@ services:
         condition: service_healthy
     volumes:
       - ./storage:/var/www/html/storage
-      - ./public/storage:/var/www/html/public/storage
+      # Removed public/storage mount to avoid symlink clash
       - ./app:/var/www/html/app
       # Do not mount bootstrap/cache from the host. Local Composer runs include
       # require-dev packages, while this image is installed with --no-dev;
