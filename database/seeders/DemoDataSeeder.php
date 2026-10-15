@@ -419,7 +419,7 @@ class DemoDataSeeder extends Seeder
                 [
                     'company_id' => $garage->company_id,
                     'bus_project' => $projects[$i % count($projects)],
-                    'vin' => strtoupper('VIN'.$garage->id.str_pad((string) $i, 11, '0', STR_PAD_LEFT)),
+                    'vin' => strtoupper(substr('VIN' . $garage->id . str_pad((string) $i, 11, '0', STR_PAD_LEFT), 0, 17)),
                     'uzunluq' => 12.5,
                     'route_number' => $routes[$i % count($routes)],
                     'engine_number' => 'ENG-'.str_pad((string) $i, 6, '0', STR_PAD_LEFT),

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * Seeds the platform-level SuperAdmin account.
@@ -87,17 +88,23 @@ class UserSeeder extends Seeder
      */
     private function resolveSuperAdminPassword(): string
     {
-        if ($env = env('SUPER_ADMIN_PASSWORD')) {
-            return (string) $env;
+        // Prefer config value, fallback to env var.
+        $pwd = config('settings.super_admin_password') ?? env('SUPER_ADMIN_PASSWORD');
+        if ($pwd) {
+            // Disallow placeholder values that indicate an unset password.
+            if (Str::contains($pwd, 'CHANGE_ME')) {
+                throw new \RuntimeException('SUPER_ADMIN_PASSWORD must be set to a strong value before seeding production.');
+            }
+            return (string) $pwd;
         }
 
+        // Local or testing environments may use a simple default password.
         if (app()->environment(['local', 'testing'])) {
             return 'password';
         }
 
-        throw new \RuntimeException(
-            'SUPER_ADMIN_PASSWORD must be set before seeding a non-local environment.'
-        );
+        // In all other cases the password must be explicitly provided.
+        throw new \RuntimeException('SUPER_ADMIN_PASSWORD must be set before seeding a non-local environment.');
     }
 
     /**
