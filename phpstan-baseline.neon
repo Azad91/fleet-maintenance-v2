@@ -6031,17 +6031,6 @@ parameters:
 			count: 1
 			path: app/Models/WarehouseTransfer.php
 
-		-
-			message: '#^Method App\\Models\\WarehouseTransferItem\:\:transfer\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Models/WarehouseTransferItem.php
-
-		-
-			message: '#^Method App\\Models\\WarehouseTransferItem\:\:warehouse\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Models/WarehouseTransferItem.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\BusDailyStatus\:\:\$created_by\.$#'

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransferStatus;
 use App\Http\Requests\WarehouseStoreRequest;
 use App\Http\Requests\WarehouseUpdateRequest;
 use App\Imports\WarehouseImport;
 use App\Models\Warehouse;
+use App\Models\WarehouseTransferItem;
 use App\Services\GarageContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -129,6 +131,20 @@ class WarehouseController extends Controller
         $warehouse = Warehouse::findOrFail($id);
 
         $this->authorize('delete', $warehouse);
+
+        $hasActiveTransfers = WarehouseTransferItem::where('warehouse_id', $warehouse->id)
+            ->whereHas('transfer', function ($query) {
+                $query->whereIn('status', [
+                    TransferStatus::Draft->value,
+                    TransferStatus::Dispatched->value,
+                    TransferStatus::Disputed->value,
+                ]);
+            })
+            ->exists();
+
+        if ($hasActiveTransfers) {
+            return back()->with('error', __('messages.flash.cannot_delete_warehouse_active_transfer'));
+        }
 
         $warehouse->delete();
 

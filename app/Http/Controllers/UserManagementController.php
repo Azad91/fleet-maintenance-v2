@@ -59,6 +59,20 @@ class UserManagementController extends Controller
 
         $data = $this->validateUser($request, null, true);
 
+        if ($data['role'] === 'admin') {
+            $hasActiveAdmin = \Illuminate\Support\Facades\DB::table('garage_user')
+                ->where('garage_id', $garageId)
+                ->where('role', 'admin')
+                ->where('is_active', true)
+                ->exists();
+
+            if ($hasActiveAdmin) {
+                return back()
+                    ->withErrors(['role' => __('messages.flash.garage_already_has_admin')])
+                    ->withInput();
+            }
+        }
+
         $this->userService->createUserWithGarageRole($data, $garageId, true);
 
         return redirect()->route('users.index')
@@ -119,6 +133,21 @@ class UserManagementController extends Controller
 
         $data = $this->validateUser($request, $user, false);
 
+        if ($data['role'] === 'admin' && ! empty($data['is_active'])) {
+            $hasOtherActiveAdmin = \Illuminate\Support\Facades\DB::table('garage_user')
+                ->where('garage_id', $garageId)
+                ->where('role', 'admin')
+                ->where('is_active', true)
+                ->where('user_id', '!=', $user->id)
+                ->exists();
+
+            if ($hasOtherActiveAdmin) {
+                return back()
+                    ->withErrors(['role' => __('messages.flash.garage_already_has_admin')])
+                    ->withInput();
+            }
+        }
+
         if ($user->is(auth()->user())) {
             if ($data['role'] !== 'admin') {
                 return back()
@@ -171,7 +200,7 @@ class UserManagementController extends Controller
                     ->ignore($user?->id)
                     ->whereNull('deleted_at'),
             ],
-            'pin' => ['nullable', 'string', 'digits:4'],
+            'pin' => ['nullable', 'string', new \App\Rules\StrongPin],
         ]);
     }
 

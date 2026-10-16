@@ -44,7 +44,7 @@ class ChangePinController extends Controller
     {
         $validated = $request->validate([
             'current_pin' => ['required', 'string', 'digits_between:4,6'],
-            'pin' => ['required', 'string', 'digits_between:4,6', 'confirmed', 'different:current_pin'],
+            'pin' => ['required', 'string', new \App\Rules\StrongPin, 'confirmed', 'different:current_pin'],
             'pin_confirmation' => ['required', 'string', 'digits_between:4,6'],
         ], [
             'pin.different' => __('messages.pin_change.same_as_current'),

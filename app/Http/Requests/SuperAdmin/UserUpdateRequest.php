@@ -29,7 +29,7 @@ class UserUpdateRequest extends SuperAdminRequest
                     ->ignore($userId)
                     ->whereNull('deleted_at'),
             ],
-            'pin' => ['nullable', 'string', 'digits_between:4,6'],
+            'pin' => ['nullable', 'string', new \App\Rules\StrongPin],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

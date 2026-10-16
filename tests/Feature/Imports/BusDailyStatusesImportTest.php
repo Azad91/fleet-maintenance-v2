@@ -48,7 +48,7 @@ class BusDailyStatusesImportTest extends TestCase
         return new BusDailyStatusesImport($this->garage->id, $this->company->id);
     }
 
-    protected function invokeResolveDate(mixed $value): string
+    protected function invokeResolveDate(mixed $value): ?string
     {
         $import = $this->makeImport();
         $reflection = new \ReflectionMethod($import, 'resolveDate');
@@ -100,9 +100,9 @@ class BusDailyStatusesImportTest extends TestCase
         $this->assertSame(now()->toDateString(), $this->invokeResolveDate(''));
     }
 
-    public function test_invalid_string_defaults_to_today(): void
+    public function test_invalid_string_returns_null(): void
     {
-        $this->assertSame(now()->toDateString(), $this->invokeResolveDate('not-a-date'));
+        $this->assertNull($this->invokeResolveDate('not-a-date'));
     }
 
     // ==================================================================

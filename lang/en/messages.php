@@ -110,6 +110,8 @@ return [
         'tab_email' => 'Email',
         'tab_pin' => 'Code + PIN',
         'employee_code_placeholder' => 'e.g.: ANB-001',
+        'pin_too_weak' => 'This PIN is too common or easily guessed. Please choose a stronger PIN.',
+        'pin_digits_between' => 'The PIN must be between 4 and 6 digits.',
     ],
 
     // ==================== PIN CHANGE ====================
@@ -705,6 +707,7 @@ return [
             'no_km_columns' => 'No KM column has quantity > 0',
             'employee_code_empty' => 'Employee code is empty',
             'previous_row_failed' => 'A previous row in this card failed — the card was not created.',
+            'invalid_date' => 'Invalid date format (:date)',
         ],
     ],
 
@@ -1219,6 +1222,8 @@ return [
         'invalid_status_transition' => "Cannot transition from ':from' to ':to'.",
         'stock_item_not_found' => "Item with code ':code' not found in the current garage's warehouse.",
         'stock_insufficient' => "Not enough ':name' in stock (required: :requested, available: :available).",
+        'cannot_delete_warehouse_active_transfer' => 'Cannot delete: this item has active (pending, in-transit, or disputed) transfers.',
+        'garage_already_has_admin' => 'This garage already has an active admin. Only one active admin per garage is allowed.',
         'stock_insufficient_generic' => 'Insufficient stock.',
         'service_vehicle_required' => 'A service vehicle must be selected for road complaints.',
         'service_vehicle_not_found' => 'The selected service vehicle was not found.',
@@ -1450,6 +1455,11 @@ return [
             'ok' => 'OK',
             'no-history' => 'Unknown',
         ],
+    ],
+
+    'demo' => [
+        'read_only_mode' => 'Modifications are restricted in demo mode.',
+        'expired' => 'Your demo account has expired.',
     ],
 
     'errors' => [

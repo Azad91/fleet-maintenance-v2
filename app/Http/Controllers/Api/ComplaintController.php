@@ -25,7 +25,7 @@ class ComplaintController extends Controller
     {
         Gate::authorize('viewAny', Complaint::class);
 
-        $perPage = min((int) $request->input('per_page', 15), 100);
+        $perPage = max(1, min((int) $request->input('per_page', 15), 100));
 
         $query = Complaint::with(['bus', 'items']);
 

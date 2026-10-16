@@ -361,7 +361,7 @@ class WarehouseTransferService
                 ]);
             }
 
-            $locked->load('items');
+            $locked->load('items.warehouse');
 
             // ── Deterministic lock order for source warehouses ──
             $sortedItems = $locked->items
@@ -370,13 +370,33 @@ class WarehouseTransferService
 
             foreach ($sortedItems as $item) {
                 $warehouse = Warehouse::withoutGlobalScopes()
+                    ->withTrashed()
                     ->where('id', $item->warehouse_id)
+                    ->where('garage_id', $locked->from_garage_id)
                     ->lockForUpdate()
                     ->first();
 
-                if ($warehouse) {
-                    $warehouse->increment('quantity', $item->declared_quantity);
+                if (! $warehouse && $item->warehouse?->code) {
+                    $warehouse = Warehouse::withoutGlobalScopes()
+                        ->where('code', $item->warehouse->code)
+                        ->where('garage_id', $locked->from_garage_id)
+                        ->lockForUpdate()
+                        ->first();
                 }
+
+                if (! $warehouse) {
+                    throw ValidationException::withMessages([
+                        'items' => __('messages.flash.stock_item_not_found', [
+                            'code' => $item->warehouse->code,
+                        ]),
+                    ]);
+                }
+
+                if ($warehouse->trashed()) {
+                    $warehouse->restore();
+                }
+
+                $warehouse->increment('quantity', $item->declared_quantity);
             }
 
             $locked->update([

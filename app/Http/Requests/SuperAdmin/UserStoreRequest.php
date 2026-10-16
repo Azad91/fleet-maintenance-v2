@@ -27,7 +27,7 @@ class UserStoreRequest extends SuperAdminRequest
                 'max:50',
                 Rule::unique('users', 'employee_code')->whereNull('deleted_at'),
             ],
-            'pin' => ['nullable', 'string', 'digits_between:4,6'],
+            'pin' => ['nullable', 'string', new \App\Rules\StrongPin],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

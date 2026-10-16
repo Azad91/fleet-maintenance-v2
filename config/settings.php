@@ -12,6 +12,8 @@ return [
     'version' => '1.0.0',
     'pagination' => env('APP_PAGINATION', 25),
     'locale' => env('APP_LOCALE', 'en'),
+    'super_admin_email' => env('SUPER_ADMIN_EMAIL', 'admin@fleet.com'),
+    'super_admin_password' => env('SUPER_ADMIN_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------

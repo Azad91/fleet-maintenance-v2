@@ -56,6 +56,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             App\Http\Middleware\SetLocale::class,
             App\Http\Middleware\EnsureActiveUser::class,
+            App\Http\Middleware\DemoReadOnly::class,
+        ]);
+
+        $middleware->api(append: [
+            App\Http\Middleware\DemoReadOnly::class,
         ]);
 
         $middleware->alias([
@@ -68,6 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'director' => App\Http\Middleware\EnsureDirector::class,
             'active.user' => App\Http\Middleware\EnsureActiveUser::class,
             '2fa.verified' => App\Http\Middleware\EnsureTwoFactorVerified::class,
+            'demo.readonly' => App\Http\Middleware\DemoReadOnly::class,
         ]);
 
         // ── MIDDLEWARE PRIORITY ───────────────────────────────────────────────

@@ -419,10 +419,24 @@ class ComplaintsImport extends AbstractImport implements SkipsOnFailure, ToColle
      */
     protected function resolveEmployeeId(array $rowArray): ?int
     {
-        // Explicit numeric id — trust it without caching (it is already
-        // the resolved value).
+        // Explicit numeric id — validate that it belongs to the current garage and is not deleted.
         if (! empty($rowArray['employee_id']) && is_numeric($rowArray['employee_id'])) {
-            return (int) $rowArray['employee_id'];
+            $employeeId = (int) $rowArray['employee_id'];
+            $cacheKey = 'id:'.$employeeId;
+            if (array_key_exists($cacheKey, $this->employeeCache)) {
+                return $this->employeeCache[$cacheKey];
+            }
+
+            $valid = Employee::withoutGlobalScopes()
+                ->whereKey($employeeId)
+                ->when($this->garageId, fn ($q) => $q->where('garage_id', $this->garageId))
+                ->whereNull('deleted_at')
+                ->exists();
+
+            $resolved = $valid ? $employeeId : null;
+            $this->employeeCache[$cacheKey] = $resolved;
+
+            return $resolved;
         }
 
         $rawName = trim((string) (

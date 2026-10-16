@@ -186,10 +186,14 @@ class UserController extends Controller
     }
 
     /**
-     * Generate a random 4-digit PIN.
+     * Generate a random 6-digit PIN.
      */
     private function generatePin(): string
     {
-        return (string) random_int(1000, 9999);
+        do {
+            $pin = (string) random_int(100000, 999999);
+        } while (in_array($pin, \App\Rules\StrongPin::WEAK_PINS, true) || count(array_unique(str_split($pin))) === 1);
+
+        return $pin;
     }
 }

@@ -43,6 +43,20 @@ class UserService
                 'email_verified_at' => now(), // ✅ Auto-verified: qaraj admini yaradıb
             ])->save();
 
+            if ($data['role'] === 'admin' && $isActive) {
+                $hasActiveAdmin = DB::table('garage_user')
+                    ->where('garage_id', $garageId)
+                    ->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->exists();
+
+                if ($hasActiveAdmin) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'role' => __('messages.flash.garage_already_has_admin'),
+                    ]);
+                }
+            }
+
             $user->garages()->attach($garageId, [
                 'role' => $data['role'],
                 'is_active' => $isActive,
@@ -93,6 +107,21 @@ class UserService
 
             $user->update($userUpdate);
 
+            if ($data['role'] === 'admin' && ! empty($data['is_active'])) {
+                $hasOtherActiveAdmin = DB::table('garage_user')
+                    ->where('garage_id', $garageId)
+                    ->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->where('user_id', '!=', $user->id)
+                    ->exists();
+
+                if ($hasOtherActiveAdmin) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'role' => __('messages.flash.garage_already_has_admin'),
+                    ]);
+                }
+            }
+
             $user->garages()->updateExistingPivot($garageId, [
                 'role' => $data['role'],
                 'is_active' => $data['is_active'],
@@ -137,10 +166,14 @@ class UserService
     }
 
     /**
-     * Generate a random 4-digit PIN.
+     * Generate a random 6-digit PIN.
      */
     public function generatePin(): string
     {
-        return (string) random_int(1000, 9999);
+        do {
+            $pin = (string) random_int(100000, 999999);
+        } while (in_array($pin, \App\Rules\StrongPin::WEAK_PINS, true) || count(array_unique(str_split($pin))) === 1);
+
+        return $pin;
     }
 }

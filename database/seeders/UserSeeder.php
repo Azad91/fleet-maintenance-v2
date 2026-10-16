@@ -40,8 +40,10 @@ class UserSeeder extends Seeder
     // ============================================================
     private function seedSuperAdmin(): void
     {
+        $email = (string) config('settings.super_admin_email', 'admin@fleet.com');
+
         $existing = User::withoutGlobalScopes()
-            ->where('email', 'admin@fleet.com')
+            ->where('email', $email)
             ->first();
 
         // Idempotent: never overwrite an existing SuperAdmin's password.
@@ -49,7 +51,7 @@ class UserSeeder extends Seeder
         if ($existing) {
             if (! $existing->isSuperAdmin()) {
                 $existing->promoteToSuperAdmin()->save();
-                $this->command->info('Existing user admin@fleet.com promoted to Super Admin.');
+                $this->command->info("Existing user {$email} promoted to Super Admin.");
             } else {
                 $this->command->line('Super Admin already exists — password left untouched.');
             }
@@ -61,7 +63,7 @@ class UserSeeder extends Seeder
 
         $superAdmin = User::create([
             'name' => 'Super Admin',
-            'email' => 'admin@fleet.com',
+            'email' => $email,
             'password' => Hash::make($password),
             'is_active' => true,
             // Admin-created users are considered pre-verified. Self-registration

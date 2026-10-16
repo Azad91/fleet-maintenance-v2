@@ -110,6 +110,8 @@ return [
         'tab_email' => 'E-posta',
         'tab_pin' => 'Kod + PIN',
         'employee_code_placeholder' => 'Örn: ANB-001',
+        'pin_too_weak' => 'Bu PIN çok zayıf ve kolay tahmin edilebilir. Lütfen daha güçlü bir PIN seçin.',
+        'pin_digits_between' => 'PIN 4 ile 6 basamak arasında olmalıdır.',
     ],
 
     // ==================== PIN CHANGE ====================
@@ -705,6 +707,7 @@ return [
             'no_km_columns' => 'Hiçbir KM sütununda miktar > 0 değil',
             'employee_code_empty' => 'Personel kodu boş',
             'previous_row_failed' => 'Bu karttaki önceki bir satır başarısız oldu — kart oluşturulmadı.',
+            'invalid_date' => 'Geçersiz tarih formatı (:date)',
         ],
     ],
 
@@ -1217,6 +1220,8 @@ return [
         'invalid_status_transition' => "':from' durumundan ':to' durumuna geçilemez.",
         'stock_item_not_found' => "Mevcut garajın deposunda ':code' kodlu ürün bulunamadı.",
         'stock_insufficient' => "Stokta yeterli ':name' yok (gerekli: :requested, mevcut: :available).",
+        'cannot_delete_warehouse_active_transfer' => 'Silinemez: Bu malzeme için aktif (bekleyen, yolda veya ihtilaflı) transfer bulunmaktadır.',
+        'garage_already_has_admin' => 'Bu garajın zaten aktif bir yöneticisi var. Garaj başına yalnızca bir aktif yöneticiye izin verilir.',
         'stock_insufficient_generic' => 'Yetersiz stok.',
         'service_vehicle_required' => 'Yol şikayetleri için bir servis aracı seçilmelidir.',
         'service_vehicle_not_found' => 'Seçilen servis aracı bulunamadı.',
@@ -1446,6 +1451,12 @@ return [
             'no-history' => 'Bilinmiyor',
         ],
     ],
+
+    'demo' => [
+        'read_only_mode' => 'Demo modunda değişiklik yapılması kısıtlanmıştır.',
+        'expired' => 'Demo hesabınızın süresi doldu.',
+    ],
+
     'errors' => [
         'forbidden_title' => 'Erişim engellendi',
         'forbidden_message' => 'Bu sayfaya erişim izniniz yok. Lütfen yöneticinizle iletişime geçin.',

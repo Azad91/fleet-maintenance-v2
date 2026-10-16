@@ -47,16 +47,28 @@ class UserPolicy
             return true;
         }
 
+        if ($targetUser->isSuperAdmin()) {
+            return false;
+        }
+
         return $this->targetSharesCurrentGarage($targetUser);
     }
 
     public function delete(User $user, User $targetUser): bool
     {
+        if ($targetUser->isSuperAdmin() && ! $user->isSuperAdmin()) {
+            return false;
+        }
+
         if ($user->isSuperAdmin()) {
             return true;
         }
 
         if (! $user->hasGarageRole(RoleEnum::ADMIN->value)) {
+            return false;
+        }
+
+        if ($targetUser->is($user)) {
             return false;
         }
 

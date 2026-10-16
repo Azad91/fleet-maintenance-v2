@@ -15,14 +15,15 @@ class WarehouseController extends Controller
     {
         Gate::authorize('viewAny', Warehouse::class);
 
-        $perPage = min((int) $request->input('per_page', 15), 100);
+        $perPage = max(1, min((int) $request->input('per_page', 15), 100));
 
         $query = Warehouse::query();
 
         if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('code', 'ILIKE', "%{$request->search}%")
-                    ->orWhere('name', 'ILIKE', "%{$request->search}%");
+            $search = addcslashes($request->search, '%_\\');
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'ILIKE', "%{$search}%")
+                    ->orWhere('name', 'ILIKE', "%{$search}%");
             });
         }
 
@@ -87,15 +88,17 @@ class WarehouseController extends Controller
     {
         Gate::authorize('viewAny', Warehouse::class);
 
-        $perPage = min((int) $request->input('per_page', 15), 100);
+        $perPage = max(1, min((int) $request->input('per_page', 15), 100));
 
         $query = Warehouse::query();
 
         if ($request->code) {
-            $query->where('code', 'ILIKE', "%{$request->code}%");
+            $escapedCode = addcslashes($request->code, '%_\\');
+            $query->where('code', 'ILIKE', "%{$escapedCode}%");
         }
         if ($request->name) {
-            $query->where('name', 'ILIKE', "%{$request->name}%");
+            $escapedName = addcslashes($request->name, '%_\\');
+            $query->where('name', 'ILIKE', "%{$escapedName}%");
         }
 
         $warehouses = $query->paginate($perPage);

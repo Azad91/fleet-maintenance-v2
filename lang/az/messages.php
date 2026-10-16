@@ -110,6 +110,8 @@ return [
         'tab_email' => 'Email',
         'tab_pin' => 'Kod + PIN',
         'employee_code_placeholder' => 'məs.: ANB-001',
+        'pin_too_weak' => 'Bu PIN çox sadə və asan təxmin ediləndir. Daha etibarlı PIN seçin.',
+        'pin_digits_between' => 'PIN 4-6 rəqəmdən ibarət olmalıdır.',
     ],
 
     // ==================== PIN CHANGE ====================
@@ -705,6 +707,7 @@ return [
             'no_km_columns' => 'Heç bir KM sütununda miqdar > 0 deyil',
             'employee_code_empty' => 'İşçi kodu boşdur',
             'previous_row_failed' => 'Bu kartda əvvəlki sətir uğursuz oldu — kart yaradılmadı.',
+            'invalid_date' => 'Tarix formatı düzgün deyil (:date)',
         ],
     ],
 
@@ -1223,6 +1226,8 @@ return [
         'invalid_status_transition' => "':from' statusundan ':to' statusuna keçid icazəli deyil.",
         'stock_item_not_found' => "':code' kodlu detal cari qarajın anbarında tapılmadı.",
         'stock_insufficient' => "Anbarda kifayət qədər ':name' yoxdur (tələb: :requested, mövcud: :available).",
+        'cannot_delete_warehouse_active_transfer' => 'Silmək mümkün deyil: bu mal üzrə aktiv (gözləyən, yolda və ya mübahisəli) köçürmə var.',
+        'garage_already_has_admin' => 'Bu qarajın artıq aktiv admini var. Eyni qarajda yalnız bir aktiv admin ola bilər.',
         'stock_insufficient_generic' => 'Anbarda kifayət qədər detal yoxdur.',
         'service_vehicle_required' => 'Yol şikayətləri üçün servis maşını seçilməlidir.',
         'service_vehicle_not_found' => 'Seçilmiş servis maşını tapılmadı.',
@@ -1456,6 +1461,12 @@ return [
             'no-history' => 'Məlum deyil',
         ],
     ],
+
+    'demo' => [
+        'read_only_mode' => 'Demo rejimində dəyişiklik etmək məhdudlaşdırılıb.',
+        'expired' => 'Demo hesabınızın istifadə müddəti bitib.',
+    ],
+
     'errors' => [
         'forbidden_title' => 'İcazə yoxdur',
         'forbidden_message' => 'Bu səhifəyə giriş icazəniz yoxdur. Zəhmət olmasa administratorla əlaqə saxlayın.',

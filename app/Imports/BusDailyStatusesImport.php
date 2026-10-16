@@ -95,7 +95,14 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
                 continue;
             }
 
-            $date = $this->resolveDate($row['date'] ?? $row['tarix'] ?? null);
+            $rawDate = $row['date'] ?? $row['tarix'] ?? null;
+            $date = $this->resolveDate($rawDate);
+
+            if ($date === null) {
+                $this->recordSkip($currentRow, $dqn, __('messages.imports.reasons.invalid_date', ['date' => (string) $rawDate]));
+
+                continue;
+            }
 
             $key = $bus->id.'|'.$date;
 
@@ -202,8 +209,12 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
      * always parsed as 15 September 2026, independent of the PHP
      * locale or Carbon's default parsing rules.
      */
-    private function resolveDate(mixed $value): string
+    private function resolveDate(mixed $value): ?string
     {
+        if ($value === null || (is_string($value) && trim($value) === '')) {
+            return now()->toDateString();
+        }
+
         if ($value instanceof \DateTimeInterface) {
             return Carbon::instance($value)->toDateString();
         }
@@ -216,33 +227,36 @@ class BusDailyStatusesImport extends AbstractImport implements ToCollection, Wit
                     ExcelDate::excelToDateTimeObject((float) $value)
                 )->toDateString();
             } catch (\Throwable $e) {
-                // Fall through to today
+                return null;
             }
         }
 
-        if (is_string($value) && trim($value) !== '') {
+        if (is_string($value)) {
             $value = trim($value);
 
             // Explicit day-first formats: d.m.Y, d/m/Y, d-m-Y.
             if (preg_match('/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/', $value, $m)) {
                 try {
-                    return Carbon::createFromDate(
-                        (int) $m[3],
-                        (int) $m[2],
-                        (int) $m[1]
-                    )->toDateString();
+                    $year = (int) $m[3];
+                    $month = (int) $m[2];
+                    $day = (int) $m[1];
+                    if (checkdate($month, $day, $year)) {
+                        return Carbon::createFromDate($year, $month, $day)->toDateString();
+                    }
+
+                    return null;
                 } catch (\Throwable $e) {
-                    // Fall through to generic parse
+                    return null;
                 }
             }
 
             try {
                 return Carbon::parse($value)->toDateString();
             } catch (\Throwable $e) {
-                // Fall through to today
+                return null;
             }
         }
 
-        return now()->toDateString();
+        return null;
     }
 }

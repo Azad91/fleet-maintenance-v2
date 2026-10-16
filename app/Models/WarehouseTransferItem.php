@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One line of a warehouse transfer — "N units of item X".
@@ -27,7 +28,10 @@ class WarehouseTransferItem extends Model
         'received_quantity' => 'integer',
     ];
 
-    public function transfer()
+    /**
+     * @return BelongsTo<WarehouseTransfer, $this>
+     */
+    public function transfer(): BelongsTo
     {
         return $this->belongsTo(WarehouseTransfer::class, 'transfer_id');
     }
@@ -36,8 +40,10 @@ class WarehouseTransferItem extends Model
      * The source warehouse row. Use withoutGlobalScopes() when
      * reading from a transfer that may belong to a different garage
      * than the current context.
+     *
+     * @return BelongsTo<Warehouse, $this>
      */
-    public function warehouse()
+    public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }

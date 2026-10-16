@@ -103,6 +103,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'current_garage_id',
         'current_company_id',
         'last_selected_garage_at',
+        'is_demo',
+        'demo_expires_at',
         // 2FA columns are NOT fillable — set them only through
         // twoFactorManager operations in the setup controller.
     ];
@@ -139,6 +141,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $attributes = [
         'role' => RoleEnum::USER->value,
         'is_active' => true,
+        'is_demo' => false,
     ];
 
     protected $hidden = [
@@ -155,9 +158,21 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_secret' => 'encrypted',
         'two_factor_recovery_codes' => 'encrypted:array',
         'two_factor_confirmed_at' => 'datetime',
+        'is_demo' => 'boolean',
+        'demo_expires_at' => 'datetime',
     ];
 
     // ==================== GLOBAL ROLE CHECKS ====================
+
+    public function isDemo(): bool
+    {
+        return (bool) $this->is_demo;
+    }
+
+    public function isDemoExpired(): bool
+    {
+        return $this->isDemo() && $this->demo_expires_at !== null && $this->demo_expires_at->isPast();
+    }
 
     public function isSuperAdmin(): bool
     {

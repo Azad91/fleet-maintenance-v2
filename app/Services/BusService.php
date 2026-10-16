@@ -54,10 +54,11 @@ class BusService
         $query = Bus::with($this->busListWith());
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('dqn', 'ILIKE', "%{$search}%")
-                    ->orWhere('route_number', 'ILIKE', "%{$search}%")
-                    ->orWhere('bus_project', 'ILIKE', "%{$search}%");
+            $escaped = $this->escapeLike($search);
+            $query->where(function ($q) use ($escaped) {
+                $q->where('dqn', 'ILIKE', "%{$escaped}%")
+                    ->orWhere('route_number', 'ILIKE', "%{$escaped}%")
+                    ->orWhere('bus_project', 'ILIKE', "%{$escaped}%");
             });
         }
 
@@ -80,7 +81,8 @@ class BusService
 
         foreach ($textFields as $field) {
             if (! empty($filters[$field])) {
-                $query->where($field, 'ILIKE', '%'.$filters[$field].'%');
+                $escaped = $this->escapeLike((string) $filters[$field]);
+                $query->where($field, 'ILIKE', '%'.$escaped.'%');
             }
         }
 
@@ -94,9 +96,10 @@ class BusService
         // UI actually offers: the user types "12" and expects every
         // bus whose length renders as "...12..." to appear.
         if (! empty($filters['uzunluq'])) {
+            $escaped = $this->escapeLike((string) $filters['uzunluq']);
             $query->whereRaw(
                 'CAST(uzunluq AS TEXT) ILIKE ?',
-                ['%'.$filters['uzunluq'].'%']
+                ['%'.$escaped.'%']
             );
         }
 
@@ -190,14 +193,16 @@ class BusService
 
         foreach ($searchableFields as $field) {
             if (! empty($filters[$field])) {
-                $query->where($field, 'ILIKE', '%'.$filters[$field].'%');
+                $escaped = $this->escapeLike((string) $filters[$field]);
+                $query->where($field, 'ILIKE', '%'.$escaped.'%');
             }
         }
 
         if (! empty($filters['uzunluq'])) {
+            $escaped = $this->escapeLike((string) $filters['uzunluq']);
             $query->whereRaw(
                 'CAST(uzunluq AS TEXT) ILIKE ?',
-                ['%'.$filters['uzunluq'].'%']
+                ['%'.$escaped.'%']
             );
         }
 
@@ -220,5 +225,10 @@ class BusService
         }
 
         return $totalDeleted;
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return addcslashes($value, '%_\\');
     }
 }
