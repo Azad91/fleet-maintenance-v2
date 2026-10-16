@@ -24,7 +24,7 @@ services:
       - -c
       - >-
         php /var/www/html/artisan migrate --force --no-interaction
-        && php /var/www/html/artisan db:seed --class=Database\Seeders\UserSeeder --force --no-interaction
+        && php /var/www/html/artisan db:seed --class='Database\Seeders\UserSeeder' --force --no-interaction
 
   app:
     build:

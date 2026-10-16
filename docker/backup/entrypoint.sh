@@ -22,16 +22,16 @@ BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 # Cron does NOT source any shell profile, so anything the backup script
 # reads must live here.
 cat > /etc/environment <<EOF
-POSTGRES_USER=${POSTGRES_USER}
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-POSTGRES_DB=${POSTGRES_DB}
-BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS}
+POSTGRES_USER="${POSTGRES_USER}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
+POSTGRES_DB="${POSTGRES_DB}"
+BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS}"
 EOF
 
 # Install the crontab. 02:00 by default, but operators can override the
 # hour via BACKUP_HOUR without touching the repo.
 cat > /etc/crontabs/root <<EOF
-0 ${BACKUP_HOUR} * * * /usr/local/bin/backup-run.sh >> /var/log/backup.log 2>&1
+0 ${BACKUP_HOUR} * * * /usr/local/bin/backup-run.sh 2>&1 | tee -a /var/log/backup.log > /proc/1/fd/1
 EOF
 
 echo "[$(date)] Backup sidecar starting — cron hour=${BACKUP_HOUR}, retention=${BACKUP_RETENTION_DAYS}d"

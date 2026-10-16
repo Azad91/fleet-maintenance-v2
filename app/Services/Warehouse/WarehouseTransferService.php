@@ -593,7 +593,15 @@ class WarehouseTransferService
 
         return DB::transaction(function () use ($data, $companyId, $type) {
             // SECURITY: same-vehicle guard as in create().
-            if ($type->isToServiceVehicle() && ! empty($data['to_service_vehicle_id'])) {
+            if ($type->isToServiceVehicle()) {
+                if (empty($data['to_service_vehicle_id'])) {
+                    throw ValidationException::withMessages([
+                        'to_service_vehicle_id' => __('validation.required', [
+                            'attribute' => __('messages.transfers.to_service_vehicle'),
+                        ]),
+                    ]);
+                }
+
                 $vehicleExists = \App\Models\ServiceVehicle::withoutGlobalScopes()
                     ->whereKey($data['to_service_vehicle_id'])
                     ->where('garage_id', $data['from_garage_id'])
@@ -635,7 +643,7 @@ class WarehouseTransferService
                 'company_id' => $companyId,
                 'from_garage_id' => $data['from_garage_id'],
                 'to_garage_id' => null,
-                'to_service_vehicle_id' => $type->isToServiceVehicle() ? ($data['to_service_vehicle_id'] ?? null) : null,
+                'to_service_vehicle_id' => $type->isToServiceVehicle() ? $data['to_service_vehicle_id'] : null,
                 'type' => $type->value,
                 'status' => TransferStatus::Received->value,
                 'declared_total' => $total,

@@ -394,9 +394,14 @@
             let html = '<option value="">'
                 + @json(__('messages.complaints.select_service')) + '</option>';
 
+            const selectedKm = select.getAttribute('data-selected');
+            let hasMatch = false;
+
             if (data.intervals && data.intervals.length > 0) {
                 data.intervals.forEach(item => {
-                    html += `<option value="${item.km}">${item.label}</option>`;
+                    const isSelected = selectedKm && String(selectedKm) === String(item.km);
+                    if (isSelected) hasMatch = true;
+                    html += `<option value="${item.km}" ${isSelected ? 'selected' : ''}>${item.label}</option>`;
                 });
             } else {
                 html = '<option value="">'
@@ -404,6 +409,10 @@
             }
 
             select.innerHTML = html;
+
+            if (hasMatch) {
+                onServiceChange();
+            }
         })
         .catch(err => {
             console.error('Interval load error:', err);
@@ -617,16 +626,18 @@
 
     function removeDetail(button) {
         const items = document.querySelectorAll('.detail-item');
+        const item = button.closest('.detail-item');
 
         if (items.length > 1) {
-            button.closest('.detail-item').remove();
+            item.remove();
         } else {
-            const item = button.closest('.detail-item');
-
-            item.querySelectorAll('input').forEach(i => {
-                if (i.name && i.name.includes('used_quantity')) {
-                    i.value = '0';
+            item.querySelectorAll('input, select').forEach(el => {
+                if (el.name && el.name.includes('shikayet_index')) {
+                    el.value = '0';
+                } else {
+                    el.value = '';
                 }
+                el.classList.remove('is-valid', 'is-invalid');
             });
         }
     }

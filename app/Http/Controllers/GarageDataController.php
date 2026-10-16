@@ -33,7 +33,7 @@ class GarageDataController extends Controller
 
     public function detailByCode(string $code)
     {
-        $detail = Warehouse::where('code', $code)->first();
+        $detail = Warehouse::activeStock()->where('code', $code)->first();
 
         return response()->json([
             'detallar_name' => $detail?->name,
@@ -210,6 +210,7 @@ class GarageDataController extends Controller
                 $warehouse = Warehouse::withoutGlobalScopes()
                     ->where('code', $part->part_code)
                     ->where('garage_id', $bus->garage_id)
+                    ->where('is_quarantine', false)
                     ->whereNull('deleted_at')
                     ->first();
 

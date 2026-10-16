@@ -163,6 +163,15 @@ class UserManagementController extends Controller
             'role' => ['required', Rule::in(RoleEnum::garageRoles())],
             'password' => $passwordRules,
             'is_active' => [$creating ? 'nullable' : 'required', 'boolean'],
+            'employee_code' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('users', 'employee_code')
+                    ->ignore($user?->id)
+                    ->whereNull('deleted_at'),
+            ],
+            'pin' => ['nullable', 'string', 'digits:4'],
         ]);
     }
 

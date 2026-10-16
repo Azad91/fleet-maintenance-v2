@@ -13,7 +13,7 @@ class IdempotencyMiddleware
 {
     private const CACHE_TTL_HOURS = 12;
 
-    private const LOCK_SECONDS = 30;
+    private const LOCK_SECONDS = 120;
 
     private const MAX_KEY_LENGTH = 255;
 

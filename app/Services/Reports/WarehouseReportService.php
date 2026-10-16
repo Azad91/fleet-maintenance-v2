@@ -95,6 +95,7 @@ class WarehouseReportService
     {
         return Warehouse::withoutGlobalScope('garage')
             ->whereIn('garage_id', $scope->garageIds)
+            ->where('is_quarantine', false)
             ->whereColumn('quantity', '<=', 'minimum_quantity')
             ->orderBy('quantity')
             ->orderBy('name')

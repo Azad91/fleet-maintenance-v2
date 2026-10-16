@@ -212,7 +212,9 @@
 
         {{-- Maintenance: service_km dropdown --}}
         <div id="serviceTypeBlock" style="display:none;">
-            <select class="form-select" id="service_km_select" name="service_km" onchange="onServiceChange()">
+            <select class="form-select" id="service_km_select" name="service_km"
+                    data-selected="{{ old('service_km', $complaint->service_km ?? '') }}"
+                    onchange="onServiceChange()">
                 <option value="">{{ __('messages.complaints.select_service') }}</option>
             </select>
             <div class="form-text">{{ __('messages.complaints.service_hint') }}</div>

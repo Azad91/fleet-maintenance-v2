@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserService
 {
@@ -23,11 +25,21 @@ class UserService
         bool $isActive = true
     ): User {
         return DB::transaction(function () use ($data, $garageId, $isActive) {
+            $employeeCode = ! empty($data['employee_code'])
+                ? (string) $data['employee_code']
+                : $this->generateEmployeeCode();
+
+            $pinWasProvided = ! empty($data['pin']);
+            $pin = $pinWasProvided ? (string) $data['pin'] : $this->generatePin();
+
             $user = new User;
             $user->forceFill([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => $data['password'],
+                'employee_code' => $employeeCode,
+                'pin' => Hash::make($pin),
+                'pin_is_default' => ! $pinWasProvided,
                 'email_verified_at' => now(), // ✅ Auto-verified: qaraj admini yaradıb
             ])->save();
 
@@ -110,5 +122,25 @@ class UserService
 
             return $user->fresh(['garages']);
         });
+    }
+
+    /**
+     * Generate a unique employee code.
+     */
+    public function generateEmployeeCode(): string
+    {
+        do {
+            $code = 'EMP-'.strtoupper(Str::random(6));
+        } while (User::withTrashed()->where('employee_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Generate a random 4-digit PIN.
+     */
+    public function generatePin(): string
+    {
+        return (string) random_int(1000, 9999);
     }
 }

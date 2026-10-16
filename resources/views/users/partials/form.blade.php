@@ -55,6 +55,19 @@
             <input id="password_confirmation" name="password_confirmation" type="password" class="form-control"
                    {{ isset($user) ? '' : 'required' }} autocomplete="new-password">
         </div>
+        <div class="col-md-6">
+            <label for="employee_code" class="form-label fw-bold">{{ __('messages.super_admin.users.employee_code') }}</label>
+            <input id="employee_code" name="employee_code" type="text" class="form-control"
+                   value="{{ old('employee_code', $user->employee_code ?? '') }}"
+                   placeholder="{{ __('messages.super_admin.users.employee_code_placeholder') }}">
+            <small class="form-text text-muted">{{ __('messages.super_admin.users.employee_code_hint') }}</small>
+        </div>
+        <div class="col-md-6">
+            <label for="pin" class="form-label fw-bold">{{ __('messages.super_admin.users.pin') }}</label>
+            <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" class="form-control"
+                   placeholder="{{ isset($user) ? '••••' : '1234' }}" autocomplete="off">
+            <small class="form-text text-muted">{{ __('messages.super_admin.users.pin_hint') }}</small>
+        </div>
         @isset($user)
             <div class="col-md-6 d-flex align-items-end">
                 <div class="form-check form-switch mb-2">

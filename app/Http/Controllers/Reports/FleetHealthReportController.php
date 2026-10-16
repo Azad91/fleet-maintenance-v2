@@ -100,7 +100,7 @@ class FleetHealthReportController extends ReportController
             ],
             rows: $rows->map(fn ($r) => [
                 $r->description,
-                $r->bus_id,
+                $r->dqn,
                 (int) $r->total,
                 \Carbon\Carbon::parse($r->last_occurrence)->format('d.m.Y'),
             ])->all(),

@@ -213,8 +213,9 @@ class ComplaintService
                 ComplaintDetail::auditBulkDelete($detailIds);
             }
 
-            // Soft-delete details
+            // Soft-delete details and items
             $locked->details()->delete();
+            $locked->items()->delete();
 
             // Soft-delete complaint
             $locked->delete();

@@ -215,7 +215,9 @@
 
         // Match found — autofill name, available, and warehouse id.
         nameEl.value = item.name;
-        availableEl.innerHTML = '<strong>' + item.quantity + '</strong> ' + (item.unit || '');
+        const strong = document.createElement('strong');
+        strong.textContent = String(item.quantity);
+        availableEl.replaceChildren(strong, document.createTextNode(' ' + (item.unit || '')));
         idEl.value = item.id;
         input.classList.add('is-valid');
 

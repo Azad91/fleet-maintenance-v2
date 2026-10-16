@@ -157,8 +157,7 @@ class FleetHealthReportService
             ->join('buses as b', 'b.id', '=', 'c.bus_id')
             ->whereIn('c.garage_id', $scope->garageIds)
             ->whereNull('c.deleted_at')
-            // NOTE: complaint_items has no soft-delete column. Its lifecycle
-            // is tied to the parent complaint via ON DELETE CASCADE.
+            ->whereNull('ci.deleted_at')
             ->whereBetween('c.created_at', [$period->from, $period->to])
             ->when($scope->brandId, fn ($q) => $q->where('b.brand_id', $scope->brandId))
             ->where(function ($q) {
@@ -198,6 +197,7 @@ class FleetHealthReportService
             ->join('buses as b', 'b.id', '=', 'c.bus_id')
             ->whereIn('c.garage_id', $scope->garageIds)
             ->whereNull('c.deleted_at')
+            ->whereNull('ci.deleted_at')
             ->whereBetween('c.created_at', [$period->from, $period->to])
             ->when($scope->brandId, fn ($q) => $q->where('b.brand_id', $scope->brandId))
             ->select(

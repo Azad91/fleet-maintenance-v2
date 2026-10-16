@@ -482,7 +482,7 @@
         </section>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script>
         const menuToggle = document.querySelector('.fleet-menu-toggle');
         if (menuToggle) {

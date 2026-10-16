@@ -31,7 +31,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 ? '*'
                 : array_map('trim', explode(',', $trustedProxies));
 
-            $middleware->trustProxies(at: $proxies);
+            $middleware->trustProxies(
+                at: $proxies,
+                headers: Request::HEADER_X_FORWARDED_FOR |
+                    Request::HEADER_X_FORWARDED_HOST |
+                    Request::HEADER_X_FORWARDED_PORT |
+                    Request::HEADER_X_FORWARDED_PROTO |
+                    Request::HEADER_X_FORWARDED_AWS_ELB
+            );
         }
 
         // Global middleware — runs on every request.

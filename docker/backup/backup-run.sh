@@ -17,6 +17,7 @@ set -eu
 TS="$(date +%Y-%m-%d_%H-%M-%S)"
 OUT="/backups/fleet_${TS}.sql.gz"
 TMP="/backups/.fleet_${TS}.sql.partial"
+TMP_GZ="/backups/.fleet_${TS}.sql.gz.partial"
 MARKER="/backups/.last-success"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 
@@ -36,18 +37,28 @@ if ! PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump \
         --if-exists \
         > "${TMP}"; then
     log "ERROR: pg_dump failed"
-    rm -f "${TMP}"
+    rm -f "${TMP}" "${TMP_GZ}"
     exit 1
 fi
 
-# Compress and remove the raw partial in one atomic-ish step.
-if ! gzip -9 < "${TMP}" > "${OUT}"; then
+# Compress to a temporary partial archive.
+if ! gzip -9 < "${TMP}" > "${TMP_GZ}"; then
     log "ERROR: gzip failed"
-    rm -f "${TMP}" "${OUT}"
+    rm -f "${TMP}" "${TMP_GZ}"
     exit 1
 fi
 
 rm -f "${TMP}"
+
+# Verify gzip archive integrity before moving to final path.
+if ! gzip -t "${TMP_GZ}"; then
+    log "ERROR: gzip integrity check failed"
+    rm -f "${TMP_GZ}"
+    exit 1
+fi
+
+# Atomic move to final destination.
+mv "${TMP_GZ}" "${OUT}"
 
 SIZE="$(du -h "${OUT}" | cut -f1)"
 log "Backup OK — ${OUT} (${SIZE})"

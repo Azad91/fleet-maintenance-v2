@@ -58,7 +58,7 @@ class WarehouseTransferController extends Controller
         $garageId = GarageContext::getGarageId();
         $companyId = GarageContext::getCompanyId();
 
-        $warehouses = Warehouse::query()->orderBy('name')->get();
+        $warehouses = Warehouse::query()->activeStock()->orderBy('name')->get();
 
         // Other garages within the same company (excluding self).
         $otherGarages = Garage::where('company_id', $companyId)

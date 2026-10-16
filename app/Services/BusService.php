@@ -185,13 +185,20 @@ class BusService
         }
 
         $searchableFields = [
-            'bus_project', 'vin', 'uzunluq', 'route_number', 'dqn', 'engine_number',
+            'bus_project', 'vin', 'route_number', 'dqn', 'engine_number',
         ];
 
         foreach ($searchableFields as $field) {
             if (! empty($filters[$field])) {
                 $query->where($field, 'ILIKE', '%'.$filters[$field].'%');
             }
+        }
+
+        if (! empty($filters['uzunluq'])) {
+            $query->whereRaw(
+                'CAST(uzunluq AS TEXT) ILIKE ?',
+                ['%'.$filters['uzunluq'].'%']
+            );
         }
 
         $totalDeleted = 0;

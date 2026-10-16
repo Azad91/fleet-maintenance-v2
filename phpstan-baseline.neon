@@ -1813,12 +1813,6 @@ parameters:
 			path: app/Http/Controllers/Reports/FleetHealthReportController.php
 
 		-
-			message: '#^Access to an undefined property object\:\:\$bus_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Reports/FleetHealthReportController.php
-
-		-
 			message: '#^Access to an undefined property object\:\:\$cards_count\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1857,7 +1851,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property object\:\:\$dqn\.$#'
 			identifier: property.notFound
-			count: 4
+			count: 5
 			path: app/Http/Controllers/Reports/FleetHealthReportController.php
 
 		-
