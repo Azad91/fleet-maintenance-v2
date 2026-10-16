@@ -24,9 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Trust proxies is configured ONLY through the env variable.
-        $trustedProxies = env('TRUSTED_PROXIES');
+        $trustedProxies = trim((string) env('TRUSTED_PROXIES', ''));
 
-        if ($trustedProxies !== null && $trustedProxies !== '') {
+        if (env('APP_ENV') === 'production' && $trustedProxies === '*') {
+            throw new RuntimeException('TRUSTED_PROXIES=* is forbidden in production.');
+        }
+
+        if ($trustedProxies !== '') {
             $proxies = $trustedProxies === '*'
                 ? '*'
                 : array_map('trim', explode(',', $trustedProxies));

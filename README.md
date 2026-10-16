@@ -277,7 +277,7 @@ php artisan test
 ## Texnologiyalar
 
 - Laravel 13
-- PHP 8.3+
+- PHP 8.4+
 - PostgreSQL
 - Bootstrap 5
 - Laravel Excel (`maatwebsite/excel`)
