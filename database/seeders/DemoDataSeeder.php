@@ -135,12 +135,15 @@ class DemoDataSeeder extends Seeder
 
     private function createDirector(Company $company, string $name, string $email): User
     {
+        $existing = User::where('email', $email)->first();
+        $code = $existing?->employee_code ?? $this->generateUniqueEmployeeCode('DIR', $email);
+
         $director = User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
                 'password' => Hash::make('password'),
-                'employee_code' => 'DIR-'.strtoupper(substr(md5($email), 0, 6)),
+                'employee_code' => $code,
                 'pin' => Hash::make('1234'),
                 'pin_is_default' => true,
                 'is_active' => true,
@@ -241,13 +244,15 @@ class DemoDataSeeder extends Seeder
     private function createGarageAdmin(Garage $garage): void
     {
         $adminEmail = "{$garage->code}.admin@demo.test";
+        $existing = User::where('email', $adminEmail)->first();
+        $code = $existing?->employee_code ?? $this->generateUniqueEmployeeCode('ADM', $adminEmail);
 
         $admin = User::updateOrCreate(
             ['email' => $adminEmail],
             [
                 'name' => "{$garage->name} Admin",
                 'password' => Hash::make('password'),
-                'employee_code' => 'ADM-'.strtoupper(substr(md5($adminEmail), 0, 6)),
+                'employee_code' => $code,
                 'pin' => Hash::make('1234'),
                 'pin_is_default' => true,
                 'is_active' => true,
@@ -306,14 +311,16 @@ class DemoDataSeeder extends Seeder
         foreach ($roleMatrix as $role) {
             $slug = str_replace('_', '.', $role);
             $email = "{$garage->code}.{$slug}@demo.test";
+            $existing = User::where('email', $email)->first();
+            $prefix = strtoupper(substr($role, 0, 3));
+            $code = $existing?->employee_code ?? $this->generateUniqueEmployeeCode($prefix, $email);
 
             $user = User::updateOrCreate(
                 ['email' => $email],
                 [
                     'name' => "{$garage->name} ".ucwords(str_replace('_', ' ', $role)),
                     'password' => Hash::make('password'),
-                    'employee_code' => strtoupper(substr($role, 0, 3)).'-'.
-                        strtoupper(substr(md5($email), 0, 6)),
+                    'employee_code' => $code,
                     'pin' => Hash::make('1234'),
                     'pin_is_default' => false,
                     'is_active' => true,
@@ -628,5 +635,20 @@ class DemoDataSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    private function generateUniqueEmployeeCode(string $prefix, string $seed): string
+    {
+        $hash = strtoupper(substr(md5($seed), 0, 6));
+        $code = "{$prefix}-{$hash}";
+
+        $counter = 1;
+        while (User::withTrashed()->where('employee_code', $code)->exists()) {
+            $hash = strtoupper(substr(md5($seed.'-'.$counter), 0, 6));
+            $code = "{$prefix}-{$hash}";
+            $counter++;
+        }
+
+        return $code;
     }
 }
