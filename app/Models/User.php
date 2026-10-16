@@ -155,8 +155,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'two_factor_secret' => 'encrypted',
-        'two_factor_recovery_codes' => 'encrypted:array',
+        'two_factor_secret' => \App\Casts\SafeEncrypted::class,
+        'two_factor_recovery_codes' => \App\Casts\SafeEncryptedArray::class,
         'two_factor_confirmed_at' => 'datetime',
         'is_demo' => 'boolean',
         'demo_expires_at' => 'datetime',
@@ -520,15 +520,6 @@ class User extends Authenticatable implements MustVerifyEmail
             }
 
             $codes = $fresh->two_factor_recovery_codes ?? [];
-
-            // Defensive: allow JSON-encoded string fallback.
-            if (is_string($codes)) {
-                $codes = json_decode($codes, true) ?? [];
-            }
-
-            if (! is_array($codes)) {
-                return false;
-            }
 
             foreach ($codes as $index => $hashedCode) {
                 if (Hash::check($code, $hashedCode)) {

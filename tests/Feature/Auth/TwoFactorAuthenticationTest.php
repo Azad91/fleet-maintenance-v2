@@ -341,4 +341,21 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertNotNull($softDeleted);
         $this->assertCount(1, $softDeleted->two_factor_recovery_codes);
     }
+
+    public function test_corrupted_or_key_rotated_mfa_secret_returns_null_without_crashing(): void
+    {
+        $sa = $this->makeSuperAdminWithMfa();
+
+        // Simulate corrupted MAC or secret encrypted under previous APP_KEY
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $sa->id)->update([
+            'two_factor_secret' => 'invalid-or-foreign-encrypted-payload',
+            'two_factor_recovery_codes' => 'invalid-or-foreign-encrypted-payload',
+        ]);
+
+        $fresh = User::find($sa->id);
+        $this->assertNotNull($fresh);
+        $this->assertNull($fresh->two_factor_secret);
+        $this->assertNull($fresh->two_factor_recovery_codes);
+        $this->assertTrue($fresh->requiresTwoFactorSetup());
+    }
 }
