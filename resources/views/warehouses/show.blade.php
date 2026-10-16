@@ -43,7 +43,7 @@
                 <code>{{ $warehouse->code }}</code>
                 @if($warehouse->is_quarantine)
                     · <span class="fleet-status fleet-status--warning">
-                        <i class="fas fa-shield-exclamation"></i>
+                        <i class="bi bi-shield-exclamation"></i>
                         {{ __('messages.warehouse.quarantine') }}
                     </span>
                 @endif

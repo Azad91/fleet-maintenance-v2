@@ -222,7 +222,7 @@
                     @endif
                     @if($canViewOilChanges)
                         <a href="{{ route('oil-changes.index') }}" class="fleet-nav__link {{ request()->routeIs('oil-changes.*') ? 'is-active' : '' }}">
-                            <i class="fas fa-oil-can-drip"></i><span>{{ __('messages.oil_change.title') }}</span>
+                            <i class="fas fa-droplet"></i><span>{{ __('messages.oil_change.title') }}</span>
                         </a>
                     @endif
                 @endif
@@ -299,7 +299,7 @@
                 {{-- Oil Change Reports — Admin only --}}
                 @if($canManage)
                     <a href="{{ route('reports.oil-change.history') }}" class="fleet-nav__link {{ request()->routeIs('reports.oil-change.*') ? 'is-active' : '' }}">
-                        <i class="fas fa-oil-can-drip"></i><span>{{ __('messages.reports.oil_change.title') }}</span>
+                        <i class="fas fa-droplet"></i><span>{{ __('messages.reports.oil_change.title') }}</span>
                     </a>
                 @endif
 

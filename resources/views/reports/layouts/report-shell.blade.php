@@ -86,7 +86,7 @@
         'oil_change' => [
             'title'   => __('messages.reports.oil_change.title'),
             'eyebrow' => __('messages.nav.operations'),
-            'icon'    => 'fa-oil-can-drip',
+            'icon'    => 'fa-droplet',
             'reports' => [
                 'history'        => ['label' => __('messages.reports.oil_change.history'),       'route' => 'reports.oil-change.history',       'roles' => [RoleEnum::ADMIN->value]],
                 'upcoming'       => ['label' => __('messages.reports.oil_change.upcoming'),      'route' => 'reports.oil-change.upcoming',      'roles' => [RoleEnum::ADMIN->value]],
